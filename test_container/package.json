@@ -1,0 +1,33 @@
+{
+  "name": "test_container",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test/test.ts",
+  "scripts": {
+    "echo": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test",
+    "watch": "node --test --watch ./test/*",
+    "jest": "jest",
+    "jest watch": "jest --watch"
+  },
+  "keywords": [],
+  "author": "C",
+  "license": "ISC",
+  "devDependencies": {
+    "@testcontainers/postgresql": "^11.0.3",
+    "@testcontainers/redis": "^11.0.3",
+    "@types/jest": "^29.5.14",
+    "@types/mocha": "^10.0.10",
+    "@types/pg": "^8.15.4",
+    "cypress": "^14.4.1",
+    "jest": "^30.0.0",
+    "testcontainers": "^11.0.3",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "pg": "^8.16.0",
+    "redis": "^5.5.6"
+  }
+}
