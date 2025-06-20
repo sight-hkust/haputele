@@ -1,0 +1,27 @@
+{
+  "name": "haputele",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sight-hkust/haputele.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sight-hkust/haputele/issues"
+  },
+  "homepage": "https://github.com/sight-hkust/haputele#readme",
+  "devDependencies": {
+    "@testcontainers/postgresql": "^11.0.3",
+    "cypress": "^14.5.0",
+    "testcontainers": "^11.0.3",
+    "typescript": "^5.8.3"
+  }
+}

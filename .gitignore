@@ -6,3 +6,8 @@ logs/
 .env
 .DS_Store
 
+
+cypress/results/*
+cypress/reports/*
+cypress/screenshots/*
+cypress/videos/*
