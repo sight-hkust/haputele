@@ -52,6 +52,9 @@ export default defineConfig({
             SERVE_CLIENT: "true",
             PORT: "80",
           })
+          .withCommand([
+            "sh",
+            "-c","npm run start:prod"])
           .start();
         console.log(
           `Tooljet container is running at http://localhost:${tooljet.getMappedPort(
