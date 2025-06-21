@@ -1,11 +1,16 @@
 import { randomBytes } from "crypto";
 import { defineConfig } from "cypress";
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
 import { GenericContainer } from "testcontainers";
 
 let database: StartedPostgreSqlContainer | null = null;
 
 export default defineConfig({
+  viewportHeight: 1080,
+  viewportWidth: 1920,
   e2e: {
     setupNodeEvents(on, config) {
       // implement node event listeners here
@@ -17,10 +22,12 @@ export default defineConfig({
           .withDatabase("haputele")
           .withUsername(dbUser)
           .withPassword(dbPassword)
-          .withCopyFilesToContainer([{
-            source: "./schema.sql",
-            target: "/docker-entrypoint-initdb.d/init.sql"
-          }])
+          .withCopyFilesToContainer([
+            {
+              source: "./schema.sql",
+              target: "/docker-entrypoint-initdb.d/init.sql",
+            },
+          ])
           .start();
         const dbIp = database.getIpAddress(database.getNetworkNames()[0]);
         console.log(`Postgres Password: ${dbPassword}`);
@@ -29,7 +36,10 @@ export default defineConfig({
           "tooljet/tooljet:ee-lts-latest"
         )
           .withPlatform("linux/amd64")
-          .withExposedPorts(80)
+          .withExposedPorts({
+            container: 80,
+            host: 3080,
+          })
           .withEnvironment({
             ORM_LOGGING: "all",
             TOOLJET_HOST: "http://localhost:80",
@@ -52,17 +62,15 @@ export default defineConfig({
             SERVE_CLIENT: "true",
             PORT: "80",
           })
-          .withCommand([
-            "sh",
-            "-c","npm run start:prod"])
+          .withCommand(["sh", "-c", "npm run start:prod"])
           .start();
         console.log(
           `Tooljet container is running at http://localhost:${tooljet.getMappedPort(
             80
           )}`
         );
-        // config.env.tooljetUrl = `http://localhost:${tooljet.getMappedPort(80)}`;
       });
+      return config;
     },
   },
 });
