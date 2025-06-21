@@ -20,6 +20,8 @@ SET row_security = off;
 -- Name: accounts; Type: TABLE; Schema: public; Owner: postgres
 --
 
+
+
 CREATE TABLE public.accounts (
     username character varying(255) NOT NULL,
     password character varying(255) NOT NULL
