@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_DB: haputele
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # Replace with a secure password or set in .env
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tooljet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # redis:
+  #   image: redis:latest
+  #   container_name: redis
+  #   networks:
+  #     - tooljet-network
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  tooljet:
+    image: tooljet/tooljet:ee-lts-latest
+    tty: true
+    stdin_open: true
+    restart: always
+    container_name: tooljet
+    platform: linux/amd64
+    ports:
+      - "80:80"
+      - "3002:3002" # Expose PostgREST port as seen in logs
+    environment:
+      ORM_LOGGING: all
+      TOOLJET_HOST: http://localhost:80
+      LOCKBOX_MASTER_KEY: ${LOCKBOX_MASTER_KEY} # Replace with a 32-byte hex key or set in .env
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE} # Replace with a 64-byte hex key or set in .env
+      PG_DB: tooljet_production
+      PG_USER: postgres
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_PASS: ${POSTGRES_PASSWORD} # Must match POSTGRES_PASSWORD
+      TOOLJET_DB: tooljet_db
+      TOOLJET_DB_USER: postgres
+      TOOLJET_DB_HOST: postgres
+      TOOLJET_DB_PASS: ${POSTGRES_PASSWORD} # Must match POSTGRES_PASSWORD
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@postgres/tooljet_db
+      PGRST_HOST: localhost:3002
+      PGRST_JWT_SECRET: ${PGRST_JWT_SECRET} # Replace with a 32-byte hex key or set in .env
+      PGRST_SERVER_PORT: 3002
+      USER_SESSION_EXPIRY: 2880
+      SERVE_CLIENT: "true"
+      PORT: 80
+      # REDIS_URL: redis://redis:6379
+    command: npm run start:prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # redis:
+      #   condition: service_healthy
+    networks:
+      - tooljet-network
+
+networks:
+  tooljet-network:
+    driver: bridge
