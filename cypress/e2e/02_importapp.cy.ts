@@ -69,13 +69,13 @@ describe("Import App via API", () => {
           tooljet_version: appData.tooljet_version,
           app: [
             {
-              appName: appData.app[0].definition.appV2.name+appname, 
+              appName: appname, 
               definition: {
                 appV2: {
                   ...appData.app[0].definition.appV2,
                   organizationId: workspaceId,
                   userId: userId,
-                  name: appData.app[0].definition.appV2.name || appname, //can not null, otherwise show empty page due to type error(tolowercase of null)
+                  name: appname, //can not null, otherwise show empty page due to type error(tolowercase of null)
                   appEnvironments: appData.app[0].definition.appV2.appEnvironments.map((env) => ({
                     ...env,
                     organizationId: workspaceId,
@@ -107,6 +107,7 @@ describe("Import App via API", () => {
           expect(response.status).to.be.oneOf([200, 201]);
           cy.visit(`http://localhost:3080/${slug}`, { failOnStatusCode: false });
           cy.url().should("include", `/${slug}`);
+          cy.wait(4000)
           cy.contains(`${appname}`).should("exist"); // Matches the set name
 
         });

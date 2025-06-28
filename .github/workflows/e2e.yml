@@ -1,0 +1,15 @@
+name: Run Cypress Tests
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  chrome:
+    runs-on: ubuntu-latest
+    name: E2E on Chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cypress-io/github-action@v6
+        with:
+          browser: chrome
+        env:
+          CYPRESS_INTERNAL_BROWSER_CONNECT_TIMEOUT: 240000
