@@ -11,11 +11,7 @@ let database: StartedPostgreSqlContainer | null = null;
 export default defineConfig({
   viewportHeight: 1080,
   viewportWidth: 1920,
-  env: {
-    EXTERNAL_API_ACCESS_TOKEN: "bXlfc2VjdXJlX2FjY2Vzc190b2tlbl8xMjM="
-  },
   e2e: {
-    // baseUrl: "http://localhost:3080",
     // experimentalMemoryManagement: true,
     numTestsKeptInMemory: 30,
     setupNodeEvents(on, config) {
@@ -47,8 +43,6 @@ export default defineConfig({
             host: 3080,
           })
           .withEnvironment({
-            ENABLE_EXTERNAL_API: "true",
-            EXTERNAL_API_ACCESS_TOKEN: "bXlfc2VjdXJlX2FjY2Vzc190b2tlbl8xMjM=",
             ORM_LOGGING: "all",
             TOOLJET_HOST: "http://localhost:80",
             LOCKBOX_MASTER_KEY: randomBytes(32).toString("hex"),
