@@ -4,10 +4,10 @@ jobs:
   chrome:
     runs-on: ubuntu-latest
     name: E2E on Chrome
-    env:
-      CYPRESS_SKIP_VERIFY: true
     steps:
       - uses: actions/checkout@v4
       - uses: cypress-io/github-action@v6
         with:
           browser: chrome
+          env:
+            CYPRESS_SKIP_VERIFY: true
