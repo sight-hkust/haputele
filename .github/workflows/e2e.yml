@@ -1,5 +1,7 @@
 name: Run Cypress Tests
-on: push
+on:
+  push:
+  workflow_dispatch:
 jobs:
   chrome:
     runs-on: ubuntu-latest
