@@ -10,9 +10,10 @@ describe('onboard spec', () => {
     cy.get('[data-cy="email-input"]').type("user@abc.com");
     cy.get('[data-cy="password-input"]').type("Pass123=");
     cy.contains('Sign up').click();
-    cy.get('[data-cy="onboarding-company-name"]').type('hapu');
+    cy.get('[data-cy="onboarding-company-name"]').type('Test Company');
     cy.get('[data-cy="onboarding-build-purpose"]').type('Testing ToolJet');
     cy.get('[data-cy="onboarding-submit"]').click();
+    cy.wait(4000)
     cy.get('[data-cy="onboarding-workspace-name"]').clear().type('Hapu Workspace'); //seems auto filled, rename
     cy.get('[data-cy="onboarding-submit"]').click();
     cy.get('.decline-button').click();
@@ -29,8 +30,9 @@ describe('onboard spec', () => {
     cy.log("Current URL:", cy.url());
     cy.log("Logout..");
     cy.visit('http://localhost:3080/hapu-workspace');
-    cy.get('*[class^="settings-nav-item"]').click();
-    // cy.get('[data-cy="settings-icon"]').click();
+    cy.wait(4000)
+    // cy.get('*[class^="settings-nav-item"]').click();
+    cy.get('[data-cy="settings-icon"]').click();
     cy.get('[data-cy="logout-link"]').click();
     cy.url().should('include', '/login');
   })
