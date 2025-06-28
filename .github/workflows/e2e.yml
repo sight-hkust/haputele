@@ -10,4 +10,4 @@ jobs:
         with:
           browser: chrome
         env:
-          CYPRESS_INTERNAL_BROWSER_CONNECT_TIMEOUT: 120000
+          CYPRESS_INTERNAL_BROWSER_CONNECT_TIMEOUT: 240000
