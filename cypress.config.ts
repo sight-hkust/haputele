@@ -12,9 +12,8 @@ export default defineConfig({
   viewportHeight: 1080,
   viewportWidth: 1920,
   e2e: {
-    // baseUrl: "http://localhost:3080",
     // experimentalMemoryManagement: true,
-    // numTestsKeptInMemory: 30,
+    numTestsKeptInMemory: 30,
     setupNodeEvents(on, config) {
       // implement node event listeners here
       on("before:browser:launch", async () => {
