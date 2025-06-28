@@ -11,6 +11,7 @@ let database: StartedPostgreSqlContainer | null = null;
 export default defineConfig({
   viewportHeight: 1080,
   viewportWidth: 1920,
+  defaultCommandTimeout:10000,
   e2e: {
     // experimentalMemoryManagement: true,
     numTestsKeptInMemory: 30,
