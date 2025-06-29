@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - cypress/**
+      - cypress.config.ts
       - schema.sql
   workflow_dispatch:
 jobs:
