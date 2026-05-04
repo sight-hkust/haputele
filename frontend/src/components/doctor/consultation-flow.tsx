@@ -1,0 +1,451 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { ArrowLeft, ArrowRight, CalendarPlus, CheckCircle2, Clock4, FileSignature, Save, X } from "lucide-react";
+import { z } from "zod";
+
+import { Button } from "@/components/primitives/button";
+import { Card } from "@/components/primitives/card";
+import { ErrorBanner } from "@/components/primitives/error-banner";
+import { Input, Label } from "@/components/primitives/input";
+import {
+  ConsultationStepper,
+  type ConsultationStage,
+} from "@/components/doctor/consultation-stepper";
+import {
+  DiagnosesEditor,
+  LabsEditor,
+  MedicationsEditor,
+  NotesEditor,
+  ReferralsEditor,
+  type ConsultationFormShape,
+} from "@/components/doctor/consultation-editors";
+import { ConsultationReview } from "@/components/doctor/consultation-review";
+import { DoctorSlotPicker } from "@/components/doctor/doctor-slot-picker";
+import {
+  SignatureCanvas,
+  type SignatureCanvasHandle,
+} from "@/components/doctor/signature-canvas";
+import { explainError } from "@/lib/error-codes";
+import { appLocalToUtcIso, fmtRelative } from "@/lib/format";
+import { useCurrentDoctor, useSubmitConsultation, useUpdateConsultation } from "@/lib/use-api";
+import type { Consultation, FollowUpInput } from "@/types/api";
+import { cn } from "@/lib/cn";
+
+// Schema mirrors the backend ConsultationPatch + submit payload. Generic name
+// validation is *deferred* until submit so the doctor can save partial drafts
+// across stages without being yelled at for incomplete medication rows.
+const formSchema = z.object({
+  notes: z.object({
+    complaint: z.string(),
+    onset: z.string(),
+    symptoms: z.string(),
+    observations: z.string(),
+  }),
+  diagnoses: z.array(
+    z.object({ code: z.string(), text: z.string().optional() }),
+  ),
+  medications: z.array(
+    z.object({
+      genericName: z.string(),
+      tradeName: z.string().optional(),
+      dose: z.string().optional(),
+      frequency: z.string().optional(),
+      duration: z.string().optional(),
+      instructions: z.string().optional(),
+    }),
+  ),
+  labs: z.array(
+    z.object({ testName: z.string().optional(), instructions: z.string().optional() }),
+  ),
+  referrals: z.array(
+    z.object({
+      specialistOrDepartment: z.string().optional(),
+      instructions: z.string().optional(),
+    }),
+  ),
+});
+
+function defaultsFrom(c: Consultation): ConsultationFormShape {
+  return {
+    notes: {
+      complaint: c.notes.complaint ?? "",
+      onset: c.notes.onset ?? "",
+      symptoms: c.notes.symptoms ?? "",
+      observations: c.notes.observations ?? "",
+    },
+    diagnoses: c.diagnoses.map((d) => ({ code: d.code, text: d.text ?? "" })),
+    medications: c.medications.map((m) => ({
+      genericName: m.genericName,
+      tradeName: m.tradeName ?? "",
+      dose: m.dose ?? "",
+      frequency: m.frequency ?? "",
+      duration: m.duration ?? "",
+      instructions: m.instructions ?? "",
+    })),
+    labs: c.labs.map((l) => ({ testName: l.testName ?? "", instructions: l.instructions ?? "" })),
+    referrals: c.referrals.map((r) => ({
+      specialistOrDepartment: r.specialistOrDepartment ?? "",
+      instructions: r.instructions ?? "",
+    })),
+  };
+}
+
+// Strip empty entries before sending — the API tolerates them but the audit
+// trail looks cleaner with only non-empty rows.
+function toPatch(v: ConsultationFormShape) {
+  return {
+    notes: {
+      complaint: v.notes.complaint || undefined,
+      onset: v.notes.onset || undefined,
+      symptoms: v.notes.symptoms || undefined,
+      observations: v.notes.observations || undefined,
+    },
+    diagnoses: v.diagnoses
+      .filter((d) => d.code)
+      .map((d) => ({ code: d.code as never, text: d.text || undefined })),
+    medications: v.medications
+      .filter((m) => m.genericName.trim())
+      .map((m) => ({
+        genericName: m.genericName,
+        tradeName: m.tradeName || undefined,
+        dose: m.dose || undefined,
+        frequency: m.frequency || undefined,
+        duration: m.duration || undefined,
+        instructions: m.instructions || undefined,
+      })),
+    labs: v.labs
+      .filter((l) => l.testName?.trim() || l.instructions?.trim())
+      .map((l) => ({ testName: l.testName || undefined, instructions: l.instructions || undefined })),
+    referrals: v.referrals
+      .filter((r) => r.specialistOrDepartment?.trim() || r.instructions?.trim())
+      .map((r) => ({
+        specialistOrDepartment: r.specialistOrDepartment || undefined,
+        instructions: r.instructions || undefined,
+      })),
+  };
+}
+
+export function ConsultationFlow({
+  consultation,
+  appointmentId,
+  readOnly,
+}: {
+  consultation: Consultation;
+  appointmentId: number;
+  readOnly?: boolean;
+}) {
+  const router = useRouter();
+  const [stage, setStage] = useState<ConsultationStage>("notes");
+  const [signed, setSigned] = useState(false);
+  const sigRef = useRef<SignatureCanvasHandle>(null);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+
+  // Three-way follow-up choice at submit. Default: none.
+  type FollowUpChoice = "none" | "appointment" | "weeks";
+  const [followUpChoice, setFollowUpChoice] = useState<FollowUpChoice>("none");
+  const [followUpAt, setFollowUpAt] = useState<string>(""); // datetime-local
+  const [followUpWeeks, setFollowUpWeeks] = useState<number>(4);
+
+  const { doctor } = useCurrentDoctor();
+  const update = useUpdateConsultation(consultation.id);
+  const submit = useSubmitConsultation(consultation.id);
+
+  const form = useForm<ConsultationFormShape>({
+    resolver: zodResolver(formSchema) as never,
+    defaultValues: defaultsFrom(consultation),
+  });
+
+  const values = form.watch();
+
+  // Save when leaving stage 1 or stage 2 — keeps drafts coherent if the
+  // doctor closes the tab between sections.
+  const persist = async () => {
+    const v = form.getValues();
+    await update.mutateAsync(toPatch(v));
+    setSavedAt(new Date().toISOString());
+  };
+
+  const next = async () => {
+    await persist();
+    setStage(stage === "notes" ? "rx" : "review");
+  };
+
+  const back = () => setStage(stage === "review" ? "rx" : "notes");
+
+  const onSubmit = async () => {
+    const sig = sigRef.current?.toDataURL();
+    if (!sig) return;
+    // Final patch in case anything's dirty since the last save.
+    await update.mutateAsync(toPatch(form.getValues()));
+    let followUp: FollowUpInput | undefined;
+    if (followUpChoice === "appointment" && followUpAt) {
+      followUp = { kind: "appointment", scheduledAt: appLocalToUtcIso(followUpAt) };
+    } else if (followUpChoice === "weeks") {
+      followUp = { kind: "weeks", weeks: followUpWeeks };
+    }
+    submit.mutate(
+      { signature: sig, followUp },
+      {
+        onSuccess: () => router.push(`/doctor/appointments/${appointmentId}`),
+      },
+    );
+  };
+
+  // The submit button is disabled if the chosen branch is incomplete.
+  const followUpReady =
+    followUpChoice === "none" ||
+    (followUpChoice === "appointment" && followUpAt.length > 0) ||
+    (followUpChoice === "weeks" && followUpWeeks >= 1 && followUpWeeks <= 52);
+
+  // Validate medications client-side — every entry must have a non-empty
+  // genericName before we'll let the doctor submit. (Server enforces too.)
+  const medsValid = useMemo(
+    () => values.medications.every((m) => m.genericName.trim().length > 0),
+    [values.medications],
+  );
+
+  // Read-only path: a completed consultation is shown via the same component
+  // but with all editing disabled.
+  if (readOnly) {
+    return (
+      <Card className="p-8">
+        <CompletedNotice signedAt={consultation.signedAt} />
+        <div className="mt-6">
+          <ConsultationReview values={values} />
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      <Card className="p-6">
+        <ConsultationStepper current={stage} />
+      </Card>
+
+      {update.error && (
+        <ErrorBanner>{explainError(update.error.error)}</ErrorBanner>
+      )}
+      {submit.error && (
+        <ErrorBanner>{explainError(submit.error.error)}</ErrorBanner>
+      )}
+
+      <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-8">
+        {stage === "notes" && (
+          <Card variant="elevated" className="p-8">
+            <h2 className="mb-2 font-display text-2xl tracking-[-0.01em]">
+              Consultation notes
+            </h2>
+            <p className="mb-6 text-sm text-[var(--muted-foreground)]">
+              Capture the patient&rsquo;s complaint and your observations from the call.
+            </p>
+            <NotesEditor register={form.register} />
+          </Card>
+        )}
+
+        {stage === "rx" && (
+          <Card variant="elevated" className="flex flex-col gap-10 p-8">
+            <DiagnosesEditor
+              control={form.control}
+              register={form.register}
+              watch={form.watch}
+            />
+            <MedicationsEditor control={form.control} register={form.register} />
+            <LabsEditor control={form.control} register={form.register} />
+            <ReferralsEditor control={form.control} register={form.register} />
+            {!medsValid && (
+              <ErrorBanner tone="amber">
+                Every medication entry needs a generic name before you can submit. (§1.7)
+              </ErrorBanner>
+            )}
+          </Card>
+        )}
+
+        {stage === "review" && (
+          <div className="flex flex-col gap-6">
+            <ConsultationReview values={values} />
+
+            <Card variant="elevated" className="flex flex-col gap-6 p-8">
+              <div className="flex flex-col gap-3">
+                <Label>Follow-up</Label>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <FollowUpOption
+                    Icon={X}
+                    title="No follow-up"
+                    description="Patient doesn't need a return visit."
+                    active={followUpChoice === "none"}
+                    onClick={() => setFollowUpChoice("none")}
+                  />
+                  <FollowUpOption
+                    Icon={CalendarPlus}
+                    title="Book appointment"
+                    description="Pick the exact return slot now (with you)."
+                    active={followUpChoice === "appointment"}
+                    onClick={() => setFollowUpChoice("appointment")}
+                  />
+                  <FollowUpOption
+                    Icon={Clock4}
+                    title="In N weeks"
+                    description="Add to queue; the healthworker books later."
+                    active={followUpChoice === "weeks"}
+                    onClick={() => setFollowUpChoice("weeks")}
+                  />
+                </div>
+
+                {followUpChoice === "appointment" && doctor && (
+                  <DoctorSlotPicker
+                    doctorId={doctor.id}
+                    value={followUpAt}
+                    onChange={setFollowUpAt}
+                    defaultWeeksAhead={4}
+                  />
+                )}
+
+                {followUpChoice === "weeks" && (
+                  <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4">
+                    <Label>Recommend follow-up in</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {[2, 4, 6, 8, 12].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setFollowUpWeeks(n)}
+                          className={cn(
+                            "rounded-xl border px-3 py-1.5 text-xs font-medium transition-all",
+                            followUpWeeks === n
+                              ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
+                              : "border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--accent)]/30",
+                          )}
+                        >
+                          {n} weeks
+                        </button>
+                      ))}
+                      <Input
+                        type="number"
+                        min={1}
+                        max={52}
+                        value={followUpWeeks}
+                        onChange={(e) => setFollowUpWeeks(Number(e.target.value) || 0)}
+                        className="w-24"
+                      />
+                    </div>
+                    <p className="text-xs text-[var(--muted-foreground)]">
+                      Creates a queue entry tagged to you as preferred doctor, snapped to the Monday of that target week.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="sig">Signature *</Label>
+                <SignatureCanvas ref={sigRef} onChange={setSigned} />
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Footer — back / save / next / submit */}
+        <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-lg backdrop-blur">
+          <div className="flex items-center gap-2">
+            {stage !== "notes" && (
+              <Button type="button" variant="secondary" onClick={back}>
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => persist()}
+              disabled={update.isPending}
+            >
+              <Save className="h-4 w-4" />
+              {update.isPending ? "Saving…" : "Save draft"}
+            </Button>
+            {savedAt && !update.isPending && (
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-600">
+                Saved {fmtRelative(savedAt)}
+              </span>
+            )}
+          </div>
+          <div>
+            {stage !== "review" && (
+              <Button type="button" onClick={next} disabled={update.isPending}>
+                {update.isPending ? "Saving…" : "Save & continue"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+            {stage === "review" && (
+              <Button
+                type="button"
+                onClick={onSubmit}
+                disabled={!signed || !medsValid || !followUpReady || submit.isPending}
+              >
+                <FileSignature className="h-4 w-4" />
+                {submit.isPending ? "Submitting…" : "Sign & submit"}
+              </Button>
+            )}
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function FollowUpOption({
+  Icon,
+  title,
+  description,
+  active,
+  onClick,
+}: {
+  Icon: typeof X;
+  title: string;
+  description: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-all",
+        active
+          ? "border-[var(--accent)] bg-[var(--accent)]/5 shadow-sm"
+          : "border-[var(--border)] hover:border-[var(--accent)]/30 hover:bg-[var(--muted)]/40",
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-lg",
+          active ? "bg-[var(--accent)]/15 text-[var(--accent)]" : "bg-[var(--muted)] text-[var(--muted-foreground)]",
+        )}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="text-sm font-semibold tracking-[-0.01em]">{title}</div>
+      <div className="text-xs text-[var(--muted-foreground)]">{description}</div>
+    </button>
+  );
+}
+
+function CompletedNotice({ signedAt }: { signedAt: string | null }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+      <CheckCircle2 className="h-5 w-5 text-emerald-700" />
+      <div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-700">
+          Locked & signed
+        </div>
+        <div className="text-sm font-semibold tracking-[-0.01em]">
+          Submitted {signedAt ? fmtRelative(signedAt) : "earlier"}.
+        </div>
+      </div>
+    </div>
+  );
+}

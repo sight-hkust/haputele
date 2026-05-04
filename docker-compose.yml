@@ -1,0 +1,91 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-haputele}
+      POSTGRES_USER: ${POSTGRES_USER:-hapu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hapu}
+      TZ: ${APP_TIMEZONE:-Asia/Colombo}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-hapu} -d $${POSTGRES_DB:-haputele}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  # Local self-hosted LiveKit is disabled — using LiveKit Cloud instead (see
+  # LIVEKIT_URL in .env). Re-enable this block to switch back to self-hosted.
+  # livekit:
+  #   image: livekit/livekit-server:latest
+  #   restart: unless-stopped
+  #   command: --dev --bind 0.0.0.0
+  #   environment:
+  #     LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:-devsecret-must-be-at-least-32-chars-long}"
+  #     NODE_IP: ${LIVEKIT_NODE_IP:-127.0.0.1}
+  #   ports:
+  #     - "7880:7880"
+  #     - "7881:7881"
+  #     - "7882:7882/udp"
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-hapu}:${POSTGRES_PASSWORD:-hapu}@db:5432/${POSTGRES_DB:-haputele}
+      DB_HOST: db
+      DB_PORT: 5432
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      JWT_ALG: ${JWT_ALG:-HS256}
+      JWT_EXPIRE_MIN: ${JWT_EXPIRE_MIN:-480}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      HEALTHWORKER_USERNAME: ${HEALTHWORKER_USERNAME:-healthworker}
+      HEALTHWORKER_PASSWORD: ${HEALTHWORKER_PASSWORD:-H}
+      SKIP_SEED: ${SKIP_SEED:-}
+      SEED_DEV_ACCOUNTS: ${SEED_DEV_ACCOUNTS:-}
+      MASTER_CONSENT_VERSION: ${MASTER_CONSENT_VERSION:-v1}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Colombo}
+      TZ: ${APP_TIMEZONE:-Asia/Colombo}
+      LIVEKIT_URL: ${LIVEKIT_URL:-}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+    volumes:
+      # Persists the plaintext setup-token file across container restarts.
+      # `docker compose down -v` clears it (same volume lifecycle as db_data).
+      - api_data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8000}:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # NEXT_PUBLIC_* must be present at build time — Next inlines them into
+        # the client bundle. Empty here means the client uses the relative
+        # "/api" prefix and Next.js's rewrite proxies to the api container,
+        # so the bundle works on any hostname (localhost, LAN, tunnel, prod).
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL-}
+        NEXT_PUBLIC_APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Colombo}
+        NEXT_PUBLIC_LIVEKIT_URL: ${NEXT_PUBLIC_LIVEKIT_URL:-${LIVEKIT_URL:-}}
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL-}
+      NEXT_PUBLIC_APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Colombo}
+      NEXT_PUBLIC_LIVEKIT_URL: ${NEXT_PUBLIC_LIVEKIT_URL:-${LIVEKIT_URL:-}}
+      TZ: ${APP_TIMEZONE:-Asia/Colombo}
+    depends_on:
+      - api
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
+volumes:
+  db_data:
+  api_data:

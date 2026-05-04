@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #fafafa;
+    --foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #0052ff;
+    --accent-secondary: #4d7cff;
+    --accent-foreground: #ffffff;
+    --border: #e2e8f0;
+    --card: #ffffff;
+    --ring: #0052ff;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)] font-sans;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  ::selection {
+    background: rgba(0, 82, 255, 0.18);
+    color: var(--foreground);
+  }
+
+  /* Honor user motion preferences. Continuous animations (rotating ring,
+     floating cards) collapse to nothing; entrance/transition feel snappy. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    background: linear-gradient(to right, var(--accent), var(--accent-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .gradient-bg {
+    background: linear-gradient(to right, var(--accent), var(--accent-secondary));
+  }
+
+  .gradient-bg-diagonal {
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  }
+
+  /* Subtle dot textures used on inverted (dark) sections vs. light surfaces. */
+  .dot-pattern-dark {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .dot-pattern-light {
+    background-image: radial-gradient(circle, rgba(15, 23, 42, 0.05) 1.5px, transparent 1.5px);
+    background-size: 32px 32px;
+  }
+}
