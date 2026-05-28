@@ -87,25 +87,19 @@ def test_full_setup_flow(client, seeded_setup_token):
     # initialize — cookies auto-sent by the client; CSRF echo in header.
     r = client.post("/setup/initialize", json=_body(), headers=_csrf(client))
     assert r.status_code == 201, r.text
-    assert r.json()["ok"] is True
-    assert r.json()["loginPath"] == "/login"
+    out = r.json()
+    assert out["ok"] is True
+    assert out["username"] == "ops"
+    assert out["role"] == "sys-admin"
+    # The setup cookie is consumed; a real sys-admin session takes its place.
+    assert not client.cookies.get("setup_session"), "setup_session must be cleared"
+    assert client.cookies.get("session"), "session cookie missing after initialize"
+    assert client.cookies.get("csrf_token"), "csrf_token cookie missing after initialize"
 
     # status flips to true after init
     r = client.get("/setup/status")
     assert r.status_code == 200
     assert r.json() == {"initialized": True}
-
-    # login as the new sys-admin — sets session + new csrf_token.
-    r = client.post(
-        "/auth/login",
-        json={"username": "ops", "password": "correct-horse-battery-staple"},
-    )
-    assert r.status_code == 200, r.text
-    out = r.json()
-    assert out["role"] == "sys-admin"
-    assert out["username"] == "ops"
-    assert "token" not in out, "JWT must never appear in the response body"
-    assert client.cookies.get("session"), "session cookie missing after login"
 
     # sys-admin endpoints reachable via the cookie. GETs don't need CSRF.
     r = client.get("/sysadmin/me")
@@ -132,6 +126,29 @@ def test_full_setup_flow(client, seeded_setup_token):
     # A protected route now refuses us.
     r = client.get("/auth/me")
     assert r.status_code == 401
+
+
+def test_initialize_auto_logs_in_sysadmin(client, seeded_setup_token):
+    """The wizard hands off into an authenticated sys-admin session, so
+    the operator never types the password they just chose. The setup
+    cookie is consumed atomically with the swap.
+    """
+    r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
+    assert r.status_code == 200
+    assert client.cookies.get("setup_session")
+
+    r = client.post("/setup/initialize", json=_body(), headers=_csrf(client))
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body == {"ok": True, "username": "ops", "role": "sys-admin"}
+    assert not client.cookies.get("setup_session")
+    assert client.cookies.get("session")
+    assert client.cookies.get("csrf_token")
+
+    # Prove the session is valid: an authenticated read works.
+    r = client.get("/auth/me")
+    assert r.status_code == 200
+    assert r.json() == {"username": "ops", "role": "sys-admin"}
 
 
 # ── 3. Post-init rejections ────────────────────────────────────────

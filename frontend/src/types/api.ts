@@ -289,7 +289,11 @@ export type InitializeSystemRequest = {
   masterConsentVersion: string;
 };
 
-export type InitializeSystemResponse = { ok: boolean; loginPath: string };
+export type InitializeSystemResponse = {
+  ok: boolean;
+  username: string;
+  role: "sys-admin";
+};
 
 // ── Sys-admin read-only views ─────────────────────────────────────────
 

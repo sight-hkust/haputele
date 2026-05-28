@@ -29,10 +29,12 @@ from ..security import (
     CSRF_HEADER_NAME,
     SETUP_SESSION_COOKIE_NAME,
     clear_setup_session_cookies,
+    create_token,
     csrf_tokens_match,
     decode_token,
     generate_csrf_token,
     hash_password,
+    set_session_cookies,
     set_setup_session_cookies,
 )
 from ..services.system_config import get_system_config, reload_system_config
@@ -152,7 +154,8 @@ class InitializeIn(BaseModel):
 
 class InitializeOut(BaseModel):
     ok: bool
-    loginPath: str
+    username: str
+    role: str  # always "sys-admin" today; explicit so the client doesn't infer it
 
 
 class SetupStatusOut(BaseModel):
@@ -264,7 +267,16 @@ def initialize(
         pass
 
     reload_system_config(db)
-    # Burn the setup cookies — the wizard is single-use and the operator
-    # is about to log in as sys-admin, which mints its own cookie pair.
+    # Hand the wizard off into an authenticated sys-admin session in the
+    # same response: clear the single-purpose setup cookies, then mint
+    # the real session+csrf pair so stage 3 ("operating accounts") runs
+    # without a second password prompt.
     clear_setup_session_cookies(response)
-    return InitializeOut(ok=True, loginPath="/login")
+    session_token, _expires = create_token(body.sysAdmin.username, "sys-admin")
+    set_session_cookies(
+        response,
+        session_token=session_token,
+        csrf_token=generate_csrf_token(),
+        max_age_seconds=settings.JWT_EXPIRE_MIN * 60,
+    )
+    return InitializeOut(ok=True, username=body.sysAdmin.username, role="sys-admin")
