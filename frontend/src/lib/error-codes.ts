@@ -48,7 +48,7 @@ const MESSAGES: Record<string, string> = {
   setup_token_invalid: "That setup token isn't valid. Check the api container logs for the current banner.",
   setup_session_invalid: "Your setup session expired. Restart the wizard with a fresh token.",
   setup_token_missing: "No setup token is active. Restart the api container to mint a new one.",
-  setup_password_too_short: "Choose a password at least 12 characters long.",
+  setup_password_too_short: "Choose a password at least 10 characters long.",
   setup_password_weak: "That password is on the common-weak list. Pick something less obvious.",
   setup_username_reserved: "That username is reserved by the system seed. Pick something else.",
   setup_username_taken: "That username is already in use.",

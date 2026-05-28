@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, KeyRound, Plus, ServerCog, Trash2, Users } from "lucide-react";
@@ -478,18 +478,17 @@ type DraftAccount = {
   passwordConfirm: string;
 };
 
-let _draftSeq = 0;
-function _newDraft(): DraftAccount {
-  _draftSeq += 1;
-  return { id: _draftSeq, username: "", password: "", passwordConfirm: "" };
-}
-
 function OperatingAccountsStage() {
   const router = useRouter();
   const create = useCreateOperatingAccount();
+  const seqRef = useRef(0);
+  const newDraft = useCallback((): DraftAccount => {
+    seqRef.current += 1;
+    return { id: seqRef.current, username: "", password: "", passwordConfirm: "" };
+  }, []);
 
-  const [admins, setAdmins] = useState<DraftAccount[]>([_newDraft()]);
-  const [healthworkers, setHealthworkers] = useState<DraftAccount[]>([_newDraft()]);
+  const [admins, setAdmins] = useState<DraftAccount[]>(() => [newDraft()]);
+  const [healthworkers, setHealthworkers] = useState<DraftAccount[]>(() => [newDraft()]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -503,10 +502,10 @@ function OperatingAccountsStage() {
     setter((rows) => (rows.length > 1 ? rows.filter((r) => r.id !== id) : rows));
 
   const addDraft = (setter: typeof setAdmins) =>
-    setter((rows) => [...rows, _newDraft()]);
+    setter((rows) => [...rows, newDraft()]);
 
   const hasAnyFilled = (rows: DraftAccount[]) =>
-    rows.some((r) => r.username.trim() || r.password);
+    rows.some((r) => r.username.trim() || r.password || r.passwordConfirm);
 
   const onSkip = () => {
     router.replace("/sysadmin");
@@ -535,6 +534,14 @@ function OperatingAccountsStage() {
         setError("Every row needs a username, or remove it.");
         return;
       }
+      if (!r.password) {
+        setError(`Password is required for ${r.username.trim()}.`);
+        return;
+      }
+      if (r.password.length < 10) {
+        setError(`Password for ${r.username.trim()} must be at least 10 characters.`);
+        return;
+      }
       if (r.password !== r.passwordConfirm) {
         setError(`Password and confirmation do not match for ${r.username.trim()}.`);
         return;
@@ -549,6 +556,9 @@ function OperatingAccountsStage() {
           password: r.password,
           role: "admin",
         });
+        // Drop the just-created row from state so a partial-failure
+        // retry doesn't replay it as `username_taken`.
+        setAdmins((rows) => rows.filter((existing) => existing.id !== r.id));
       }
       for (const r of hwRows) {
         await create.mutateAsync({
@@ -556,9 +566,13 @@ function OperatingAccountsStage() {
           password: r.password,
           role: "healthworker",
         });
+        setHealthworkers((rows) => rows.filter((existing) => existing.id !== r.id));
       }
       router.replace("/sysadmin");
     } catch (err) {
+      // `api()` throws ApiError with .error; surface the explained copy
+      // from the error-codes table. Already-created rows have been
+      // removed above so the visible rows are only the unprocessed/failed ones.
       if (err instanceof ApiError) {
         setError(explainError(err.error));
       } else {
@@ -644,50 +658,52 @@ function AccountDraftRow({
   onRemove: (() => void) | null;
   showLabel: boolean;
 }) {
-  // showLabel keeps the label on the first row of each section; subsequent
-  // rows reuse the column headers visually but each input still gets an
-  // accessible label via aria-label so screen readers don't lose context.
+  const usernameInput = (
+    <Input
+      id={`${idPrefix}-user`}
+      aria-label="Username"
+      value={value.username}
+      onChange={(e) => onChange({ username: e.target.value })}
+      autoComplete="username"
+    />
+  );
+  const passwordInput = (
+    <Input
+      id={`${idPrefix}-pw`}
+      aria-label="Password"
+      type="password"
+      value={value.password}
+      onChange={(e) => onChange({ password: e.target.value })}
+      autoComplete="new-password"
+      minLength={10}
+    />
+  );
+  const confirmInput = (
+    <Input
+      id={`${idPrefix}-pw2`}
+      aria-label="Confirm password"
+      type="password"
+      value={value.passwordConfirm}
+      onChange={(e) => onChange({ passwordConfirm: e.target.value })}
+      autoComplete="new-password"
+    />
+  );
+
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-      <Field
-        label={showLabel ? "Username" : ""}
-        htmlFor={`${idPrefix}-user`}
-      >
-        <Input
-          id={`${idPrefix}-user`}
-          aria-label="Username"
-          value={value.username}
-          onChange={(e) => onChange({ username: e.target.value })}
-          autoComplete="username"
-        />
-      </Field>
-      <Field
-        label={showLabel ? "Password" : ""}
-        htmlFor={`${idPrefix}-pw`}
-      >
-        <Input
-          id={`${idPrefix}-pw`}
-          aria-label="Password"
-          type="password"
-          value={value.password}
-          onChange={(e) => onChange({ password: e.target.value })}
-          autoComplete="new-password"
-          minLength={10}
-        />
-      </Field>
-      <Field
-        label={showLabel ? "Confirm password" : ""}
-        htmlFor={`${idPrefix}-pw2`}
-      >
-        <Input
-          id={`${idPrefix}-pw2`}
-          aria-label="Confirm password"
-          type="password"
-          value={value.passwordConfirm}
-          onChange={(e) => onChange({ passwordConfirm: e.target.value })}
-          autoComplete="new-password"
-        />
-      </Field>
+      {showLabel ? (
+        <>
+          <Field label="Username" htmlFor={`${idPrefix}-user`}>{usernameInput}</Field>
+          <Field label="Password" htmlFor={`${idPrefix}-pw`}>{passwordInput}</Field>
+          <Field label="Confirm password" htmlFor={`${idPrefix}-pw2`}>{confirmInput}</Field>
+        </>
+      ) : (
+        <>
+          {usernameInput}
+          {passwordInput}
+          {confirmInput}
+        </>
+      )}
       {onRemove && (
         <div className="md:col-span-3">
           <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
