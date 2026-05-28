@@ -511,7 +511,7 @@ def seed_queue(db, doctors: list[Doctor], patients: list[Patient], hw_username: 
 def main() -> None:
     db = SessionLocal()
     try:
-        # The shared HW account name is whatever seed.py wrote; look it up so
+        # The shared HW account must already exist (created via the setup wizard); look it up so
         # availability / queue rows pass the FK to accounts.username.
         hw = db.query(Account).filter(Account.role == "healthworker").one()
 

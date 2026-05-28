@@ -1,8 +1,8 @@
 """Runtime view of the system_config singleton row.
 
 Env vars (settings.APP_TIMEZONE, settings.MASTER_CONSENT_VERSION) are
-first-run seed defaults only — the setup wizard reads them as form
-defaults. Runtime consumers (patients router, pdf, exports) read from
+first-run wizard prefill defaults only — the setup wizard reads them
+as form defaults. Runtime consumers (patients router, pdf, exports) read from
 the cached LiveConfig populated here.
 
 Lifecycle:
