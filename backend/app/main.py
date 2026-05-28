@@ -27,6 +27,7 @@ from .routers import (
     summary,
     sysadmin,
 )
+from .services.storage import ensure_bucket
 from .services.system_config import load_system_config
 
 
@@ -40,6 +41,7 @@ async def lifespan(app: FastAPI):
         load_system_config(db)
     finally:
         db.close()
+    ensure_bucket()
     yield
 
 
