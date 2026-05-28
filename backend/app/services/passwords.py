@@ -38,13 +38,16 @@ RESERVED_USERNAMES = frozenset({"admin", "healthworker"})
 def validate_new_account(*, username: str, password: str) -> None:
     """Apply both rules; raise the first `unprocessable` we find.
 
-    Raises with `setup_password_too_short` / `setup_password_weak` /
-    `setup_username_reserved`. Caller is responsible for username-taken
-    checks (those need a DB lookup).
+    Raises with `setup_password_weak` / `setup_password_too_short` /
+    `setup_username_reserved`. Weak-check runs *before* length-check so
+    a known-bad password like "password1" is reported as weak (you
+    picked a known-bad base) rather than short — the security signal
+    is more useful than the typing-more signal. Caller is responsible
+    for username-taken checks (those need a DB lookup).
     """
-    if len(password) < MIN_PASSWORD_LEN:
-        raise unprocessable("setup_password_too_short", min=MIN_PASSWORD_LEN)
     if password.lower() in _WEAK_PASSWORDS:
         raise unprocessable("setup_password_weak")
+    if len(password) < MIN_PASSWORD_LEN:
+        raise unprocessable("setup_password_too_short", min=MIN_PASSWORD_LEN)
     if username.lower() in RESERVED_USERNAMES:
         raise unprocessable("setup_username_reserved")
