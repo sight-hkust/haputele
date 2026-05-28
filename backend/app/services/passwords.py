@@ -1,4 +1,4 @@
-"""Shared password and username validation for account-creation flows.
+"""Shared password validation for account-creation flows.
 
 Two call sites today: POST /setup/initialize (creates the sys-admin) and
 POST /sysadmin/accounts (creates admins/healthworkers). The same rules
@@ -30,24 +30,17 @@ _WEAK_PASSWORDS = frozenset({
     "change-me-to-a-long-random-string",
 })
 
-# Don't shadow the existing singleton-by-role accounts implied by older
-# code paths. Lower-cased comparison.
-RESERVED_USERNAMES = frozenset({"admin", "healthworker"})
 
+def validate_new_password(password: str) -> None:
+    """Apply password rules; raise the first `unprocessable` we find.
 
-def validate_new_account(*, username: str, password: str) -> None:
-    """Apply both rules; raise the first `unprocessable` we find.
-
-    Raises with `setup_password_weak` / `setup_password_too_short` /
-    `setup_username_reserved`. Weak-check runs *before* length-check so
-    a known-bad password like "password1" is reported as weak (you
-    picked a known-bad base) rather than short — the security signal
-    is more useful than the typing-more signal. Caller is responsible
-    for username-taken checks (those need a DB lookup).
+    Raises `setup_password_weak` / `setup_password_too_short`. Weak-check
+    runs *before* length-check so a known-bad password like "password1"
+    is reported as weak (you picked a known-bad base) rather than short —
+    the security signal is more useful than the typing-more signal.
+    Caller is responsible for username-taken checks (DB lookup).
     """
     if password.lower() in _WEAK_PASSWORDS:
         raise unprocessable("setup_password_weak")
     if len(password) < MIN_PASSWORD_LEN:
         raise unprocessable("setup_password_too_short", min=MIN_PASSWORD_LEN)
-    if username.lower() in RESERVED_USERNAMES:
-        raise unprocessable("setup_username_reserved")

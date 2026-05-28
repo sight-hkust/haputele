@@ -222,16 +222,6 @@ def test_initialize_with_short_password_returns_422(client, seeded_setup_token):
     assert _error_code(r) == "setup_password_too_short"
 
 
-def test_initialize_with_reserved_username_returns_422(client, seeded_setup_token):
-    r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
-    assert r.status_code == 200
-    body = _body()
-    body["sysAdmin"]["username"] = "admin"
-    r = client.post("/setup/initialize", json=body, headers=_csrf(client))
-    assert r.status_code == 422
-    assert _error_code(r) == "setup_username_reserved"
-
-
 # ── 4. CSRF on the user flow ──────────────────────────────────────
 
 def test_logout_without_csrf_returns_403(client, seeded_setup_token):

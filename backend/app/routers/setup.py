@@ -37,7 +37,7 @@ from ..security import (
     set_session_cookies,
     set_setup_session_cookies,
 )
-from ..services.passwords import validate_new_account
+from ..services.passwords import validate_new_password
 from ..services.system_config import get_system_config, reload_system_config
 
 
@@ -180,10 +180,7 @@ def initialize(
     if get_system_config().is_initialized:
         raise conflict("setup_already_completed")
 
-    validate_new_account(
-        username=body.sysAdmin.username,
-        password=body.sysAdmin.password,
-    )
+    validate_new_password(body.sysAdmin.password)
 
     # Block obviously-empty institute identity fields.
     addr_lines = [s for s in body.instituteIdentity.addressLines if s.strip()]

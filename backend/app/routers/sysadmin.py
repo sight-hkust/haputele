@@ -14,7 +14,7 @@ from ..deps import CurrentUser, db_dep, require_role
 from ..errors import unprocessable
 from ..models import Account
 from ..security import hash_password
-from ..services.passwords import validate_new_account
+from ..services.passwords import validate_new_password
 from ..services.system_config import get_system_config
 
 
@@ -67,7 +67,7 @@ def create_account(
     db: Session = Depends(db_dep),
     _: CurrentUser = Depends(require_role("sys-admin")),
 ) -> AccountOut:
-    validate_new_account(username=payload.username, password=payload.password)
+    validate_new_password(payload.password)
     # Fast-path duplicate check; the PK below is authoritative against races.
     if db.get(Account, payload.username):
         raise unprocessable("username_taken")

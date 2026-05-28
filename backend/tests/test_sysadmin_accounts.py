@@ -103,18 +103,6 @@ def test_rejects_weak_password(client, seeded_setup_token):
     assert _error_code(r) == "setup_password_weak"
 
 
-def test_rejects_reserved_username(client, seeded_setup_token):
-    _initialize_and_login_sysadmin(client, seeded_setup_token)
-
-    r = client.post(
-        "/sysadmin/accounts",
-        json={"username": "Admin", "password": "correct-horse-battery-staple", "role": "admin"},
-        headers=_csrf(client),
-    )
-    assert r.status_code == 422
-    assert _error_code(r) == "setup_username_reserved"
-
-
 def test_rejects_duplicate_username(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
