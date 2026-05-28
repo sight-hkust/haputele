@@ -479,6 +479,10 @@ type DraftAccount = {
   username: string;
   password: string;
   passwordConfirm: string;
+  // Per-row error. Populated by onSubmit's validation pass or by an API
+  // failure on this row; cleared at the start of every onSubmit so a fix
+  // and resubmit walks the rows from a clean slate.
+  error?: string;
 };
 
 function OperatingAccountsStage() {
@@ -492,7 +496,6 @@ function OperatingAccountsStage() {
 
   const [admins, setAdmins] = useState<DraftAccount[]>(() => [newDraft()]);
   const [healthworkers, setHealthworkers] = useState<DraftAccount[]>(() => [newDraft()]);
-  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const updateDraft = (
@@ -514,9 +517,17 @@ function OperatingAccountsStage() {
     router.replace("/sysadmin");
   };
 
+  // Pure validator — never touches state, returns the message or undefined.
+  const validateRow = (r: DraftAccount): string | undefined => {
+    if (!r.username.trim()) return "Username is required.";
+    if (!r.password) return "Password is required.";
+    if (r.password.length < 10) return "Password must be at least 10 characters.";
+    if (r.password !== r.passwordConfirm) return "Passwords do not match.";
+    return undefined;
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     // A row counts as "intended" if the operator typed anything in it.
     // Fully-empty rows are silently dropped — they're placeholder slots
@@ -532,55 +543,58 @@ function OperatingAccountsStage() {
       return;
     }
 
-    for (const r of [...adminRows, ...hwRows]) {
-      if (!r.username.trim()) {
-        setError("Every row needs a username, or remove it.");
-        return;
-      }
-      if (!r.password) {
-        setError(`Password is required for ${r.username.trim()}.`);
-        return;
-      }
-      if (r.password.length < 10) {
-        setError(`Password for ${r.username.trim()} must be at least 10 characters.`);
-        return;
-      }
-      if (r.password !== r.passwordConfirm) {
-        setError(`Password and confirmation do not match for ${r.username.trim()}.`);
-        return;
-      }
-    }
+    // Validation gate: collect every row's error in one pass and apply
+    // them all at once. If any row fails, no API calls fire — so partial
+    // success (some rows created, one row left over with an error) is
+    // impossible from the typo path.
+    const errors = new Map<number, string | undefined>();
+    for (const r of [...adminRows, ...hwRows]) errors.set(r.id, validateRow(r));
+    const hasInvalid = [...errors.values()].some((m) => m !== undefined);
 
+    setAdmins((rows) => rows.map((r) =>
+      errors.has(r.id) ? { ...r, error: errors.get(r.id) } : { ...r, error: undefined }
+    ));
+    setHealthworkers((rows) => rows.map((r) =>
+      errors.has(r.id) ? { ...r, error: errors.get(r.id) } : { ...r, error: undefined }
+    ));
+    if (hasInvalid) return;
+
+    // All validation passed — submit everything. If a row fails on the
+    // server (e.g., username collides with a pre-existing DB row), put
+    // the message on that row and stop; already-created rows fall away
+    // from state so a retry doesn't replay them as username_taken.
     setSubmitting(true);
     try {
+      const submitOne = async (
+        r: DraftAccount,
+        role: "admin" | "healthworker",
+        setter: typeof setAdmins,
+      ): Promise<boolean> => {
+        try {
+          await create.mutateAsync({
+            username: r.username.trim(),
+            password: r.password,
+            role,
+          });
+          setter((rows) => rows.filter((existing) => existing.id !== r.id));
+          return true;
+        } catch (err) {
+          const msg =
+            err instanceof ApiError
+              ? explainError(err.error)
+              : "Couldn't reach the server. Try again in a moment.";
+          updateDraft(setter, r.id, { error: msg });
+          return false;
+        }
+      };
+
       for (const r of adminRows) {
-        await create.mutateAsync({
-          username: r.username.trim(),
-          password: r.password,
-          role: "admin",
-        });
-        // Drop the just-created row from state so a partial-failure
-        // retry doesn't replay it as `username_taken`.
-        setAdmins((rows) => rows.filter((existing) => existing.id !== r.id));
+        if (!(await submitOne(r, "admin", setAdmins))) return;
       }
       for (const r of hwRows) {
-        await create.mutateAsync({
-          username: r.username.trim(),
-          password: r.password,
-          role: "healthworker",
-        });
-        setHealthworkers((rows) => rows.filter((existing) => existing.id !== r.id));
+        if (!(await submitOne(r, "healthworker", setHealthworkers))) return;
       }
       router.replace("/sysadmin");
-    } catch (err) {
-      // `api()` throws ApiError with .error; surface the explained copy
-      // from the error-codes table. Already-created rows have been
-      // removed above so the visible rows are only the unprocessed/failed ones.
-      if (err instanceof ApiError) {
-        setError(explainError(err.error));
-      } else {
-        setError("Couldn't reach the server. Try again in a moment.");
-      }
     } finally {
       setSubmitting(false);
     }
@@ -627,8 +641,6 @@ function OperatingAccountsStage() {
           <Plus className="size-4" aria-hidden /> Add another healthworker
         </Button>
       </FieldGroup>
-
-      {error && <ErrorPill>{error}</ErrorPill>}
 
       <div className="flex items-center justify-between gap-3">
         <Button type="button" variant="ghost" onClick={onSkip} disabled={submitting}>
@@ -706,6 +718,11 @@ function AccountDraftRow({
           {passwordInput}
           {confirmInput}
         </>
+      )}
+      {value.error && (
+        <div className="md:col-span-3">
+          <ErrorPill>{value.error}</ErrorPill>
+        </div>
       )}
       {onRemove && (
         <div className="md:col-span-3">
