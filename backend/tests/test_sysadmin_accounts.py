@@ -64,6 +64,30 @@ def test_create_healthworker_account(client, seeded_setup_token):
     assert r.json() == {"username": "bob", "role": "healthworker"}
 
 
+def test_multiple_admins_and_healthworkers_allowed(client, seeded_setup_token):
+    """Migration 0007 dropped the per-role singleton indexes for admin and
+    healthworker. The wizard's stage 3 lets the operator add several of
+    each, so this test guards against the index being reintroduced.
+    """
+    _initialize_and_login_sysadmin(client, seeded_setup_token)
+
+    for name in ("alice", "bob"):
+        r = client.post(
+            "/sysadmin/accounts",
+            json={"username": name, "password": "correct-horse-battery-staple", "role": "admin"},
+            headers=_csrf(client),
+        )
+        assert r.status_code == 201, f"second admin failed: {r.text}"
+
+    for name in ("carol", "dave"):
+        r = client.post(
+            "/sysadmin/accounts",
+            json={"username": name, "password": "correct-horse-battery-staple", "role": "healthworker"},
+            headers=_csrf(client),
+        )
+        assert r.status_code == 201, f"second healthworker failed: {r.text}"
+
+
 def test_rejects_disallowed_role(client, seeded_setup_token):
     """Only admin and healthworker can be created via this endpoint.
     Doctors require a profile (use POST /doctors). Sys-admin is singleton.
