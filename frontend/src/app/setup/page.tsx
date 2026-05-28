@@ -10,6 +10,7 @@ import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { Select } from "@/components/primitives/select";
 import { ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import {
@@ -226,6 +227,7 @@ function ConfigureStage({
   onSessionExpired: () => void;
   onInitialized: () => void;
 }) {
+  const { login } = useAuth();
   const initialize = useInitializeSystem();
   const timezones = useMemo(listTimezones, []);
 
@@ -265,7 +267,7 @@ function ConfigureStage({
     }
 
     try {
-      await initialize.mutateAsync({
+      const result = await initialize.mutateAsync({
         sysAdmin: { username: username.trim(), password },
         instituteIdentity: {
           name: instituteName.trim(),
@@ -277,6 +279,7 @@ function ConfigureStage({
         exportTimezone: exportTimezone.trim(),
         masterConsentVersion: masterConsentVersion.trim(),
       });
+      login({ username: result.username, role: result.role, expiresAt: result.expiresAt });
       onInitialized();
     } catch (err) {
       if (err instanceof ApiError) {

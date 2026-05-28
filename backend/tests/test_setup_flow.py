@@ -141,7 +141,10 @@ def test_initialize_auto_logs_in_sysadmin(client, seeded_setup_token):
     r = client.post("/setup/initialize", json=_body(), headers=_csrf(client))
     assert r.status_code == 201, r.text
     body = r.json()
-    assert body == {"ok": True, "username": "ops", "role": "sys-admin"}
+    assert body["ok"] is True
+    assert body["username"] == "ops"
+    assert body["role"] == "sys-admin"
+    assert "expiresAt" in body
     assert not client.cookies.get("setup_session")
     assert client.cookies.get("session")
     assert client.cookies.get("csrf_token")

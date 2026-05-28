@@ -130,6 +130,7 @@ class InitializeOut(BaseModel):
     ok: bool
     username: str
     role: str  # always "sys-admin" today; explicit so the client doesn't infer it
+    expiresAt: datetime
 
 
 class SetupStatusOut(BaseModel):
@@ -251,11 +252,16 @@ def initialize(
     # the real session+csrf pair so stage 3 ("operating accounts") runs
     # without a second password prompt.
     clear_setup_session_cookies(response)
-    session_token, _expires = create_token(body.sysAdmin.username, SYSADMIN_ROLE)
+    session_token, expires_at = create_token(body.sysAdmin.username, SYSADMIN_ROLE)
     set_session_cookies(
         response,
         session_token=session_token,
         csrf_token=generate_csrf_token(),
         max_age_seconds=settings.JWT_EXPIRE_MIN * 60,
     )
-    return InitializeOut(ok=True, username=body.sysAdmin.username, role=SYSADMIN_ROLE)
+    return InitializeOut(
+        ok=True,
+        username=body.sysAdmin.username,
+        role=SYSADMIN_ROLE,
+        expiresAt=expires_at,
+    )

@@ -1,6 +1,6 @@
 """Generate / reuse / rotate the first-run setup token.
 
-Invoked from entrypoint.sh between `alembic upgrade head` and the seeder.
+Invoked from entrypoint.sh between `alembic upgrade head` and app startup.
 
 Behaviour:
   - System already initialized → no-op; ensure /data/setup-token is gone.

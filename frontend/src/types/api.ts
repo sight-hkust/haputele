@@ -293,6 +293,7 @@ export type InitializeSystemResponse = {
   ok: boolean;
   username: string;
   role: "sys-admin";
+  expiresAt: string;
 };
 
 // POST /sysadmin/accounts — sys-admin only. Doctors use POST /doctors.
