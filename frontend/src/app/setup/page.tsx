@@ -220,6 +220,19 @@ function TokenStage({ onVerified }: { onVerified: () => void }) {
 
 // ── Step 2 — configure ─────────────────────────────────────────────────
 
+// Backend error codes are field-specific on the wire; the frontend used to
+// render them all in a single bottom-of-form banner, which made the operator
+// guess which input was wrong. This map routes each code to the input that
+// owns it. Codes not in the map fall through to `_form` (the top-level pill).
+const BACKEND_ERROR_TO_FIELD: Record<string, string> = {
+  setup_password_too_short: "password",
+  setup_password_weak: "password",
+  setup_username_taken: "username",
+  setup_address_required: "addressLines",
+  setup_institute_name_required: "instituteName",
+  setup_institute_phone_required: "contactPhone",
+};
+
 function ConfigureStage({
   onSessionExpired,
   onInitialized,
@@ -241,30 +254,36 @@ function ConfigureStage({
   const [appTimezone, setAppTimezone] = useState(DEFAULT_TZ);
   const [exportTimezone, setExportTimezone] = useState(DEFAULT_TZ);
   const [masterConsentVersion, setMasterConsentVersion] = useState("v1");
-  const [error, setError] = useState<string | null>(null);
+  // Per-field errors. `_form` is reserved for non-field-specific messages
+  // (network failure, session expired). Cleared on every onSubmit so a
+  // resubmit walks the rules from a clean slate.
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
 
-    // Cheap client-side validation — server validates again and is authoritative.
-    if (password.length < 10) {
-      setError("Password must be at least 10 characters.");
-      return;
-    }
-    if (password !== passwordConfirm) {
-      setError("Passwords don't match.");
-      return;
-    }
+    // Validation gate: walk every field, collect every error, apply them
+    // in one pass. If anything is wrong, no API call fires.
+    const next: Record<string, string> = {};
+
+    if (!username.trim()) next.username = "Username is required.";
+
+    if (!password) next.password = "Password is required.";
+    else if (password.length < 10) next.password = "Password must be at least 10 characters.";
+
+    if (!passwordConfirm) next.passwordConfirm = "Confirm your password.";
+    else if (password && password !== passwordConfirm) next.passwordConfirm = "Passwords don't match.";
+
+    if (!instituteName.trim()) next.instituteName = "Institute name is required.";
+
     const lines = addressLines.map((s) => s.trim()).filter(Boolean);
-    if (lines.length === 0) {
-      setError("Provide at least one address line.");
-      return;
-    }
-    if (!instituteName.trim() || !contactPhone.trim() || !contactEmail.trim()) {
-      setError("Fill every institute identity field.");
-      return;
-    }
+    if (lines.length === 0) next.addressLines = "Provide at least one address line.";
+
+    if (!contactPhone.trim()) next.contactPhone = "Contact phone is required.";
+    if (!contactEmail.trim()) next.contactEmail = "Contact email is required.";
+
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
 
     try {
       const result = await initialize.mutateAsync({
@@ -284,14 +303,15 @@ function ConfigureStage({
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.error === "setup_session_invalid") {
-          setError("Your setup session expired. Restart with a fresh token.");
+          setErrors({ _form: "Your setup session expired. Restart with a fresh token." });
           // Small delay so the operator sees the message before we bounce.
           setTimeout(onSessionExpired, 1200);
           return;
         }
-        setError(explainError(err.error));
+        const field = BACKEND_ERROR_TO_FIELD[err.error] ?? "_form";
+        setErrors({ [field]: explainError(err.error) });
       } else {
-        setError("Couldn't reach the server. Try again in a moment.");
+        setErrors({ _form: "Couldn't reach the server. Try again in a moment." });
       }
     }
   };
@@ -304,20 +324,20 @@ function ConfigureStage({
     >
       {/* Sys-admin account */}
       <FieldGroup title="Sys-admin account">
-        <Field label="Username" htmlFor="sa-user">
+        <Field label="Username" htmlFor="sa-user" error={errors.username}>
           <Input
             id="sa-user"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="e.g. ops"
             autoComplete="username"
-            required
           />
         </Field>
         <Field
           label="Password"
           htmlFor="sa-pw"
           hint="At least 10 characters. Avoid words like 'admin'."
+          error={errors.password}
         >
           <Input
             id="sa-pw"
@@ -325,32 +345,27 @@ function ConfigureStage({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
-            minLength={10}
-            required
           />
         </Field>
-        <Field label="Confirm password" htmlFor="sa-pw2">
+        <Field label="Confirm password" htmlFor="sa-pw2" error={errors.passwordConfirm}>
           <Input
             id="sa-pw2"
             type="password"
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
             autoComplete="new-password"
-            minLength={10}
-            required
           />
         </Field>
       </FieldGroup>
 
       {/* Institute identity */}
       <FieldGroup title="Institute identity">
-        <Field label="Institute name" htmlFor="i-name">
+        <Field label="Institute name" htmlFor="i-name" error={errors.instituteName}>
           <Input
             id="i-name"
             value={instituteName}
             onChange={(e) => setInstituteName(e.target.value)}
             placeholder="e.g. HapuTele Demo Clinic"
-            required
           />
         </Field>
         <div className="flex flex-col gap-2">
@@ -364,7 +379,7 @@ function ConfigureStage({
                   next[idx] = e.target.value;
                   setAddressLines(next);
                 }}
-                placeholder={idx === 0 ? "Street and number" : "City / postcode"}
+                placeholder="Address line"
               />
               {addressLines.length > 1 && (
                 <Button
@@ -389,24 +404,23 @@ function ConfigureStage({
             <Plus className="h-4 w-4" />
             Add line
           </Button>
+          {errors.addressLines && <ErrorPill>{errors.addressLines}</ErrorPill>}
         </div>
-        <Field label="Contact phone" htmlFor="i-phone">
+        <Field label="Contact phone" htmlFor="i-phone" error={errors.contactPhone}>
           <Input
             id="i-phone"
             value={contactPhone}
             onChange={(e) => setContactPhone(e.target.value)}
             placeholder="+94 11 555 0100"
-            required
           />
         </Field>
-        <Field label="Contact email" htmlFor="i-email">
+        <Field label="Contact email" htmlFor="i-email" error={errors.contactEmail}>
           <Input
             id="i-email"
             type="email"
             value={contactEmail}
             onChange={(e) => setContactEmail(e.target.value)}
             placeholder="ops@example.com"
-            required
           />
         </Field>
       </FieldGroup>
@@ -456,7 +470,7 @@ function ConfigureStage({
         </Field>
       </FieldGroup>
 
-      {error && <ErrorPill>{error}</ErrorPill>}
+      {errors._form && <ErrorPill>{errors._form}</ErrorPill>}
 
       <Button
         type="submit"
@@ -741,11 +755,13 @@ function Field({
   label,
   htmlFor,
   hint,
+  error,
   children,
 }: {
   label: string;
   htmlFor: string;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -753,6 +769,7 @@ function Field({
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
       {hint && <span className="text-xs text-[var(--muted-foreground)]">{hint}</span>}
+      {error && <ErrorPill>{error}</ErrorPill>}
     </div>
   );
 }
