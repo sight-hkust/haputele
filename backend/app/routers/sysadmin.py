@@ -6,6 +6,7 @@ because they require a profile row beyond plain account credentials.
 """
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from typing import Literal
 
@@ -67,12 +68,23 @@ def create_account(
     _: CurrentUser = Depends(require_role("sys-admin")),
 ) -> AccountOut:
     validate_new_account(username=payload.username, password=payload.password)
+    # Fast-path duplicate check; the PK below is authoritative against races.
     if db.get(Account, payload.username):
         raise unprocessable("username_taken")
-    db.add(Account(
+    account = Account(
         username=payload.username,
         password=hash_password(payload.password),
         role=payload.role,
-    ))
-    db.commit()
+    )
+    db.add(account)
+    try:
+        db.commit()
+    except IntegrityError:
+        # Concurrent insert won the race; the DB's PK uniqueness is the
+        # ultimate source of truth, so we surface the same 422 as the
+        # pre-check rather than leak a 500.
+        db.rollback()
+        raise unprocessable("username_taken")
+    # Account has no server-side defaults today; the response can echo
+    # the payload directly without refreshing from the DB.
     return AccountOut(username=payload.username, role=payload.role)
