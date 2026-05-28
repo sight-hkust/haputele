@@ -47,6 +47,7 @@ const MESSAGES: Record<string, string> = {
   setup_already_completed: "Setup has already been completed. Sign in instead.",
   setup_token_invalid: "That setup token isn't valid. Check the api container logs for the current banner.",
   setup_session_invalid: "Your setup session expired. Restart the wizard with a fresh token.",
+  csrf_failed: "Your setup session got out of sync. Restart the wizard with a fresh token. If it keeps happening, clear localhost cookies in your browser.",
   setup_token_missing: "No setup token is active. Restart the api container to mint a new one.",
   setup_password_too_short: "Choose a password at least 10 characters long.",
   setup_password_weak: "That password is on the common-weak list. Pick something less obvious.",

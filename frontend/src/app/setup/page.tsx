@@ -302,9 +302,15 @@ function ConfigureStage({
       onInitialized();
     } catch (err) {
       if (err instanceof ApiError) {
-        if (err.error === "setup_session_invalid") {
-          setErrors({ _form: "Your setup session expired. Restart with a fresh token." });
-          // Small delay so the operator sees the message before we bounce.
+        if (
+          err.error === "setup_session_invalid" ||
+          err.error === "csrf_failed"
+        ) {
+          // CSRF mismatch in the setup flow is functionally a "session
+          // out of sync" — the cookie pair the wizard handed out doesn't
+          // line up anymore, so the safe move is the same bounce: send
+          // the operator back to the token stage to mint a fresh pair.
+          setErrors({ _form: explainError(err.error) });
           setTimeout(onSessionExpired, 1200);
           return;
         }
