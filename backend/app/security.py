@@ -10,10 +10,12 @@ from .config import settings
 
 
 SESSION_COOKIE_NAME = "session"
-SETUP_SESSION_COOKIE_NAME = "setup_session"
 # The CSRF cookie is intentionally NOT HttpOnly — the frontend reads it
 # via document.cookie and echoes it back in `X-CSRF-Token`. Safe because
 # same-origin policy keeps cross-origin JS from reading it.
+# The setup flow does NOT use a cookie at all: its JWT travels in the
+# verify-token response body and rides back as `Authorization: Bearer`
+# on /setup/initialize. See routers/setup.py for the lifecycle.
 CSRF_COOKIE_NAME = "csrf_token"
 CSRF_HEADER_NAME = "X-CSRF-Token"
 
@@ -96,39 +98,3 @@ def clear_session_cookies(response: Response) -> None:
         )
 
 
-def set_setup_session_cookies(
-    response: Response,
-    *,
-    setup_token: str,
-    csrf_token: str,
-    max_age_seconds: int,
-) -> None:
-    response.set_cookie(
-        key=SETUP_SESSION_COOKIE_NAME,
-        value=setup_token,
-        max_age=max_age_seconds,
-        httponly=True,
-        secure=settings.COOKIE_SECURE,
-        samesite=settings.COOKIE_SAMESITE,
-        domain=settings.COOKIE_DOMAIN or None,
-        path="/",
-    )
-    response.set_cookie(
-        key=CSRF_COOKIE_NAME,
-        value=csrf_token,
-        max_age=max_age_seconds,
-        httponly=False,
-        secure=settings.COOKIE_SECURE,
-        samesite=settings.COOKIE_SAMESITE,
-        domain=settings.COOKIE_DOMAIN or None,
-        path="/",
-    )
-
-
-def clear_setup_session_cookies(response: Response) -> None:
-    for name in (SETUP_SESSION_COOKIE_NAME, CSRF_COOKIE_NAME):
-        response.delete_cookie(
-            key=name,
-            path="/",
-            domain=settings.COOKIE_DOMAIN or None,
-        )

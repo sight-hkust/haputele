@@ -6,12 +6,13 @@ Three scenarios, matching the acceptance criteria in the feature brief:
   2. Full flow: verify-token → initialize (auto-login) → sys-admin endpoint.
   3. Idempotency: a second /setup/initialize returns 409 setup_already_completed.
 
-Auth is cookie-based: POST /setup/verify-token mints a setup_session;
-POST /setup/initialize swaps it for a real session cookie; POST /auth/login
-(used by some tests) mints the same pair directly. The TestClient (httpx)
-auto-persists cookies, so subsequent calls inherit them. For unsafe verbs
-the client also has to echo the CSRF cookie back as `X-CSRF-Token` — that's
-the `_csrf` helper below.
+Auth for the setup flow is **bearer-token-only** — no cookies are set
+during stages 1-2. POST /setup/verify-token returns the setup-session
+JWT in the response body; the wizard echoes it back on /setup/initialize
+as `Authorization: Bearer <jwt>`. /setup/initialize then sets the real
+`session` + `csrf_token` cookies on success, identical to /auth/login.
+After that point the rest of the app uses cookie-based session auth +
+double-submit CSRF (the `_csrf` helper below).
 
 Error responses carry an additional `requestId` field (injected by
 RequestIdMiddleware + the http_exception_handler in main.py). Assertions
@@ -24,10 +25,19 @@ def _error_code(resp) -> str:
 
 
 def _csrf(client) -> dict[str, str]:
-    """Echo the current CSRF cookie as the matching header."""
+    """Echo the current CSRF cookie as the matching header.
+
+    Used by post-init API calls — /auth/logout and any authenticated
+    state-changing endpoint. The setup flow itself doesn't need this.
+    """
     token = client.cookies.get("csrf_token")
     assert token, "csrf_token cookie not set — did the prior request mint a session?"
     return {"X-CSRF-Token": token}
+
+
+def _bearer(token: str) -> dict[str, str]:
+    """Authorization header for /setup/initialize."""
+    return {"Authorization": f"Bearer {token}"}
 
 
 # ── 1. Uninitialized gate ──────────────────────────────────────────
@@ -76,24 +86,25 @@ def _body() -> dict:
 
 
 def test_full_setup_flow(client, seeded_setup_token):
-    # verify-token — sets setup_session + csrf_token cookies.
+    # verify-token — returns the JWT in the body; sets NO cookies.
     r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
     assert r.status_code == 200, r.text
     body = r.json()
     assert "expiresAt" in body
-    assert "setupSessionToken" not in body, "JWT must never appear in the response body"
-    assert client.cookies.get("setup_session"), "setup_session cookie missing"
-    assert client.cookies.get("csrf_token"), "csrf_token cookie missing"
+    assert body["setupSessionToken"], "verify-token must return the JWT in body"
+    assert not client.cookies.get("setup_session"), "no setup cookies in the new flow"
+    assert not client.cookies.get("csrf_token"), "no csrf_token cookie pre-init"
 
-    # initialize — cookies auto-sent by the client; CSRF echo in header.
-    r = client.post("/setup/initialize", json=_body(), headers=_csrf(client))
+    setup_token = body["setupSessionToken"]
+
+    # initialize — bearer in Authorization header; no CSRF check.
+    r = client.post("/setup/initialize", json=_body(), headers=_bearer(setup_token))
     assert r.status_code == 201, r.text
     out = r.json()
     assert out["ok"] is True
     assert out["username"] == "ops"
     assert out["role"] == "sys-admin"
-    # The setup cookie is consumed; a real sys-admin session takes its place.
-    assert not client.cookies.get("setup_session"), "setup_session must be cleared"
+    # Initialize mints the real session pair, just like /auth/login.
     assert client.cookies.get("session"), "session cookie missing after initialize"
     assert client.cookies.get("csrf_token"), "csrf_token cookie missing after initialize"
 
@@ -132,20 +143,21 @@ def test_full_setup_flow(client, seeded_setup_token):
 def test_initialize_auto_logs_in_sysadmin(client, seeded_setup_token):
     """The wizard hands off into an authenticated sys-admin session, so
     the operator never types the password they just chose. The setup
-    cookie is consumed atomically with the swap.
+    JWT lives only in the response body / Authorization header — no
+    cookie is involved during stages 1-2.
     """
     r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
     assert r.status_code == 200
-    assert client.cookies.get("setup_session")
+    setup_token = r.json()["setupSessionToken"]
+    assert not client.cookies.get("setup_session"), "verify-token must not set cookies"
 
-    r = client.post("/setup/initialize", json=_body(), headers=_csrf(client))
+    r = client.post("/setup/initialize", json=_body(), headers=_bearer(setup_token))
     assert r.status_code == 201, r.text
     body = r.json()
     assert body["ok"] is True
     assert body["username"] == "ops"
     assert body["role"] == "sys-admin"
     assert "expiresAt" in body
-    assert not client.cookies.get("setup_session")
     assert client.cookies.get("session")
     assert client.cookies.get("csrf_token")
 
@@ -155,22 +167,34 @@ def test_initialize_auto_logs_in_sysadmin(client, seeded_setup_token):
     assert r.json() == {"username": "ops", "role": "sys-admin"}
 
 
+def test_verify_token_sets_no_cookies(client, seeded_setup_token):
+    """Regression guard against accidentally re-introducing cookie writes
+    in /setup/verify-token. The whole point of the bearer-token redesign
+    is that no cookie exists during the wizard flow.
+    """
+    r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
+    assert r.status_code == 200
+    assert client.cookies.get("setup_session") is None
+    assert client.cookies.get("csrf_token") is None
+    assert client.cookies.get("session") is None
+
+
 # ── 3. Post-init rejections ────────────────────────────────────────
 
 def test_initialize_twice_returns_already_completed(client, seeded_setup_token):
     # First init.
     r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
     assert r.status_code == 200
-    r = client.post("/setup/initialize", json=_body(), headers=_csrf(client))
+    setup_token = r.json()["setupSessionToken"]
+    r = client.post("/setup/initialize", json=_body(), headers=_bearer(setup_token))
     assert r.status_code == 201
 
     # Second init attempt — middleware should refuse before the handler runs.
-    # The setup_session cookie was cleared at the end of the first init, so
-    # we mint a fresh one. The middleware short-circuits regardless.
+    # The bearer header doesn't matter; the setup gate short-circuits.
     r = client.post(
         "/setup/initialize",
         json=_body(),
-        headers={"X-CSRF-Token": "any-value-mw-fires-first"},
+        headers=_bearer("any-value-mw-fires-first"),
     )
     assert r.status_code == 409
     assert _error_code(r) == "setup_already_completed"
@@ -182,32 +206,43 @@ def test_verify_token_with_invalid_token_returns_401(client, seeded_setup_token)
     assert _error_code(r) == "setup_token_invalid"
 
 
-def test_initialize_without_session_token_returns_401(client):
-    # No verify-token call → no setup_session cookie → reject.
+def test_initialize_without_bearer_returns_401(client):
+    """No Authorization header → setup_session_invalid."""
+    r = client.post("/setup/initialize", json=_body())
+    assert r.status_code == 401
+    assert _error_code(r) == "setup_session_invalid"
+
+
+def test_initialize_with_malformed_bearer_returns_401(client):
+    """Authorization header present but not 'Bearer <jwt>' → 401."""
+    for bad in ("not-bearer-at-all", "Bearer ", "Bearer  ", "Basic abc"):
+        r = client.post(
+            "/setup/initialize",
+            json=_body(),
+            headers={"Authorization": bad},
+        )
+        assert r.status_code == 401, f"header={bad!r}: {r.text}"
+        assert _error_code(r) == "setup_session_invalid"
+
+
+def test_initialize_with_garbage_bearer_returns_401(client):
+    """Bearer header has a string, but it isn't a valid JWT."""
     r = client.post(
         "/setup/initialize",
         json=_body(),
-        headers={"X-CSRF-Token": "anything"},
+        headers=_bearer("this.isnt.a.real.jwt"),
     )
     assert r.status_code == 401
     assert _error_code(r) == "setup_session_invalid"
 
 
-def test_initialize_without_csrf_returns_403(client, seeded_setup_token):
-    """The setup cookie pair alone isn't enough — the CSRF echo is required."""
-    r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
-    assert r.status_code == 200
-    r = client.post("/setup/initialize", json=_body())  # no X-CSRF-Token
-    assert r.status_code == 403
-    assert _error_code(r) == "csrf_failed"
-
-
 def test_initialize_with_weak_password_returns_422(client, seeded_setup_token):
     r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
     assert r.status_code == 200
+    setup_token = r.json()["setupSessionToken"]
     body = _body()
     body["sysAdmin"]["password"] = "admin"  # short + weak
-    r = client.post("/setup/initialize", json=body, headers=_csrf(client))
+    r = client.post("/setup/initialize", json=body, headers=_bearer(setup_token))
     assert r.status_code == 422
     assert _error_code(r) in {"setup_password_too_short", "setup_password_weak"}
 
@@ -215,21 +250,27 @@ def test_initialize_with_weak_password_returns_422(client, seeded_setup_token):
 def test_initialize_with_short_password_returns_422(client, seeded_setup_token):
     r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
     assert r.status_code == 200
+    setup_token = r.json()["setupSessionToken"]
     body = _body()
     body["sysAdmin"]["password"] = "shortpw12"  # 9 chars, below the 10-char minimum
-    r = client.post("/setup/initialize", json=body, headers=_csrf(client))
+    r = client.post("/setup/initialize", json=body, headers=_bearer(setup_token))
     assert r.status_code == 422
     assert _error_code(r) == "setup_password_too_short"
 
 
-# ── 4. CSRF on the user flow ──────────────────────────────────────
+# ── 4. CSRF on the user (post-init) flow ──────────────────────────
 
 def test_logout_without_csrf_returns_403(client, seeded_setup_token):
-    """The user flow's CSRF guard mirrors the setup flow's."""
+    """The user flow keeps cookie-based double-submit CSRF — that pattern
+    works fine for the long-lived authenticated session and wasn't part
+    of the desync window the setup-flow redesign addressed.
+    """
     # Spin up a working session via the full setup path.
     r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
-    r = client.post("/setup/initialize", json=_body(), headers=_csrf(client))
+    setup_token = r.json()["setupSessionToken"]
+    r = client.post("/setup/initialize", json=_body(), headers=_bearer(setup_token))
     assert r.status_code == 201
+    # Re-login to prove /auth/login still mints the same cookie pair.
     r = client.post(
         "/auth/login",
         json={"username": "ops", "password": "correct-horse-battery-staple"},

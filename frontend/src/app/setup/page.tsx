@@ -70,9 +70,13 @@ function SetupWizard() {
   const router = useRouter();
   const status = useSetupStatus();
 
-  // The setup session is held in an HttpOnly cookie after step 1 — no
-  // need to thread a token through React state any more.
   const [stage, setStage] = useState<Stage>("token");
+  // Setup-session JWT lives in React state — never a cookie. Captured
+  // from POST /setup/verify-token's response body in stage 1, sent back
+  // as Authorization: Bearer on /setup/initialize in stage 2. A page
+  // refresh wipes this and forces the wizard back to stage 1, which is
+  // intentional: no stale cookie can desync against an in-flight session.
+  const [setupSessionToken, setSetupSessionToken] = useState<string | null>(null);
 
   // If the system is already initialized, bounce to login — but only
   // while we're still in stages 1-2. Stage 3 ("operating accounts")
@@ -137,10 +141,19 @@ function SetupWizard() {
           </motion.p>
 
           {stage === "token" ? (
-            <TokenStage onVerified={() => setStage("configure")} />
+            <TokenStage
+              onVerified={(token) => {
+                setSetupSessionToken(token);
+                setStage("configure");
+              }}
+            />
           ) : stage === "configure" ? (
             <ConfigureStage
-              onSessionExpired={() => setStage("token")}
+              setupSessionToken={setupSessionToken ?? ""}
+              onSessionExpired={() => {
+                setSetupSessionToken(null);
+                setStage("token");
+              }}
               onInitialized={() => setStage("operating-accounts")}
             />
           ) : (
@@ -162,7 +175,7 @@ function SetupWizard() {
 
 // ── Step 1 — token entry ──────────────────────────────────────────────
 
-function TokenStage({ onVerified }: { onVerified: () => void }) {
+function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) => void }) {
   const verify = useVerifySetupToken();
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -176,8 +189,8 @@ function TokenStage({ onVerified }: { onVerified: () => void }) {
       return;
     }
     try {
-      await verify.mutateAsync({ token: trimmed });
-      onVerified();
+      const result = await verify.mutateAsync({ token: trimmed });
+      onVerified(result.setupSessionToken);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(explainError(err.error));
@@ -234,9 +247,11 @@ const BACKEND_ERROR_TO_FIELD: Record<string, string> = {
 };
 
 function ConfigureStage({
+  setupSessionToken,
   onSessionExpired,
   onInitialized,
 }: {
+  setupSessionToken: string;
   onSessionExpired: () => void;
   onInitialized: () => void;
 }) {
@@ -287,29 +302,29 @@ function ConfigureStage({
 
     try {
       const result = await initialize.mutateAsync({
-        sysAdmin: { username: username.trim(), password },
-        instituteIdentity: {
-          name: instituteName.trim(),
-          addressLines: lines,
-          contactPhone: contactPhone.trim(),
-          contactEmail: contactEmail.trim(),
+        body: {
+          sysAdmin: { username: username.trim(), password },
+          instituteIdentity: {
+            name: instituteName.trim(),
+            addressLines: lines,
+            contactPhone: contactPhone.trim(),
+            contactEmail: contactEmail.trim(),
+          },
+          appTimezone: appTimezone.trim(),
+          exportTimezone: exportTimezone.trim(),
+          masterConsentVersion: masterConsentVersion.trim(),
         },
-        appTimezone: appTimezone.trim(),
-        exportTimezone: exportTimezone.trim(),
-        masterConsentVersion: masterConsentVersion.trim(),
+        setupSessionToken,
       });
       login({ username: result.username, role: result.role, expiresAt: result.expiresAt });
       onInitialized();
     } catch (err) {
       if (err instanceof ApiError) {
-        if (
-          err.error === "setup_session_invalid" ||
-          err.error === "csrf_failed"
-        ) {
-          // CSRF mismatch in the setup flow is functionally a "session
-          // out of sync" — the cookie pair the wizard handed out doesn't
-          // line up anymore, so the safe move is the same bounce: send
-          // the operator back to the token stage to mint a fresh pair.
+        if (err.error === "setup_session_invalid") {
+          // The bearer JWT expired or got dropped from React state (e.g.,
+          // F5 mid-form). Bounce back to stage 1 so the operator mints a
+          // fresh one. The setup flow no longer uses CSRF, so csrf_failed
+          // can't happen here.
           setErrors({ _form: explainError(err.error) });
           setTimeout(onSessionExpired, 1200);
           return;

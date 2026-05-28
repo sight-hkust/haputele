@@ -770,18 +770,37 @@ export function useSetupStatus() {
 
 export function useVerifySetupToken() {
   return useMutation({
+    // skipAuthRedirect: a bad / consumed token returns 401 setup_token_invalid;
+    // the wizard wants to display that inline, not bounce to /login.
     mutationFn: (body: VerifySetupTokenRequest) =>
-      api<VerifySetupTokenResponse>("/setup/verify-token", { method: "POST", body }),
+      api<VerifySetupTokenResponse>("/setup/verify-token", {
+        method: "POST",
+        body,
+        skipAuthRedirect: true,
+      }),
   });
 }
 
-// The setup-session cookie was minted by /setup/verify-token; it rides
-// along on this call automatically. We just need to send the body and
-// the standard CSRF echo, both of which api() handles.
+// /setup/initialize authenticates via Authorization: Bearer <jwt>, using
+// the setup-session token the wizard captured from verify-token's
+// response body. No cookies are involved — the JWT lives in React state
+// for the lifetime of stage 2. skipAuthRedirect lets an expired bearer
+// surface as a catchable error instead of a /login bounce.
 export function useInitializeSystem() {
   return useMutation({
-    mutationFn: (body: InitializeSystemRequest) =>
-      api<InitializeSystemResponse>("/setup/initialize", { method: "POST", body }),
+    mutationFn: ({
+      body,
+      setupSessionToken,
+    }: {
+      body: InitializeSystemRequest;
+      setupSessionToken: string;
+    }) =>
+      api<InitializeSystemResponse>("/setup/initialize", {
+        method: "POST",
+        body,
+        auth: setupSessionToken,
+        skipAuthRedirect: true,
+      }),
   });
 }
 

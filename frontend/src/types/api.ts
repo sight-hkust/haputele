@@ -272,9 +272,13 @@ export type PatientHistory = {
 export type SetupStatusResponse = { initialized: boolean };
 
 export type VerifySetupTokenRequest = { token: string };
-// The setup-session JWT is delivered as an HttpOnly cookie, not in the
-// body — only the expiry is exposed for UI display.
-export type VerifySetupTokenResponse = { expiresAt: string };
+// The setup-session JWT travels in the body — the wizard holds it in
+// React state and sends it back as `Authorization: Bearer …` on
+// /setup/initialize. No cookies are set during the setup flow.
+export type VerifySetupTokenResponse = {
+  expiresAt: string;
+  setupSessionToken: string;
+};
 
 export type InitializeSystemRequest = {
   sysAdmin: { username: string; password: string };

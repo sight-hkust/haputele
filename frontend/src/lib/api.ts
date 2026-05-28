@@ -43,8 +43,15 @@ type ApiOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
   // Set true to silence the auto-redirect on 401. Used by the auth
   // bootstrap (`/auth/me`) and explicit logout, where bouncing the page
-  // would either loop or land the user back on /login twice.
+  // would either loop or land the user back on /login twice. The setup
+  // wizard also uses it: a bad token / expired setup-session is a
+  // recoverable in-flow error, not a "go log in" signal.
   skipAuthRedirect?: boolean;
+  // Explicit bearer token sent as `Authorization: Bearer …`. Used by the
+  // setup wizard to authenticate /setup/initialize against the JWT
+  // returned by /setup/verify-token. Coexists with the cookie-based
+  // session — the server picks the one its endpoint expects.
+  auth?: string;
 };
 
 // Read a cookie by name from document.cookie. Returns null on the server
@@ -63,7 +70,7 @@ export function readCookie(name: string): string | null {
 }
 
 export async function api<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { body, headers, skipAuthRedirect, ...rest } = options;
+  const { body, headers, skipAuthRedirect, auth, ...rest } = options;
   const method = (rest.method ?? "GET").toUpperCase();
 
   const finalHeaders: Record<string, string> = {
@@ -71,9 +78,17 @@ export async function api<T = unknown>(path: string, options: ApiOptions = {}): 
     ...(headers as Record<string, string> | undefined),
   };
 
+  // Explicit bearer auth (setup wizard). When provided, this takes
+  // precedence over cookie-based session auth on the server side —
+  // /setup/initialize reads Authorization, the rest of the app reads
+  // the session cookie. Cookies still ride along (credentials: include)
+  // but the server's gate decides which one matters per endpoint.
+  if (auth) finalHeaders["Authorization"] = `Bearer ${auth}`;
+
   // CSRF echo on unsafe verbs. No cookie → no header; the backend
   // responds with 401 (no session) or 403 (csrf_failed), and the caller
-  // learns to log in.
+  // learns to log in. The setup flow has no csrf_token cookie, so the
+  // header is naturally absent — /setup/initialize doesn't check CSRF.
   if (!SAFE_METHODS.has(method)) {
     const csrf = readCookie(CSRF_COOKIE_NAME);
     if (csrf) finalHeaders[CSRF_HEADER_NAME] = csrf;

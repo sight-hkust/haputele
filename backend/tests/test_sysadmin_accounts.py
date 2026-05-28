@@ -32,10 +32,21 @@ def _init_body() -> dict:
 
 
 def _initialize_and_login_sysadmin(client, seeded_setup_token):
-    """Drive the wizard to a logged-in sys-admin session."""
+    """Drive the wizard to a logged-in sys-admin session.
+
+    The setup-session JWT is delivered in the verify-token response body
+    and sent back on /setup/initialize as `Authorization: Bearer …`.
+    /setup/initialize itself mints the real session cookie pair, so any
+    cookie-authenticated calls that follow ride on those cookies.
+    """
     r = client.post("/setup/verify-token", json={"token": seeded_setup_token})
     assert r.status_code == 200
-    r = client.post("/setup/initialize", json=_init_body(), headers=_csrf(client))
+    setup_token = r.json()["setupSessionToken"]
+    r = client.post(
+        "/setup/initialize",
+        json=_init_body(),
+        headers={"Authorization": f"Bearer {setup_token}"},
+    )
     assert r.status_code == 201
     assert client.cookies.get("session")
 

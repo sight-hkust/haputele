@@ -22,20 +22,14 @@ from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..deps import db_dep
-from ..errors import conflict, forbidden, unauthorized, unprocessable
+from ..errors import conflict, unauthorized, unprocessable
 from ..models import Account, SetupToken, SystemConfig
 from ..security import (
-    CSRF_COOKIE_NAME,
-    CSRF_HEADER_NAME,
-    SETUP_SESSION_COOKIE_NAME,
-    clear_setup_session_cookies,
     create_token,
-    csrf_tokens_match,
     decode_token,
     generate_csrf_token,
     hash_password,
     set_session_cookies,
-    set_setup_session_cookies,
 )
 from ..services.passwords import validate_new_password
 from ..services.system_config import get_system_config, reload_system_config
@@ -67,13 +61,19 @@ def _mint_setup_session() -> tuple[str, datetime]:
 
 
 def _require_setup_session(request: Request) -> None:
-    """Cookie-backed setup-session check.
+    """Bearer-token check for the setup-session JWT.
 
-    Mirrors `deps.current_user` but with a separate cookie name so a stale
-    setup wizard tab can't accidentally authenticate as a real user once
-    the system is initialized. Setup is single-purpose and short-lived.
+    The token comes back from POST /setup/verify-token in the response
+    body and is held in the wizard's React state — never a cookie. That
+    keeps the setup flow free of CSRF concerns (browsers don't auto-send
+    Authorization headers, only cookies) and removes the cookie-desync
+    window that bit us under page-refresh + multi-tab churn. The post-init
+    /auth/* flow keeps cookie-based auth + double-submit CSRF unchanged.
     """
-    token = request.cookies.get(SETUP_SESSION_COOKIE_NAME)
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        raise unauthorized("setup_session_invalid")
+    token = header[len("Bearer "):].strip()
     if not token:
         raise unauthorized("setup_session_invalid")
     try:
@@ -84,14 +84,6 @@ def _require_setup_session(request: Request) -> None:
         raise unauthorized("setup_session_invalid")
     if payload.get("sub") != SETUP_JWT_SUBJECT or payload.get("role") != SETUP_JWT_ROLE:
         raise unauthorized("setup_session_invalid")
-    # CSRF on the setup flow uses the same double-submit cookie pair as
-    # the user flow — the CSRF cookie name is shared, only the session
-    # cookie differs.
-    if not csrf_tokens_match(
-        request.cookies.get(CSRF_COOKIE_NAME),
-        request.headers.get(CSRF_HEADER_NAME),
-    ):
-        raise forbidden("csrf_failed")
 
 
 # ── schemas ─────────────────────────────────────────────────────────
@@ -100,10 +92,12 @@ class VerifyTokenIn(BaseModel):
     token: str = Field(min_length=1)
 
 
-# The session JWT itself rides back as an HttpOnly cookie; we expose only
-# `expiresAt` so the wizard can show a countdown.
+# The setup-session JWT is delivered in the body — the wizard stashes it
+# in React state and sends it back as `Authorization: Bearer <token>` on
+# /setup/initialize. No cookies are set by this endpoint.
 class VerifyTokenOut(BaseModel):
     expiresAt: datetime
+    setupSessionToken: str
 
 
 class SysAdminIn(BaseModel):
@@ -147,7 +141,6 @@ def setup_status() -> SetupStatusOut:
 @router.post("/verify-token", response_model=VerifyTokenOut)
 def verify_token(
     body: VerifyTokenIn,
-    response: Response,
     db: Session = Depends(db_dep),
 ) -> VerifyTokenOut:
     # Defensive — the middleware also guards this.
@@ -161,13 +154,7 @@ def verify_token(
         raise unauthorized("setup_token_invalid")
 
     token, expires = _mint_setup_session()
-    set_setup_session_cookies(
-        response,
-        setup_token=token,
-        csrf_token=generate_csrf_token(),
-        max_age_seconds=SETUP_JWT_TTL_MIN * 60,
-    )
-    return VerifyTokenOut(expiresAt=expires)
+    return VerifyTokenOut(expiresAt=expires, setupSessionToken=token)
 
 
 @router.post("/initialize", response_model=InitializeOut, status_code=201)
@@ -240,15 +227,13 @@ def initialize(
         pass
 
     reload_system_config(db)
-    # Post-commit cookie write: system is already initialized at this
-    # point, so a cookie-mint failure leaves the operator able to recover
-    # via POST /auth/login. Don't wrap in a transaction — cookies aren't
-    # part of one.
-    # Hand the wizard off into an authenticated sys-admin session in the
-    # same response: clear the single-purpose setup cookies, then mint
-    # the real session+csrf pair so stage 3 ("operating accounts") runs
-    # without a second password prompt.
-    clear_setup_session_cookies(response)
+    # Hand the wizard off into an authenticated sys-admin session by
+    # minting the real session+csrf cookie pair on this response. No
+    # setup cookies exist to clear — the setup flow's JWT lives in a
+    # bearer header, not a cookie. Post-commit cookie write: a cookie-
+    # mint failure here leaves the system initialized and the operator
+    # able to recover via POST /auth/login. Cookies aren't part of the
+    # DB transaction, so we don't try to roll back.
     session_token, expires_at = create_token(body.sysAdmin.username, SYSADMIN_ROLE)
     set_session_cookies(
         response,
