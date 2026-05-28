@@ -295,6 +295,20 @@ export type InitializeSystemResponse = {
   role: "sys-admin";
 };
 
+// POST /sysadmin/accounts — sys-admin only. Doctors use POST /doctors.
+export type OperatingAccountRole = "admin" | "healthworker";
+
+export type CreateOperatingAccountRequest = {
+  username: string;
+  password: string;
+  role: OperatingAccountRole;
+};
+
+export type CreateOperatingAccountResponse = {
+  username: string;
+  role: OperatingAccountRole;
+};
+
 // ── Sys-admin read-only views ─────────────────────────────────────────
 
 export type SystemConfig = {

@@ -20,6 +20,8 @@ import type {
   CalendarAppointment,
   Consent,
   Consultation,
+  CreateOperatingAccountRequest,
+  CreateOperatingAccountResponse,
   DiagnosisEntry,
   Doctor,
   InitializeSystemRequest,
@@ -790,6 +792,17 @@ export function useSystemConfig() {
   return useQuery({
     queryKey: ["sysadmin", "system-config"],
     queryFn: () => fetcher<SystemConfig>("/sysadmin/system-config"),
+  });
+}
+
+export function useCreateOperatingAccount() {
+  const fetcher = useAuthedApi();
+  return useMutation({
+    mutationFn: (body: CreateOperatingAccountRequest) =>
+      fetcher<CreateOperatingAccountResponse>("/sysadmin/accounts", {
+        method: "POST",
+        body,
+      }),
   });
 }
 
