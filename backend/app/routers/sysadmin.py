@@ -1,12 +1,19 @@
 """Sys-admin endpoints — platform administration, not clinical.
 
-For now this router exposes two read-only routes that prove the role is
-wired correctly. Future work (dev dashboard: edit system_config, ops
-toggles, etc.) lands in a separate feature.
+Today: read-only `/me` and `/system-config`, plus account creation for
+operating roles (admin, healthworker). Doctor accounts use POST /doctors
+because they require a profile row beyond plain account credentials.
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+from typing import Literal
 
-from ..deps import CurrentUser, require_role
+from ..deps import CurrentUser, db_dep, require_role
+from ..errors import unprocessable
+from ..models import Account
+from ..security import hash_password
+from ..services.passwords import validate_new_account
 from ..services.system_config import get_system_config
 
 
@@ -31,3 +38,41 @@ def system_config(_: CurrentUser = Depends(require_role("sys-admin"))) -> dict:
         "exportTimezone": cfg.export_timezone,
         "masterConsentVersion": cfg.master_consent_version,
     }
+
+
+# ── operating-account creation ───────────────────────────────────────
+
+
+class AccountCreateIn(BaseModel):
+    username: str = Field(min_length=1, max_length=255)
+    password: str
+    # Pydantic validates `role` against the literal; an unknown value
+    # surfaces as a 422 from the framework before our handler runs.
+    role: Literal["admin", "healthworker"]
+
+
+class AccountOut(BaseModel):
+    username: str
+    role: str
+
+
+@router.post(
+    "/accounts",
+    response_model=AccountOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_account(
+    payload: AccountCreateIn,
+    db: Session = Depends(db_dep),
+    _: CurrentUser = Depends(require_role("sys-admin")),
+) -> AccountOut:
+    validate_new_account(username=payload.username, password=payload.password)
+    if db.get(Account, payload.username):
+        raise unprocessable("username_taken")
+    db.add(Account(
+        username=payload.username,
+        password=hash_password(payload.password),
+        role=payload.role,
+    ))
+    db.commit()
+    return AccountOut(username=payload.username, role=payload.role)
