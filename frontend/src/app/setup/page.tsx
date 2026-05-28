@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, KeyRound, Plus, ServerCog, Trash2 } from "lucide-react";
+import { ArrowRight, KeyRound, Plus, ServerCog, Trash2, Users } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
 import { Input, Label } from "@/components/primitives/input";
@@ -13,6 +13,7 @@ import { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import {
+  useCreateOperatingAccount,
   useInitializeSystem,
   useSetupStatus,
   useVerifySetupToken,
@@ -62,22 +63,24 @@ export default function SetupPage() {
   );
 }
 
-type Stage = "token" | "configure";
+type Stage = "token" | "configure" | "operating-accounts";
 
 function SetupWizard() {
   const router = useRouter();
   const status = useSetupStatus();
 
-  // If the system is already initialized, bounce to login. We still mount the
-  // wizard for the brief moment status is loading so the operator sees the
-  // expected screen rather than a flicker.
-  useEffect(() => {
-    if (status.data?.initialized) router.replace("/login");
-  }, [status.data?.initialized, router]);
-
   // The setup session is held in an HttpOnly cookie after step 1 — no
   // need to thread a token through React state any more.
   const [stage, setStage] = useState<Stage>("token");
+
+  // If the system is already initialized, bounce to login — but only
+  // while we're still in stages 1-2. Stage 3 ("operating accounts")
+  // runs *after* initialize flips status to true; the wizard owns that
+  // state and must not self-evict when React Query refetches status.
+  useEffect(() => {
+    if (stage === "operating-accounts") return;
+    if (status.data?.initialized) router.replace("/login");
+  }, [stage, status.data?.initialized, router]);
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -93,7 +96,11 @@ function SetupWizard() {
         >
           <motion.div variants={fadeInUp}>
             <SectionLabel pulse>
-              {stage === "token" ? "Step 1 of 2 · Setup token" : "Step 2 of 2 · Configure"}
+              {stage === "token"
+                ? "Step 1 of 3 · Setup token"
+                : stage === "configure"
+                  ? "Step 2 of 3 · Configure"
+                  : "Step 3 of 3 · Operating accounts"}
             </SectionLabel>
           </motion.div>
 
@@ -106,9 +113,13 @@ function SetupWizard() {
                 Welcome to{" "}
                 <span className="gradient-text">HapuTele</span>.
               </>
-            ) : (
+            ) : stage === "configure" ? (
               <>
                 Configure your <span className="gradient-text">clinic</span>.
+              </>
+            ) : (
+              <>
+                Add your <span className="gradient-text">team</span>.
               </>
             )}
           </motion.h1>
@@ -119,16 +130,20 @@ function SetupWizard() {
           >
             {stage === "token"
               ? "Paste the one-time setup token printed when the api container started. Find it in the container logs or at /data/setup-token inside the api container."
-              : "Your sys-admin account, institute identity, and timezone defaults. You can change everything except the sys-admin username later."}
+              : stage === "configure"
+                ? "Your sys-admin account, institute identity, and timezone defaults. You can change everything except the sys-admin username later."
+                : "Optional — create the admins and healthworkers who will run day-to-day operations."}
           </motion.p>
 
           {stage === "token" ? (
             <TokenStage onVerified={() => setStage("configure")} />
-          ) : (
+          ) : stage === "configure" ? (
             <ConfigureStage
               onSessionExpired={() => setStage("token")}
-              onInitialized={() => router.replace("/login")}
+              onInitialized={() => setStage("operating-accounts")}
             />
+          ) : (
+            <OperatingAccountsStage />
           )}
 
           <motion.p variants={fadeIn} className="text-xs text-[var(--muted-foreground)]">
@@ -454,6 +469,236 @@ function ConfigureStage({
   );
 }
 
+// ── Step 3 — operating accounts (optional) ─────────────────────────
+
+type DraftAccount = {
+  id: number;
+  username: string;
+  password: string;
+  passwordConfirm: string;
+};
+
+let _draftSeq = 0;
+function _newDraft(): DraftAccount {
+  _draftSeq += 1;
+  return { id: _draftSeq, username: "", password: "", passwordConfirm: "" };
+}
+
+function OperatingAccountsStage() {
+  const router = useRouter();
+  const create = useCreateOperatingAccount();
+
+  const [admins, setAdmins] = useState<DraftAccount[]>([_newDraft()]);
+  const [healthworkers, setHealthworkers] = useState<DraftAccount[]>([_newDraft()]);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const updateDraft = (
+    setter: typeof setAdmins,
+    id: number,
+    patch: Partial<DraftAccount>,
+  ) => setter((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+
+  const removeDraft = (setter: typeof setAdmins, id: number) =>
+    setter((rows) => (rows.length > 1 ? rows.filter((r) => r.id !== id) : rows));
+
+  const addDraft = (setter: typeof setAdmins) =>
+    setter((rows) => [...rows, _newDraft()]);
+
+  const hasAnyFilled = (rows: DraftAccount[]) =>
+    rows.some((r) => r.username.trim() || r.password);
+
+  const onSkip = () => {
+    router.replace("/sysadmin");
+  };
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // A row counts as "intended" if the operator typed anything in it.
+    // Fully-empty rows are silently dropped — they're placeholder slots
+    // from the "+ Add another" button the operator didn't end up using.
+    const adminRows = admins.filter(
+      (r) => r.username.trim() || r.password || r.passwordConfirm,
+    );
+    const hwRows = healthworkers.filter(
+      (r) => r.username.trim() || r.password || r.passwordConfirm,
+    );
+    if (adminRows.length === 0 && hwRows.length === 0) {
+      onSkip();
+      return;
+    }
+
+    for (const r of [...adminRows, ...hwRows]) {
+      if (!r.username.trim()) {
+        setError("Every row needs a username, or remove it.");
+        return;
+      }
+      if (r.password !== r.passwordConfirm) {
+        setError(`Password and confirmation do not match for ${r.username.trim()}.`);
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    try {
+      for (const r of adminRows) {
+        await create.mutateAsync({
+          username: r.username.trim(),
+          password: r.password,
+          role: "admin",
+        });
+      }
+      for (const r of hwRows) {
+        await create.mutateAsync({
+          username: r.username.trim(),
+          password: r.password,
+          role: "healthworker",
+        });
+      }
+      router.replace("/sysadmin");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(explainError(err.error));
+      } else {
+        setError("Couldn't reach the server. Try again in a moment.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="flex w-full max-w-2xl flex-col gap-6">
+      <FieldGroup title="Admins">
+        {admins.map((row, idx) => (
+          <AccountDraftRow
+            key={row.id}
+            idPrefix={`admin-${row.id}`}
+            value={row}
+            onChange={(patch) => updateDraft(setAdmins, row.id, patch)}
+            onRemove={admins.length > 1 ? () => removeDraft(setAdmins, row.id) : null}
+            showLabel={idx === 0}
+          />
+        ))}
+        <Button type="button" variant="ghost" onClick={() => addDraft(setAdmins)}>
+          <Plus className="size-4" aria-hidden /> Add another admin
+        </Button>
+      </FieldGroup>
+
+      <FieldGroup title="Healthworkers">
+        {healthworkers.map((row, idx) => (
+          <AccountDraftRow
+            key={row.id}
+            idPrefix={`hw-${row.id}`}
+            value={row}
+            onChange={(patch) => updateDraft(setHealthworkers, row.id, patch)}
+            onRemove={
+              healthworkers.length > 1
+                ? () => removeDraft(setHealthworkers, row.id)
+                : null
+            }
+            showLabel={idx === 0}
+          />
+        ))}
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => addDraft(setHealthworkers)}
+        >
+          <Plus className="size-4" aria-hidden /> Add another healthworker
+        </Button>
+      </FieldGroup>
+
+      {error && <ErrorPill>{error}</ErrorPill>}
+
+      <div className="flex items-center justify-between gap-3">
+        <Button type="button" variant="ghost" onClick={onSkip} disabled={submitting}>
+          Skip — finish setup
+        </Button>
+        <Button
+          type="submit"
+          disabled={
+            submitting || (!hasAnyFilled(admins) && !hasAnyFilled(healthworkers))
+          }
+        >
+          {submitting ? "Creating…" : "Create accounts & continue"}{" "}
+          <ArrowRight className="size-4" aria-hidden />
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function AccountDraftRow({
+  idPrefix,
+  value,
+  onChange,
+  onRemove,
+  showLabel,
+}: {
+  idPrefix: string;
+  value: DraftAccount;
+  onChange: (patch: Partial<DraftAccount>) => void;
+  onRemove: (() => void) | null;
+  showLabel: boolean;
+}) {
+  // showLabel keeps the label on the first row of each section; subsequent
+  // rows reuse the column headers visually but each input still gets an
+  // accessible label via aria-label so screen readers don't lose context.
+  return (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <Field
+        label={showLabel ? "Username" : ""}
+        htmlFor={`${idPrefix}-user`}
+      >
+        <Input
+          id={`${idPrefix}-user`}
+          aria-label="Username"
+          value={value.username}
+          onChange={(e) => onChange({ username: e.target.value })}
+          autoComplete="username"
+        />
+      </Field>
+      <Field
+        label={showLabel ? "Password" : ""}
+        htmlFor={`${idPrefix}-pw`}
+      >
+        <Input
+          id={`${idPrefix}-pw`}
+          aria-label="Password"
+          type="password"
+          value={value.password}
+          onChange={(e) => onChange({ password: e.target.value })}
+          autoComplete="new-password"
+          minLength={10}
+        />
+      </Field>
+      <Field
+        label={showLabel ? "Confirm password" : ""}
+        htmlFor={`${idPrefix}-pw2`}
+      >
+        <Input
+          id={`${idPrefix}-pw2`}
+          aria-label="Confirm password"
+          type="password"
+          value={value.passwordConfirm}
+          onChange={(e) => onChange({ passwordConfirm: e.target.value })}
+          autoComplete="new-password"
+        />
+      </Field>
+      {onRemove && (
+        <div className="md:col-span-3">
+          <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
+            <Trash2 className="size-4" aria-hidden /> Remove
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Bits ───────────────────────────────────────────────────────────────
 
 function Field({
@@ -558,18 +803,26 @@ function SetupHeroGraphic({ stage }: { stage: Stage }) {
           <div className="rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] p-5 shadow-accent">
             {stage === "token" ? (
               <KeyRound className="h-10 w-10 text-white" />
-            ) : (
+            ) : stage === "configure" ? (
               <ServerCog className="h-10 w-10 text-white" />
+            ) : (
+              <Users className="h-10 w-10 text-white" />
             )}
           </div>
           <div>
             <p className="font-display text-xl tracking-[-0.01em]">
-              {stage === "token" ? "Bring the token" : "Seal the system"}
+              {stage === "token"
+                ? "Bring the token"
+                : stage === "configure"
+                  ? "Seal the system"
+                  : "Build your team"}
             </p>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
               {stage === "token"
                 ? "Single-use, printed in the api container logs."
-                : "One transaction, then the system is live."}
+                : stage === "configure"
+                  ? "One transaction, then the system is live."
+                  : "Add admins and healthworkers, or skip for now."}
             </p>
           </div>
         </motion.div>
