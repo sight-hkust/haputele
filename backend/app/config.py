@@ -25,23 +25,12 @@ class Settings(BaseSettings):
     # is rejected because `allow_credentials=True` forbids it.
     CORS_ALLOW_ORIGINS: str = ""  # comma-separated; empty = no cross-origin
 
-    ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "admin"
-    HEALTHWORKER_USERNAME: str = "healthworker"
-    HEALTHWORKER_PASSWORD: str = "H"
-
-    # SETUP-SEED VALUES — used only by the first-run wizard as default form
-    # values, and by `seed.py` to upsert dev accounts. After /setup/initialize
-    # succeeds, runtime config (timezones, master_consent_version) is read
-    # from the system_config table; these env vars are NOT consulted at
-    # request time. See backend/app/services/system_config.py.
+    # First-run wizard prefill defaults. After /setup/initialize succeeds,
+    # runtime config (timezones, master_consent_version) is read from the
+    # system_config table; these env vars are NOT consulted at request
+    # time. See backend/app/services/system_config.py.
     MASTER_CONSENT_VERSION: str = "v1"
     APP_TIMEZONE: str = "Asia/Colombo"
-
-    # When truthy ("1"/"true"/"yes"/"on"), seed.py skips its upserts. Set
-    # this in production-style deployments so first-run setup is the only
-    # way to land accounts. Read directly from os.environ in seed.py to
-    # keep the precedence rules explicit there.
 
     # LiveKit (video transport). LIVEKIT_URL is the wss:// endpoint
     # exposed to the browser; KEY/SECRET stay server-side and are used

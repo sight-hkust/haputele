@@ -17,7 +17,4 @@ alembic upgrade head
 echo "[entrypoint] bootstrapping setup token (if uninitialized)..."
 python -m app.scripts.bootstrap_setup_token || echo "[entrypoint] bootstrap_setup_token failed (continuing)"
 
-echo "[entrypoint] seeding admin + healthworker accounts..."
-python -m seed || echo "[entrypoint] seed failed (continuing)"
-
 exec "$@"
