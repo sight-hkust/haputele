@@ -34,6 +34,15 @@ def test_validate_rejects_short_password():
     assert _detail(exc.value)["min"] == MIN_PASSWORD_LEN
 
 
+def test_validate_min_password_length_boundary():
+    """Exactly `MIN_PASSWORD_LEN` chars must be accepted; one fewer rejected."""
+    # One below the threshold raises.
+    with pytest.raises(HTTPException):
+        validate_new_account(username="alice", password="a" * (MIN_PASSWORD_LEN - 1))
+    # Exactly at the threshold passes.
+    validate_new_account(username="alice", password="a" * MIN_PASSWORD_LEN)
+
+
 def test_validate_rejects_weak_password_case_insensitive():
     with pytest.raises(HTTPException) as exc:
         validate_new_account(username="alice", password="Administrator")
@@ -41,7 +50,7 @@ def test_validate_rejects_weak_password_case_insensitive():
 
 
 def test_validate_rejects_reserved_usernames_case_insensitive():
-    for reserved in ("admin", "Admin", "ADMIN", "healthworker"):
+    for reserved in ("admin", "Admin", "ADMIN", "healthworker", "Healthworker", "HEALTHWORKER"):
         with pytest.raises(HTTPException) as exc:
             validate_new_account(username=reserved, password="correct-horse-battery-staple")
         assert _detail(exc.value)["error"] == "setup_username_reserved"
