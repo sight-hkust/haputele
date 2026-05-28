@@ -46,6 +46,7 @@ SETUP_TOKEN_FILE = Path("/data/setup-token")
 SETUP_JWT_TTL_MIN = 15
 SETUP_JWT_SUBJECT = "setup"
 SETUP_JWT_ROLE = "setup"
+SYSADMIN_ROLE = "sys-admin"
 
 MIN_PASSWORD_LEN = 10
 
@@ -226,7 +227,7 @@ def initialize(
     db.add(Account(
         username=body.sysAdmin.username,
         password=hash_password(body.sysAdmin.password),
-        role="sys-admin",
+        role=SYSADMIN_ROLE,
     ))
 
     cfg = db.get(SystemConfig, 1)
@@ -267,16 +268,20 @@ def initialize(
         pass
 
     reload_system_config(db)
+    # Post-commit cookie write: system is already initialized at this
+    # point, so a cookie-mint failure leaves the operator able to recover
+    # via POST /auth/login. Don't wrap in a transaction — cookies aren't
+    # part of one.
     # Hand the wizard off into an authenticated sys-admin session in the
     # same response: clear the single-purpose setup cookies, then mint
     # the real session+csrf pair so stage 3 ("operating accounts") runs
     # without a second password prompt.
     clear_setup_session_cookies(response)
-    session_token, _expires = create_token(body.sysAdmin.username, "sys-admin")
+    session_token, _expires = create_token(body.sysAdmin.username, SYSADMIN_ROLE)
     set_session_cookies(
         response,
         session_token=session_token,
         csrf_token=generate_csrf_token(),
         max_age_seconds=settings.JWT_EXPIRE_MIN * 60,
     )
-    return InitializeOut(ok=True, username=body.sysAdmin.username, role="sys-admin")
+    return InitializeOut(ok=True, username=body.sysAdmin.username, role=SYSADMIN_ROLE)

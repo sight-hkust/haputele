@@ -3,14 +3,15 @@
 Three scenarios, matching the acceptance criteria in the feature brief:
 
   1. Uninitialized: a protected endpoint returns 409 setup_required.
-  2. Full flow: verify-token → initialize → login → sys-admin endpoint.
+  2. Full flow: verify-token → initialize (auto-login) → sys-admin endpoint.
   3. Idempotency: a second /setup/initialize returns 409 setup_already_completed.
 
-Auth is cookie-based: POST /setup/verify-token and POST /auth/login set
-an HttpOnly session cookie plus a non-HttpOnly `csrf_token` cookie. The
-TestClient (httpx) auto-persists cookies, so subsequent calls inherit
-them. For unsafe verbs the client also has to echo the CSRF cookie back
-as `X-CSRF-Token` — that's the `_csrf` helper below.
+Auth is cookie-based: POST /setup/verify-token mints a setup_session;
+POST /setup/initialize swaps it for a real session cookie; POST /auth/login
+(used by some tests) mints the same pair directly. The TestClient (httpx)
+auto-persists cookies, so subsequent calls inherit them. For unsafe verbs
+the client also has to echo the CSRF cookie back as `X-CSRF-Token` — that's
+the `_csrf` helper below.
 
 Error responses carry an additional `requestId` field (injected by
 RequestIdMiddleware + the http_exception_handler in main.py). Assertions
