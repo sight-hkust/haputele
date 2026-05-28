@@ -37,6 +37,7 @@ from ..security import (
     set_session_cookies,
     set_setup_session_cookies,
 )
+from ..services.passwords import RESERVED_USERNAMES, validate_new_account
 from ..services.system_config import get_system_config, reload_system_config
 
 
@@ -48,39 +49,11 @@ SETUP_JWT_SUBJECT = "setup"
 SETUP_JWT_ROLE = "setup"
 SYSADMIN_ROLE = "sys-admin"
 
-MIN_PASSWORD_LEN = 10
-
-# Obvious-weak strings rejected outright. Lower-cased exact match.
-_WEAK_PASSWORDS = frozenset({
-    "admin",
-    "administrator",
-    "healthworker",
-    "sysadmin",
-    "sys-admin",
-    "password",
-    "password1",
-    "passw0rd",
-    "letmein",
-    "changeme",
-    "dev-secret-change-me",
-    "change-me-to-a-long-random-string",
-})
-
-# Don't shadow the existing singleton-by-role accounts.
-_RESERVED_USERNAMES = frozenset({"admin", "healthworker"})
-
 
 # ── helpers ─────────────────────────────────────────────────────────
 
 def _sha256(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
-
-
-def _validate_password(pw: str) -> None:
-    if len(pw) < MIN_PASSWORD_LEN:
-        raise unprocessable("setup_password_too_short", min=MIN_PASSWORD_LEN)
-    if pw.lower() in _WEAK_PASSWORDS:
-        raise unprocessable("setup_password_weak")
 
 
 def _mint_setup_session() -> tuple[str, datetime]:
@@ -206,9 +179,10 @@ def initialize(
     if get_system_config().is_initialized:
         raise conflict("setup_already_completed")
 
-    _validate_password(body.sysAdmin.password)
-    if body.sysAdmin.username.lower() in _RESERVED_USERNAMES:
-        raise unprocessable("setup_username_reserved")
+    validate_new_account(
+        username=body.sysAdmin.username,
+        password=body.sysAdmin.password,
+    )
 
     # Block obviously-empty institute identity fields.
     addr_lines = [s for s in body.instituteIdentity.addressLines if s.strip()]
