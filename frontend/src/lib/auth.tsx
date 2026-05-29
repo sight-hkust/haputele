@@ -35,16 +35,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // /login redirect, but we don't want that bounce for the unauthenticated
   // case (login page, setup wizard) — so we swallow 401 silently here via
   // the `skipAuthRedirect` opt-out.
+  //
+  // Pre-init shortcut: /auth/me is gated by SetupRequiredMiddleware and
+  // 409s before any auth dep runs when system_config.initialized_at is
+  // NULL. The 409 is harmless (we swallow it) but pollutes devtools and
+  // adds a round-trip on every page load before first-run setup. So we
+  // check /setup/status first — the only endpoint guaranteed reachable
+  // in every state — and skip /auth/me when we already know there can't
+  // be a session.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        const status = await api<{ initialized: boolean }>("/setup/status");
+        if (cancelled) return;
+        if (!status.initialized) {
+          // No init means no accounts means no session. Stay anonymous.
+          return;
+        }
         const me = await api<{ username: string; role: Role }>("/auth/me", {
           skipAuthRedirect: true,
         });
         if (!cancelled) setSession({ username: me.username, role: me.role });
       } catch {
-        // Not signed in. Stay anonymous.
+        // Network/status read failed, or /auth/me said we're not signed
+        // in. Stay anonymous either way — page-level guards will redirect
+        // to /login if they need a session.
       } finally {
         if (!cancelled) setLoading(false);
       }
