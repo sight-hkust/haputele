@@ -1,0 +1,64 @@
+name: Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      intent:
+        type: choice
+        description: "Intent of running Terraform workflow"
+        default: plan
+        options:
+          - plan
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Run Terraform
+    defaults:
+      run:
+        working-directory: deployment
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Authenticate to Security Token Service
+        uses: hkust-contrib/actions/authenticate@latest
+        with:
+          scope: sops:age_keypair
+
+      - name: Setup Terraform
+        uses: hkust-contrib/actions/setup-terraform@latest
+        with:
+          use_federated_token: true
+          state: projects/haputele
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event.inputs.intent == 'plan' || github.event_name == 'push'
+        run: terraform plan -no-color
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event.inputs.intent == 'apply'
+        run: terraform apply -auto-approve
+
+      - name: Terraform Destroy
+        if: github.ref == 'refs/heads/main' && github.event.inputs.intent == 'destroy'
+        run: terraform destroy -auto-approve
