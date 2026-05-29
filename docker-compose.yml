@@ -34,6 +34,13 @@ services:
       RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY_ID:-rustfsadmin}
       RUSTFS_SECRET_KEY: ${S3_SECRET_ACCESS_KEY:-rustfsadmin}
       RUSTFS_OBS_LOGGER_LEVEL: warn
+      # rustfs refuses to boot with the literal default keys
+      # (rustfsadmin/rustfsadmin) on a non-loopback listener — a safety
+      # check meant to stop accidentally exposing a default-credentialed
+      # store to a real network. Since this service only runs in local
+      # dev compose (prod points S3_ENDPOINT_URL at the real S3), we
+      # opt into the bypass instead of rotating the dev keys.
+      RUSTFS_ALLOW_INSECURE_DEFAULT_CREDENTIALS: "true"
     volumes:
       - rustfs_data:/data
     ports:
