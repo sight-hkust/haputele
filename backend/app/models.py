@@ -7,7 +7,6 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
-    LargeBinary,
     Numeric,
     String,
     Text,
@@ -43,7 +42,7 @@ class Doctor(Base):
     practitioner_address: Mapped[str] = mapped_column(Text, nullable=False)
     institute_name: Mapped[str] = mapped_column(String(255), nullable=False)
     institute_contact: Mapped[str] = mapped_column(String(255), nullable=False)
-    rubber_stamp_image: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    rubber_stamp_key: Mapped[str] = mapped_column(String(512), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
@@ -114,7 +113,7 @@ class Consent(Base):
     )
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reason: Mapped[str | None] = mapped_column(Text)
-    signature_image: Mapped[bytes | None] = mapped_column(LargeBinary)
+    signature_key: Mapped[str | None] = mapped_column(String(512))
     signature_method: Mapped[str | None] = mapped_column(String(20))
 
 
@@ -190,7 +189,7 @@ class Consultation(Base):
     follow_up_appointment_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("appointments.appointment_id")
     )
-    signature: Mapped[bytes | None] = mapped_column(LargeBinary)
+    signature_key: Mapped[str | None] = mapped_column(String(512))
     signed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
@@ -203,7 +202,7 @@ class AppointmentAttachment(Base):
     )
     mime_type: Mapped[str] = mapped_column(String(50), nullable=False)
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    bytes: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    object_key: Mapped[str] = mapped_column(String(512), nullable=False)
     byte_size: Mapped[int] = mapped_column(Integer, nullable=False)
     caption: Mapped[str | None] = mapped_column(Text)
     uploaded_by: Mapped[str] = mapped_column(

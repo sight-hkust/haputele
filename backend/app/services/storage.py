@@ -9,17 +9,25 @@ custom S3 gateway.
 to come up against a missing/unreachable bucket. We treat 404/NoSuchBucket
 as "create it" and any other error as fatal — getting this wrong silently
 loses uploads, so we'd rather crash early.
+
+`put_bytes` / `get_bytes` / `delete_object` are the blob I/O surface the
+routers use: we store an opaque object key in Postgres and the bytes here,
+then proxy reads back through the API (never presigned URLs) so patient PII
+stays behind the existing cookie auth. boto3 is synchronous, so `async`
+callers must wrap these in `run_in_threadpool` to avoid blocking the loop.
 """
 from __future__ import annotations
 
 import logging
 from functools import lru_cache
+from uuid import uuid4
 
 import boto3
 from botocore.client import Config
 from botocore.exceptions import ClientError
 
 from ..config import settings
+from ..errors import not_found
 
 
 _logger = logging.getLogger("haputele.storage")
@@ -79,3 +87,47 @@ def ensure_bucket(bucket: str | None = None) -> None:
             _logger.info("s3 bucket already exists (race): %s", name)
             return
         raise
+
+
+def object_key(prefix: str, ext: str) -> str:
+    """Build an opaque, collision-free object key under `prefix`.
+
+    Random (uuid4) rather than the row PK so callers can upload *before* the
+    DB insert — no flush-to-get-id dance, and the key never has to change.
+    """
+    return f"{prefix}/{uuid4().hex}.{ext}"
+
+
+def put_bytes(key: str, data: bytes, content_type: str) -> None:
+    """Upload `data` under `key`. Callers commit the key to Postgres only
+    after this returns, so a failed upload raises before any DB write."""
+    get_s3_client().put_object(
+        Bucket=settings.S3_BUCKET,
+        Key=key,
+        Body=data,
+        ContentType=content_type,
+    )
+
+
+def get_bytes(key: str) -> bytes:
+    """Fetch the object at `key`. Raises 404 `object_not_found` if the key is
+    absent — a DB row pointing at a missing object is a data-integrity bug, so
+    we surface it rather than returning empty bytes."""
+    try:
+        resp = get_s3_client().get_object(Bucket=settings.S3_BUCKET, Key=key)
+    except ClientError as exc:
+        code = exc.response.get("Error", {}).get("Code", "")
+        if code in ("NoSuchKey", "404"):
+            raise not_found("object_not_found")
+        raise
+    return resp["Body"].read()
+
+
+def delete_object(key: str) -> None:
+    """Best-effort delete. Used after the owning DB row is already gone, so a
+    missing key is fine (S3 delete is idempotent) and we never raise — at
+    worst we leak one orphaned object, which a future sweep can reclaim."""
+    try:
+        get_s3_client().delete_object(Bucket=settings.S3_BUCKET, Key=key)
+    except ClientError as exc:
+        _logger.warning("s3 delete failed for %s: %s", key, exc)

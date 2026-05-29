@@ -138,7 +138,8 @@ class ConsentOut(BaseModel):
     def _hassig(cls, value: Any) -> Any:
         if isinstance(value, dict) or value is None:
             return value
-        # ORM row → derive hasSignature from signature_image presence.
+        # ORM row → derive hasSignature from signature key presence (the bytes
+        # live in S3; the key column is non-null iff a signature was captured).
         as_dict = {
             "consent_id": value.consent_id,
             "patient_id": value.patient_id,
@@ -150,7 +151,7 @@ class ConsentOut(BaseModel):
             "revoked_at": value.revoked_at,
             "reason": value.reason,
             "signature_method": value.signature_method,
-            "hasSignature": value.signature_image is not None,
+            "hasSignature": value.signature_key is not None,
         }
         return as_dict
 

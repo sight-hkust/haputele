@@ -17,6 +17,7 @@ from ..schemas import (
 )
 from ..services.livekit import mint_token, room_for_appointment
 from ..services.signature import decode_signature
+from ..services.storage import object_key, put_bytes
 
 
 router = APIRouter(prefix="/appointments", tags=["preconsult"])
@@ -45,7 +46,7 @@ def _master_consent_active(db: Session, patient_id: int) -> bool:
     if not p or not p.master_consent_id:
         return False
     mc = db.get(Consent, p.master_consent_id)
-    return bool(mc and mc.agreed and mc.revoked_at is None and mc.signature_image is not None)
+    return bool(mc and mc.agreed and mc.revoked_at is None and mc.signature_key is not None)
 
 
 def _latest_session_consent(db: Session, appt_id: int) -> Consent | None:
@@ -71,9 +72,11 @@ def record_session_consent(appt_id: int, payload: SessionConsentIn, db: Session 
 
     # FEEDBACK §1: signature only when the patient agrees. Declines stay
     # signature-less — capturing a signature on a "no" would be meaningless.
-    signature_bytes: bytes | None = (
-        decode_signature(payload.signatureImage) if payload.agreed else None
-    )
+    signature_key: str | None = None
+    if payload.agreed:
+        signature_bytes = decode_signature(payload.signatureImage)
+        signature_key = object_key("signatures/consent", "png")
+        put_bytes(signature_key, signature_bytes, "image/png")
 
     consent = Consent(
         patient_id=appt.patient_id,
@@ -81,8 +84,8 @@ def record_session_consent(appt_id: int, payload: SessionConsentIn, db: Session 
         agreed=payload.agreed,
         appointment_id=appt_id,
         captured_at=payload.capturedAt or datetime.now(timezone.utc),
-        signature_image=signature_bytes,
-        signature_method="signature" if signature_bytes else None,
+        signature_key=signature_key,
+        signature_method="signature" if signature_key else None,
     )
     db.add(consent)
 

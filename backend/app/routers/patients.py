@@ -8,6 +8,7 @@ from ..deps import db_dep, require_role
 from ..errors import not_found, unprocessable
 from ..models import Appointment, Consent, Consultation, Patient, Profile
 from ..services.signature import decode_signature
+from ..services.storage import object_key, put_bytes
 from ..services.system_config import get_system_config
 from ..schemas import (
     AppointmentOut,
@@ -51,6 +52,8 @@ def create_patient(payload: PatientCreate, db: Session = Depends(db_dep)):
     # FEEDBACK §1: an "agreed" click is not defensible by itself — capture a
     # signature alongside the consent record before the patient row exists.
     signature_bytes = decode_signature(payload.masterConsent.signatureImage)
+    signature_key = object_key("signatures/consent", "png")
+    put_bytes(signature_key, signature_bytes, "image/png")
 
     if payload.nationalId:
         existing = db.scalar(select(Patient).where(Patient.n_id == payload.nationalId))
@@ -77,7 +80,7 @@ def create_patient(payload: PatientCreate, db: Session = Depends(db_dep)):
         version=payload.masterConsent.version or get_system_config().master_consent_version,
         agreed=True,
         captured_at=payload.masterConsent.capturedAt or datetime.now(timezone.utc),
-        signature_image=signature_bytes,
+        signature_key=signature_key,
         signature_method="signature",
     )
     db.add(consent)
@@ -244,13 +247,15 @@ def re_consent(patient_id: int, payload: ReConsentIn, db: Session = Depends(db_d
     if not payload.agreed:
         raise unprocessable("master_consent_not_agreed")
     signature_bytes = decode_signature(payload.signatureImage)
+    signature_key = object_key("signatures/consent", "png")
+    put_bytes(signature_key, signature_bytes, "image/png")
     consent = Consent(
         patient_id=p.patient_id,
         scope="master",
         version=payload.version or get_system_config().master_consent_version,
         agreed=True,
         captured_at=payload.capturedAt or datetime.now(timezone.utc),
-        signature_image=signature_bytes,
+        signature_key=signature_key,
         signature_method="signature",
     )
     db.add(consent)

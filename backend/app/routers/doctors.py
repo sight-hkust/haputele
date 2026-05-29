@@ -10,6 +10,7 @@ from ..models import Account, Doctor
 from ..schemas import DoctorCreate, DoctorDetailOut, DoctorOut, DoctorUpdate
 from ..security import hash_password
 from ..services.signature import decode_rubber_stamp
+from ..services.storage import delete_object, get_bytes, object_key, put_bytes
 
 
 router = APIRouter(prefix="/doctors", tags=["doctors"])
@@ -23,16 +24,20 @@ REQUIRED_PRESCRIPTION_FIELDS = (
 )
 
 
-def _encode_stamp(data: bytes | None) -> str | None:
-    """Bytes → `data:image/<mime>;base64,...` for re-display on the edit page.
+def _sniff_stamp(data: bytes) -> tuple[str, str]:
+    """(mime, ext) from magic bytes — PNG/JPEG only, matching the uploader's
+    accept list. Anything else is treated as PNG (browsers infer from the
+    actual bytes regardless of the hint)."""
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg", "jpg"
+    return "image/png", "png"
 
-    Mime is sniffed from magic bytes (PNG/JPEG only, matching the uploader's
-    accept list); anything else falls back to PNG since browsers infer from
-    the actual bytes regardless of the data-URL hint.
-    """
+
+def _encode_stamp(data: bytes | None) -> str | None:
+    """Bytes → `data:image/<mime>;base64,...` for re-display on the edit page."""
     if not data:
         return None
-    mime = "image/jpeg" if data[:3] == b"\xff\xd8\xff" else "image/png"
+    mime, _ = _sniff_stamp(data)
     return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
 
 
@@ -47,6 +52,9 @@ def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> Docto
         raise unprocessable("username_taken")
 
     stamp = decode_rubber_stamp(payload.rubberStampImage)
+    mime, ext = _sniff_stamp(stamp)
+    stamp_key = object_key("doctors/stamps", ext)
+    put_bytes(stamp_key, stamp, mime)
 
     account = Account(
         username=payload.username,
@@ -64,7 +72,7 @@ def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> Docto
         practitioner_address=payload.practitionerAddress,
         institute_name=payload.instituteName,
         institute_contact=payload.instituteContact,
-        rubber_stamp_image=stamp,
+        rubber_stamp_key=stamp_key,
         active=True,
     )
     db.add(account)
@@ -91,7 +99,7 @@ def get_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorDetailOut
     if not doctor:
         raise not_found("doctor_not_found")
     out = DoctorDetailOut.model_validate(doctor)
-    out.rubberStampImage = _encode_stamp(doctor.rubber_stamp_image)
+    out.rubberStampImage = _encode_stamp(get_bytes(doctor.rubber_stamp_key))
     return out
 
 
@@ -116,8 +124,14 @@ def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(d
     }
     data = payload.model_dump(exclude_unset=True)
 
+    superseded_key: str | None = None
     if "rubberStampImage" in data and data["rubberStampImage"] is not None:
-        doctor.rubber_stamp_image = decode_rubber_stamp(data.pop("rubberStampImage"))
+        stamp = decode_rubber_stamp(data.pop("rubberStampImage"))
+        mime, ext = _sniff_stamp(stamp)
+        new_key = object_key("doctors/stamps", ext)
+        put_bytes(new_key, stamp, mime)
+        superseded_key = doctor.rubber_stamp_key
+        doctor.rubber_stamp_key = new_key
     else:
         data.pop("rubberStampImage", None)
 
@@ -135,6 +149,10 @@ def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(d
 
     db.commit()
     db.refresh(doctor)
+    # Drop the superseded object only once the new key is committed — a failed
+    # commit rolls back to old_key, so we must not delete it pre-commit.
+    if superseded_key:
+        delete_object(superseded_key)
     return DoctorOut.model_validate(doctor)
 
 

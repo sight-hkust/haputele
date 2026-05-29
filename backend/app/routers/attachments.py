@@ -1,13 +1,16 @@
 """HW-uploaded photos for an appointment — FEEDBACK §3.
 
-Stored as BYTEA in `appointment_attachments`. The list endpoint returns
-metadata only; clients fetch each blob through the singular GET. Doctors
-can read attachments on their own appointments but cannot upload or
-delete (HW-only writes, doctors are read-only consumers).
+Bytes live in S3 (`appointment_attachments.object_key` holds the key); the
+row carries metadata only. The list endpoint returns metadata; clients fetch
+each blob through the singular GET, which proxies the bytes from S3 so they
+stay behind this router's auth. Doctors can read attachments on their own
+appointments but cannot upload or delete (HW-only writes, doctors are
+read-only consumers).
 """
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, File, Form, Response, UploadFile, status
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -15,6 +18,7 @@ from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, forbidden, not_found, unprocessable
 from ..models import Appointment, AppointmentAttachment, Doctor
 from ..schemas import AppointmentDetailOut, AttachmentMetaOut, AttachmentUpdateIn
+from ..services.storage import delete_object, get_bytes, object_key, put_bytes
 
 
 router = APIRouter(prefix="/appointments", tags=["attachments"])
@@ -22,6 +26,10 @@ router = APIRouter(prefix="/appointments", tags=["attachments"])
 
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
 MAX_BYTES = 10 * 1024 * 1024  # 10 MB per attachment
+
+# Extension for the S3 key — cosmetic (the key is opaque), but keeps objects
+# recognisable when browsing the bucket. Mirrors ALLOWED_MIME.
+_MIME_EXT = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 
 WRITEABLE_STATES = (
     "scheduled",
@@ -85,11 +93,16 @@ async def upload_attachment(
     if len(blob) > MAX_BYTES:
         raise unprocessable("attachment_too_large", max=MAX_BYTES)
 
+    # Upload to S3 before the insert: a failed upload raises here, leaving no
+    # dangling row. boto3 is sync, so offload it off the event loop.
+    key = object_key(f"attachments/{appt_id}", _MIME_EXT[mime])
+    await run_in_threadpool(put_bytes, key, blob, mime)
+
     row = AppointmentAttachment(
         appointment_id=appt_id,
         mime_type=mime,
         filename=(file.filename or "upload")[:255],
-        bytes=blob,
+        object_key=key,
         byte_size=len(blob),
         caption=(caption or None),
         uploaded_by=user.username,
@@ -126,8 +139,11 @@ def stream_attachment(
     appt = _appt(db, appt_id)
     _scope_read(db, appt, user)
     row = _attachment(db, appt_id, attachment_id)
+    # Proxy the bytes from S3 (sync endpoint → boto3 call is fine here; FastAPI
+    # runs sync routes in a threadpool). Keeps PII behind this route's auth.
+    data = get_bytes(row.object_key)
     return Response(
-        content=row.bytes,
+        content=data,
         media_type=row.mime_type,
         headers={
             # `inline` so the browser renders it directly in an <img>/iframe;
@@ -175,8 +191,13 @@ def delete_attachment(
     if appt.status in ("completed", "cancelled"):
         raise conflict("invalid_state", currentStatus=appt.status)
     row = _attachment(db, appt_id, attachment_id)
+    key = row.object_key
     db.delete(row)
     db.commit()
+    # Best-effort: the row (source of truth) is gone; an orphaned object is
+    # harmless and reclaimable. Done after commit so a delete failure here
+    # can't roll back the row removal.
+    delete_object(key)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
