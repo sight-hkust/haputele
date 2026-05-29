@@ -36,9 +36,8 @@ yarn-error.log*
 .vscode/
 *.swp
 
-# Claude Code local state
-.claude/settings.local.json
-.claude/scheduled_tasks.lock
+# Claude Code local state (worktrees, agent settings, runtime locks).
+.claude/
 
 # Demo asset — real practitioner rubber-stamp PNG (PII). Keep out of repo.
 # Drop your own stamp at scripts/assets/doctor_stamp.png locally; the

@@ -20,6 +20,7 @@ from .routers import (
     consultations,
     doctors,
     exports,
+    livekit_webhook,
     patients,
     preconsult,
     queue,
@@ -27,6 +28,7 @@ from .routers import (
     summary,
     sysadmin,
 )
+from .services.storage import ensure_bucket
 from .services.system_config import load_system_config
 
 
@@ -40,6 +42,7 @@ async def lifespan(app: FastAPI):
         load_system_config(db)
     finally:
         db.close()
+    ensure_bucket()
     yield
 
 
@@ -146,6 +149,7 @@ def create_app() -> FastAPI:
     app.include_router(queue.router)
     app.include_router(summary.router)
     app.include_router(exports.router)
+    app.include_router(livekit_webhook.router)
 
     @app.get("/health", tags=["meta"])
     def health() -> dict:

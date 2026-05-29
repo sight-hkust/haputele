@@ -1,0 +1,54 @@
+# Optional YAML config for the HapuTele API. Keys are the same as the env
+# var names in .env.example — anything you set here is overridden by a real
+# env var or a value in .env, so you can keep ops-only overrides at the
+# env layer and put the bulk of static config here.
+#
+# Default load path is `config.yaml` in the api's working directory. Point
+# at a different file with the CONFIG_FILE env var:
+#     CONFIG_FILE=/etc/haputele/config.yaml
+# Missing file is fine — the YAML source contributes nothing in that case.
+#
+# To use inside the docker-compose api container, mount it:
+#     volumes:
+#       - ./config.yaml:/app/config.yaml:ro
+
+# --- Database ---
+DATABASE_URL: postgresql+psycopg2://hapu:hapu@db:5432/haputele
+
+# --- Auth (JWT in HttpOnly cookie + CSRF double-submit) ---
+JWT_SECRET: change-me-to-a-long-random-string
+JWT_ALG: HS256
+JWT_EXPIRE_MIN: 480
+
+COOKIE_SECURE: true
+COOKIE_SAMESITE: lax
+COOKIE_DOMAIN: ""
+
+# Comma-separated origins for credentialed cross-origin requests. Leave
+# empty when frontend and API share an origin via the Next /api rewrite.
+CORS_ALLOW_ORIGINS: ""
+
+# --- First-run seed defaults ---
+# Only consulted by the /setup wizard and seed.py; runtime reads from the
+# system_config DB row after /setup/initialize succeeds.
+ADMIN_USERNAME: admin
+ADMIN_PASSWORD: admin
+HEALTHWORKER_USERNAME: healthworker
+HEALTHWORKER_PASSWORD: H
+MASTER_CONSENT_VERSION: v1
+APP_TIMEZONE: Asia/Colombo
+
+# --- LiveKit (video transport) ---
+LIVEKIT_URL: ""
+LIVEKIT_API_KEY: ""
+LIVEKIT_API_SECRET: ""
+
+# --- Object storage (S3-compatible) ---
+# Leave S3_ENDPOINT_URL empty for real AWS S3; set to the rustfs/minio URL
+# in dev. S3_FORCE_PATH_STYLE must be true for non-AWS endpoints.
+S3_ENDPOINT_URL: http://rustfs:9000
+S3_REGION: us-east-1
+S3_BUCKET: haputele
+S3_ACCESS_KEY_ID: ""
+S3_SECRET_ACCESS_KEY: ""
+S3_FORCE_PATH_STYLE: true
