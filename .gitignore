@@ -46,6 +46,8 @@ scripts/assets/doctor_stamp.png
 
 # Markdown (spec / docs / demo plan) — keep local for now.
 *.md
+# ...except the top-level README, which ships with the repo.
+!/README.md
 
 # Archived documentation — kept locally, never committed.
 stale_documentation/
