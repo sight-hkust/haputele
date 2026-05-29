@@ -1,0 +1,76 @@
+name: Build Docker images
+
+# Builds the frontend (Next.js) and backend (FastAPI) images in parallel.
+# PRs build both images for validation but do not push; pushes to main and
+# version tags (v*) publish to GitHub Container Registry.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel an in-flight run when a newer commit lands on the same ref.
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: backend
+            context: ./backend
+            image: ghcr.io/sight-hkust/haputele-backend
+          - name: frontend
+            context: ./frontend
+            image: ghcr.io/sight-hkust/haputele-frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Skip login on PRs from forks (no push, and GITHUB_TOKEN is read-only there).
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          # PRs build only; main/tags push.
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          # platforms: linux/amd64,linux/arm64   # uncomment for multi-arch builds
+          # NEXT_PUBLIC_* are inlined into the client bundle at build time.
+          # Empty NEXT_PUBLIC_API_URL keeps the bundle hostname-agnostic (client
+          # uses the relative /api prefix, proxied by next.config rewrites).
+          build-args: |
+            ${{ matrix.name == 'frontend' && 'NEXT_PUBLIC_API_URL=' || '' }}
+            ${{ matrix.name == 'frontend' && 'NEXT_PUBLIC_APP_TIMEZONE=Asia/Colombo' || '' }}
