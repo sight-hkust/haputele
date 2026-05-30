@@ -18,6 +18,7 @@ from ..schemas import (
     FollowUpWeeks,
 )
 from ..services.signature import decode_signature
+from ..services.storage import object_key, put_bytes
 
 
 def _doctor(db: Session, user: CurrentUser) -> Doctor:
@@ -173,7 +174,11 @@ def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = D
         db.add(follow_up_queue)
         db.flush()
 
-    c.signature = signature_bytes
+    # Signatures are always PNG (enforced by decode_signature). Upload to S3
+    # and store the key; the bytes are pulled back only for the prescription PDF.
+    sig_key = object_key("signatures/consultation", "png")
+    put_bytes(sig_key, signature_bytes, "image/png")
+    c.signature_key = sig_key
     c.signed_at = signed_at
     c.status = "completed"
     appt.status = "completed"

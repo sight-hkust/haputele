@@ -15,6 +15,7 @@ from reportlab.platypus import (
 )
 
 from .tz import app_tz
+from .services.storage import get_bytes
 from .services.system_config import get_system_config
 
 
@@ -198,8 +199,12 @@ def render_prescription_pdf(*, patient, doctor, appointment, consultation) -> by
     # the middle, rubber stamp on the right. Captions on the second row only
     # under signature/stamp; provider cell spans both rows.
     story.append(Spacer(1, 0.5 * cm))
-    sig_img = _img_or_blank(consultation.signature, width=5 * cm, height=2 * cm)
-    stamp_img = _img_or_blank(doctor.rubber_stamp_image, width=3.5 * cm, height=3.5 * cm)
+    # Pull the signature/stamp bytes back from S3. The signature key may be
+    # absent on a not-yet-signed consultation; the stamp is always present.
+    sig_bytes = get_bytes(consultation.signature_key) if consultation.signature_key else None
+    stamp_bytes = get_bytes(doctor.rubber_stamp_key) if doctor.rubber_stamp_key else None
+    sig_img = _img_or_blank(sig_bytes, width=5 * cm, height=2 * cm)
+    stamp_img = _img_or_blank(stamp_bytes, width=3.5 * cm, height=3.5 * cm)
     provider_lines = [
         f"<b>Dr. {doctor.given_name} {doctor.family_name}</b>",
         f"SLMC Reg. No.: <b>{doctor.slmc_registration_number}</b>",

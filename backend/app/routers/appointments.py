@@ -180,7 +180,7 @@ def get_appointment(appt_id: int, db: Session = Depends(db_dep),
             not mc
             or mc.revoked_at is not None
             or not mc.agreed
-            or mc.signature_image is None
+            or mc.signature_key is None
         ):
             master_status = "needs_reconsent"
     else:
