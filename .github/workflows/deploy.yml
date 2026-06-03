@@ -30,7 +30,13 @@ jobs:
       - name: Authenticate to Security Token Service
         uses: hkust-contrib/actions/authenticate@latest
         with:
-          scope: sops:age_keypair
+          scope: aws sops:age_keypair
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/Root
+          aws-region: ap-south-1
 
       - name: Setup Terraform
         uses: hkust-contrib/actions/setup-terraform@latest
