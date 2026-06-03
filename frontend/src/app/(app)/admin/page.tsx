@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CheckCircle2, Stethoscope, UserPlus2, XCircle } from "lucide-react";
+import { CheckCircle2, Mail, ShieldCheck, Stethoscope, UserPlus2, XCircle } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
@@ -92,17 +92,42 @@ export default function AdminDoctors() {
                   <div className="rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] p-2 shadow-accent transition-transform duration-300 group-hover:scale-110">
                     <Stethoscope className="h-5 w-5 text-white" />
                   </div>
-                  {d.active ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Active
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-rose-700">
-                      <XCircle className="h-3 w-3" />
-                      Inactive
-                    </span>
-                  )}
+                  {/* Two independent badges: active/inactive (account
+                      state) and awaiting-setup (invite outstanding). A
+                      deactivated doctor can also be awaiting setup if
+                      they were never onboarded — we show both badges
+                      stacked rather than collapsing one. */}
+                  <div className="flex flex-col items-end gap-1.5">
+                    {d.active ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-rose-700">
+                        <XCircle className="h-3 w-3" />
+                        Inactive
+                      </span>
+                    )}
+                    {d.onboardingStatus === "awaiting_setup" && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-amber-700">
+                        <Mail className="h-3 w-3" />
+                        Awaiting setup
+                      </span>
+                    )}
+                    {d.onboardingStatus === "awaiting_approval" && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-sky-700">
+                        <ShieldCheck className="h-3 w-3" />
+                        Awaiting approval
+                      </span>
+                    )}
+                    {d.onboardingStatus === "rejected" && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-rose-700">
+                        <XCircle className="h-3 w-3" />
+                        Rejected
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <h3 className="mt-4 font-display text-xl tracking-[-0.01em]">{doctorName(d)}</h3>
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">{d.email}</p>

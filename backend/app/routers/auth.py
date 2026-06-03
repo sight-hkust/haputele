@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
+from sqlalchemy import select
+
 from ..config import settings
 from ..deps import CurrentUser, current_user, db_dep
-from ..errors import unauthorized
-from ..models import Account
+from ..errors import forbidden, unauthorized
+from ..models import Account, Doctor
 from ..schemas import LoginIn, LoginOut, MeOut
 from ..security import (
     clear_session_cookies,
@@ -34,6 +36,21 @@ def login(
         raise unauthorized(INVALID_CREDENTIALS)
     if payload.role and payload.role != account.role:
         raise unauthorized(INVALID_CREDENTIALS)
+
+    # Approval gate for self-onboarded doctors. We check AFTER password
+    # verification so a wrong password still returns the generic
+    # invalid_credentials code — an attacker who doesn't know the password
+    # gets the same response either way. Only the legitimate owner sees
+    # the specific pending/rejected code, which is what they need to
+    # understand why they can't get in.
+    if account.role == "doctor":
+        doctor = db.scalar(select(Doctor).where(Doctor.username == account.username))
+        if doctor is not None:
+            if doctor.rejected_at is not None:
+                raise forbidden("account_rejected")
+            if doctor.approved_at is None:
+                raise forbidden("account_pending_approval")
+
     token, expires = create_token(account.username, account.role)
     set_session_cookies(
         response,

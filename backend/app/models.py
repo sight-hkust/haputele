@@ -44,6 +44,14 @@ class Doctor(Base):
     institute_contact: Mapped[str] = mapped_column(String(255), nullable=False)
     rubber_stamp_key: Mapped[str] = mapped_column(String(512), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # Approval workflow. Doctors self-onboard via an invite-by-email flow
+    # which creates the row but leaves approved_at NULL; an admin reviews
+    # and either calls /approve (stamps NOW) or /reject (stamps rejected_at
+    # + optional reason and deactivates). Backfilled to NOW() on the 0010
+    # migration so existing doctors stay usable across the upgrade.
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rejected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rejected_reason: Mapped[str | None] = mapped_column(Text)
 
 
 class Patient(Base):
@@ -271,3 +279,95 @@ class QueueEntry(Base):
     booked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancellation_reason: Mapped[str | None] = mapped_column(Text)
+
+
+class EmailSuppression(Base):
+    """Addresses we must not send transactional email to.
+
+    Populated by the Resend webhook handler when an `email.bounced`
+    (hard bounce only) or `email.complained` event arrives. `reason`
+    is the raw webhook event type so an operator can tell at a glance
+    why an address was suppressed. Lookups by lowercased address are
+    O(1) via the primary key, so send_email() can cheaply gate every
+    outbound message on this table.
+    """
+    __tablename__ = "email_suppressions"
+
+    email: Mapped[str] = mapped_column(String(320), primary_key=True)
+    reason: Mapped[str] = mapped_column(String(64), nullable=False)
+    detail: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("NOW()")
+    )
+
+
+class DoctorInvite(Base):
+    """One-shot onboarding token for a newly-created doctor account.
+
+    Issued by `POST /doctors` (or the re-issue endpoint) when the
+    admin chooses "invite by email" instead of typing a password. The
+    Account row exists with a random password; the doctor receives a
+    link containing the raw token (NOT the hash), follows it, sets
+    their real password, and we mark the row consumed.
+
+    Liveness predicate: `consumed_at IS NULL AND expires_at > NOW()`.
+    Multiple historical rows per doctor are allowed (re-issue flow);
+    the onboarding endpoint picks the most recent live row.
+    """
+    __tablename__ = "doctor_invites"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # NULL for "new-doctor" invites issued by email before any Doctor row
+    # exists. The onboarding-complete path fills this in atomically with
+    # the new Doctor row's id.
+    doctor_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("doctor.doctor_id", ondelete="CASCADE")
+    )
+    # Captured at invite time. The onboarding page surfaces this so the
+    # doctor sees "you're setting up the account that invite went to".
+    # Also used to reject double-invites for the same address.
+    email: Mapped[str] = mapped_column(Text, nullable=False)
+    # Optional admin-provided name hint, used purely to personalise the
+    # invite email's greeting. Doctor's actual family name is captured
+    # in the onboarding form.
+    family_name: Mapped[str | None] = mapped_column(Text)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("NOW()")
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class NotificationLog(Base):
+    """Idempotency record for every outbound notification.
+
+    `dedup_key` is the unique identity of a "thing we should send once",
+    constructed by the caller — e.g. `"reminder.t-24h:appt-123"` or
+    `"doctor.invite:doctor-45"`. The UNIQUE constraint means a cron
+    scanner can rely on `INSERT … ON CONFLICT DO NOTHING RETURNING id`
+    to atomically claim a send slot: if the insert returned a row the
+    caller is responsible for sending; if it didn't, someone else (or
+    a previous run) already sent it.
+
+    `kind` is the category (used for filtering / reporting);
+    `recipient` is the email address we sent to; `resend_msg_id` is the
+    Resend message id (populated after the API call, so a row in the
+    table with NULL resend_msg_id means "claimed to send but the API
+    call hasn't completed yet" — see send_reminders.py for the
+    claim → send → update sequence).
+    """
+    __tablename__ = "notification_log"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    dedup_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    recipient: Mapped[str] = mapped_column(Text, nullable=False)
+    sent_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("NOW()")
+    )
+    resend_msg_id: Mapped[str | None] = mapped_column(Text)
+
+

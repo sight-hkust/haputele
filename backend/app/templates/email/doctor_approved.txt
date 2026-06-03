@@ -1,0 +1,10 @@
+Hi Dr. {{ family_name }},
+
+Your account at {{ institute_name | default("HapuTele") }} has been approved by
+an administrator. You can now sign in using the username and password you
+chose during onboarding.
+
+    {{ login_link }}
+
+--
+{{ institute_name | default("HapuTele") }}

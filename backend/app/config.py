@@ -89,5 +89,31 @@ class Settings(BaseSettings):
     S3_SECRET_ACCESS_KEY: str = ""
     S3_FORCE_PATH_STYLE: bool = True
 
+    # Resend (transactional email). API key stays server-side. RESEND_FROM
+    # must use a domain you've verified in the Resend dashboard; until a
+    # domain is verified, set RESEND_FROM to "onboarding@resend.dev" and
+    # note that delivery is restricted to the account-owner's email.
+    # RESEND_WEBHOOK_SECRET is the Svix signing secret shown when you add
+    # a webhook endpoint; required to accept POSTs on /resend/webhook.
+    # When RESEND_API_KEY is empty, send_email() raises a clean 422 so
+    # callers can branch on `email_not_configured` in dev/test.
+    RESEND_API_KEY: str = ""
+    RESEND_FROM: str = ""
+    RESEND_REPLY_TO: str = ""
+    RESEND_WEBHOOK_SECRET: str = ""
+
+    # Where the frontend lives — used by the email service to build absolute
+    # URLs in transactional templates (e.g. doctor invite links). No trailing
+    # slash. In dev with the Next.js dev server at :3000 set
+    # FRONTEND_BASE_URL=http://localhost:3000; in prod set it to your real
+    # https origin. If empty, send_templated() refuses to render any template
+    # that needs a link, because relative URLs in email don't resolve.
+    FRONTEND_BASE_URL: str = ""
+
+    # How long a doctor invite token is valid for, in hours. Default 72h
+    # (long weekend) gives a busy clinician enough slack but is short
+    # enough that a leaked link doesn't sit usable for weeks.
+    DOCTOR_INVITE_TTL_HOURS: int = 72
+
 
 settings = Settings()

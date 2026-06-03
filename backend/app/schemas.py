@@ -48,7 +48,76 @@ class DoctorBase(BaseModel):
 
 class DoctorCreate(DoctorBase):
     username: str
+    # Optional — if omitted/empty, the system creates the account with a
+    # random password and emails the doctor an invite link to set their
+    # own. Requires the email service to be configured; the endpoint will
+    # 422 `email_not_configured` otherwise.
+    password: Optional[str] = None
+
+
+class DoctorOnboardingPeek(BaseModel):
+    """Public view returned when a doctor visits an invite link.
+
+    `mode` distinguishes the two invite shapes:
+      - "new"      → the doctor is onboarding fresh. Frontend renders the
+                     full profile form; email + familyName are shown read-only
+                     as part of the welcome.
+      - "rotation" → an existing doctor is just setting a new password.
+                     Frontend renders the slim password-only form.
+    """
+    mode: str  # "new" | "rotation"
+    email: str
+    # Populated in "new" mode when the admin supplied a family-name hint
+    # at invite time, and in "rotation" mode from the existing Doctor row.
+    familyName: str | None = None
+    givenName: str | None = None  # only in rotation mode
+
+
+class DoctorOnboardingComplete(BaseModel):
+    """Rotation-flow payload — just a new password."""
     password: str
+
+
+class DoctorOnboardingSubmit(BaseModel):
+    """New-doctor payload — full profile + chosen credentials.
+
+    Note: there is deliberately NO email field. The invite already binds
+    an email address; the server uses that value when creating the
+    Account + Doctor row and ignores anything the client might send.
+    This makes the "doctor submitted a different email" case
+    unrepresentable rather than something we'd need to validate against.
+
+    Server validates §1.7 mandatory fields are present. RubberStampImage
+    is a base64 data URL (the same shape the admin form already uses).
+    """
+    username: str
+    password: str
+    givenName: str
+    familyName: str
+    contact: str
+    slmcRegistrationNumber: str
+    qualifications: str
+    practitionerAddress: str
+    instituteName: str
+    instituteContact: str
+    rubberStampImage: str  # base64
+
+
+class DoctorInviteCreate(BaseModel):
+    """Admin's invite-by-email request. Only the email is required.
+
+    `familyName` is an optional hint solely for the invite email's
+    greeting — the doctor's real family name is captured during
+    onboarding. Not echoed in any later API response.
+    """
+    email: EmailStr
+    familyName: str | None = None
+
+
+class DoctorRejectIn(BaseModel):
+    """Admin's reject payload. `reason` is shown to the doctor on a
+    pending/rejected screen and stored on the Doctor row for audit."""
+    reason: str | None = None
 
 
 class DoctorUpdate(BaseModel):
@@ -81,6 +150,19 @@ class DoctorOut(BaseModel):
     instituteName: str = Field(validation_alias="institute_name")
     instituteContact: str = Field(validation_alias="institute_contact")
     active: bool
+    # Three-state lifecycle:
+    #   "awaiting_setup"    → live unconsumed invite, doctor hasn't filled
+    #                         out the form yet (or has filled it out and
+    #                         submitted but their row hasn't been created
+    #                         yet — only possible in the legacy mode).
+    #   "awaiting_approval" → doctor has submitted their profile; admin
+    #                         hasn't approved yet. Account exists but
+    #                         can't log in.
+    #   "rejected"          → admin reviewed + rejected. active is also
+    #                         false; rejected_at + rejected_reason are
+    #                         populated on the Doctor row.
+    #   "active"            → approved + onboarded. Normal state.
+    onboardingStatus: str = "active"
 
 
 class DoctorDetailOut(DoctorOut):

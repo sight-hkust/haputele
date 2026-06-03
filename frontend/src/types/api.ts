@@ -75,6 +75,13 @@ export type Doctor = {
   instituteName: string;
   instituteContact: string;
   active: boolean;
+  // Four-state lifecycle (server-computed):
+  //   awaiting_setup    → live unconsumed invite, no form submission yet
+  //   awaiting_approval → doctor self-onboarded; admin needs to act
+  //   rejected          → admin reviewed + rejected
+  //   active            → approved + usable
+  // Optional for backward compatibility with older response shapes.
+  onboardingStatus?: "awaiting_setup" | "awaiting_approval" | "rejected" | "active";
   // Only the singular GET /doctors/{id} populates this (as a base64 data URL);
   // the list endpoint omits it to keep payloads lean.
   rubberStampImage?: string | null;

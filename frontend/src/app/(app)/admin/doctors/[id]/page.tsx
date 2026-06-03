@@ -3,18 +3,22 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, ToggleLeft, ToggleRight } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Mail, RefreshCw, ShieldCheck, ShieldX, ToggleLeft, ToggleRight, XCircle } from "lucide-react";
 
 import { DoctorForm } from "@/components/admin/doctor-form";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
+import { Input, Label } from "@/components/primitives/input";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { StatusBadge } from "@/components/primitives/status-badge";
 import {
+  useApproveDoctor,
   useDeactivateDoctor,
   useDoctor,
+  useReissueDoctorInvite,
+  useRejectDoctor,
   useUpdateDoctor,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
@@ -28,7 +32,16 @@ export default function DoctorDetailPage() {
   const doctor = useDoctor(Number.isFinite(id) ? id : null);
   const update = useUpdateDoctor(id);
   const deactivate = useDeactivateDoctor();
+  const reissueInvite = useReissueDoctorInvite();
+  const approve = useApproveDoctor();
+  const reject = useRejectDoctor();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  // Lightweight one-shot ack after re-sending. Cleared when the user
+  // navigates away (component unmount). No toast system in scope here,
+  // so we render a small inline pill.
+  const [inviteJustSent, setInviteJustSent] = useState(false);
 
   if (doctor.error) {
     return (
@@ -91,6 +104,126 @@ export default function DoctorDetailPage() {
         }
       />
 
+      {/* Awaiting-approval banner — the doctor has submitted their
+          profile, you need to review and click Approve (or Reject). */}
+      {d.onboardingStatus === "awaiting_approval" && (
+        <Card className="border-sky-200 bg-sky-50/50 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-sky-100 p-2">
+                <ShieldCheck className="h-4 w-4 text-sky-700" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-sky-900">
+                  Awaiting your approval
+                </p>
+                <p className="mt-1 text-sm text-sky-800">
+                  This doctor submitted their profile. Review the §1.7 fields
+                  below, then approve to let them log in.
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => setRejectOpen(true)}
+                disabled={approve.isPending || reject.isPending}
+              >
+                <ShieldX className="h-4 w-4" />
+                Reject
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => approve.mutate(d.id)}
+                disabled={approve.isPending}
+              >
+                <CheckCircle2 className={`h-4 w-4 ${approve.isPending ? "animate-pulse" : ""}`} />
+                {approve.isPending ? "Approving…" : "Approve"}
+              </Button>
+            </div>
+          </div>
+          {approve.error && (
+            <ErrorBanner className="mt-3">{explainError(approve.error.error)}</ErrorBanner>
+          )}
+        </Card>
+      )}
+
+      {/* Rejected banner — terminal state. */}
+      {d.onboardingStatus === "rejected" && (
+        <Card className="border-rose-200 bg-rose-50/50 p-5">
+          <div className="flex items-start gap-3">
+            <div className="rounded-lg bg-rose-100 p-2">
+              <XCircle className="h-4 w-4 text-rose-700" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-rose-900">
+                Submission rejected
+              </p>
+              <p className="mt-1 text-sm text-rose-800">
+                The doctor can&rsquo;t log in. Re-issue an invite if you want
+                them to try again.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Awaiting-setup banner. Only renders when there's a live unconsumed
+          invite for this doctor; folds in the re-send affordance so the
+          admin doesn't have to dig for it. */}
+      {d.onboardingStatus === "awaiting_setup" && (
+        <Card className="border-amber-200 bg-amber-50/50 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-amber-100 p-2">
+                <Mail className="h-4 w-4 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-amber-900">
+                  Awaiting onboarding
+                </p>
+                <p className="mt-1 text-sm text-amber-800">
+                  This doctor hasn&rsquo;t set their password yet. The most
+                  recent invite link is still active.
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {inviteJustSent && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Sent
+                </span>
+              )}
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() =>
+                  reissueInvite.mutate(d.id, {
+                    onSuccess: () => {
+                      setInviteJustSent(true);
+                      // Hide the "Sent" pill after 4s so it doesn't sit there forever.
+                      setTimeout(() => setInviteJustSent(false), 4000);
+                    },
+                  })
+                }
+                disabled={reissueInvite.isPending}
+              >
+                <RefreshCw className={`h-4 w-4 ${reissueInvite.isPending ? "animate-spin" : ""}`} />
+                {reissueInvite.isPending ? "Sending…" : "Re-send invite"}
+              </Button>
+            </div>
+          </div>
+          {reissueInvite.error && (
+            <ErrorBanner className="mt-3">
+              {explainError(reissueInvite.error.error)}
+            </ErrorBanner>
+          )}
+        </Card>
+      )}
+
       <Card variant="elevated" className="p-8">
         <DoctorForm
           mode="update"
@@ -119,6 +252,52 @@ export default function DoctorDetailPage() {
           onCancel={() => router.push("/admin")}
         />
       </Card>
+
+      <Modal
+        open={rejectOpen}
+        onClose={() => !reject.isPending && setRejectOpen(false)}
+        title="Reject this submission?"
+        description="The doctor won't be able to log in. They'll see the reason you enter below if they try."
+      >
+        {reject.error && (
+          <ErrorBanner className="mb-3">{explainError(reject.error.error)}</ErrorBanner>
+        )}
+        <div className="mb-4 flex flex-col gap-2">
+          <Label htmlFor="reject-reason">Reason (shown to the doctor)</Label>
+          <Input
+            id="reject-reason"
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="e.g. SLMC number couldn't be verified"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => setRejectOpen(false)}
+            disabled={reject.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() =>
+              reject.mutate(
+                { id: d.id, reason: rejectReason.trim() || undefined },
+                {
+                  onSuccess: () => {
+                    setRejectOpen(false);
+                    setRejectReason("");
+                  },
+                },
+              )
+            }
+            disabled={reject.isPending}
+          >
+            {reject.isPending ? "Rejecting…" : "Reject submission"}
+          </Button>
+        </div>
+      </Modal>
 
       <Modal
         open={confirmOpen}

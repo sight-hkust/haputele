@@ -1,16 +1,80 @@
 import base64
+import logging
+import secrets
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from datetime import datetime, timezone
+
+from ..config import settings
 from ..deps import db_dep, require_role
-from ..errors import not_found, unprocessable
-from ..models import Account, Doctor
-from ..schemas import DoctorCreate, DoctorDetailOut, DoctorOut, DoctorUpdate
+from ..errors import conflict, not_found, unprocessable
+from ..models import Account, Doctor, DoctorInvite
+from ..schemas import (
+    DoctorCreate,
+    DoctorDetailOut,
+    DoctorInviteCreate,
+    DoctorOut,
+    DoctorRejectIn,
+    DoctorUpdate,
+)
 from ..security import hash_password
+from ..services import doctor_invites as invites
+from ..services.email import is_configured as email_configured, send_templated
 from ..services.signature import decode_rubber_stamp
 from ..services.storage import delete_object, get_bytes, object_key, put_bytes
+
+
+def _doctors_with_live_invite(db: Session, doctor_ids: list[int]) -> set[int]:
+    """Single query: which of these doctor_ids have a live unconsumed invite?
+
+    A "live" invite is `consumed_at IS NULL AND expires_at > NOW()`. Used by
+    list_doctors to compute onboardingStatus without N+1, and by the detail
+    endpoint as a degenerate single-element case.
+    """
+    if not doctor_ids:
+        return set()
+    rows = db.scalars(
+        select(DoctorInvite.doctor_id)
+        .where(
+            DoctorInvite.doctor_id.in_(doctor_ids),
+            DoctorInvite.consumed_at.is_(None),
+            DoctorInvite.expires_at > datetime.now(timezone.utc),
+        )
+        .distinct()
+    ).all()
+    return set(rows)
+
+
+def _onboarding_status(doctor: Doctor, *, has_live_invite: bool) -> str:
+    """Resolve the 4-way status from Doctor row state + invite liveness.
+
+    Priority (top wins): rejected > awaiting_setup (live invite + no row-
+    completion) > awaiting_approval (row exists but unapproved) > active.
+
+    Note: a doctor in the new-doctor flow has `approved_at IS NULL` AND
+    has consumed their invite by the time we look. A doctor in the
+    rotation flow has `approved_at` populated (backfilled by 0010 for
+    pre-existing rows, or set by the legacy POST /doctors path which
+    auto-approves).
+    """
+    if doctor.rejected_at is not None:
+        return "rejected"
+    if has_live_invite:
+        return "awaiting_setup"
+    if doctor.approved_at is None:
+        return "awaiting_approval"
+    return "active"
+
+
+def _attach_status(out: DoctorOut, doctor: Doctor, *, has_live_invite: bool) -> DoctorOut:
+    out.onboardingStatus = _onboarding_status(doctor, has_live_invite=has_live_invite)
+    return out
+
+
+_logger = logging.getLogger("haputele.doctors")
 
 
 router = APIRouter(prefix="/doctors", tags=["doctors"])
@@ -44,6 +108,17 @@ def _encode_stamp(data: bytes | None) -> str | None:
 @router.post("", response_model=DoctorOut, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role("admin"))])
 def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> DoctorOut:
+    """Legacy admin-fills-everything path. Two sub-modes by `password`:
+
+      password set    → admin types the password and shares it offline.
+      password absent → password-rotation invite goes out to the doctor's
+                        email so they can pick a password without admin
+                        ever seeing it. Requires email_configured().
+
+    Doctor is auto-approved on this path — the admin typed every field
+    themselves so there's nothing to review. For the "doctor fills
+    everything" path use POST /doctors/invites instead.
+    """
     missing = [f for f in REQUIRED_PRESCRIPTION_FIELDS if not getattr(payload, f, None)]
     if missing:
         raise unprocessable("missing_prescription_fields", missing=missing)
@@ -51,14 +126,23 @@ def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> Docto
     if db.get(Account, payload.username):
         raise unprocessable("username_taken")
 
+    invite_mode = not payload.password
+    if invite_mode and not email_configured():
+        raise unprocessable("email_not_configured")
+
     stamp = decode_rubber_stamp(payload.rubberStampImage)
     mime, ext = _sniff_stamp(stamp)
     stamp_key = object_key("doctors/stamps", ext)
     put_bytes(stamp_key, stamp, mime)
 
+    # In invite mode, generate a random password that's effectively
+    # un-guessable. The doctor will replace it via the onboarding flow;
+    # the value never leaves this function (no log, no return).
+    initial_password = payload.password or secrets.token_urlsafe(48)
+
     account = Account(
         username=payload.username,
-        password=hash_password(payload.password),
+        password=hash_password(initial_password),
         role="doctor",
     )
     doctor = Doctor(
@@ -74,22 +158,258 @@ def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> Docto
         institute_contact=payload.instituteContact,
         rubber_stamp_key=stamp_key,
         active=True,
+        # Legacy path is auto-approved — admin typed every field, there's
+        # nothing to review.
+        approved_at=datetime.now(timezone.utc),
     )
     db.add(account)
     db.add(doctor)
     db.commit()
     db.refresh(doctor)
-    return DoctorOut.model_validate(doctor)
+
+    if invite_mode:
+        _send_invite(db, doctor)
+
+    out = DoctorOut.model_validate(doctor)
+    return _attach_status(out, doctor, has_live_invite=invite_mode)
+
+
+@router.post("/{doctor_id}/invites", status_code=status.HTTP_204_NO_CONTENT,
+             dependencies=[Depends(require_role("admin"))])
+def reissue_invite(doctor_id: int, db: Session = Depends(db_dep)) -> Response:
+    """Issue a fresh password-rotation invite for an existing doctor.
+
+    Used when the original link expired, was lost, or the doctor's email
+    address has been corrected. Any prior live invite for the same
+    doctor is revoked inside `invites.issue_rotation()`.
+    """
+    if not email_configured():
+        raise unprocessable("email_not_configured")
+    doctor = db.get(Doctor, doctor_id)
+    if doctor is None:
+        raise not_found("doctor_not_found")
+    _send_invite(db, doctor)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/invites", status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role("admin"))])
+def invite_new_doctor(
+    payload: DoctorInviteCreate, db: Session = Depends(db_dep),
+) -> dict:
+    """Email-only invite: admin types just the doctor's email, the
+    doctor fills out their full profile via the onboarding link.
+
+    The Doctor row is NOT created here — it springs into existence when
+    the doctor consumes the invite. The admin then sees it in their
+    "awaiting approval" queue and approves or rejects.
+
+    Refuses (409 `email_already_used`) if the address is already in use
+    by an existing doctor or has a separate live invite.
+    """
+    if not email_configured():
+        raise unprocessable("email_not_configured")
+    invite, raw_token = invites.issue_new_doctor(
+        db, email=payload.email, family_name=payload.familyName,
+    )
+    link = invites.build_invite_link(raw_token)
+    try:
+        msg_id = send_templated(
+            db,
+            to=invite.email,
+            subject="You're invited to HapuTele",
+            template="doctor_invite",
+            context={
+                "mode": "new",
+                # Hint only — may be None. The template falls back to
+                # "Hi there," when absent.
+                "family_name": invite.family_name,
+                "link": link,
+                "expires_hours": int(
+                    (invite.expires_at - invite.created_at).total_seconds() // 3600
+                ),
+            },
+            tags={"kind": "doctor.invite.new", "invite_id": str(invite.id)},
+        )
+        _logger.info(
+            "new-doctor invite sent: email=%s invite_id=%s msg_id=%s",
+            invite.email, invite.id, msg_id,
+        )
+    except Exception:
+        _logger.exception(
+            "new-doctor invite email failed (invite row %s still issued): email=%s",
+            invite.id, invite.email,
+        )
+    return {"inviteId": invite.id, "email": invite.email}
+
+
+@router.post("/{doctor_id}/approve", response_model=DoctorOut,
+             dependencies=[Depends(require_role("admin"))])
+def approve_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorOut:
+    """Approve a self-onboarded doctor. Idempotent — re-calling after
+    approval is a no-op that still returns the current state.
+
+    Rejecting a previously-rejected doctor first requires clearing
+    rejected_at (the frontend's "Re-open this submission" path), so this
+    endpoint refuses (409 `doctor_rejected`) until that's done."""
+    doctor = db.get(Doctor, doctor_id)
+    if doctor is None:
+        raise not_found("doctor_not_found")
+    if doctor.rejected_at is not None:
+        raise conflict("doctor_rejected")
+    # Only send the notification email on the actual NULL→approved
+    # transition. Repeat approval calls are no-ops at the DB level AND
+    # at the email level, so a fat-fingered double-click doesn't ping
+    # the doctor twice.
+    just_approved = doctor.approved_at is None
+    if just_approved:
+        doctor.approved_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(doctor)
+        _send_approval_notification(db, doctor)
+    _logger.info("doctor approved: id=%s username=%s", doctor_id, doctor.username)
+    out = DoctorOut.model_validate(doctor)
+    has_live = doctor.doctor_id in _doctors_with_live_invite(db, [doctor.doctor_id])
+    return _attach_status(out, doctor, has_live_invite=has_live)
+
+
+def _send_approval_notification(db: Session, doctor: Doctor) -> None:
+    """Dispatch the "your account is ready" email. Best-effort: a Resend
+    failure here is logged but does NOT roll back the approval. The
+    admin sees the doctor as approved either way; the doctor either gets
+    the email or (worst case) finds out the next time they try to log in.
+
+    Skipped silently if the email service isn't configured — the admin
+    is still in the loop and can tell the doctor by other means.
+    """
+    if not email_configured():
+        _logger.info(
+            "approval email skipped (email_not_configured): doctor_id=%s",
+            doctor.doctor_id,
+        )
+        return
+    login_link = f"{settings.FRONTEND_BASE_URL or ''}/login"
+    try:
+        msg_id = send_templated(
+            db,
+            to=doctor.email,
+            subject="Your HapuTele account is approved",
+            template="doctor_approved",
+            context={
+                "family_name": doctor.family_name,
+                "login_link": login_link,
+            },
+            tags={"kind": "doctor.approved", "doctor_id": str(doctor.doctor_id)},
+            # Same approval can't be triggered twice (NULL→ts is the
+            # state change we guard on), but pass an idempotency key
+            # anyway for symmetry with the invite path. If approval is
+            # ever moved to an at-least-once delivery (job queue), the
+            # key remains the right uniqueness token at Resend.
+            idempotency_key=f"doctor.approved:doctor-{doctor.doctor_id}",
+        )
+        _logger.info(
+            "doctor approval email sent: doctor_id=%s msg_id=%s",
+            doctor.doctor_id, msg_id,
+        )
+    except Exception:
+        _logger.exception(
+            "doctor approval email failed (doctor still approved): doctor_id=%s",
+            doctor.doctor_id,
+        )
+
+
+@router.post("/{doctor_id}/reject", response_model=DoctorOut,
+             dependencies=[Depends(require_role("admin"))])
+def reject_doctor(
+    doctor_id: int,
+    payload: DoctorRejectIn,
+    db: Session = Depends(db_dep),
+) -> DoctorOut:
+    """Reject a self-onboarded doctor. Stamps rejected_at +
+    rejected_reason and deactivates so they can't log in.
+
+    Refuses (409 `doctor_already_approved`) if the doctor is already
+    approved — admin should deactivate via the normal DELETE path instead
+    so the audit trail stays clean ("rejected" specifically means the
+    onboarding submission was bad).
+    """
+    doctor = db.get(Doctor, doctor_id)
+    if doctor is None:
+        raise not_found("doctor_not_found")
+    if doctor.approved_at is not None:
+        raise conflict("doctor_already_approved")
+    doctor.rejected_at = datetime.now(timezone.utc)
+    doctor.rejected_reason = (payload.reason or "").strip() or None
+    doctor.active = False
+    db.commit()
+    db.refresh(doctor)
+    _logger.info(
+        "doctor rejected: id=%s username=%s reason=%r",
+        doctor_id, doctor.username, doctor.rejected_reason,
+    )
+    out = DoctorOut.model_validate(doctor)
+    has_live = doctor.doctor_id in _doctors_with_live_invite(db, [doctor.doctor_id])
+    return _attach_status(out, doctor, has_live_invite=has_live)
+
+
+def _send_invite(db: Session, doctor: Doctor) -> None:
+    """Issue an invite row and dispatch the email. Logs but doesn't raise
+    on Resend failure — the admin has already gotten a 201 for the
+    create, and the invite row exists for re-send."""
+    invite, raw_token = invites.issue_rotation(db, doctor_id=doctor.doctor_id)
+    link = invites.build_invite_link(raw_token)
+    try:
+        msg_id = send_templated(
+            db,
+            to=doctor.email,
+            subject="Set your password",
+            template="doctor_invite",
+            context={
+                "mode": "rotation",
+                "family_name": doctor.family_name,
+                "link": link,
+                "expires_hours": int(
+                    (invite.expires_at - invite.created_at).total_seconds() // 3600
+                ),
+            },
+            tags={"kind": "doctor.invite", "doctor_id": str(doctor.doctor_id)},
+        )
+        _logger.info(
+            "doctor invite sent: doctor_id=%s email=%s msg_id=%s",
+            doctor.doctor_id, doctor.email, msg_id,
+        )
+    except Exception:
+        _logger.exception(
+            "doctor invite email failed (invite row %s still issued): doctor_id=%s",
+            invite.id, doctor.doctor_id,
+        )
 
 
 @router.get("", response_model=list[DoctorOut])
 def list_doctors(active: bool | None = None, db: Session = Depends(db_dep),
-                 _user=Depends(require_role("admin", "doctor", "healthworker"))):
+                 user=Depends(require_role("admin", "doctor", "healthworker"))):
     stmt = select(Doctor)
     if active is not None:
         stmt = stmt.where(Doctor.active.is_(active))
+    # Healthworkers (booking flow) and doctors (browsing colleagues) only
+    # ever see approved, non-rejected doctors. Admins see everyone,
+    # including awaiting_approval and rejected entries, so they can act
+    # on them.
+    if user.role != "admin":
+        stmt = stmt.where(
+            Doctor.approved_at.is_not(None),
+            Doctor.rejected_at.is_(None),
+        )
     rows = db.scalars(stmt.order_by(Doctor.doctor_id)).all()
-    return [DoctorOut.model_validate(r) for r in rows]
+    # Two queries total: the doctor list, then a single batched lookup of
+    # "which of these have a live invite". O(1) regardless of doctor count.
+    awaiting_ids = _doctors_with_live_invite(db, [r.doctor_id for r in rows])
+    return [
+        _attach_status(
+            DoctorOut.model_validate(r), r, has_live_invite=r.doctor_id in awaiting_ids,
+        )
+        for r in rows
+    ]
 
 
 @router.get("/{doctor_id}", response_model=DoctorDetailOut,
@@ -100,7 +420,8 @@ def get_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorDetailOut
         raise not_found("doctor_not_found")
     out = DoctorDetailOut.model_validate(doctor)
     out.rubberStampImage = _encode_stamp(get_bytes(doctor.rubber_stamp_key))
-    return out
+    has_live = doctor.doctor_id in _doctors_with_live_invite(db, [doctor.doctor_id])
+    return _attach_status(out, doctor, has_live_invite=has_live)
 
 
 @router.patch("/{doctor_id}", response_model=DoctorOut,
@@ -153,7 +474,9 @@ def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(d
     # commit rolls back to old_key, so we must not delete it pre-commit.
     if superseded_key:
         delete_object(superseded_key)
-    return DoctorOut.model_validate(doctor)
+    out = DoctorOut.model_validate(doctor)
+    has_live = doctor.doctor_id in _doctors_with_live_invite(db, [doctor.doctor_id])
+    return _attach_status(out, doctor, has_live_invite=has_live)
 
 
 @router.delete("/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT,

@@ -1,0 +1,35 @@
+{% if family_name -%}
+Hi Dr. {{ family_name }},
+{%- else -%}
+Hi Doctor,
+{%- endif %}
+
+{% if mode == "new" -%}
+An administrator at {{ institute_name | default("HapuTele") }} has invited you
+to join the practitioner programme.
+
+Click the link below to provide your information — name, contact, SLMC
+registration, qualifications, your institute, and your prescription rubber
+stamp:
+
+    {{ link }}
+
+Once you submit, an administrator will review the information you provided.
+We'll notify you by email as soon as your account is approved and ready to use.
+
+This link expires in {{ expires_hours }} hours. If you didn't expect this
+invitation, you can safely ignore it — no account is created until you
+complete the form.
+{%- else -%}
+An account has been created for you at {{ institute_name | default("HapuTele") }}.
+
+Set your password using the link below to finish onboarding:
+
+    {{ link }}
+
+This link expires in {{ expires_hours }} hours. If you didn't expect this
+email, you can ignore it — the account stays inert until the link is used.
+{%- endif %}
+
+--
+{{ institute_name | default("HapuTele") }}

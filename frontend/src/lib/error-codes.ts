@@ -55,6 +55,27 @@ const MESSAGES: Record<string, string> = {
   setup_address_required: "Provide at least one institute address line.",
   setup_institute_name_required: "Institute name is required.",
   setup_institute_phone_required: "Institute contact phone is required.",
+  // Doctor invite / onboarding flow.
+  invite_not_found:
+    "This invite link isn't valid. It may have expired or already been used. Ask your administrator to resend a new one.",
+  password_too_short: "Choose a password at least 8 characters long.",
+  missing_password: "Choose a password.",
+  email_not_configured:
+    "Email isn't set up on the server, so an invite can't be sent. Ask an administrator to either configure the email service or create the account with a manual password.",
+  email_already_used:
+    "A doctor account or pending invite already uses that email address.",
+  email_mismatch:
+    "The email in the form has to match the one your invite was sent to.",
+  wrong_invite_mode:
+    "This invite link is for a different onboarding flow. Ask your admin to resend it.",
+  account_pending_approval:
+    "Your account hasn't been approved by an administrator yet. Please wait — you'll get an email once it's reviewed.",
+  account_rejected:
+    "Your onboarding submission was rejected. Contact your administrator for details.",
+  doctor_rejected:
+    "This doctor's submission was previously rejected. Re-issue an invite to start fresh.",
+  doctor_already_approved:
+    "This doctor is already approved. Use deactivate instead if you want to disable them.",
   request_failed: "Something went wrong. Try again.",
 };
 

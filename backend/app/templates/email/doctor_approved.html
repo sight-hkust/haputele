@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block heading %}Your account is approved{% endblock %}
+{% block body %}
+  <p>Hi Dr. {{ family_name }},</p>
+  <p>
+    Your account at {{ institute_name | default("HapuTele") }} has been approved
+    by an administrator. You can now sign in using the username and password
+    you chose during onboarding.
+  </p>
+{% endblock %}
+{% block cta %}
+  <div style="margin-top:24px;">
+    <a href="{{ login_link }}"
+       style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:600;font-size:15px;">
+      Sign in
+    </a>
+  </div>
+  <p style="font-size:12px;color:#9ca3af;margin-top:24px;word-break:break-all;">
+    Or paste this URL into your browser:<br>
+    <span style="color:#6b7280;">{{ login_link }}</span>
+  </p>
+{% endblock %}

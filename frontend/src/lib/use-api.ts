@@ -194,7 +194,10 @@ export function useDoctor(id: number | null) {
 
 export type DoctorCreateRequest = {
   username: string;
-  password: string;
+  // Optional: when omitted the backend mints an invite token and emails the
+  // doctor a link to set their own password. Requires the email service to
+  // be configured server-side; otherwise the request 422s `email_not_configured`.
+  password?: string;
   givenName: string;
   familyName: string;
   contact: string;
@@ -226,6 +229,56 @@ export function useUpdateDoctor(id: number) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
+
+// Fires the doctor invite email again. Any prior live invite for the same
+// doctor is revoked inside the backend `services.doctor_invites.issue()`,
+// so the old link stops working as soon as this resolves.
+export function useReissueDoctorInvite() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<void, ApiError, number>({
+    mutationFn: (id) => fetcher(`/doctors/${id}/invites`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
+}
+
+// Invite-by-email: admin types just the email and (optionally) a name
+// hint. No Doctor row is created server-side until the doctor consumes
+// the invite via the public onboarding form.
+export type DoctorInviteRequest = { email: string; familyName?: string };
+export type DoctorInviteResponse = { inviteId: number; email: string };
+
+export function useInviteDoctor() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<DoctorInviteResponse, ApiError, DoctorInviteRequest>({
+    mutationFn: (body) => fetcher("/doctors/invites", { method: "POST", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
+}
+
+// Approve / reject a self-onboarded doctor. Approve flips status →
+// "active". Reject stamps rejected_at + sets active=false; supply a
+// reason that's surfaced on the rejected doctor's login screen.
+export function useApproveDoctor() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<Doctor, ApiError, number>({
+    mutationFn: (id) => fetcher(`/doctors/${id}/approve`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
+}
+
+export function useRejectDoctor() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<Doctor, ApiError, { id: number; reason?: string }>({
+    mutationFn: ({ id, reason }) =>
+      fetcher(`/doctors/${id}/reject`, { method: "POST", body: { reason } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
+}
+
 
 // Soft-delete — backend sets active=false, preserves FK references on past
 // appointments / consultations.
