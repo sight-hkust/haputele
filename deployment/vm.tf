@@ -3,7 +3,7 @@ resource "aws_lightsail_instance" "debian_vm" {
   availability_zone = data.sops_file.secrets.data["availability_zone"]
   blueprint_id      = "debian_12"
   bundle_id         = "small_3_0"
-  user_data = <<-EOF
+  user_data         = <<-EOF
               #cloud-config
               ssh_authorized_keys:
                 - ${tls_private_key.vm_key.public_key_openssh}
