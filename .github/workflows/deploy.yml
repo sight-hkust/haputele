@@ -58,7 +58,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        if: github.event.inputs.intent == 'plan' || github.event_name == 'push'
+        if: github.event.inputs.intent == 'plan'
         run: terraform plan -no-color
 
       - name: Terraform Apply

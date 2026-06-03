@@ -8,20 +8,12 @@ resource "nomad_job" "caddy" {
 
   jobspec = templatefile(
     "${path.module}/templates/caddy.nomad.tpl",
-    {}
+    {
+      domain = var.domain
+    }
   )
 }
 
-resource "aws_lightsail_instance_public_ports" "caddy_http" {
-  instance_name = aws_lightsail_instance.debian_vm.name
-
-  port_info {
-    protocol  = "tcp"
-    from_port = 80
-    to_port   = 80
-  }
-}
-
 output "public_url" {
-  value = "http://${aws_lightsail_instance.debian_vm.public_ip_address}"
+  value = "https://${var.domain}"
 }

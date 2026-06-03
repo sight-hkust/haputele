@@ -28,11 +28,16 @@ resource "aws_lightsail_instance" "debian_vm" {
                       path      = "/opt/postgres/data"
                       read_only = false
                     }
+                    host_volume "caddy_data" {
+                      path      = "/opt/caddy/data"
+                      read_only = false
+                    }
               runcmd:
                 - install -m 0755 -d /etc/apt/keyrings
                 - install -m 0755 -d /etc/nomad.d
                 - install -m 0755 -d /opt/nomad/data
                 - install -m 0755 -d /opt/postgres/data
+                - install -m 0755 -d /opt/caddy/data
                 - curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
                 - chmod a+r /etc/apt/keyrings/docker.gpg
                 - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list

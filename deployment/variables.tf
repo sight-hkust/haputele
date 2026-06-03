@@ -23,9 +23,10 @@ variable "postgres_user" {
 }
 
 variable "postgres_password" {
-  description = "PostgreSQL password"
+  description = "PostgreSQL password. Leave empty to auto-generate a random one (random_password.postgres)."
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "database_url" {
@@ -35,9 +36,10 @@ variable "database_url" {
 }
 
 variable "jwt_secret" {
-  description = "Secret used to sign JWTs"
+  description = "Secret used to sign JWTs. Leave empty to auto-generate a random one (random_password.jwt_secret)."
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "jwt_alg" {
@@ -161,6 +163,11 @@ variable "dns_subdomain" {
   description = "Subdomain for the haputele app"
   type        = string
   default     = "haputele"
+}
+
+variable "domain" {
+  description = "Public FQDN Caddy serves (e.g. haputele.example.com). Its A record must point at the VM's public IP; Caddy auto-provisions a TLS cert for it."
+  type        = string
 }
 
 variable "next_public_app_timezone" {
