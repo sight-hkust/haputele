@@ -35,7 +35,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/Root
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/LightsailProvisioner
           aws-region: ap-south-1
 
       - name: Setup Terraform
