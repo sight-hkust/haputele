@@ -344,7 +344,10 @@ def seeded_doctor(initialized_system):
             practitioner_address="Test Address",
             institute_name="Test Clinic",
             institute_contact="+94 11 111 1111",
-            rubber_stamp_image=b"\x89PNG\r\n\x1a\n",
+            # Post-S3 migration: column is rubber_stamp_key. We don't put
+            # actual bytes anywhere — no test reads the stamp back — so a
+            # fake key is fine.
+            rubber_stamp_key="test/stub-stamp-key.png",
             active=True,
             # Represents a pre-existing (already approved) doctor — the
             # invite-by-email flow has a separate path for fresh ones.
