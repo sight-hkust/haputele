@@ -8,7 +8,7 @@ job "frontend" {
 
     network {
       port "http" {
-        to = 3000
+        static = 3000
       }
     }
 

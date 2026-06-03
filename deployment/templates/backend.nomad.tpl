@@ -8,7 +8,7 @@ job "backend" {
 
     network {
       port "http" {
-        to = 8000
+        static = 8000
       }
     }
 
