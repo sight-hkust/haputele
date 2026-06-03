@@ -1,0 +1,14 @@
+Hi Dr. {{ doctor_family_name }},
+
+{% if window == "t-24h" -%}
+You have a consultation scheduled for tomorrow.
+{%- else -%}
+You have a consultation starting in about an hour.
+{%- endif %}
+
+  Patient:        {{ patient_given_name }} {{ patient_family_name }}
+  When:           {{ scheduled_at_local }}
+  Appointment ID: #{{ appointment_id }}
+
+--
+{{ institute_name | default("HapuTele") }}

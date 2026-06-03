@@ -75,7 +75,10 @@ function LoginScreen() {
     } catch (err) {
       // Backend returns a stable `invalid_credentials` code regardless of
       // which field was wrong, so the error never leaks user existence.
-      if (err instanceof ApiError && err.status === 401) {
+      // The pending-approval / rejected codes come back as 403 — those
+      // are intentionally specific because only the legitimate owner
+      // ever sees them (you have to have entered the right password).
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         setError(explainError(err.error));
       } else {
         setError("Couldn't reach the server. Try again in a moment.");

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block heading %}
+  {% if mode == "new" %}You're invited to {{ institute_name | default("HapuTele") }}{% else %}Set your password{% endif %}
+{% endblock %}
+{% block body %}
+  {# Greeting. For new-doctor invites we don't know they hold a doctorate
+     until they tell us, so we drop the "Dr." prefix. If the admin
+     provided a family-name hint, we use it as a plain first-line name. #}
+  {# We're inviting them to a practitioner programme, so treat them as
+     a doctor in both modes. With a family-name hint we use it; without
+     one we fall back to the role title. #}
+  {% if family_name %}
+    <p>Hi Dr. {{ family_name }},</p>
+  {% else %}
+    <p>Hi Doctor,</p>
+  {% endif %}
+
+  {% if mode == "new" %}
+    <p>
+      An administrator at {{ institute_name | default("HapuTele") }} has invited
+      you to join the practitioner programme. Click the link below to provide
+      your information — name, contact, SLMC registration, qualifications, your
+      institute, and your prescription rubber stamp.
+    </p>
+    <p>
+      Once you submit, an administrator will review the information you
+      provided. We&rsquo;ll notify you by email as soon as your account is
+      approved and ready to use.
+    </p>
+  {% else %}
+    <p>
+      An account has been created for you at {{ institute_name | default("HapuTele") }}.
+      Set your password using the link below to finish onboarding.
+    </p>
+  {% endif %}
+
+  <p style="color:#6b7280;font-size:13px;">
+    This link expires in {{ expires_hours }} hours.
+    {% if mode == "new" %}
+      If you didn&rsquo;t expect this invitation, you can safely ignore it —
+      no account is created until you complete the form.
+    {% else %}
+      If you didn&rsquo;t expect this email, you can ignore it — the account
+      stays inert until the link is used.
+    {% endif %}
+  </p>
+{% endblock %}
+{% block cta %}
+  <div style="margin-top:24px;">
+    <a href="{{ link }}"
+       style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:600;font-size:15px;">
+      {% if mode == "new" %}Provide your information{% else %}Set your password{% endif %}
+    </a>
+  </div>
+  <p style="font-size:12px;color:#9ca3af;margin-top:24px;word-break:break-all;">
+    Or paste this URL into your browser:<br>
+    <span style="color:#6b7280;">{{ link }}</span>
+  </p>
+{% endblock %}

@@ -19,11 +19,13 @@ from .routers import (
     availability,
     consultations,
     doctors,
+    doctor_onboarding,
     exports,
     livekit_webhook,
     patients,
     preconsult,
     queue,
+    resend_webhook,
     setup,
     summary,
     sysadmin,
@@ -150,6 +152,8 @@ def create_app() -> FastAPI:
     app.include_router(summary.router)
     app.include_router(exports.router)
     app.include_router(livekit_webhook.router)
+    app.include_router(resend_webhook.router)
+    app.include_router(doctor_onboarding.router)
 
     @app.get("/health", tags=["meta"])
     def health() -> dict:

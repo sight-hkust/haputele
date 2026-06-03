@@ -18,7 +18,12 @@ from .request_id import REQUEST_ID_HEADER
 from ..services.system_config import get_system_config
 
 
-_ALWAYS_OPEN_EXACT = {"/health", "/openapi.json", "/livekit/webhook"}
+_ALWAYS_OPEN_EXACT = {
+    "/health",
+    "/openapi.json",
+    "/livekit/webhook",
+    "/resend/webhook",
+}
 _ALWAYS_OPEN_PREFIXES = ("/docs", "/redoc")
 
 

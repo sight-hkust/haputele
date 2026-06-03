@@ -117,15 +117,26 @@ def _wipe_setup_state():
     db = SessionLocal()
     try:
         # Wipe accounts (cascades to doctor / availability via FK).
+        # The `appointments_locked_guard` trigger from migration 0005 has a
+        # bug: as a BEFORE-DELETE trigger it returns NEW (which is NULL for
+        # DELETE), silently suppressing the delete. We disable it for the
+        # duration of the wipe. (See bug note in the feature-end summary.)
         db.execute(text("DELETE FROM appointment_attachments"))
         db.execute(text("DELETE FROM consultations"))
         db.execute(text("DELETE FROM preconsultation"))
         db.execute(text("DELETE FROM consents"))
+        db.execute(text("ALTER TABLE appointments DISABLE TRIGGER appointments_locked_guard"))
         db.execute(text("DELETE FROM appointments"))
+        db.execute(text("ALTER TABLE appointments ENABLE TRIGGER appointments_locked_guard"))
         db.execute(text("DELETE FROM queue_entries"))
         db.execute(text("DELETE FROM doctor_availability"))
         db.execute(text("DELETE FROM profile"))
         db.execute(text("DELETE FROM patients"))
+        # Resend-feature tables — wiped explicitly even though they cascade
+        # from doctor / are FK-less, so test order is irrelevant.
+        db.execute(text("DELETE FROM notification_log"))
+        db.execute(text("DELETE FROM doctor_invites"))
+        db.execute(text("DELETE FROM email_suppressions"))
         db.execute(text("DELETE FROM doctor"))
         db.execute(text("DELETE FROM accounts"))
         db.execute(text("DELETE FROM setup_tokens"))
@@ -161,6 +172,195 @@ def client():
     from fastapi.testclient import TestClient
     with TestClient(app_main.app) as c:
         yield c
+
+
+# ── Fixtures for the Resend / doctor-invite / reminder tests ────────────
+
+@pytest.fixture
+def email_env(monkeypatch):
+    """Force the email service into 'configured' mode for tests.
+
+    Without this, `is_configured()` is False and any code path that
+    sends mail short-circuits with 422 — which is the *opposite* of
+    what we want to verify in the happy-path tests. The api key value
+    is fake; nothing actually hits Resend because `captured_emails`
+    monkeypatches the send functions.
+    """
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_fake_key_for_unit_tests")
+    monkeypatch.setenv("RESEND_FROM", "test@example.com")
+    monkeypatch.setenv("FRONTEND_BASE_URL", "http://testserver")
+    # The Settings object was already constructed at module import; mutate
+    # it in-place so downstream `settings.X` reads pick up the new values.
+    from app.config import settings as _settings
+    monkeypatch.setattr(_settings, "RESEND_API_KEY", "re_test_fake_key_for_unit_tests")
+    monkeypatch.setattr(_settings, "RESEND_FROM", "test@example.com")
+    monkeypatch.setattr(_settings, "FRONTEND_BASE_URL", "http://testserver")
+
+
+@pytest.fixture
+def captured_emails(monkeypatch):
+    """Intercept outbound email at the seam every caller uses.
+
+    Returns a list of `(fn_name, kwargs)` tuples — one per call. Each
+    monkeypatch points at the *binding inside the calling module*
+    (router / script / service), because Python imports copy references
+    at import time; replacing `app.services.email.send_templated` alone
+    wouldn't be seen by routers that have already done
+    `from ..services.email import send_templated`.
+    """
+    calls: list[tuple[str, dict]] = []
+    counter = {"n": 0}
+
+    def _fake_send_templated(db, **kwargs):
+        counter["n"] += 1
+        calls.append(("send_templated", kwargs))
+        return f"fake-msg-id-{counter['n']}"
+
+    def _fake_send_email(db, **kwargs):
+        counter["n"] += 1
+        calls.append(("send_email", kwargs))
+        return f"fake-msg-id-{counter['n']}"
+
+    # Patch at every import site we know about.
+    monkeypatch.setattr("app.services.email.send_templated", _fake_send_templated)
+    monkeypatch.setattr("app.services.email.send_email", _fake_send_email)
+    monkeypatch.setattr("app.routers.doctors.send_templated", _fake_send_templated)
+    return calls
+
+
+def _initialize_system_directly(db) -> None:
+    """Flip system_config to initialized without going through the wizard,
+    then refresh the in-memory cache.
+
+    Faster than the verify-token → initialize flow for tests that only
+    care about post-init behaviour (doctor onboarding, reminders). The
+    cache refresh is critical: the setup-gate middleware reads from a
+    module-level cache, not the DB, so an in-place DB UPDATE isn't
+    visible without explicitly re-loading.
+    """
+    from sqlalchemy import text
+    from app.services.system_config import load_system_config
+    db.execute(text(
+        "UPDATE system_config SET "
+        "  initialized_at = NOW(), "
+        "  institute_name = 'Test Clinic', "
+        "  institute_address_lines = '[\"Test St\"]'::jsonb, "
+        "  institute_contact_phone = '+94 11 000 0000', "
+        "  institute_contact_email = 'ops@example.com', "
+        "  app_timezone = 'Asia/Colombo', "
+        "  export_timezone = 'Asia/Colombo', "
+        "  master_consent_version = 'v1' "
+        "WHERE id = 1"
+    ))
+    db.commit()
+    load_system_config(db)
+
+
+@pytest.fixture
+def initialized_system():
+    """system_config flipped to 'initialized' so post-setup routes work."""
+    from app.database import SessionLocal
+    db = SessionLocal()
+    try:
+        _initialize_system_directly(db)
+    finally:
+        db.close()
+
+
+@pytest.fixture
+def admin_account(initialized_system):
+    """Seed an admin Account row. Returns (username, plaintext_password)."""
+    from app.database import SessionLocal
+    from app.models import Account
+    from app.security import hash_password
+
+    creds = ("test_admin", "TestAdmin-Password-123")
+    db = SessionLocal()
+    try:
+        db.add(Account(username=creds[0], password=hash_password(creds[1]), role="admin"))
+        db.commit()
+    finally:
+        db.close()
+    return creds
+
+
+@pytest.fixture
+def admin_client(client, admin_account):
+    """TestClient already logged in as the admin (cookies pre-set)."""
+    username, password = admin_account
+    r = client.post("/auth/login", json={"username": username, "password": password})
+    assert r.status_code == 200, r.text
+    return client
+
+
+@pytest.fixture
+def healthworker_account(initialized_system):
+    """Seed a healthworker Account. Returns (username, password)."""
+    from app.database import SessionLocal
+    from app.models import Account
+    from app.security import hash_password
+
+    creds = ("test_hw", "TestHW-Password-123")
+    db = SessionLocal()
+    try:
+        db.add(Account(username=creds[0], password=hash_password(creds[1]), role="healthworker"))
+        db.commit()
+    finally:
+        db.close()
+    return creds
+
+
+@pytest.fixture
+def seeded_doctor(initialized_system):
+    """A Doctor + Account ready to be invited. Returns the Doctor row.
+
+    The Account row's password is a random unguessable value (same as
+    what create_doctor's invite mode would generate), so tests that
+    verify "consume updates the password" can assert on a known-after
+    state without knowing the before-state.
+    """
+    import secrets
+    from datetime import datetime, timezone
+
+    from app.database import SessionLocal
+    from app.models import Account, Doctor
+    from app.security import hash_password
+
+    db = SessionLocal()
+    try:
+        username = "dr_test_seeded"
+        db.add(Account(
+            username=username,
+            password=hash_password(secrets.token_urlsafe(32)),
+            role="doctor",
+        ))
+        db.add(Doctor(
+            username=username,
+            given_name="Test", family_name="Doctor",
+            contact="+94 11 000 0000",
+            email="dr_test@example.com",
+            slmc_registration_number="SLMC-TEST",
+            qualifications="MBBS",
+            practitioner_address="Test Address",
+            institute_name="Test Clinic",
+            institute_contact="+94 11 111 1111",
+            # Post-S3 migration: column is rubber_stamp_key. We don't put
+            # actual bytes anywhere — no test reads the stamp back — so a
+            # fake key is fine.
+            rubber_stamp_key="test/stub-stamp-key.png",
+            active=True,
+            # Represents a pre-existing (already approved) doctor — the
+            # invite-by-email flow has a separate path for fresh ones.
+            approved_at=datetime.now(timezone.utc),
+        ))
+        db.commit()
+        doctor = db.query(Doctor).filter_by(username=username).first()
+        # Detach from session so the fixture-consumer can use it after this
+        # fixture's session closes.
+        db.expunge(doctor)
+        return doctor
+    finally:
+        db.close()
 
 
 @pytest.fixture
