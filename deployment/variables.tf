@@ -157,17 +157,6 @@ variable "next_public_api_url" {
   default     = ""
 }
 
-variable "cloudflare_api_token" {
-  description = "Cloudflare API token for DNS management"
-  type        = string
-  sensitive   = true
-}
-
-variable "cloudflare_zone_id" {
-  description = "Cloudflare zone ID for sightprojects.app"
-  type        = string
-}
-
 variable "dns_subdomain" {
   description = "Subdomain for the haputele app"
   type        = string
