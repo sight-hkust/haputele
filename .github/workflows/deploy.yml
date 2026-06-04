@@ -103,10 +103,14 @@ jobs:
             echo "Unlocked via terraform force-unlock."
             exit 0
           fi
-          echo "terraform force-unlock failed; trying the unlock endpoint directly..."
+          # NOTE: the unlock verb is UNLOCK, NOT DELETE. On this http backend the
+          # state object and the lock share one path (/states/projects/haputele)
+          # and are distinguished by method — DELETE there deletes the STATE, so
+          # never use it here.
+          echo "terraform force-unlock failed; trying the unlock endpoint directly (UNLOCK)..."
           curl -sS -f -v \
             -u "${TF_HTTP_USERNAME}:${TF_HTTP_PASSWORD}" \
-            -X "${TF_HTTP_UNLOCK_METHOD:-DELETE}" \
+            -X "${TF_HTTP_UNLOCK_METHOD:-UNLOCK}" \
             -H 'Content-Type: application/json' \
             -d "{\"ID\":\"${LOCK_ID}\"}" \
             "${TF_HTTP_UNLOCK_ADDRESS}"
