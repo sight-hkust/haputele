@@ -1,0 +1,147 @@
+---
+# Provisions the HapuTele VM: everything the old cloud-init runcmd + Nomad jobs
+# used to do. Terraform now only creates the VM and ships an ansible-vault file
+# (/etc/haputele/vault.yml) via cloud-init; this playbook installs Docker,
+# decrypts that vault, renders config, and brings the docker compose stack up.
+#
+# Run by CI with: ansible-playbook -i <inventory> playbook.yml
+#   --private-key <key> --vault-password-file <pwfile> -e @vars.json
+- name: Provision HapuTele stack
+  hosts: haputele
+  become: true
+  gather_facts: true
+
+  vars:
+    app_dir: /opt/haputele
+    vault_remote_path: /etc/haputele/vault.yml
+    vault_staged_path: "{{ playbook_dir }}/.vault.staged.yml"
+
+  tasks:
+    # The apt module needs python3-apt, which minimal Debian 12 cloud images may
+    # lack. raw uses /bin/sh (no python deps) to bootstrap it before any apt task.
+    - name: Bootstrap python3-apt
+      ansible.builtin.raw: >-
+        test -e /usr/lib/python3/dist-packages/apt/__init__.py ||
+        (apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-apt)
+      changed_when: false
+
+    - name: Install prerequisite packages
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+        update_cache: true
+        state: present
+
+    - name: Create apt keyring directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Add Docker GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/debian/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Add Docker apt repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        mode: "0644"
+        content: >
+          deb [arch={{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}
+          signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
+
+    - name: Install Docker engine + compose plugin
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        update_cache: true
+        state: present
+
+    - name: Ensure docker is enabled and running
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Create app + data directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ app_dir }}"
+        - /opt/postgres/data
+        - /opt/caddy/data
+
+    - name: Read the encrypted vault placed on the VM by cloud-init
+      ansible.builtin.slurp:
+        src: "{{ vault_remote_path }}"
+      register: vault_blob
+
+    - name: Deploy stack with decrypted secrets
+      block:
+        # Stage the vault on the controller so include_vars can transparently
+        # decrypt it with --vault-password-file (vars files are loaded from the
+        # control node, not the remote).
+        - name: Stage the vault on the controller
+          ansible.builtin.copy:
+            content: "{{ vault_blob.content | b64decode }}"
+            dest: "{{ vault_staged_path }}"
+            mode: "0600"
+          delegate_to: localhost
+          become: false
+
+        - name: Load + decrypt secrets
+          ansible.builtin.include_vars:
+            file: "{{ vault_staged_path }}"
+            name: secrets
+
+        - name: Render .env
+          ansible.builtin.template:
+            src: env.j2
+            dest: "{{ app_dir }}/.env"
+            mode: "0600"
+
+        - name: Render Caddyfile
+          ansible.builtin.template:
+            src: Caddyfile.j2
+            dest: "{{ app_dir }}/Caddyfile"
+            mode: "0644"
+
+        - name: Copy docker-compose.prod.yml
+          ansible.builtin.copy:
+            src: docker-compose.prod.yml
+            dest: "{{ app_dir }}/docker-compose.prod.yml"
+            mode: "0644"
+
+        - name: Pull latest images
+          ansible.builtin.command:
+            cmd: docker compose --env-file .env -f docker-compose.prod.yml pull
+            chdir: "{{ app_dir }}"
+          register: compose_pull
+          changed_when: "'Pulled' in compose_pull.stderr or 'Downloaded' in compose_pull.stderr"
+
+        - name: Bring the stack up
+          ansible.builtin.command:
+            cmd: docker compose --env-file .env -f docker-compose.prod.yml up -d --remove-orphans
+            chdir: "{{ app_dir }}"
+          register: compose_up
+          changed_when: true
+
+      always:
+        - name: Remove staged vault from controller
+          ansible.builtin.file:
+            path: "{{ vault_staged_path }}"
+            state: absent
+          delegate_to: localhost
+          become: false

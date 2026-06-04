@@ -118,9 +118,24 @@ No admin/healthworker accounts are auto-created — the sys-admin is created thr
 
 After deploy, run through the first-run wizard from a trusted machine. The setup token is printed to the api container's stdout and written to `/data/setup-token` (in the `api_data` named volume); a single `/setup/initialize` POST seals the system and the token becomes invalid.
 
+### Automated AWS deployment (Terraform + Ansible)
+
+`deployment/` provisions a single AWS Lightsail VM and runs the whole stack with `docker compose` behind Caddy (automatic TLS). It is driven by the **Deployment** GitHub Actions workflow (`.github/workflows/deploy.yml`, `workflow_dispatch` → intent `plan` / `apply` / `destroy`). There is no orchestrator — Nomad was removed.
+
+How the pieces fit:
+
+- **Terraform** (`deployment/*.tf`) only creates infrastructure and *generates secrets*. It makes the VM, firewall, and SSH key, and combines the sops-encrypted secrets (`secrets.yaml`: Cloudflare R2 + Resend) with auto-generated ones (`JWT_SECRET`, the Postgres password, LiveKit key/secret) into one file. That file is **ansible-vault-encrypted** by `deployment/scripts/ansible-vault-encrypt.sh` (deterministically, so it doesn't churn) and shipped to the VM via cloud-init `write_files` as `/etc/haputele/vault.yml`. Cloud-init does nothing else.
+- **Ansible** (`deployment/ansible/`) runs as the next CI step over SSH: installs Docker, decrypts the vault, renders `/opt/haputele/.env` + a `Caddyfile`, and brings up `docker-compose.prod.yml` (Postgres, api, frontend, self-hosted LiveKit, Caddy). Non-secret config (domain, image tags, timezones, …) comes from Terraform outputs passed as `-e @vars.json`.
+
+Operational notes:
+
+- **Required CI secret:** `ANSIBLE_VAULT_PASSWORD` — used by Terraform to encrypt the vault and by Ansible to decrypt it.
+- **Secret rotation rebuilds the VM.** Cloud-init `user_data` is immutable (ForceNew), so changing any secret changes the vault ciphertext and replaces the instance. Non-secret changes (new image tags, domain config) only re-run Ansible — no VM rebuild.
+- **Migrating off Nomad (one-time):** the old state still references the removed `nomad` provider, so run a `terraform destroy` of the previous stack before the first `apply`, or `terraform state rm` the `nomad_job.*` / `null_resource.wait_for_nomad` resources first.
+
 Other production gaps to plug before any non-dev deployment:
 
-- No reverse proxy / TLS termination. Put Caddy / Traefik / nginx in front of ports 3000 and 8000. **TLS is mandatory** — `COOKIE_SECURE=true` is the default and browsers won't send the session cookie over plain HTTP.
+- The bundled dev `docker-compose.yml` has no reverse proxy / TLS — put Caddy / Traefik / nginx in front of ports 3000 and 8000 if you deploy it directly. **TLS is mandatory** — `COOKIE_SECURE=true` is the default and browsers won't send the session cookie over plain HTTP. (The automated AWS deployment above already fronts the stack with Caddy + ACME TLS.)
 - CORS defaults closed (`CORS_ALLOW_ORIGINS` empty) and uses `allow_credentials=True`. This is correct for the bundled `/api` rewrite where every browser request is same-origin. For cross-origin deploys, set `CORS_ALLOW_ORIGINS` to a comma-separated list of explicit origins — wildcards are forbidden in credentialed mode.
 - The bundled `rustfs` object store is dev-only — point `S3_*` at a managed/hardened S3 in production. `db` and `rustfs` have compose healthchecks; `api` and `frontend` do not.
 - No background worker, mailer, or scheduler.

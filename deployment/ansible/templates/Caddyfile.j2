@@ -1,0 +1,26 @@
+# Managed by Ansible (deployment/ansible/playbook.yml) — do not edit by hand.
+#
+# Serving a real hostname makes Caddy auto-provision a TLS cert via ACME
+# (HTTP-01 on :80) and serve HTTPS on :443. Requires the domain's A record to
+# point at this VM's public IP and ports 80+443 reachable. Upstreams use the
+# docker compose service names (not 127.0.0.1) since Caddy resolves them over
+# the compose network.
+{{ domain }} {
+    # Strip /livekit so the signaling WS (e.g. /livekit/rtc) reaches the server
+    # at /rtc. handle_path must match subpaths, not just bare /livekit.
+    handle_path /livekit/* {
+        reverse_proxy livekit:7880
+    }
+
+    # Backend routers are mounted without an /api prefix (auth lives at /auth,
+    # etc.), mirroring the next.config.mjs rewrite that strips /api in dev.
+    # handle_path strips the prefix; a plain handle would forward /api/* verbatim
+    # and 404 at the backend.
+    handle_path /api/* {
+        reverse_proxy api:8000
+    }
+
+    handle {
+        reverse_proxy frontend:3000
+    }
+}

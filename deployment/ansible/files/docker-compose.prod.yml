@@ -1,0 +1,112 @@
+# Production stack for the HapuTele VM. Rendered onto the VM by Ansible and run
+# with `docker compose --env-file /opt/haputele/.env -f docker-compose.prod.yml`.
+# Differs from the repo-root docker-compose.yml (dev): prebuilt GHCR images (no
+# build), real Cloudflare R2 instead of the rustfs dev store, and Caddy + LiveKit
+# added. Postgres/api/frontend stay internal on the default bridge; only Caddy
+# (80/443) and LiveKit's media ports are published.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${APP_TIMEZONE}
+    volumes:
+      - /opt/postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    image: ${DOCKER_IMAGE_BACKEND}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALG: ${JWT_ALG}
+      JWT_EXPIRE_MIN: ${JWT_EXPIRE_MIN}
+      COOKIE_SECURE: ${COOKIE_SECURE}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS}
+      MASTER_CONSENT_VERSION: ${MASTER_CONSENT_VERSION}
+      APP_TIMEZONE: ${APP_TIMEZONE}
+      TZ: ${APP_TIMEZONE}
+      LIVEKIT_URL: ${LIVEKIT_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      S3_REGION: ${S3_REGION}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM: ${RESEND_FROM}
+      RESEND_REPLY_TO: ${RESEND_REPLY_TO}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}
+      DOCTOR_INVITE_TTL_HOURS: ${DOCTOR_INVITE_TTL_HOURS}
+    volumes:
+      # Persists the plaintext setup-token file across restarts.
+      - api_data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: ${DOCKER_IMAGE_FRONTEND}
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_APP_TIMEZONE: ${NEXT_PUBLIC_APP_TIMEZONE}
+      TZ: ${APP_TIMEZONE}
+    depends_on:
+      - api
+
+  # Self-hosted LiveKit. Signaling (7880) stays internal — browsers reach it as
+  # wss://<domain>/livekit through Caddy. WebRTC media needs the host ports:
+  # 7881/tcp fallback and the 50000-50100/udp range, with use_external_ip so the
+  # server advertises the VM's public IP in ICE candidates.
+  livekit:
+    image: livekit/livekit-server:latest
+    restart: unless-stopped
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          port_range_start: 50000
+          port_range_end: 50100
+          use_external_ip: true
+        log_level: info
+        keys:
+          ${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}
+    ports:
+      - "7881:7881"
+      - "50000-50100:50000-50100/udp"
+
+  # Reverse proxy + automatic TLS. Caddyfile is rendered by Ansible and mounted
+  # at the image's default config path; /data persists ACME certs across restarts
+  # so Caddy doesn't re-provision from Let's Encrypt (rate limits) every boot.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    volumes:
+      - /opt/haputele/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/caddy/data:/data
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+      - frontend
+      - livekit
+
+volumes:
+  api_data:

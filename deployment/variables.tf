@@ -166,8 +166,27 @@ variable "dns_subdomain" {
 }
 
 variable "domain" {
-  description = "Public FQDN Caddy serves (e.g. haputele.example.com). Its A record must point at the VM's public IP; Caddy auto-provisions a TLS cert for it."
+  description = "Public FQDN Caddy serves. Its A record must point at the VM's public IP; Caddy auto-provisions a TLS cert for it."
   type        = string
+  default     = "haputele.sightprojects.app"
+}
+
+variable "availability_zone" {
+  description = "Lightsail availability zone. Must be a zone in the CI aws-region (ap-south-1). Not a secret, so it lives here rather than in sops."
+  type        = string
+  default     = "ap-south-1a"
+}
+
+variable "ansible_vault_password" {
+  description = "Password used to ansible-vault-encrypt the combined secrets file baked into cloud-init and to decrypt it during the Ansible run. Set via TF_VAR_ansible_vault_password (GitHub secret ANSIBLE_VAULT_PASSWORD)."
+  type        = string
+  sensitive   = true
+}
+
+variable "ansible_user" {
+  description = "SSH user Ansible connects as. Lightsail Debian 12 images default to 'admin' (cloud-init installs the TF public key there)."
+  type        = string
+  default     = "admin"
 }
 
 variable "next_public_app_timezone" {

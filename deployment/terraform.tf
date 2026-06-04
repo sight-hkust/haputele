@@ -9,10 +9,6 @@ terraform {
       source  = "carlpett/sops"
       version = "1.4.1"
     }
-    nomad = {
-      source  = "hashicorp/nomad"
-      version = "~> 2.0"
-    }
     tls = {
       source  = "hashicorp/tls"
       version = "~> 4.0"
@@ -20,6 +16,10 @@ terraform {
     random = {
       source  = "hashicorp/random"
       version = "~> 3.0"
+    }
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.0"
     }
   }
 }

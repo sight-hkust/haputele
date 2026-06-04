@@ -23,6 +23,11 @@ jobs:
     defaults:
       run:
         working-directory: deployment
+    env:
+      # Used by Terraform (data.external.vault encrypts the secrets file) and by
+      # the Ansible step (decrypts it). data.external runs during plan too, so
+      # this must be present for every Terraform invocation.
+      TF_VAR_ansible_vault_password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -37,6 +42,15 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/LightsailProvisioner
           aws-region: ap-south-1
+
+      # ansible-vault + jq back the Terraform external data source (vault.tf);
+      # ansible-playbook runs the post-apply provisioning. jq ships on the runner.
+      - name: Install Ansible
+        run: |
+          # pipx avoids PEP-668 "externally-managed-environment" failures from
+          # pip on the runner's system Python; it's preinstalled on ubuntu-latest.
+          pipx install ansible-core
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Setup Terraform
         uses: hkust-contrib/actions/setup-terraform@latest
@@ -64,6 +78,40 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event.inputs.intent == 'apply'
         run: terraform apply -auto-approve
+
+      # --- Provision the VM with Ansible (apply only) ---
+      - name: Wait for VM SSH + cloud-init
+        if: github.ref == 'refs/heads/main' && github.event.inputs.intent == 'apply'
+        run: |
+          IP="$(terraform output -raw vm_public_ip)"
+          terraform output -raw ssh_private_key > ssh_key
+          chmod 600 ssh_key
+          for i in $(seq 1 60); do
+            if ssh -i ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                 -o ConnectTimeout=5 "admin@${IP}" 'test -f /etc/haputele/vault.yml'; then
+              echo "VM ready (cloud-init wrote the vault file)."
+              exit 0
+            fi
+            echo "Waiting for VM ${IP} ($i/60)..."
+            sleep 10
+          done
+          echo "VM did not become ready in time." >&2
+          exit 1
+
+      - name: Run Ansible playbook
+        if: github.ref == 'refs/heads/main' && github.event.inputs.intent == 'apply'
+        env:
+          ANSIBLE_CONFIG: ${{ github.workspace }}/deployment/ansible/ansible.cfg
+        run: |
+          IP="$(terraform output -raw vm_public_ip)"
+          terraform output -raw ansible_extra_vars > vars.json
+          printf '%s' '${{ secrets.ANSIBLE_VAULT_PASSWORD }}' > vaultpass
+          printf '[haputele]\n%s\n' "$IP" > inventory.ini
+          ansible-playbook -i inventory.ini ansible/playbook.yml \
+            --private-key ssh_key \
+            --vault-password-file vaultpass \
+            -e @vars.json
+          rm -f vaultpass ssh_key
 
       - name: Terraform Destroy
         if: github.ref == 'refs/heads/main' && github.event.inputs.intent == 'destroy'

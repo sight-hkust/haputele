@@ -12,17 +12,6 @@ resource "aws_lightsail_instance_public_ports" "vm" {
     to_port   = 22
   }
 
-  # Nomad HTTP API. Terraform (the nomad provider + wait_for_nomad) connects
-  # here over the public IP, so it must stay reachable.
-  # SECURITY: this Nomad API has no ACL/TLS; an open 4646 lets anyone submit
-  # jobs (RCE). Lock this down (Nomad ACLs, or restrict cidrs to the CI egress
-  # range) before treating this as anything more than a disposable env.
-  port_info {
-    protocol  = "tcp"
-    from_port = 4646
-    to_port   = 4646
-  }
-
   # Caddy: 80 for ACME HTTP-01 challenge + HTTP->HTTPS redirect, 443 for HTTPS.
   port_info {
     protocol  = "tcp"
@@ -35,12 +24,9 @@ resource "aws_lightsail_instance_public_ports" "vm" {
     to_port   = 443
   }
 
-  # LiveKit: 7880 signaling (WS), 7881 RTC/TCP fallback, 50000-50100 RTC/UDP.
-  port_info {
-    protocol  = "tcp"
-    from_port = 7880
-    to_port   = 7880
-  }
+  # LiveKit media: 7881 RTC/TCP fallback, 50000-50100 RTC/UDP. Signaling (7880)
+  # is NOT exposed directly — browsers reach it as wss://<domain>/livekit through
+  # Caddy on 443, which reverse-proxies to the livekit container internally.
   port_info {
     protocol  = "tcp"
     from_port = 7881
