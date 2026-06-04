@@ -16,4 +16,4 @@ livekit-api==1.1.0
 boto3==1.35.84
 resend==2.30.1
 svix==1.45.1
-jinja2==3.1.4
+jinja2==3.1.6
