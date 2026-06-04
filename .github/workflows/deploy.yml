@@ -89,11 +89,27 @@ jobs:
       - name: Terraform Force Unlock
         if: github.event.inputs.intent == 'unlock'
         run: |
-          if [ -z "${{ github.event.inputs.lock_id }}" ]; then
+          LOCK_ID="${{ github.event.inputs.lock_id }}"
+          if [ -z "$LOCK_ID" ]; then
             echo "::error::intent=unlock requires the 'lock_id' input." >&2
             exit 1
           fi
-          terraform force-unlock -force "${{ github.event.inputs.lock_id }}"
+          # Preferred path. If the backend's unlock endpoint errors out (this
+          # http backend has returned retriable 5xx for force-unlock), fall back
+          # to calling the unlock endpoint directly with the standard TF
+          # http-backend protocol (method TF_HTTP_UNLOCK_METHOD, default DELETE;
+          # body = the lock info JSON). -v surfaces the server's real response.
+          if terraform force-unlock -force "$LOCK_ID"; then
+            echo "Unlocked via terraform force-unlock."
+            exit 0
+          fi
+          echo "terraform force-unlock failed; trying the unlock endpoint directly..."
+          curl -sS -f -v \
+            -u "${TF_HTTP_USERNAME}:${TF_HTTP_PASSWORD}" \
+            -X "${TF_HTTP_UNLOCK_METHOD:-DELETE}" \
+            -H 'Content-Type: application/json' \
+            -d "{\"ID\":\"${LOCK_ID}\"}" \
+            "${TF_HTTP_UNLOCK_ADDRESS}"
 
       - name: Terraform Plan
         id: plan
