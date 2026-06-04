@@ -11,10 +11,23 @@ on:
           - plan
           - apply
           - destroy
+          - unlock
+      lock_id:
+        type: string
+        description: "State lock ID to release (required when intent = unlock)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
   id-token: write
+
+# Serialize Deployment runs so two of them can't race for the Terraform state
+# lock. Queue rather than cancel — cancelling a run mid-apply is exactly what
+# leaves a stale lock behind.
+concurrency:
+  group: deploy-terraform
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -69,6 +82,18 @@ jobs:
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
+
+      # Release a stale state lock left by a cancelled/crashed run. Only removes
+      # the lock; does not touch state. Pass the lock ID from the error message
+      # as the `lock_id` input. Make sure no Deployment run is actually active.
+      - name: Terraform Force Unlock
+        if: github.event.inputs.intent == 'unlock'
+        run: |
+          if [ -z "${{ github.event.inputs.lock_id }}" ]; then
+            echo "::error::intent=unlock requires the 'lock_id' input." >&2
+            exit 1
+          fi
+          terraform force-unlock -force "${{ github.event.inputs.lock_id }}"
 
       - name: Terraform Plan
         id: plan
