@@ -194,14 +194,3 @@ variable "next_public_app_timezone" {
   type        = string
   default     = "Asia/Colombo"
 }
-
-variable "extra_authorized_keys" {
-  description = "Additional SSH public keys authorized for the 'admin' user, appended after the Terraform-generated VM key. Default: operator keys from https://github.com/0xinterface.keys."
-  type        = list(string)
-  default = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO3XtOQIWQXzJBMwKZAHj+CdStqUfLqTn80zoIYHqpMY",
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL4hoqAr76JwTIlUXjR1kMeIfRifij65hBN5vlK7bfco",
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHPK+bR2JIzK43k8rGILOlJ07YaymhHoXcpjR69ngqoC",
-    "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBG2h8OBT7O/X4jmyfKfODDrl84cjpcjbC7Ge3B4eoJf0EgVSqHjl7TK8MojnxjivoQl7kZGNHeoMJ/jUqSJqGW4=",
-  ]
-}

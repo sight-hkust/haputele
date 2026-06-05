@@ -9,6 +9,18 @@
 # SSH login user for the Lightsail Debian 12 image.
 ansible_user: admin
 
+# Operator SSH public keys, added to the admin user's authorized_keys by the
+# playbook — NOT via Terraform user_data, which is ForceNew and would destroy
+# and rebuild the VM on any change. Managing them here means a key add/remove is
+# just a playbook re-run against the live host. Public keys are non-secret, so
+# they live in plain group_vars rather than the vault. Source:
+# https://github.com/0xinterface.keys
+operator_authorized_keys:
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO3XtOQIWQXzJBMwKZAHj+CdStqUfLqTn80zoIYHqpMY"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL4hoqAr76JwTIlUXjR1kMeIfRifij65hBN5vlK7bfco"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHPK+bR2JIzK43k8rGILOlJ07YaymhHoXcpjR69ngqoC"
+  - "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBG2h8OBT7O/X4jmyfKfODDrl84cjpcjbC7Ge3B4eoJf0EgVSqHjl7TK8MojnxjivoQl7kZGNHeoMJ/jUqSJqGW4="
+
 # Container images.
 docker_image_backend: ghcr.io/sight-hkust/haputele-backend:latest
 docker_image_frontend: ghcr.io/sight-hkust/haputele-frontend:latest
