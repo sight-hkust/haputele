@@ -1,7 +1,7 @@
 resource "aws_lightsail_instance" "debian_vm" {
   name              = "debian-vm"
   availability_zone = var.availability_zone
-  blueprint_id      = "debian_12"
+  blueprint_id      = "debian_13"
   bundle_id         = "small_3_0"
 
   # Cloud-init is now intentionally minimal: it only authorizes the SSH key
