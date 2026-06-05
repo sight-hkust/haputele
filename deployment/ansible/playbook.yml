@@ -17,6 +17,21 @@
     vault_staged_path: "{{ playbook_dir }}/.vault.staged.yml"
 
   tasks:
+    # Authorize operator keys on the LIVE VM. Kept out of Terraform's user_data
+    # (ForceNew → VM replacement) on purpose: a managed block in admin's
+    # authorized_keys is idempotent and rebuild-free. The block markers fence off
+    # these keys so the Terraform-generated bootstrap key (written by user_data)
+    # is never touched. blockinfile is ansible-core, so no extra collection.
+    - name: Authorize operator SSH keys for {{ ansible_user }}
+      ansible.builtin.blockinfile:
+        path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+        create: true
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0600"
+        marker: "# {mark} ANSIBLE MANAGED — operator keys"
+        block: '{{ operator_authorized_keys | join("\n") }}'
+
     # The apt module needs python3-apt, which minimal Debian 12 cloud images may
     # lack. raw uses /bin/sh (no python deps) to bootstrap it before any apt task.
     - name: Bootstrap python3-apt
