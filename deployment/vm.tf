@@ -24,8 +24,9 @@ resource "aws_lightsail_instance" "debian_vm" {
   # the VM disk. Changing any secret changes the ciphertext, which (user_data
   # being ForceNew) replaces the VM — rotate secrets deliberately.
   user_data = templatefile("${path.module}/templates/user-data.sh.tpl", {
-    public_key       = trimspace(tls_private_key.vm_key.public_key_openssh)
-    vault_ciphertext = data.external.vault.result.ciphertext
+    public_key            = trimspace(tls_private_key.vm_key.public_key_openssh)
+    extra_authorized_keys = join("\n", var.extra_authorized_keys)
+    vault_ciphertext      = data.external.vault.result.ciphertext
   })
 
   tags = {

@@ -16,6 +16,7 @@ set -euo pipefail
 install -d -m 0700 -o admin -g admin /home/admin/.ssh
 cat > /home/admin/.ssh/authorized_keys <<'PUBKEY'
 ${public_key}
+${extra_authorized_keys}
 PUBKEY
 chown admin:admin /home/admin/.ssh/authorized_keys
 chmod 600 /home/admin/.ssh/authorized_keys
