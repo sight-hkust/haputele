@@ -123,13 +123,13 @@ variable "s3_force_path_style" {
 }
 
 variable "resend_from" {
-  description = "Sender address for Resend emails"
+  description = "Sender address for Resend emails. Must be on a domain verified in the Resend dashboard, else Resend rejects the send. Empty disables email (the backend's is_configured() requires both this and RESEND_API_KEY)."
   type        = string
-  default     = ""
+  default     = "noreply@haputele.sightprojects.app"
 }
 
 variable "resend_reply_to" {
-  description = "Reply-To address for Resend emails"
+  description = "Reply-To address for Resend emails. Optional; left empty so no Reply-To header is sent (no-reply transactional mail)."
   type        = string
   default     = ""
 }
