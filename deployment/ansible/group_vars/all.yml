@@ -51,8 +51,10 @@ DOCTOR_INVITE_TTL_HOURS: "72"
 S3_REGION: auto
 S3_FORCE_PATH_STYLE: "true"
 
-# Email (api key + webhook secret are secret — see vault).
-RESEND_FROM: ""
+# Email (api key + webhook secret are secret — see vault). RESEND_FROM must be
+# on a Resend-verified domain; empty disables email. Reply-To stays empty (no
+# Reply-To header on no-reply transactional mail).
+RESEND_FROM: noreply@haputele.sightprojects.app
 RESEND_REPLY_TO: ""
 
 # Frontend (NEXT_PUBLIC_* are inlined at image build time; passed for parity).
