@@ -1,0 +1,48 @@
+---
+# Non-secret defaults. Terraform overrides these at deploy time via
+# `-e @vars.json` (the ansible_extra_vars output), which has higher precedence;
+# these values only fill gaps so templates never hit an undefined variable.
+# Keep in sync with deployment/variables.tf defaults. Secret values are NOT
+# here — they come from the ansible-vault file delivered by cloud-init and are
+# loaded into the `secrets` namespace by the playbook.
+
+# SSH login user for the Lightsail Debian 12 image.
+ansible_user: admin
+
+# Container images.
+docker_image_backend: ghcr.io/sight-hkust/haputele-backend:latest
+docker_image_frontend: ghcr.io/sight-hkust/haputele-frontend:latest
+
+# Public-facing.
+domain: haputele.sightprojects.app
+LIVEKIT_URL: wss://haputele.sightprojects.app/livekit
+FRONTEND_BASE_URL: https://haputele.sightprojects.app
+
+# Database (password/DSN are secret — see vault).
+POSTGRES_DB: haputele
+POSTGRES_USER: hapu
+
+# Auth.
+JWT_ALG: HS256
+JWT_EXPIRE_MIN: "480"
+COOKIE_SECURE: "true"
+COOKIE_SAMESITE: lax
+COOKIE_DOMAIN: ""
+CORS_ALLOW_ORIGINS: ""
+MASTER_CONSENT_VERSION: v1
+
+# App.
+APP_TIMEZONE: Asia/Colombo
+DOCTOR_INVITE_TTL_HOURS: "72"
+
+# Object storage (endpoint/bucket/keys are secret — see vault).
+S3_REGION: auto
+S3_FORCE_PATH_STYLE: "true"
+
+# Email (api key + webhook secret are secret — see vault).
+RESEND_FROM: ""
+RESEND_REPLY_TO: ""
+
+# Frontend (NEXT_PUBLIC_* are inlined at image build time; passed for parity).
+NEXT_PUBLIC_API_URL: ""
+NEXT_PUBLIC_APP_TIMEZONE: Asia/Colombo
