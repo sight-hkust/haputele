@@ -268,6 +268,25 @@ export type AttachmentMeta = {
   uploadedAt: string;
 };
 
+// ── Capture sessions (phone-as-camera via QR) ────────────────────────
+export type CapturePurpose = "appointment_attachment" | "rubber_stamp";
+
+export type CaptureSession = {
+  id: number;
+  token: string; // raw secret — only present in the creation response
+  purpose: CapturePurpose;
+  expiresAt: string;
+};
+
+export type CaptureSessionStatus = {
+  id: number;
+  purpose: CapturePurpose;
+  expiresAt: string;
+  closed: boolean;
+  uploadCount: number;
+  relayReady: boolean;
+};
+
 export type AppointmentDetail = {
   appointment: Appointment;
   patient: Patient | null;

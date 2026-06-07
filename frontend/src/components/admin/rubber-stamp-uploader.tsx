@@ -1,12 +1,13 @@
 "use client";
 
-import { Camera, Pencil, Stamp, Upload, X } from "lucide-react";
+import { Camera, Pencil, Smartphone, Stamp, Upload, X } from "lucide-react";
 import { useRef, useState, type ChangeEvent } from "react";
 
 import { Button } from "@/components/primitives/button";
 import { CameraCaptureModal } from "@/components/primitives/camera-capture-modal";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
+import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
 import { RubberStampEditor } from "@/components/admin/rubber-stamp-editor";
 
 const MAX_BYTES = 1_000_000; // 1 MB — keeps the patient PDF lean
@@ -14,18 +15,26 @@ const ACCEPTED = ["image/png", "image/jpeg"];
 
 // Reads a file → base64 data URL (`data:image/png;base64,…`). The backend
 // strips the data: prefix on its own, so either form is acceptable.
+//
+// `enableQrCapture` adds a "Use phone" option that mints a capture session
+// and relays a phone photo into the editor. It's off by default because
+// minting a session needs an authenticated admin — the public doctor
+// self-onboarding form renders this same component without it.
 export function RubberStampUploader({
   value,
   onChange,
+  enableQrCapture = false,
 }: {
   value: string | null;
   onChange: (next: string | null) => void;
+  enableQrCapture?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editorSource, setEditorSource] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   // Validate then read a file → base64 data URL → open the editor. Shared by
   // the file picker and the camera capture.
@@ -105,6 +114,17 @@ export function RubberStampUploader({
               <Camera className="h-3.5 w-3.5" />
               Take photo
             </Button>
+            {enableQrCapture && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setQrOpen(true)}
+              >
+                <Smartphone className="h-3.5 w-3.5" />
+                Use phone
+              </Button>
+            )}
             <Button
               type="button"
               variant="ghost"
@@ -133,16 +153,28 @@ export function RubberStampUploader({
               </div>
             </div>
           </button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="self-center"
-            onClick={() => setCameraOpen(true)}
-          >
-            <Camera className="h-3.5 w-3.5" />
-            Take a photo instead
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setCameraOpen(true)}
+            >
+              <Camera className="h-3.5 w-3.5" />
+              Take a photo instead
+            </Button>
+            {enableQrCapture && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setQrOpen(true)}
+              >
+                <Smartphone className="h-3.5 w-3.5" />
+                Use phone camera
+              </Button>
+            )}
+          </div>
         </div>
       )}
       <input
@@ -197,6 +229,16 @@ export function RubberStampUploader({
         quality={0.9}
         filename="rubber-stamp.jpg"
       />
+
+      {enableQrCapture && (
+        <QrCaptureModal
+          open={qrOpen}
+          onClose={() => setQrOpen(false)}
+          purpose="rubber_stamp"
+          onRelayReceived={processFile}
+          title="Photograph the stamp with a phone"
+        />
+      )}
     </div>
   );
 }

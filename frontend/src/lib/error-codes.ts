@@ -20,6 +20,10 @@ const MESSAGES: Record<string, string> = {
   attachment_empty: "That file appeared to be empty.",
   attachment_unsupported_type: "Only JPEG, PNG, and WebP images can be attached.",
   attachment_not_found: "That attachment couldn't be found.",
+  // Phone-camera capture (QR)
+  capture_session_not_found: "This capture link is no longer active — generate a fresh QR code.",
+  capture_relay_empty: "No photo has been received from the phone yet.",
+  appointment_required: "An appointment is required to start a phone capture.",
   patient_not_found: "Patient not found.",
   doctor_not_found: "Doctor not found.",
   appointment_not_found: "Appointment not found.",

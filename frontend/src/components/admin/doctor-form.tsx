@@ -326,7 +326,13 @@ export function DoctorForm({
       </Section>
 
       <Section Icon={Stamp} title="Rubber stamp" hint={isCreate ? "Required (§1.7)." : "Replace only if you need to update the existing stamp."}>
-        <RubberStampUploader value={stamp} onChange={handleStampChange} />
+        {/* Phone-camera QR needs an authenticated admin to mint a session,
+            so it's only offered outside the public self-onboarding form. */}
+        <RubberStampUploader
+          value={stamp}
+          onChange={handleStampChange}
+          enableQrCapture={!isSelfOnboarding}
+        />
         {stampError && <p className="mt-2 text-xs text-rose-600">{stampError}</p>}
       </Section>
 
