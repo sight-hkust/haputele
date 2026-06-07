@@ -1,13 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, Trash2, Upload } from "lucide-react";
+import { Camera, Smartphone, Trash2, Upload } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
 import { CameraCaptureModal } from "@/components/primitives/camera-capture-modal";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
+import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
 import { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import {
@@ -33,6 +34,7 @@ export function AttachmentsPanel({
   const upload = useUploadAttachment(appointmentId);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const readonly = READONLY_STATES.includes(status);
 
@@ -84,6 +86,15 @@ export function AttachmentsPanel({
               Take photo
             </Button>
             <Button
+              variant="secondary"
+              onClick={() => setQrOpen(true)}
+              disabled={upload.isPending}
+              size="sm"
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              Use phone
+            </Button>
+            <Button
               onClick={() => fileInput.current?.click()}
               disabled={upload.isPending}
               size="sm"
@@ -128,6 +139,14 @@ export function AttachmentsPanel({
         onClose={() => setCameraOpen(false)}
         onCapture={(file) => uploadFiles([file])}
         filename={`photo-${Date.now()}.jpg`}
+      />
+
+      <QrCaptureModal
+        open={qrOpen}
+        onClose={() => setQrOpen(false)}
+        purpose="appointment_attachment"
+        appointmentId={appointmentId}
+        title="Snap photos from a phone"
       />
     </Card>
   );

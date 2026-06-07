@@ -18,6 +18,9 @@ import type {
   AvailabilityCreateRequest,
   AvailabilityUpdateRequest,
   CalendarAppointment,
+  CapturePurpose,
+  CaptureSession,
+  CaptureSessionStatus,
   Consent,
   Consultation,
   CreateOperatingAccountRequest,
@@ -875,6 +878,41 @@ export function useCreateOperatingAccount() {
         method: "POST",
         body,
       }),
+  });
+}
+
+// ── Capture sessions (phone-as-camera via QR) ────────────────────────
+
+// Mint a capture session. The response carries the raw token (shown once,
+// inside the QR) so the desktop can build the scannable link.
+export function useCreateCaptureSession() {
+  const fetcher = useAuthedApi();
+  return useMutation<
+    CaptureSession,
+    ApiError,
+    { purpose: CapturePurpose; appointmentId?: number }
+  >({
+    mutationFn: (body) =>
+      fetcher<CaptureSession>("/capture/sessions", { method: "POST", body }),
+  });
+}
+
+// Poll a capture session's status while the QR modal is open. `intervalMs`
+// drives the refetch cadence; pass enabled=false to stop polling (e.g. once
+// the modal closes or the session lapses).
+export function useCaptureSessionStatus(
+  sessionId: number | null,
+  { enabled = true, intervalMs = 2500 }: { enabled?: boolean; intervalMs?: number } = {},
+) {
+  const fetcher = useAuthedApi();
+  return useQuery<CaptureSessionStatus, ApiError>({
+    queryKey: ["capture", "session", sessionId],
+    queryFn: () => fetcher<CaptureSessionStatus>(`/capture/sessions/${sessionId}`),
+    enabled: enabled && sessionId != null,
+    refetchInterval: enabled ? intervalMs : false,
+    // Status is inherently live — never serve a stale cached value.
+    staleTime: 0,
+    gcTime: 0,
   });
 }
 

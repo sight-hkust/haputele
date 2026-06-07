@@ -17,6 +17,7 @@ from .routers import (
     attachments,
     auth,
     availability,
+    capture,
     consultations,
     doctors,
     doctor_onboarding,
@@ -146,6 +147,7 @@ def create_app() -> FastAPI:
     app.include_router(availability.flat_router)
     app.include_router(preconsult.router)
     app.include_router(attachments.router)
+    app.include_router(capture.router)
     app.include_router(consultations.appts_router)
     app.include_router(consultations.cons_router)
     app.include_router(queue.router)

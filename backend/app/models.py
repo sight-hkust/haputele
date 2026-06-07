@@ -341,6 +341,62 @@ class DoctorInvite(Base):
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class CaptureSession(Base):
+    """Short-lived token that turns any phone into a one-shot camera.
+
+    A logged-in operator mints a session from the desktop (POST
+    /capture/sessions), gets back a raw token, and shows a QR code that
+    encodes `{FRONTEND_BASE_URL}/capture/{raw_token}`. Whoever scans it
+    lands on a public, token-authenticated page that drives the phone's
+    camera and uploads photos straight back here — the bytes never touch
+    the operator's computer.
+
+    Like setup_tokens / doctor_invites we store only sha256-hex of the raw
+    token; the raw value is shown once (in the QR) and never persisted.
+
+    `purpose` decides what the server does with an uploaded photo:
+
+      appointment_attachment → the photo is committed directly as an
+          AppointmentAttachment on `appointment_id`. Many photos per
+          session are allowed (the operator can snap several); the
+          desktop just watches the attachments list refresh.
+
+      rubber_stamp → there is no destination record yet (the stamp is a
+          field in a form still being filled out), so the latest photo is
+          parked in the relay slot below and the desktop pulls it into the
+          stamp editor. One photo at a time; a new upload overwrites.
+
+    Liveness: `closed_at IS NULL AND expires_at > NOW()`. The desktop
+    closes the session when the modal is dismissed; otherwise it lapses
+    on its short TTL.
+    """
+    __tablename__ = "capture_sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    purpose: Mapped[str] = mapped_column(String(30), nullable=False)
+    appointment_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("appointments.appointment_id", ondelete="CASCADE")
+    )
+    created_by: Mapped[str] = mapped_column(
+        String(255), ForeignKey("accounts.username"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("NOW()")
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    upload_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
+    )
+    # Relay slot — only used by the rubber_stamp purpose. Holds the most
+    # recent uploaded photo until the desktop pulls it; overwritten on each
+    # new upload (the previous object is best-effort deleted).
+    relay_object_key: Mapped[str | None] = mapped_column(String(512))
+    relay_mime: Mapped[str | None] = mapped_column(String(50))
+    relay_uploaded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class NotificationLog(Base):
     """Idempotency record for every outbound notification.
 

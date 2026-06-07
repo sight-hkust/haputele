@@ -768,3 +768,48 @@ class QueueEntryOut(BaseModel):
     bookedAt: Optional[datetime] = Field(default=None, validation_alias="booked_at")
     cancelledAt: Optional[datetime] = Field(default=None, validation_alias="cancelled_at")
     cancellationReason: Optional[str] = Field(default=None, validation_alias="cancellation_reason")
+
+
+# ── Capture sessions (phone-as-camera via QR) ─────────────────────────
+
+class CaptureSessionCreateIn(BaseModel):
+    """Desktop → server: mint a capture session.
+
+    `appointmentId` is required when purpose is appointment_attachment
+    (that's where the phone's photos land) and ignored otherwise. The
+    server re-validates the appointment exists and is writeable.
+    """
+    purpose: Literal["appointment_attachment", "rubber_stamp"]
+    appointmentId: Optional[int] = None
+
+
+class CaptureSessionOut(BaseModel):
+    """Creation response. `token` is the raw secret — returned exactly once
+    here so the desktop can build the QR; never re-fetchable afterwards."""
+    id: int
+    token: str
+    purpose: str
+    expiresAt: datetime = Field(validation_alias="expires_at")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
+class CaptureSessionStatusOut(BaseModel):
+    """Desktop poll response — never carries the token. `relayReady` flags
+    that a rubber_stamp photo is parked and waiting to be pulled."""
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    id: int
+    purpose: str
+    expiresAt: datetime = Field(validation_alias="expires_at")
+    closed: bool
+    uploadCount: int = Field(validation_alias="upload_count")
+    relayReady: bool
+
+
+class CapturePeekOut(BaseModel):
+    """Phone → server peek: just enough for the capture page to render the
+    right UI. No appointment/patient detail — the scanner is unauthenticated
+    beyond holding the token, so we leak nothing identifying."""
+    purpose: str
+    expiresAt: datetime
