@@ -24,6 +24,16 @@ class Account(Base):
     username: Mapped[str] = mapped_column(String(255), primary_key=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Set by the sys-admin (ops super user) to soft-disable an operating
+    # account. NULL = active; a non-NULL timestamp blocks /auth/login with
+    # `account_disabled`. We soft-disable rather than delete because the
+    # username is FK-referenced (RESTRICT) by records this account created.
+    disabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Optional ops-managed profile for operating accounts (admin /
+    # healthworker): who the account belongs to and how to reach them.
+    # Doctors carry their richer profile on the `doctor` table instead.
+    full_name: Mapped[str | None] = mapped_column(Text)
+    contact: Mapped[str | None] = mapped_column(Text)
 
 
 class Doctor(Base):
@@ -52,6 +62,25 @@ class Doctor(Base):
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     rejected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     rejected_reason: Mapped[str | None] = mapped_column(Text)
+    # When the row sprang into existence — submission time in the
+    # new-doctor flow, create time in the legacy flow. Drives the
+    # approval-queue ordering. server_default keeps existing fixtures and
+    # any direct INSERTs valid without setting it explicitly.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("NOW()")
+    )
+    # Audit: which admin acted, and (on reapply) which rejected row this
+    # submission supersedes. All nullable — an awaiting doctor has neither
+    # approver nor rejecter yet; a first-time applicant has no predecessor.
+    approved_by: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("accounts.username", ondelete="SET NULL")
+    )
+    rejected_by: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("accounts.username", ondelete="SET NULL")
+    )
+    previous_doctor_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("doctor.doctor_id", ondelete="SET NULL")
+    )
 
 
 class Patient(Base):

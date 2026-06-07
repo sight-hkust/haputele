@@ -32,7 +32,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import settings
@@ -90,15 +90,25 @@ def issue_new_doctor(
     """New mode: mint an invite for a doctor who doesn't have a row yet.
 
     Refuses (409 `email_already_used`) if the email is already linked to
-    a Doctor row OR has another live unconsumed new-doctor invite. The
-    second check is the cheap way to prevent two admins from inviting
-    the same address twice in parallel; we revoke prior live invites for
-    the same email on the happy path below.
+    a *live* (non-rejected) Doctor row OR has another live unconsumed
+    new-doctor invite. The second check is the cheap way to prevent two
+    admins from inviting the same address twice in parallel; we revoke
+    prior live invites for the same email on the happy path below.
+
+    Rejected doctors are tombstones — they keep the row for audit but no
+    longer claim the email, so a rejected doctor can be re-invited and
+    reapply with the same address. The compare is case-insensitive so the
+    legacy mixed-case create path can't slip a duplicate past us.
     """
     normalised = email.strip().lower()
 
-    # Already-a-doctor check.
-    if db.scalar(select(Doctor).where(Doctor.email == normalised)):
+    # Already-a-(live)-doctor check. Rejected rows don't count.
+    if db.scalar(
+        select(Doctor).where(
+            func.lower(Doctor.email) == normalised,
+            Doctor.rejected_at.is_(None),
+        )
+    ):
         raise conflict("email_already_used")
 
     now = datetime.now(timezone.utc)
@@ -233,6 +243,19 @@ def consume_new_doctor(
     stamp_key = object_key("doctors/stamps", ext)
     put_bytes(stamp_key, rubber_stamp, mime)
 
+    now = datetime.now(timezone.utc)
+    # If this email was rejected before, link the fresh submission back to
+    # the most recent rejected attempt so the audit trail across re-tries
+    # is navigable. invite.email is already normalised lower-case.
+    predecessor = db.scalar(
+        select(Doctor)
+        .where(
+            func.lower(Doctor.email) == invite.email,
+            Doctor.rejected_at.is_not(None),
+        )
+        .order_by(Doctor.doctor_id.desc())
+    )
+
     account = Account(
         username=username,
         password=hash_password(password),
@@ -252,6 +275,8 @@ def consume_new_doctor(
         rubber_stamp_key=stamp_key,
         active=True,
         approved_at=None,  # awaits admin approval before login is allowed
+        created_at=now,
+        previous_doctor_id=predecessor.doctor_id if predecessor else None,
     )
     db.add(account)
     db.add(doctor)

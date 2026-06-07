@@ -67,7 +67,7 @@ const MESSAGES: Record<string, string> = {
   email_not_configured:
     "Email isn't set up on the server, so an invite can't be sent. Ask an administrator to either configure the email service or create the account with a manual password.",
   email_already_used:
-    "A doctor account or pending invite already uses that email address.",
+    "An active doctor account or pending invite already uses that email address.",
   email_mismatch:
     "The email in the form has to match the one your invite was sent to.",
   wrong_invite_mode:
@@ -77,9 +77,21 @@ const MESSAGES: Record<string, string> = {
   account_rejected:
     "Your onboarding submission was rejected. Contact your administrator for details.",
   doctor_rejected:
-    "This doctor's submission was previously rejected. Re-issue an invite to start fresh.",
+    "This doctor's submission was rejected. Use “Invite to reapply” to let them submit again.",
   doctor_already_approved:
     "This doctor is already approved. Use deactivate instead if you want to disable them.",
+  doctor_not_rejected:
+    "This action only applies to rejected doctors.",
+  invalid_status:
+    "Unknown doctor status filter.",
+  // Sys-admin account management.
+  account_disabled:
+    "This account has been disabled. Contact your system administrator to re-enable it.",
+  account_not_found: "That account no longer exists.",
+  cannot_manage_role:
+    "Only admin and healthworker accounts can be managed here. Doctors are managed from the admin console.",
+  account_in_use:
+    "This account has records attached to it and can't be deleted. Disable it instead to block sign-in while keeping its history.",
   request_failed: "Something went wrong. Try again.",
 };
 

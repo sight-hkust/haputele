@@ -23,10 +23,14 @@ import type {
   CaptureSessionStatus,
   Consent,
   Consultation,
+  AccountRosterEntry,
+  AccountUpdateRequest,
   CreateOperatingAccountRequest,
   CreateOperatingAccountResponse,
+  ResetAccountPasswordRequest,
   DiagnosisEntry,
   Doctor,
+  DoctorSummary,
   InitializeSystemRequest,
   InitializeSystemResponse,
   LabEntry,
@@ -58,6 +62,7 @@ import type {
   StartMeetingResponse,
   SubmitConsultationRequest,
   SubmitConsultationResponse as TSubmitConsultationResponse,
+  SysadminMe,
   SystemConfig,
   VerifySetupTokenRequest,
   VerifySetupTokenResponse,
@@ -177,12 +182,30 @@ export function useReConsent(patientId: number) {
 }
 
 // ── Doctors ──────────────────────────────────────────────────────────
-export function useDoctorList(opts?: { active?: boolean }) {
+export type DoctorListFilter = {
+  active?: boolean;
+  // Computed onboarding status — drives the admin approval-queue tabs.
+  status?: "awaiting_approval" | "awaiting_setup" | "active" | "rejected";
+};
+
+export function useDoctorList(opts?: DoctorListFilter) {
   const fetcher = useAuthedApi();
-  const qs = opts?.active !== undefined ? `?active=${opts.active}` : "";
+  const qs = new URLSearchParams();
+  if (opts?.active !== undefined) qs.set("active", String(opts.active));
+  if (opts?.status) qs.set("status", opts.status);
+  const q = qs.toString();
   return useQuery({
     queryKey: ["doctors", "list", opts ?? {}],
-    queryFn: () => fetcher<Doctor[]>(`/doctors${qs}`),
+    queryFn: () => fetcher<Doctor[]>(`/doctors${q ? `?${q}` : ""}`),
+  });
+}
+
+// Per-status counts for the approval-queue tab badges (admin only).
+export function useDoctorSummary() {
+  const fetcher = useAuthedApi();
+  return useQuery({
+    queryKey: ["doctors", "summary"],
+    queryFn: () => fetcher<DoctorSummary>("/doctors/summary"),
   });
 }
 
@@ -278,6 +301,29 @@ export function useRejectDoctor() {
   return useMutation<Doctor, ApiError, { id: number; reason?: string }>({
     mutationFn: ({ id, reason }) =>
       fetcher(`/doctors/${id}/reject`, { method: "POST", body: { reason } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
+}
+
+// Invite a rejected doctor to reapply with the same email. Issues a fresh
+// full-profile (new-doctor) invite; the rejected row is preserved as
+// history and the new submission links back to it via previousDoctorId.
+export function useReinviteReapply() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<{ inviteId: number; email: string }, ApiError, number>({
+    mutationFn: (id) => fetcher(`/doctors/${id}/reinvite-reapply`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
+}
+
+// Hard-delete a rejected doctor record (right-to-erasure). Backend
+// refuses anything that isn't in the rejected state.
+export function usePurgeDoctor() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<void, ApiError, number>({
+    mutationFn: (id) => fetcher(`/doctors/${id}/purge`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -870,14 +916,96 @@ export function useSystemConfig() {
   });
 }
 
+// The signed-in ops account + its editable profile. Powers the System
+// page's self-account section (the sys-admin isn't on the roster below).
+export function useSysadminMe() {
+  const fetcher = useAuthedApi();
+  return useQuery({
+    queryKey: ["sysadmin", "me"],
+    queryFn: () => fetcher<SysadminMe>("/sysadmin/me"),
+  });
+}
+
+// Roster of every account EXCEPT the ops account. Manageable rows (admin /
+// healthworker) get full controls; doctors are read-only (managed via the
+// shared doctor tools).
+export function useAccountRoster() {
+  const fetcher = useAuthedApi();
+  return useQuery({
+    queryKey: ["sysadmin", "accounts"],
+    queryFn: () => fetcher<AccountRosterEntry[]>("/sysadmin/accounts"),
+  });
+}
+
 export function useCreateOperatingAccount() {
   const fetcher = useAuthedApi();
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateOperatingAccountRequest) =>
       fetcher<CreateOperatingAccountResponse>("/sysadmin/accounts", {
         method: "POST",
         body,
       }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
+  });
+}
+
+// Edit an operating account's ops-managed profile (display name, contact).
+export function useUpdateAccount() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<AccountRosterEntry, ApiError, { username: string; body: AccountUpdateRequest }>({
+    mutationFn: ({ username, body }) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}`, { method: "PATCH", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
+  });
+}
+
+// Sys-admin sets a new password for an operating account. The account
+// owner is told the new secret out-of-band (operating accounts carry no
+// email). Returns void (204).
+export function useResetAccountPassword() {
+  const fetcher = useAuthedApi();
+  return useMutation<void, ApiError, { username: string; password: string }>({
+    mutationFn: ({ username, password }) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/reset-password`, {
+        method: "POST",
+        body: { password } satisfies ResetAccountPasswordRequest,
+      }),
+  });
+}
+
+// Soft-disable / re-enable. Disable blocks login while preserving every
+// record the account created; both are idempotent server-side.
+export function useDisableAccount() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<AccountRosterEntry, ApiError, string>({
+    mutationFn: (username) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/disable`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
+  });
+}
+
+export function useEnableAccount() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<AccountRosterEntry, ApiError, string>({
+    mutationFn: (username) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/enable`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
+  });
+}
+
+// Hard-delete an operating account. Fails with `account_in_use` (409) if
+// the account is FK-referenced by data it created — disable it instead.
+export function useDeleteAccount() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<void, ApiError, string>({
+    mutationFn: (username) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
 

@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ServerCog } from "lucide-react";
+import { ServerCog, Users } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 
-const NAV = [{ href: "/sysadmin", label: "System", Icon: ServerCog, exact: true }];
+const NAV = [
+  { href: "/sysadmin", label: "System", Icon: ServerCog, exact: true },
+  { href: "/sysadmin/accounts", label: "Accounts", Icon: Users, exact: false },
+];
 
 export function SysAdminNav() {
   const pathname = usePathname() ?? "";

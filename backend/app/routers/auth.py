@@ -37,6 +37,13 @@ def login(
     if payload.role and payload.role != account.role:
         raise unauthorized(INVALID_CREDENTIALS)
 
+    # Soft-disable gate. Checked AFTER password verification for the same
+    # reason as the doctor gates below: an attacker who doesn't know the
+    # password gets the generic invalid_credentials code, while the
+    # legitimate owner of a disabled account sees why they're locked out.
+    if account.disabled_at is not None:
+        raise forbidden("account_disabled")
+
     # Approval gate for self-onboarded doctors. We check AFTER password
     # verification so a wrong password still returns the generic
     # invalid_credentials code — an attacker who doesn't know the password
