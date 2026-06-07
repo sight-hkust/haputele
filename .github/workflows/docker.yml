@@ -3,18 +3,17 @@ name: Build Docker images
 # Builds the frontend (Next.js) and backend (FastAPI) images in parallel.
 # PRs build both images for validation but do not push; pushes to main and
 # version tags (v*) publish to GitHub Container Registry.
+#
+# Path filtering lives in the `changes` job, NOT in `on.push.paths`: GitHub's
+# push path filter is unreliable for tag pushes (no well-defined base to diff
+# against), so a `paths` filter here would silently skip release (v*) builds.
+# We trigger on every push/PR and let the build job decide via its `if:`.
 on:
   push:
     branches: [main]
     tags: ['v*']
-    paths:
-      - 'frontend/**'
-      - 'backend/**'
   pull_request:
     branches: [main]
-    paths:
-      - 'frontend/**'
-      - 'backend/**'
   workflow_dispatch:
 
 # Cancel an in-flight run when a newer commit lands on the same ref.
@@ -27,7 +26,33 @@ permissions:
   packages: write
 
 jobs:
+  # Detect whether app code changed. Used only to skip wasteful image rebuilds on
+  # infra-only branch pushes/PRs — tag and manual runs build unconditionally.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'frontend/**'
+              - 'backend/**'
+
   build:
+    needs: changes
+    # Always build for version tags and manual runs; for branch pushes / PRs,
+    # build only when frontend/ or backend/ changed.
+    if: >-
+      github.ref_type == 'tag' ||
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -57,6 +82,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.image }}
+          # latest=false: don't let semver tags auto-claim `latest`. We pin `latest`
+          # to main's tip via the raw rule below, so it stays a dev convenience and
+          # never silently becomes "the last release built". Production never uses
+          # `latest` — it pins an immutable :<semver> or :sha-<commit> (terraform.tfvars).
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
