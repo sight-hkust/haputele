@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Camera, Trash2, Upload } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { CameraCaptureModal } from "@/components/primitives/camera-capture-modal";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
@@ -31,15 +32,16 @@ export function AttachmentsPanel({
   const list = useAttachments(appointmentId);
   const upload = useUploadAttachment(appointmentId);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const readonly = READONLY_STATES.includes(status);
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0) return;
     setUploadError(null);
     // Sequential uploads — keeps the UI responsive and one bad file doesn't
     // abort the rest. The mutation hook invalidates the cache per success.
-    for (const file of Array.from(files)) {
+    for (const file of files) {
       try {
         await upload.mutateAsync({ file });
       } catch (err) {
@@ -48,6 +50,11 @@ export function AttachmentsPanel({
         break;
       }
     }
+  };
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    await uploadFiles(Array.from(files));
     if (fileInput.current) fileInput.current.value = "";
   };
 
@@ -66,14 +73,25 @@ export function AttachmentsPanel({
           </p>
         </div>
         {!readonly && (
-          <Button
-            onClick={() => fileInput.current?.click()}
-            disabled={upload.isPending}
-            size="sm"
-          >
-            <Upload className="h-3.5 w-3.5" />
-            {upload.isPending ? "Uploading…" : "Add photos"}
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setCameraOpen(true)}
+              disabled={upload.isPending}
+              size="sm"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              Take photo
+            </Button>
+            <Button
+              onClick={() => fileInput.current?.click()}
+              disabled={upload.isPending}
+              size="sm"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              {upload.isPending ? "Uploading…" : "Add photos"}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -104,6 +122,13 @@ export function AttachmentsPanel({
           No photos yet.
         </p>
       )}
+
+      <CameraCaptureModal
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onCapture={(file) => uploadFiles([file])}
+        filename={`photo-${Date.now()}.jpg`}
+      />
     </Card>
   );
 }
@@ -145,7 +170,7 @@ function AttachmentThumb({
               onClose={() => setPreview(false)}
               src={url}
               alt={attachment.caption || attachment.filename}
-              caption={attachment.caption}
+              title={attachment.caption || attachment.filename}
             />
           </>
         ) : error ? (

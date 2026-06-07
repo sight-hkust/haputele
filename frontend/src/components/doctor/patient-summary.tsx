@@ -175,7 +175,7 @@ function DoctorAttachmentThumb({
             onClose={() => setPreview(false)}
             src={url}
             alt={attachment.caption || attachment.filename}
-            caption={attachment.caption}
+            title={attachment.caption || attachment.filename}
           />
         </>
       ) : error ? (
