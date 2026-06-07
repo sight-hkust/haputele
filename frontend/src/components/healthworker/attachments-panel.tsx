@@ -6,6 +6,7 @@ import { Camera, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
 import { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import {
@@ -119,19 +120,34 @@ function AttachmentThumb({
   const { url, error } = useAttachmentImage(appointmentId, attachment.id);
   const remove = useDeleteAttachment(appointmentId);
   const [confirming, setConfirming] = useState(false);
+  const [preview, setPreview] = useState(false);
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--muted)]/30">
       <div className="aspect-square w-full">
         {url ? (
-          <a href={url} target="_blank" rel="noopener noreferrer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <>
+            <button
+              type="button"
+              onClick={() => setPreview(true)}
+              title={attachment.caption || attachment.filename}
+              className="block h-full w-full cursor-zoom-in"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt={attachment.caption || attachment.filename}
+                className="h-full w-full object-cover"
+              />
+            </button>
+            <ImagePreviewModal
+              open={preview}
+              onClose={() => setPreview(false)}
               src={url}
               alt={attachment.caption || attachment.filename}
-              className="h-full w-full object-cover"
+              caption={attachment.caption}
             />
-          </a>
+          </>
         ) : error ? (
           <div className="flex h-full w-full items-center justify-center p-4 text-center text-xs text-rose-600">
             Couldn&rsquo;t load image.

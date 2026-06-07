@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Activity, Camera, ClipboardList, HeartPulse, MessageSquare, Pill } from "lucide-react";
 
 import { Card } from "@/components/primitives/card";
+import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
 import { ageFromDob, fmtDate } from "@/lib/format";
 import { diseaseLabel } from "@/lib/medical-codes";
 import { useAttachmentImage } from "@/lib/use-api";
@@ -150,17 +152,32 @@ function DoctorAttachmentThumb({
   appointmentId: number;
 }) {
   const { url, error } = useAttachmentImage(appointmentId, attachment.id);
+  const [preview, setPreview] = useState(false);
   return (
     <div className="aspect-square overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--muted)]/40">
       {url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" title={attachment.caption || attachment.filename}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <>
+          <button
+            type="button"
+            onClick={() => setPreview(true)}
+            title={attachment.caption || attachment.filename}
+            className="block h-full w-full cursor-zoom-in"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={url}
+              alt={attachment.caption || attachment.filename}
+              className="h-full w-full object-cover transition-transform hover:scale-[1.02]"
+            />
+          </button>
+          <ImagePreviewModal
+            open={preview}
+            onClose={() => setPreview(false)}
             src={url}
             alt={attachment.caption || attachment.filename}
-            className="h-full w-full object-cover transition-transform hover:scale-[1.02]"
+            caption={attachment.caption}
           />
-        </a>
+        </>
       ) : error ? (
         <div className="flex h-full w-full items-center justify-center p-2 text-center text-[10px] text-rose-600">
           Load failed
