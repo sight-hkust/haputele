@@ -299,7 +299,12 @@ export default function CapturePage() {
         <div className="flex items-center justify-center gap-3">
           {shot ? (
             <>
-              <Button variant="secondary" onClick={retake} disabled={uploading}>
+              <Button
+                variant="secondary"
+                onClick={retake}
+                disabled={uploading}
+                className="border-white/30 text-white hover:border-white/50 hover:bg-white/10 hover:text-white"
+              >
                 <RefreshCw className="h-4 w-4" />
                 Retake
               </Button>
@@ -316,6 +321,7 @@ export default function CapturePage() {
                   size="icon"
                   onClick={() => setFacing((f) => (f === "environment" ? "user" : "environment"))}
                   aria-label="Switch camera"
+                  className="border-white/30 text-white hover:border-white/50 hover:bg-white/10 hover:text-white"
                 >
                   <SwitchCamera className="h-4 w-4" />
                 </Button>
