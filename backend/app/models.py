@@ -52,6 +52,25 @@ class Doctor(Base):
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     rejected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     rejected_reason: Mapped[str | None] = mapped_column(Text)
+    # When the row sprang into existence — submission time in the
+    # new-doctor flow, create time in the legacy flow. Drives the
+    # approval-queue ordering. server_default keeps existing fixtures and
+    # any direct INSERTs valid without setting it explicitly.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("NOW()")
+    )
+    # Audit: which admin acted, and (on reapply) which rejected row this
+    # submission supersedes. All nullable — an awaiting doctor has neither
+    # approver nor rejecter yet; a first-time applicant has no predecessor.
+    approved_by: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("accounts.username", ondelete="SET NULL")
+    )
+    rejected_by: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("accounts.username", ondelete="SET NULL")
+    )
+    previous_doctor_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("doctor.doctor_id", ondelete="SET NULL")
+    )
 
 
 class Patient(Base):
