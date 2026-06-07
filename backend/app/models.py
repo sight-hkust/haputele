@@ -24,6 +24,16 @@ class Account(Base):
     username: Mapped[str] = mapped_column(String(255), primary_key=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Set by the sys-admin (ops super user) to soft-disable an operating
+    # account. NULL = active; a non-NULL timestamp blocks /auth/login with
+    # `account_disabled`. We soft-disable rather than delete because the
+    # username is FK-referenced (RESTRICT) by records this account created.
+    disabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Optional ops-managed profile for operating accounts (admin /
+    # healthworker): who the account belongs to and how to reach them.
+    # Doctors carry their richer profile on the `doctor` table instead.
+    full_name: Mapped[str | None] = mapped_column(Text)
+    contact: Mapped[str | None] = mapped_column(Text)
 
 
 class Doctor(Base):

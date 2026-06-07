@@ -116,7 +116,14 @@ def test_full_setup_flow(client, seeded_setup_token):
     # sys-admin endpoints reachable via the cookie. GETs don't need CSRF.
     r = client.get("/sysadmin/me")
     assert r.status_code == 200, r.text
-    assert r.json() == {"username": "ops", "role": "sys-admin"}
+    # /sysadmin/me carries the ops account's editable profile (managed from
+    # the System page); unset right after first-run init.
+    assert r.json() == {
+        "username": "ops",
+        "role": "sys-admin",
+        "fullName": None,
+        "contact": None,
+    }
 
     r = client.get("/sysadmin/system-config")
     assert r.status_code == 200, r.text

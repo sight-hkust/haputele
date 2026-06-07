@@ -1,7 +1,7 @@
 """doctor status audit: submitted-at, actor columns, reapply linkage
 
-Revision ID: 0012_doctor_status_audit
-Revises: 0011_invite_email_approval
+Revision ID: 0014_doctor_status_audit
+Revises: 0013_account_profile
 Create Date: 2026-06-07
 
 Makes the doctor approval lifecycle manageable at scale:
@@ -40,8 +40,8 @@ from typing import Sequence, Union
 from alembic import op
 
 
-revision: str = "0012_doctor_status_audit"
-down_revision: Union[str, None] = "0011_invite_email_approval"
+revision: str = "0014_doctor_status_audit"
+down_revision: Union[str, None] = "0013_account_profile"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
