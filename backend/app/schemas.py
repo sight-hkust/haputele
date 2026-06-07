@@ -163,6 +163,32 @@ class DoctorOut(BaseModel):
     #                         populated on the Doctor row.
     #   "active"            → approved + onboarded. Normal state.
     onboardingStatus: str = "active"
+    # Lifecycle audit, surfaced so the admin queue can show "submitted N
+    # ago", who acted, and link reapplications back to the rejected
+    # attempt they supersede. submittedAt is non-null (created_at is NOT
+    # NULL on the row); the rest are null until the relevant transition.
+    submittedAt: datetime = Field(validation_alias="created_at")
+    approvedAt: Optional[datetime] = Field(default=None, validation_alias="approved_at")
+    rejectedAt: Optional[datetime] = Field(default=None, validation_alias="rejected_at")
+    rejectedReason: Optional[str] = Field(default=None, validation_alias="rejected_reason")
+    approvedBy: Optional[str] = Field(default=None, validation_alias="approved_by")
+    rejectedBy: Optional[str] = Field(default=None, validation_alias="rejected_by")
+    previousDoctorId: Optional[int] = Field(default=None, validation_alias="previous_doctor_id")
+
+
+class DoctorSummaryOut(BaseModel):
+    """Per-status counts for the admin approval queue's tab badges.
+
+    `awaitingApproval` is the actionable bucket — doctors who submitted
+    and are blocked on the admin. Computed in one pass over the doctor
+    table plus the batched live-invite lookup the list endpoint already
+    uses.
+    """
+    awaitingApproval: int = 0
+    awaitingSetup: int = 0
+    active: int = 0
+    rejected: int = 0
+    total: int = 0
 
 
 class DoctorDetailOut(DoctorOut):

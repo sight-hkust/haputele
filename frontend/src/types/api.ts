@@ -82,9 +82,28 @@ export type Doctor = {
   //   active            → approved + usable
   // Optional for backward compatibility with older response shapes.
   onboardingStatus?: "awaiting_setup" | "awaiting_approval" | "rejected" | "active";
+  // Lifecycle audit. submittedAt is always present (row creation time);
+  // the rest populate at the relevant transition. previousDoctorId links
+  // a reapplication back to the rejected attempt it supersedes.
+  submittedAt?: string;
+  approvedAt?: string | null;
+  rejectedAt?: string | null;
+  rejectedReason?: string | null;
+  approvedBy?: string | null;
+  rejectedBy?: string | null;
+  previousDoctorId?: number | null;
   // Only the singular GET /doctors/{id} populates this (as a base64 data URL);
   // the list endpoint omits it to keep payloads lean.
   rubberStampImage?: string | null;
+};
+
+// GET /doctors/summary — per-status counts driving the approval-queue tabs.
+export type DoctorSummary = {
+  awaitingApproval: number;
+  awaitingSetup: number;
+  active: number;
+  rejected: number;
+  total: number;
 };
 
 // ── Consent ──────────────────────────────────────────────────────────

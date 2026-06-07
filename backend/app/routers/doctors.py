@@ -3,13 +3,13 @@ import logging
 import secrets
 
 from fastapi import APIRouter, Depends, Response, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from datetime import datetime, timezone
 
 from ..config import settings
-from ..deps import db_dep, require_role
+from ..deps import CurrentUser, db_dep, require_role
 from ..errors import conflict, not_found, unprocessable
 from ..models import Account, Doctor, DoctorInvite
 from ..schemas import (
@@ -18,6 +18,7 @@ from ..schemas import (
     DoctorInviteCreate,
     DoctorOut,
     DoctorRejectIn,
+    DoctorSummaryOut,
     DoctorUpdate,
 )
 from ..security import hash_password
@@ -105,9 +106,12 @@ def _encode_stamp(data: bytes | None) -> str | None:
     return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
 
 
-@router.post("", response_model=DoctorOut, status_code=status.HTTP_201_CREATED,
-             dependencies=[Depends(require_role("admin", "sys-admin"))])
-def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> DoctorOut:
+@router.post("", response_model=DoctorOut, status_code=status.HTTP_201_CREATED)
+def create_doctor(
+    payload: DoctorCreate,
+    db: Session = Depends(db_dep),
+    user: CurrentUser = Depends(require_role("admin", "sys-admin")),
+) -> DoctorOut:
     """Legacy admin-fills-everything path. Two sub-modes by `password`:
 
       password set    → admin types the password and shares it offline.
@@ -130,6 +134,19 @@ def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> Docto
     if invite_mode and not email_configured():
         raise unprocessable("email_not_configured")
 
+    # Normalise the email so the case-insensitive uniqueness checks (and
+    # the partial unique index) see a consistent value regardless of how
+    # the admin typed it.
+    email = payload.email.strip().lower()
+    # Block reuse of a *live* email up front with a friendly 409 rather
+    # than letting the partial unique index surface a raw IntegrityError.
+    if db.scalar(
+        select(Doctor).where(
+            func.lower(Doctor.email) == email, Doctor.rejected_at.is_(None)
+        )
+    ):
+        raise conflict("email_already_used")
+
     stamp = decode_rubber_stamp(payload.rubberStampImage)
     mime, ext = _sniff_stamp(stamp)
     stamp_key = object_key("doctors/stamps", ext)
@@ -145,12 +162,13 @@ def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> Docto
         password=hash_password(initial_password),
         role="doctor",
     )
+    now = datetime.now(timezone.utc)
     doctor = Doctor(
         username=payload.username,
         given_name=payload.givenName,
         family_name=payload.familyName,
         contact=payload.contact,
-        email=payload.email,
+        email=email,
         slmc_registration_number=payload.slmcRegistrationNumber,
         qualifications=payload.qualifications,
         practitioner_address=payload.practitionerAddress,
@@ -158,9 +176,11 @@ def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> Docto
         institute_contact=payload.instituteContact,
         rubber_stamp_key=stamp_key,
         active=True,
+        created_at=now,
         # Legacy path is auto-approved — admin typed every field, there's
-        # nothing to review.
-        approved_at=datetime.now(timezone.utc),
+        # nothing to review. Record who did it for the audit trail.
+        approved_at=now,
+        approved_by=user.username,
     )
     db.add(account)
     db.add(doctor)
@@ -212,6 +232,14 @@ def invite_new_doctor(
     invite, raw_token = invites.issue_new_doctor(
         db, email=payload.email, family_name=payload.familyName,
     )
+    _send_new_doctor_invite(db, invite, raw_token)
+    return {"inviteId": invite.id, "email": invite.email}
+
+
+def _send_new_doctor_invite(db: Session, invite: DoctorInvite, raw_token: str) -> None:
+    """Dispatch a new-doctor (full-profile) invite email. Best-effort: a
+    Resend failure is logged but doesn't raise — the invite row already
+    exists and can be re-sent."""
     link = invites.build_invite_link(raw_token)
     try:
         msg_id = send_templated(
@@ -240,18 +268,21 @@ def invite_new_doctor(
             "new-doctor invite email failed (invite row %s still issued): email=%s",
             invite.id, invite.email,
         )
-    return {"inviteId": invite.id, "email": invite.email}
 
 
-@router.post("/{doctor_id}/approve", response_model=DoctorOut,
-             dependencies=[Depends(require_role("admin", "sys-admin"))])
-def approve_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorOut:
+@router.post("/{doctor_id}/approve", response_model=DoctorOut)
+def approve_doctor(
+    doctor_id: int,
+    db: Session = Depends(db_dep),
+    user: CurrentUser = Depends(require_role("admin", "sys-admin")),
+) -> DoctorOut:
     """Approve a self-onboarded doctor. Idempotent — re-calling after
     approval is a no-op that still returns the current state.
 
-    Rejecting a previously-rejected doctor first requires clearing
-    rejected_at (the frontend's "Re-open this submission" path), so this
-    endpoint refuses (409 `doctor_rejected`) until that's done."""
+    A rejected row is a tombstone and can't be approved (409
+    `doctor_rejected`); to give a rejected doctor another chance, invite
+    them to reapply (POST /{id}/reinvite-reapply), which produces a fresh
+    submission rather than resurrecting the rejected one."""
     doctor = db.get(Doctor, doctor_id)
     if doctor is None:
         raise not_found("doctor_not_found")
@@ -264,6 +295,7 @@ def approve_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorOut:
     just_approved = doctor.approved_at is None
     if just_approved:
         doctor.approved_at = datetime.now(timezone.utc)
+        doctor.approved_by = user.username
         db.commit()
         db.refresh(doctor)
         _send_approval_notification(db, doctor)
@@ -318,12 +350,12 @@ def _send_approval_notification(db: Session, doctor: Doctor) -> None:
         )
 
 
-@router.post("/{doctor_id}/reject", response_model=DoctorOut,
-             dependencies=[Depends(require_role("admin", "sys-admin"))])
+@router.post("/{doctor_id}/reject", response_model=DoctorOut)
 def reject_doctor(
     doctor_id: int,
     payload: DoctorRejectIn,
     db: Session = Depends(db_dep),
+    user: CurrentUser = Depends(require_role("admin", "sys-admin")),
 ) -> DoctorOut:
     """Reject a self-onboarded doctor. Stamps rejected_at +
     rejected_reason and deactivates so they can't log in.
@@ -339,6 +371,7 @@ def reject_doctor(
     if doctor.approved_at is not None:
         raise conflict("doctor_already_approved")
     doctor.rejected_at = datetime.now(timezone.utc)
+    doctor.rejected_by = user.username
     doctor.rejected_reason = (payload.reason or "").strip() or None
     doctor.active = False
     db.commit()
@@ -350,6 +383,41 @@ def reject_doctor(
     out = DoctorOut.model_validate(doctor)
     has_live = doctor.doctor_id in _doctors_with_live_invite(db, [doctor.doctor_id])
     return _attach_status(out, doctor, has_live_invite=has_live)
+
+
+@router.post("/{doctor_id}/reinvite-reapply", status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_role("admin", "sys-admin"))])
+def reinvite_reapply(doctor_id: int, db: Session = Depends(db_dep)) -> dict:
+    """Invite a previously-rejected doctor to reapply with a fresh
+    submission.
+
+    Issues a *new-doctor* invite (full profile form) to the rejected
+    doctor's email. The rejected row stays as an immutable audit record;
+    consuming the invite creates a brand-new Doctor row that links back to
+    it via previous_doctor_id. This replaces the old "clear rejected_at on
+    the same row" hack so the history of attempts is preserved.
+
+    Refuses (409 `doctor_not_rejected`) for any doctor that isn't in the
+    rejected state — reapplication only makes sense from a rejection.
+    """
+    if not email_configured():
+        raise unprocessable("email_not_configured")
+    doctor = db.get(Doctor, doctor_id)
+    if doctor is None:
+        raise not_found("doctor_not_found")
+    if doctor.rejected_at is None:
+        raise conflict("doctor_not_rejected")
+    # issue_new_doctor re-checks that no *live* doctor holds this email —
+    # the rejected row we're reapplying from doesn't count, so this passes.
+    invite, raw_token = invites.issue_new_doctor(
+        db, email=doctor.email, family_name=doctor.family_name,
+    )
+    _send_new_doctor_invite(db, invite, raw_token)
+    _logger.info(
+        "reapply invite sent for rejected doctor: id=%s email=%s invite_id=%s",
+        doctor_id, doctor.email, invite.id,
+    )
+    return {"inviteId": invite.id, "email": invite.email}
 
 
 def _send_invite(db: Session, doctor: Doctor) -> None:
@@ -385,9 +453,29 @@ def _send_invite(db: Session, doctor: Doctor) -> None:
         )
 
 
+_ONBOARDING_STATUSES = frozenset(
+    {"awaiting_approval", "awaiting_setup", "active", "rejected"}
+)
+
+
 @router.get("", response_model=list[DoctorOut])
-def list_doctors(active: bool | None = None, db: Session = Depends(db_dep),
-                 user=Depends(require_role("admin", "doctor", "healthworker", "sys-admin"))):
+def list_doctors(
+    active: bool | None = None,
+    status: str | None = None,
+    db: Session = Depends(db_dep),
+    user=Depends(require_role("admin", "doctor", "healthworker", "sys-admin")),
+):
+    """List doctors, newest submission first.
+
+    `status` filters by the computed onboarding status (admin-only buckets
+    awaiting_approval / awaiting_setup / rejected are meaningless for the
+    other roles, which only ever see approved doctors). Because
+    awaiting_setup depends on invite liveness — not a column — the status
+    filter is applied after the per-row computation rather than in SQL.
+    """
+    if status is not None and status not in _ONBOARDING_STATUSES:
+        raise unprocessable("invalid_status", allowed=sorted(_ONBOARDING_STATUSES))
+
     stmt = select(Doctor)
     if active is not None:
         stmt = stmt.where(Doctor.active.is_(active))
@@ -400,16 +488,49 @@ def list_doctors(active: bool | None = None, db: Session = Depends(db_dep),
             Doctor.approved_at.is_not(None),
             Doctor.rejected_at.is_(None),
         )
-    rows = db.scalars(stmt.order_by(Doctor.doctor_id)).all()
+    # Newest submission first so the approval queue surfaces fresh
+    # submissions at the top; doctor_id as a stable tiebreaker.
+    rows = db.scalars(
+        stmt.order_by(Doctor.created_at.desc(), Doctor.doctor_id.desc())
+    ).all()
     # Two queries total: the doctor list, then a single batched lookup of
     # "which of these have a live invite". O(1) regardless of doctor count.
     awaiting_ids = _doctors_with_live_invite(db, [r.doctor_id for r in rows])
-    return [
+    out = [
         _attach_status(
             DoctorOut.model_validate(r), r, has_live_invite=r.doctor_id in awaiting_ids,
         )
         for r in rows
     ]
+    if status is not None:
+        out = [d for d in out if d.onboardingStatus == status]
+    return out
+
+
+@router.get("/summary", response_model=DoctorSummaryOut,
+            dependencies=[Depends(require_role("admin", "sys-admin"))])
+def doctor_summary(db: Session = Depends(db_dep)) -> DoctorSummaryOut:
+    """Per-status counts for the admin queue's tab badges.
+
+    Same two-query shape as the list endpoint: all rows + the batched
+    live-invite lookup. Doctor counts are modest (one clinic's roster),
+    so materialising rows to compute status in Python is cheaper than the
+    SQL gymnastics the invite-liveness join would need.
+    """
+    rows = db.scalars(select(Doctor)).all()
+    awaiting_ids = _doctors_with_live_invite(db, [r.doctor_id for r in rows])
+    summary = DoctorSummaryOut(total=len(rows))
+    for r in rows:
+        st = _onboarding_status(r, has_live_invite=r.doctor_id in awaiting_ids)
+        if st == "awaiting_approval":
+            summary.awaitingApproval += 1
+        elif st == "awaiting_setup":
+            summary.awaitingSetup += 1
+        elif st == "rejected":
+            summary.rejected += 1
+        else:
+            summary.active += 1
+    return summary
 
 
 @router.get("/{doctor_id}", response_model=DoctorDetailOut,
@@ -488,4 +609,46 @@ def delete_doctor(doctor_id: int, db: Session = Depends(db_dep)):
         raise not_found("doctor_not_found")
     doctor.active = False
     db.commit()
+    return None
+
+
+@router.delete("/{doctor_id}/purge", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role("admin", "sys-admin"))])
+def purge_doctor(doctor_id: int, db: Session = Depends(db_dep)):
+    """Hard-delete a *rejected* doctor record — the right-to-erasure path.
+
+    Removes the Doctor row (cascading its invites), the backing Account,
+    and the rubber-stamp object in S3. Restricted to rejected doctors
+    (409 `doctor_not_rejected` otherwise) so it can never be used to wipe
+    an active doctor with real clinical history; deactivation (soft
+    delete) remains the path for those. Any later reapplication row that
+    pointed here via previous_doctor_id is detached (FK ON DELETE SET NULL)
+    rather than blocked.
+    """
+    doctor = db.get(Doctor, doctor_id)
+    if not doctor:
+        raise not_found("doctor_not_found")
+    if doctor.rejected_at is None:
+        raise conflict("doctor_not_rejected")
+
+    stamp_key = doctor.rubber_stamp_key
+    username = doctor.username
+    # Deleting the account cascades to the doctor (doctor.username FK is
+    # ON DELETE CASCADE), which in turn cascades to doctor_invites — one
+    # ORM delete, no double-delete warning. Fall back to deleting the
+    # doctor directly in the (shouldn't-happen) case the account is gone.
+    account = db.get(Account, username)
+    if account is not None:
+        db.delete(account)
+    else:
+        db.delete(doctor)
+    db.commit()
+    # Best-effort object cleanup once the row is gone. A storage failure
+    # here leaves an orphan object (harmless) but mustn't fail the purge.
+    if stamp_key:
+        try:
+            delete_object(stamp_key)
+        except Exception:
+            _logger.exception("stamp object delete failed during purge: key=%s", stamp_key)
+    _logger.info("doctor purged: id=%s username=%s", doctor_id, username)
     return None

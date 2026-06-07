@@ -27,6 +27,7 @@ import type {
   ResetAccountPasswordRequest,
   DiagnosisEntry,
   Doctor,
+  DoctorSummary,
   InitializeSystemRequest,
   InitializeSystemResponse,
   LabEntry,
@@ -178,12 +179,30 @@ export function useReConsent(patientId: number) {
 }
 
 // ── Doctors ──────────────────────────────────────────────────────────
-export function useDoctorList(opts?: { active?: boolean }) {
+export type DoctorListFilter = {
+  active?: boolean;
+  // Computed onboarding status — drives the admin approval-queue tabs.
+  status?: "awaiting_approval" | "awaiting_setup" | "active" | "rejected";
+};
+
+export function useDoctorList(opts?: DoctorListFilter) {
   const fetcher = useAuthedApi();
-  const qs = opts?.active !== undefined ? `?active=${opts.active}` : "";
+  const qs = new URLSearchParams();
+  if (opts?.active !== undefined) qs.set("active", String(opts.active));
+  if (opts?.status) qs.set("status", opts.status);
+  const q = qs.toString();
   return useQuery({
     queryKey: ["doctors", "list", opts ?? {}],
-    queryFn: () => fetcher<Doctor[]>(`/doctors${qs}`),
+    queryFn: () => fetcher<Doctor[]>(`/doctors${q ? `?${q}` : ""}`),
+  });
+}
+
+// Per-status counts for the approval-queue tab badges (admin only).
+export function useDoctorSummary() {
+  const fetcher = useAuthedApi();
+  return useQuery({
+    queryKey: ["doctors", "summary"],
+    queryFn: () => fetcher<DoctorSummary>("/doctors/summary"),
   });
 }
 
@@ -279,6 +298,29 @@ export function useRejectDoctor() {
   return useMutation<Doctor, ApiError, { id: number; reason?: string }>({
     mutationFn: ({ id, reason }) =>
       fetcher(`/doctors/${id}/reject`, { method: "POST", body: { reason } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
+}
+
+// Invite a rejected doctor to reapply with the same email. Issues a fresh
+// full-profile (new-doctor) invite; the rejected row is preserved as
+// history and the new submission links back to it via previousDoctorId.
+export function useReinviteReapply() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<{ inviteId: number; email: string }, ApiError, number>({
+    mutationFn: (id) => fetcher(`/doctors/${id}/reinvite-reapply`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
+}
+
+// Hard-delete a rejected doctor record (right-to-erasure). Backend
+// refuses anything that isn't in the rejected state.
+export function usePurgeDoctor() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<void, ApiError, number>({
+    mutationFn: (id) => fetcher(`/doctors/${id}/purge`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
