@@ -46,8 +46,20 @@ MANAGEABLE_ROLES = ("admin", "healthworker")
 
 
 @router.get("/me")
-def me(user: CurrentUser = Depends(require_role("sys-admin"))) -> dict:
-    return {"username": user.username, "role": user.role}
+def me(
+    db: Session = Depends(db_dep),
+    user: CurrentUser = Depends(require_role("sys-admin")),
+) -> dict:
+    """The signed-in ops account, including its editable profile. The
+    sys-admin manages its own account from the System page (it's excluded
+    from the /accounts roster), so this carries full_name/contact."""
+    account = db.get(Account, user.username)
+    return {
+        "username": user.username,
+        "role": user.role,
+        "fullName": account.full_name if account else None,
+        "contact": account.contact if account else None,
+    }
 
 
 @router.get("/system-config")
@@ -96,9 +108,10 @@ def list_accounts(
     db: Session = Depends(db_dep),
     _: CurrentUser = Depends(require_role("sys-admin")),
 ) -> list[AccountRow]:
-    """Full platform roster. Admins and healthworkers are manageable;
-    doctors and the sys-admin are surfaced read-only for at-a-glance
-    visibility."""
+    """Roster of every account EXCEPT the ops account itself. Admins and
+    healthworkers are manageable; doctors are surfaced read-only (managed
+    via the shared doctor tools). The sys-admin manages its own account
+    from the System page, so it's excluded here."""
     # One extra query for the doctor active/id, keyed by username, so the
     # roster build stays O(1) in round-trips regardless of account count.
     doctor_by_username = {
@@ -107,7 +120,9 @@ def list_accounts(
             select(Doctor.username, Doctor.active, Doctor.doctor_id)
         ).all()
     }
-    accounts = db.scalars(select(Account).order_by(Account.role, Account.username)).all()
+    accounts = db.scalars(
+        select(Account).where(Account.role != "sys-admin").order_by(Account.role, Account.username)
+    ).all()
     rows: list[AccountRow] = []
     for a in accounts:
         doc = doctor_by_username.get(a.username) if a.role == "doctor" else None

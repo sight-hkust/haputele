@@ -357,6 +357,16 @@ export type AccountUpdateRequest = {
   contact?: string;
 };
 
+// GET /sysadmin/me — the signed-in ops account + its editable profile.
+// The sys-admin manages its own account from the System page (it's
+// excluded from the /accounts roster).
+export type SysadminMe = {
+  username: string;
+  role: "sys-admin";
+  fullName: string | null;
+  contact: string | null;
+};
+
 // ── Sys-admin read-only views ─────────────────────────────────────────
 
 export type SystemConfig = {

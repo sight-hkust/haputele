@@ -1,10 +1,11 @@
 "use client";
 
-import { Building2, Clock, FileText, MapPin, Phone, Mail, ShieldCheck } from "lucide-react";
+import { Building2, Clock, FileText, MapPin, Phone, Mail, ShieldCheck, UserCog } from "lucide-react";
 
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
+import { SelfAccountSettings } from "@/components/sysadmin/self-account-form";
 import { explainError } from "@/lib/error-codes";
 import { fmtDateTime } from "@/lib/format";
 import { useSystemConfig } from "@/lib/use-api";
@@ -16,10 +17,24 @@ export default function SysAdminHome() {
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
       <PageHeader
         label="Sys-admin"
-        title="System"
-        highlight="configuration."
-        subtitle="The values the operator picked during first-run setup. These drive timezones, master consent versioning, and the institute identity printed on every prescription PDF."
+        title="Your account"
+        highlight="& system."
+        subtitle="Manage your own ops account, and review the system configuration the operator picked during first-run setup."
       />
+
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <UserCog className="h-4 w-4 text-[var(--accent)]" />
+          <h2 className="font-display text-lg tracking-[-0.01em]">Your account</h2>
+        </div>
+        <SelfAccountSettings />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-[var(--accent)]" />
+          <h2 className="font-display text-lg tracking-[-0.01em]">System configuration</h2>
+        </div>
 
       {error ? (
         <ErrorBanner>{explainError(error.error)}</ErrorBanner>
@@ -67,14 +82,15 @@ export default function SysAdminHome() {
         </div>
       )}
 
-      <p className="text-xs text-[var(--muted-foreground)]">
-        Read-only for now. Editing these values is planned for a future dev-dashboard release; until
-        then, an operator can re-initialize the system by following the manual procedure in{" "}
-        <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-[11px]">
-          CURRENT_INFRA.md
-        </code>{" "}
-        §6.
-      </p>
+        <p className="text-xs text-[var(--muted-foreground)]">
+          Read-only for now. Editing these values is planned for a future dev-dashboard release; until
+          then, an operator can re-initialize the system by following the manual procedure in{" "}
+          <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-[11px]">
+            CURRENT_INFRA.md
+          </code>{" "}
+          §6.
+        </p>
+      </section>
     </div>
   );
 }

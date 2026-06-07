@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import {
   CheckCircle2,
   Mail,
@@ -10,16 +11,22 @@ import {
   ShieldOff,
   ShieldX,
   Trash2,
+  X,
 } from "lucide-react";
 
 import { DoctorForm } from "@/components/admin/doctor-form";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
-import { Drawer } from "@/components/primitives/drawer";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Modal } from "@/components/primitives/modal";
-import { useAuth } from "@/lib/auth";
+import {
+  Field,
+  PasswordSection,
+  ProfileSection,
+  Section,
+  StatusHeader,
+} from "@/components/sysadmin/account-sections";
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtDateTime } from "@/lib/format";
 import {
@@ -31,8 +38,6 @@ import {
   useEnableAccount,
   useReissueDoctorInvite,
   useRejectDoctor,
-  useResetAccountPassword,
-  useUpdateAccount,
   useUpdateDoctor,
 } from "@/lib/use-api";
 import type { AccountRole, AccountRosterEntry } from "@/types/api";
@@ -44,45 +49,52 @@ const ROLE_LABEL: Record<AccountRole, string> = {
   doctor: "Doctor",
 };
 
-const MIN_PASSWORD_LEN = 10;
-
-export function AccountDrawer({
+// Inline detail/edit panel — sits beside the grid (no overlay, no dim) so
+// the table stays visible and clickable while a row is open.
+export function AccountPanel({
   account,
   onClose,
 }: {
-  account: AccountRosterEntry | null;
+  account: AccountRosterEntry;
   onClose: () => void;
 }) {
-  const { session } = useAuth();
-  // Retain the last account through the close animation so the panel doesn't
-  // blank out mid-slide. `account` is re-derived from live roster data by the
-  // parent, so edits/disables reflect here without a frozen snapshot.
-  const [shown, setShown] = useState(account);
-  useEffect(() => {
-    if (account) setShown(account);
-  }, [account]);
-  const data = account ?? shown;
-  const isSelf = data?.username === session?.username;
-
   return (
-    <Drawer
-      open={account !== null}
-      onClose={onClose}
-      title={data?.username}
-      description={data ? `${ROLE_LABEL[data.role]} account${isSelf ? " · you" : ""}` : undefined}
+    <motion.aside
+      key={account.username}
+      initial={{ opacity: 0, x: 16 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full lg:w-[26rem] lg:shrink-0"
     >
-      {data ? (
-        data.manageable ? (
-          <ManageableBody key={data.username} account={data} onClose={onClose} />
-        ) : data.role === "doctor" && data.doctorId !== null ? (
-          <DoctorBody key={data.username} doctorId={data.doctorId} />
-        ) : isSelf ? (
-          <SelfBody key={data.username} account={data} />
-        ) : (
-          <SysAdminBody />
-        )
-      ) : null}
-    </Drawer>
+      <Card
+        variant="elevated"
+        className="flex flex-col overflow-hidden lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)]"
+      >
+        <header className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
+          <div className="min-w-0">
+            <h2 className="truncate font-display text-lg tracking-[-0.01em]">{account.username}</h2>
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+              {ROLE_LABEL[account.role]} account
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close panel" className="-mr-2 -mt-1 shrink-0">
+            <X className="h-4 w-4" />
+          </Button>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-5">
+          {account.manageable ? (
+            <ManageableBody account={account} onClose={onClose} />
+          ) : account.role === "doctor" && account.doctorId !== null ? (
+            <DoctorBody doctorId={account.doctorId} />
+          ) : (
+            <p className="text-sm text-[var(--muted-foreground)]">
+              This account is read-only here.
+            </p>
+          )}
+        </div>
+      </Card>
+    </motion.aside>
   );
 }
 
@@ -177,127 +189,6 @@ function ManageableBody({
         </div>
       </Modal>
     </div>
-  );
-}
-
-// ── self: the signed-in sys-admin editing their own account ──────────────
-
-function SelfBody({ account }: { account: AccountRosterEntry }) {
-  return (
-    <div className="flex flex-col gap-8">
-      <StatusHeader active label="Active" sub="The ops super user — that's you" />
-      <ProfileSection account={account} />
-      <PasswordSection username={account.username} self />
-      <Card variant="flat" className="p-4 text-xs text-[var(--muted-foreground)]">
-        You can edit your own profile and password here, but the ops account can&apos;t be disabled or
-        deleted — that would lock the platform out of administration.
-      </Card>
-    </div>
-  );
-}
-
-// ── sys-admin (read-only fallback) ───────────────────────────────────────
-
-function SysAdminBody() {
-  return (
-    <div className="flex flex-col gap-6">
-      <StatusHeader active label="Active" sub="Ops super user" />
-      <Card variant="flat" className="p-5 text-sm text-[var(--muted-foreground)]">
-        This is the platform&apos;s singleton ops account. It can&apos;t be disabled, deleted, or edited
-        from another session.
-      </Card>
-    </div>
-  );
-}
-
-// ── shared editable sections ─────────────────────────────────────────────
-
-function ProfileSection({ account }: { account: AccountRosterEntry }) {
-  const update = useUpdateAccount();
-  const [fullName, setFullName] = useState(account.fullName ?? "");
-  const [contact, setContact] = useState(account.contact ?? "");
-  const dirty = fullName !== (account.fullName ?? "") || contact !== (account.contact ?? "");
-
-  return (
-    <Section title="Profile">
-      <Field label="Username">
-        <Input value={account.username} disabled />
-        <Hint>Usernames can&apos;t be changed — delete and recreate to rename.</Hint>
-      </Field>
-      <Field label="Full name">
-        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Alice Adams" />
-      </Field>
-      <Field label="Phone / contact">
-        <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="e.g. +94 77 123 4567" />
-      </Field>
-      {update.error ? <ErrorBanner>{explainError(update.error.error)}</ErrorBanner> : null}
-      <div>
-        <Button
-          onClick={() => update.mutate({ username: account.username, body: { fullName, contact } })}
-          disabled={!dirty || update.isPending}
-        >
-          {update.isPending ? "Saving…" : "Save changes"}
-        </Button>
-      </div>
-    </Section>
-  );
-}
-
-function PasswordSection({ username, self = false }: { username: string; self?: boolean }) {
-  const resetPw = useResetAccountPassword();
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [pwError, setPwError] = useState<string | null>(null);
-  const [pwDone, setPwDone] = useState(false);
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPwError(null);
-    setPwDone(false);
-    if (password.length < MIN_PASSWORD_LEN)
-      return setPwError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
-    if (password !== confirm) return setPwError("Passwords do not match.");
-    resetPw.mutate(
-      { username, password },
-      {
-        onSuccess: () => {
-          setPassword("");
-          setConfirm("");
-          setPwDone(true);
-        },
-      },
-    );
-  };
-
-  return (
-    <Section title="Password">
-      <form onSubmit={submit} className="flex flex-col gap-3">
-        <p className="text-sm text-[var(--muted-foreground)]">
-          {self
-            ? "Change your own password. You'll keep your current session."
-            : "Set a new password and share it with them directly — they can sign in with it immediately."}
-        </p>
-        <Field label="New password">
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
-        </Field>
-        <Field label="Confirm password">
-          <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
-        </Field>
-        {pwError ? <ErrorBanner>{pwError}</ErrorBanner> : null}
-        {resetPw.error ? <ErrorBanner>{explainError(resetPw.error.error)}</ErrorBanner> : null}
-        <div className="flex items-center gap-3">
-          <Button type="submit" variant="secondary" disabled={resetPw.isPending || !password}>
-            {resetPw.isPending ? "Saving…" : self ? "Change password" : "Set new password"}
-          </Button>
-          {pwDone ? (
-            <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Updated
-            </span>
-          ) : null}
-        </div>
-      </form>
-    </Section>
   );
 }
 
@@ -547,60 +438,4 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
       </Modal>
     </div>
   );
-}
-
-// ── shared pieces ─────────────────────────────────────────────────────────
-
-function StatusHeader({ active, label, sub }: { active: boolean; label: string; sub?: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span
-        className={
-          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] " +
-          (active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")
-        }
-      >
-        <span className={"h-1.5 w-1.5 rounded-full " + (active ? "bg-emerald-500" : "bg-rose-500")} aria-hidden />
-        {label}
-      </span>
-      {sub ? <span className="truncate text-sm text-[var(--muted-foreground)]">{sub}</span> : null}
-    </div>
-  );
-}
-
-function Section({
-  title,
-  tone = "default",
-  children,
-}: {
-  title: string;
-  tone?: "default" | "danger";
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-3">
-      <h3
-        className={
-          "font-mono text-[10px] uppercase tracking-[0.15em] " +
-          (tone === "danger" ? "text-rose-600" : "text-[var(--muted-foreground)]")
-        }
-      >
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
-}
-
-function Hint({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs text-[var(--muted-foreground)]">{children}</p>;
 }

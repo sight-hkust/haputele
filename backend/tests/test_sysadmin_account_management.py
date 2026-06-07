@@ -93,7 +93,7 @@ def _seed_sysadmin_and_login(client):
 # ── roster ───────────────────────────────────────────────────────────
 
 
-def test_roster_lists_all_roles_with_manageable_flags(client, seeded_setup_token):
+def test_roster_lists_others_and_excludes_sysadmin(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
     _create_account(client, "alice", "admin")
     _create_account(client, "bob", "healthworker")
@@ -102,8 +102,8 @@ def test_roster_lists_all_roles_with_manageable_flags(client, seeded_setup_token
     assert r.status_code == 200, r.text
     by_username = {row["username"]: row for row in r.json()}
 
-    assert by_username["ops"]["role"] == "sys-admin"
-    assert by_username["ops"]["manageable"] is False
+    # The ops account manages itself on the System page, not here.
+    assert "ops" not in by_username
     assert by_username["alice"]["role"] == "admin"
     assert by_username["alice"]["manageable"] is True
     assert by_username["alice"]["disabledAt"] is None
@@ -229,10 +229,24 @@ def test_sysadmin_can_edit_own_profile(client, seeded_setup_token):
     assert r.status_code == 200, r.text
     assert r.json()["fullName"] == "Ops Lead"
 
-    r = client.get("/sysadmin/accounts")
-    ops = {row["username"]: row for row in r.json()}["ops"]
-    assert ops["fullName"] == "Ops Lead"
-    assert ops["contact"] == "+94 11 000 1111"
+    # The ops account isn't on the /accounts roster; its profile is read
+    # back from /sysadmin/me (which powers the System page).
+    r = client.get("/sysadmin/me")
+    assert r.status_code == 200, r.text
+    assert r.json()["fullName"] == "Ops Lead"
+    assert r.json()["contact"] == "+94 11 000 1111"
+
+
+def test_me_returns_profile_fields(client, seeded_setup_token):
+    _initialize_and_login_sysadmin(client, seeded_setup_token)
+    r = client.get("/sysadmin/me")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["username"] == "ops"
+    assert body["role"] == "sys-admin"
+    # Unset until the ops account fills them in.
+    assert body["fullName"] is None
+    assert body["contact"] is None
 
 
 def test_sysadmin_cannot_disable_self(client, seeded_setup_token):

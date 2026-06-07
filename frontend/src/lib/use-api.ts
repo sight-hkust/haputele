@@ -58,6 +58,7 @@ import type {
   StartMeetingResponse,
   SubmitConsultationRequest,
   SubmitConsultationResponse as TSubmitConsultationResponse,
+  SysadminMe,
   SystemConfig,
   VerifySetupTokenRequest,
   VerifySetupTokenResponse,
@@ -870,8 +871,19 @@ export function useSystemConfig() {
   });
 }
 
-// The full platform roster. Manageable rows (admin / healthworker) carry
-// action buttons; doctors and the sys-admin are shown read-only.
+// The signed-in ops account + its editable profile. Powers the System
+// page's self-account section (the sys-admin isn't on the roster below).
+export function useSysadminMe() {
+  const fetcher = useAuthedApi();
+  return useQuery({
+    queryKey: ["sysadmin", "me"],
+    queryFn: () => fetcher<SysadminMe>("/sysadmin/me"),
+  });
+}
+
+// Roster of every account EXCEPT the ops account. Manageable rows (admin /
+// healthworker) get full controls; doctors are read-only (managed via the
+// shared doctor tools).
 export function useAccountRoster() {
   const fetcher = useAuthedApi();
   return useQuery({

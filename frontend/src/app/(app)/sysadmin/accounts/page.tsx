@@ -14,7 +14,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { AccountDrawer } from "@/components/sysadmin/account-drawer";
+import { AccountPanel } from "@/components/sysadmin/account-panel";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
@@ -118,7 +118,7 @@ export default function AccountsPage() {
           label="Sys-admin"
           title="Account"
           highlight="management."
-          subtitle="Every account on the platform. Click a row to view and manage it — admins and healthworkers fully, doctors via the shared doctor tools, the ops account read-only."
+          subtitle="Every account except your own — admins and healthworkers fully, doctors via the shared doctor tools. Click a row to manage it. (Manage your own ops account from the System page.)"
         />
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" />
@@ -134,6 +134,8 @@ export default function AccountsPage() {
         <StatChip label="Inactive" value={stats.inactive} tone="negative" />
       </div>
 
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
       <Card variant="flat" className="flex flex-col">
         <div className="flex flex-col gap-3 border-b border-[var(--border)] p-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
@@ -157,7 +159,6 @@ export default function AccountsPage() {
               <option value="admin">Admin</option>
               <option value="healthworker">Healthworker</option>
               <option value="doctor">Doctor</option>
-              <option value="sys-admin">Sys-admin</option>
             </Select>
             <Select
               value={statusFilter}
@@ -217,21 +218,29 @@ export default function AccountsPage() {
             </thead>
             <tbody>
               {rows.map((account) => (
-                <AccountRow key={account.username} account={account} onOpen={() => setOpenUsername(account.username)} />
+                <AccountRow
+                  key={account.username}
+                  account={account}
+                  selected={account.username === openUsername}
+                  onOpen={() => setOpenUsername(account.username)}
+                />
               ))}
             </tbody>
           </table>
         )}
       </Card>
 
-      {data && rows.length > 0 ? (
-        <p className="text-xs text-[var(--muted-foreground)]">
-          Showing {rows.length} of {accounts.length} {accounts.length === 1 ? "account" : "accounts"}.
-        </p>
-      ) : null}
+          {data && rows.length > 0 ? (
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Showing {rows.length} of {accounts.length} {accounts.length === 1 ? "account" : "accounts"}.
+            </p>
+          ) : null}
+        </div>
+
+        {selected ? <AccountPanel account={selected} onClose={() => setOpenUsername(null)} /> : null}
+      </div>
 
       <CreateAccountModal open={createOpen} onClose={() => setCreateOpen(false)} />
-      <AccountDrawer account={selected} onClose={() => setOpenUsername(null)} />
     </div>
   );
 }
@@ -318,7 +327,15 @@ function StatePill({ active, label }: { active: boolean; label: string }) {
   );
 }
 
-function AccountRow({ account, onOpen }: { account: AccountRosterEntry; onOpen: () => void }) {
+function AccountRow({
+  account,
+  selected,
+  onOpen,
+}: {
+  account: AccountRosterEntry;
+  selected: boolean;
+  onOpen: () => void;
+}) {
   const status = deriveStatus(account);
   const isDoctor = account.role === "doctor";
   const Icon = isDoctor ? Stethoscope : account.role === "sys-admin" ? ShieldCheck : UserCog;
@@ -328,8 +345,12 @@ function AccountRow({ account, onOpen }: { account: AccountRosterEntry; onOpen: 
       onClick={onOpen}
       tabIndex={0}
       role="button"
+      aria-pressed={selected}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
-      className="cursor-pointer border-b border-[var(--border)] outline-none transition-colors last:border-0 hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/40"
+      className={cn(
+        "cursor-pointer border-b border-[var(--border)] outline-none transition-colors last:border-0 hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/40",
+        selected && "bg-[var(--accent)]/5 hover:bg-[var(--accent)]/5",
+      )}
     >
       <td className="px-5 py-3.5">
         <div className="flex items-center gap-3">
