@@ -1,7 +1,7 @@
 """capture sessions (phone-as-camera via QR)
 
-Revision ID: 0012_capture_sessions
-Revises: 0011_invite_email_approval
+Revision ID: 0015_capture_sessions
+Revises: 0014_doctor_status_audit
 Create Date: 2026-06-07
 
 Adds the capture_sessions table backing the "scan a QR code to use your
@@ -27,8 +27,8 @@ from typing import Sequence, Union
 from alembic import op
 
 
-revision: str = "0012_capture_sessions"
-down_revision: Union[str, None] = "0011_invite_email_approval"
+revision: str = "0015_capture_sessions"
+down_revision: Union[str, None] = "0014_doctor_status_audit"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
