@@ -20,6 +20,7 @@ operator_authorized_keys:
   - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL4hoqAr76JwTIlUXjR1kMeIfRifij65hBN5vlK7bfco"
   - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHPK+bR2JIzK43k8rGILOlJ07YaymhHoXcpjR69ngqoC"
   - "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBG2h8OBT7O/X4jmyfKfODDrl84cjpcjbC7Ge3B4eoJf0EgVSqHjl7TK8MojnxjivoQl7kZGNHeoMJ/jUqSJqGW4="
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDUbBDuFv15fsHPXYgYDM4Ey/EW/lJoTzJtfvxdQ26X2" # Daniel's MacBook Air
 
 # Container images.
 docker_image_backend: ghcr.io/sight-hkust/haputele-backend:latest

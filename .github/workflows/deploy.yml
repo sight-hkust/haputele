@@ -17,6 +17,11 @@ on:
         description: "State lock ID to release (required when intent = unlock)"
         required: false
         default: ""
+      image_tag:
+        type: string
+        description: "Image tag to deploy, e.g. 0.1.0 or sha-abc1234 (emergency override; blank = use the terraform.tfvars pin)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -115,14 +120,32 @@ jobs:
             -d "{\"ID\":\"${LOCK_ID}\"}" \
             "${TF_HTTP_UNLOCK_ADDRESS}"
 
+      # An image_tag input overrides the terraform.tfvars pin for this run only.
+      # It's an ephemeral escape hatch (emergency rollback without a commit): the
+      # override lives in state until the next apply without it, which restores the
+      # tfvars pin. After using it, reconcile terraform.tfvars to match.
+      - name: Compute image override
+        id: img
+        run: |
+          TAG="${{ github.event.inputs.image_tag }}"
+          if [ -n "$TAG" ]; then
+            echo "Overriding image tag -> ${TAG}"
+            {
+              echo "vars=-var=docker_image_backend=ghcr.io/sight-hkust/haputele-backend:${TAG} -var=docker_image_frontend=ghcr.io/sight-hkust/haputele-frontend:${TAG}"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "No image_tag override; using terraform.tfvars pin."
+            echo "vars=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Terraform Plan
         id: plan
         if: github.event.inputs.intent == 'plan'
-        run: terraform plan -no-color
+        run: terraform plan -no-color ${{ steps.img.outputs.vars }}
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event.inputs.intent == 'apply'
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve ${{ steps.img.outputs.vars }}
 
       # --- Provision the VM with Ansible (apply only) ---
       - name: Wait for VM SSH + cloud-init
