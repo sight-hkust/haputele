@@ -20,8 +20,11 @@ import type {
   CalendarAppointment,
   Consent,
   Consultation,
+  AccountRosterEntry,
+  AccountUpdateRequest,
   CreateOperatingAccountRequest,
   CreateOperatingAccountResponse,
+  ResetAccountPasswordRequest,
   DiagnosisEntry,
   Doctor,
   InitializeSystemRequest,
@@ -867,14 +870,85 @@ export function useSystemConfig() {
   });
 }
 
+// The full platform roster. Manageable rows (admin / healthworker) carry
+// action buttons; doctors and the sys-admin are shown read-only.
+export function useAccountRoster() {
+  const fetcher = useAuthedApi();
+  return useQuery({
+    queryKey: ["sysadmin", "accounts"],
+    queryFn: () => fetcher<AccountRosterEntry[]>("/sysadmin/accounts"),
+  });
+}
+
 export function useCreateOperatingAccount() {
   const fetcher = useAuthedApi();
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateOperatingAccountRequest) =>
       fetcher<CreateOperatingAccountResponse>("/sysadmin/accounts", {
         method: "POST",
         body,
       }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
+  });
+}
+
+// Edit an operating account's ops-managed profile (display name, contact).
+export function useUpdateAccount() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<AccountRosterEntry, ApiError, { username: string; body: AccountUpdateRequest }>({
+    mutationFn: ({ username, body }) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}`, { method: "PATCH", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
+  });
+}
+
+// Sys-admin sets a new password for an operating account. The account
+// owner is told the new secret out-of-band (operating accounts carry no
+// email). Returns void (204).
+export function useResetAccountPassword() {
+  const fetcher = useAuthedApi();
+  return useMutation<void, ApiError, { username: string; password: string }>({
+    mutationFn: ({ username, password }) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/reset-password`, {
+        method: "POST",
+        body: { password } satisfies ResetAccountPasswordRequest,
+      }),
+  });
+}
+
+// Soft-disable / re-enable. Disable blocks login while preserving every
+// record the account created; both are idempotent server-side.
+export function useDisableAccount() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<AccountRosterEntry, ApiError, string>({
+    mutationFn: (username) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/disable`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
+  });
+}
+
+export function useEnableAccount() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<AccountRosterEntry, ApiError, string>({
+    mutationFn: (username) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/enable`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
+  });
+}
+
+// Hard-delete an operating account. Fails with `account_in_use` (409) if
+// the account is FK-referenced by data it created — disable it instead.
+export function useDeleteAccount() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<void, ApiError, string>({
+    mutationFn: (username) =>
+      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
 

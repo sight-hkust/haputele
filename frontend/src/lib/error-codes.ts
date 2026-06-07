@@ -76,6 +76,14 @@ const MESSAGES: Record<string, string> = {
     "This doctor's submission was previously rejected. Re-issue an invite to start fresh.",
   doctor_already_approved:
     "This doctor is already approved. Use deactivate instead if you want to disable them.",
+  // Sys-admin account management.
+  account_disabled:
+    "This account has been disabled. Contact your system administrator to re-enable it.",
+  account_not_found: "That account no longer exists.",
+  cannot_manage_role:
+    "Only admin and healthworker accounts can be managed here. Doctors are managed from the admin console.",
+  account_in_use:
+    "This account has records attached to it and can't be deleted. Disable it instead to block sign-in while keeping its history.",
   request_failed: "Something went wrong. Try again.",
 };
 
