@@ -314,11 +314,57 @@ export type CreateOperatingAccountRequest = {
   username: string;
   password: string;
   role: OperatingAccountRole;
+  fullName?: string;
+  contact?: string;
 };
 
 export type CreateOperatingAccountResponse = {
   username: string;
   role: OperatingAccountRole;
+};
+
+// GET /sysadmin/accounts — full platform roster. Admins and healthworkers
+// are manageable; doctors and the sys-admin are read-only rows. Roles
+// beyond the operating two appear here, so this is the broad role union.
+export type AccountRole = "sys-admin" | "admin" | "healthworker" | "doctor";
+
+export type AccountRosterEntry = {
+  username: string;
+  role: AccountRole;
+  // Ops-managed profile (operating accounts only); null for doctors and
+  // the sys-admin.
+  fullName: string | null;
+  contact: string | null;
+  // Account-level soft-disable stamp; null = active. Always null for
+  // doctors (see `doctorActive`) and the sys-admin.
+  disabledAt: string | null;
+  // Whether this surface can mutate the row (admin / healthworker only).
+  manageable: boolean;
+  // Only populated for doctor rows, mirroring the doctor.active flag.
+  doctorActive: boolean | null;
+  // Only populated for doctor rows — opens the doctor's full editor.
+  doctorId: number | null;
+};
+
+// POST /sysadmin/accounts/{username}/reset-password
+export type ResetAccountPasswordRequest = {
+  password: string;
+};
+
+// PATCH /sysadmin/accounts/{username} — edit ops-managed profile.
+export type AccountUpdateRequest = {
+  fullName?: string;
+  contact?: string;
+};
+
+// GET /sysadmin/me — the signed-in ops account + its editable profile.
+// The sys-admin manages its own account from the System page (it's
+// excluded from the /accounts roster).
+export type SysadminMe = {
+  username: string;
+  role: "sys-admin";
+  fullName: string | null;
+  contact: string | null;
 };
 
 // ── Sys-admin read-only views ─────────────────────────────────────────

@@ -106,7 +106,7 @@ def _encode_stamp(data: bytes | None) -> str | None:
 
 
 @router.post("", response_model=DoctorOut, status_code=status.HTTP_201_CREATED,
-             dependencies=[Depends(require_role("admin"))])
+             dependencies=[Depends(require_role("admin", "sys-admin"))])
 def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> DoctorOut:
     """Legacy admin-fills-everything path. Two sub-modes by `password`:
 
@@ -175,7 +175,7 @@ def create_doctor(payload: DoctorCreate, db: Session = Depends(db_dep)) -> Docto
 
 
 @router.post("/{doctor_id}/invites", status_code=status.HTTP_204_NO_CONTENT,
-             dependencies=[Depends(require_role("admin"))])
+             dependencies=[Depends(require_role("admin", "sys-admin"))])
 def reissue_invite(doctor_id: int, db: Session = Depends(db_dep)) -> Response:
     """Issue a fresh password-rotation invite for an existing doctor.
 
@@ -193,7 +193,7 @@ def reissue_invite(doctor_id: int, db: Session = Depends(db_dep)) -> Response:
 
 
 @router.post("/invites", status_code=status.HTTP_201_CREATED,
-             dependencies=[Depends(require_role("admin"))])
+             dependencies=[Depends(require_role("admin", "sys-admin"))])
 def invite_new_doctor(
     payload: DoctorInviteCreate, db: Session = Depends(db_dep),
 ) -> dict:
@@ -244,7 +244,7 @@ def invite_new_doctor(
 
 
 @router.post("/{doctor_id}/approve", response_model=DoctorOut,
-             dependencies=[Depends(require_role("admin"))])
+             dependencies=[Depends(require_role("admin", "sys-admin"))])
 def approve_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorOut:
     """Approve a self-onboarded doctor. Idempotent — re-calling after
     approval is a no-op that still returns the current state.
@@ -319,7 +319,7 @@ def _send_approval_notification(db: Session, doctor: Doctor) -> None:
 
 
 @router.post("/{doctor_id}/reject", response_model=DoctorOut,
-             dependencies=[Depends(require_role("admin"))])
+             dependencies=[Depends(require_role("admin", "sys-admin"))])
 def reject_doctor(
     doctor_id: int,
     payload: DoctorRejectIn,
@@ -387,15 +387,15 @@ def _send_invite(db: Session, doctor: Doctor) -> None:
 
 @router.get("", response_model=list[DoctorOut])
 def list_doctors(active: bool | None = None, db: Session = Depends(db_dep),
-                 user=Depends(require_role("admin", "doctor", "healthworker"))):
+                 user=Depends(require_role("admin", "doctor", "healthworker", "sys-admin"))):
     stmt = select(Doctor)
     if active is not None:
         stmt = stmt.where(Doctor.active.is_(active))
     # Healthworkers (booking flow) and doctors (browsing colleagues) only
-    # ever see approved, non-rejected doctors. Admins see everyone,
-    # including awaiting_approval and rejected entries, so they can act
-    # on them.
-    if user.role != "admin":
+    # ever see approved, non-rejected doctors. Admins and the ops sys-admin
+    # see everyone, including awaiting_approval and rejected entries, so
+    # they can act on them.
+    if user.role not in ("admin", "sys-admin"):
         stmt = stmt.where(
             Doctor.approved_at.is_not(None),
             Doctor.rejected_at.is_(None),
@@ -413,7 +413,7 @@ def list_doctors(active: bool | None = None, db: Session = Depends(db_dep),
 
 
 @router.get("/{doctor_id}", response_model=DoctorDetailOut,
-            dependencies=[Depends(require_role("admin", "doctor", "healthworker"))])
+            dependencies=[Depends(require_role("admin", "doctor", "healthworker", "sys-admin"))])
 def get_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorDetailOut:
     doctor = db.get(Doctor, doctor_id)
     if not doctor:
@@ -425,7 +425,7 @@ def get_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorDetailOut
 
 
 @router.patch("/{doctor_id}", response_model=DoctorOut,
-              dependencies=[Depends(require_role("admin"))])
+              dependencies=[Depends(require_role("admin", "sys-admin"))])
 def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(db_dep)) -> DoctorOut:
     doctor = db.get(Doctor, doctor_id)
     if not doctor:
@@ -480,7 +480,7 @@ def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(d
 
 
 @router.delete("/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT,
-               dependencies=[Depends(require_role("admin"))])
+               dependencies=[Depends(require_role("admin", "sys-admin"))])
 def delete_doctor(doctor_id: int, db: Session = Depends(db_dep)):
     # Soft delete — preserve FK references on past appointments/consultations.
     doctor = db.get(Doctor, doctor_id)
