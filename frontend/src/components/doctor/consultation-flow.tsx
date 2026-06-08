@@ -31,7 +31,7 @@ import {
 } from "@/components/doctor/signature-canvas";
 import { explainError } from "@/lib/error-codes";
 import { appLocalToUtcIso, fmtRelative } from "@/lib/format";
-import { useCurrentDoctor, useSubmitConsultation, useUpdateConsultation } from "@/lib/use-api";
+import { MY_SIGNATURE_URL, useCurrentDoctor, useSubmitConsultation, useUpdateConsultation } from "@/lib/use-api";
 import type { Consultation, FollowUpInput } from "@/types/api";
 import { cn } from "@/lib/cn";
 
@@ -143,6 +143,9 @@ export function ConsultationFlow({
   const [signed, setSigned] = useState(false);
   const sigRef = useRef<SignatureCanvasHandle>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  // When the doctor has a saved e-signature we apply it automatically; this
+  // flips true if they'd rather draw a one-off signature for this consult.
+  const [drawOneOff, setDrawOneOff] = useState(false);
 
   // Three-way follow-up choice at submit. Default: none.
   type FollowUpChoice = "none" | "appointment" | "weeks";
@@ -150,9 +153,11 @@ export function ConsultationFlow({
   const [followUpAt, setFollowUpAt] = useState<string>(""); // datetime-local
   const [followUpWeeks, setFollowUpWeeks] = useState<number>(4);
 
-  const { doctor } = useCurrentDoctor();
+  const { doctor, hasDefaultSignature } = useCurrentDoctor();
   const update = useUpdateConsultation(consultation.id);
   const submit = useSubmitConsultation(consultation.id);
+  // Draw the signature when there's no saved default, or the doctor opted to.
+  const drawingSignature = !hasDefaultSignature || drawOneOff;
 
   const form = useForm<ConsultationFormShape>({
     resolver: zodResolver(formSchema) as never,
@@ -177,8 +182,14 @@ export function ConsultationFlow({
   const back = () => setStage(stage === "review" ? "rx" : "notes");
 
   const onSubmit = async () => {
-    const sig = sigRef.current?.toDataURL();
-    if (!sig) return;
+    // When drawing, a signature is required; otherwise omit it so the backend
+    // applies the doctor's saved default e-signature.
+    let signature: string | undefined;
+    if (drawingSignature) {
+      const sig = sigRef.current?.toDataURL();
+      if (!sig) return;
+      signature = sig;
+    }
     // Final patch in case anything's dirty since the last save.
     await update.mutateAsync(toPatch(form.getValues()));
     let followUp: FollowUpInput | undefined;
@@ -188,7 +199,7 @@ export function ConsultationFlow({
       followUp = { kind: "weeks", weeks: followUpWeeks };
     }
     submit.mutate(
-      { signature: sig, followUp },
+      { signature, followUp },
       {
         onSuccess: () => router.push(`/doctor/appointments/${appointmentId}`),
       },
@@ -342,7 +353,46 @@ export function ConsultationFlow({
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="sig">Signature *</Label>
-                <SignatureCanvas ref={sigRef} onChange={setSigned} />
+                {drawingSignature ? (
+                  <>
+                    <SignatureCanvas ref={sigRef} onChange={setSigned} />
+                    {hasDefaultSignature && (
+                      <button
+                        type="button"
+                        onClick={() => setDrawOneOff(false)}
+                        className="self-start text-xs font-medium text-[var(--accent)] hover:underline"
+                      >
+                        Use my saved signature instead
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+                    <div className="flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={MY_SIGNATURE_URL}
+                        alt="Your saved e-signature"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-600">
+                        Saved signature
+                      </div>
+                      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                        Applied automatically when you submit.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDrawOneOff(true)}
+                      className="text-xs font-medium text-[var(--accent)] hover:underline"
+                    >
+                      Draw a one-off signature instead
+                    </button>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
@@ -383,7 +433,7 @@ export function ConsultationFlow({
               <Button
                 type="button"
                 onClick={onSubmit}
-                disabled={!signed || !medsValid || !followUpReady || submit.isPending}
+                disabled={(drawingSignature && !signed) || !medsValid || !followUpReady || submit.isPending}
               >
                 <FileSignature className="h-4 w-4" />
                 {submit.isPending ? "Submitting…" : "Sign & submit"}
