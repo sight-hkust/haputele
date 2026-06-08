@@ -51,8 +51,16 @@ class Doctor(Base):
     qualifications: Mapped[str] = mapped_column(Text, nullable=False)
     practitioner_address: Mapped[str] = mapped_column(Text, nullable=False)
     institute_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    institute_contact: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Institute phone is optional — many practitioners list a clinic without a
+    # dedicated line, and §1.7 prescriptions remain valid without it.
+    institute_contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
     rubber_stamp_key: Mapped[str] = mapped_column(String(512), nullable=False)
+    # Optional saved e-signature. When set, a doctor can finalise a
+    # consultation without drawing a signature each time — the bytes are
+    # copied into a fresh per-consultation object at submit so changing this
+    # later never mutates an already-signed consultation. Distinct from the
+    # rubber stamp (the official clinic stamp).
+    default_signature_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     # Approval workflow. Doctors self-onboard via an invite-by-email flow
     # which creates the row but leaves approved_at NULL; an admin reviews

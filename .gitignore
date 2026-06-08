@@ -53,3 +53,6 @@ scripts/assets/doctor_stamp.png
 # Archived documentation — kept locally, never committed.
 stale_documentation/
 
+
+# local worktree test env (not for commit)
+backend/.test-env.sh
