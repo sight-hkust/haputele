@@ -679,7 +679,9 @@ FollowUp = Annotated[
 
 
 class ConsultationSubmitIn(BaseModel):
-    signature: str  # base64 / data url
+    # Optional: when omitted, the doctor's saved default e-signature is
+    # applied (a copy of its bytes). Required only if the doctor has none.
+    signature: Optional[str] = None  # base64 / data url
     followUp: Optional[FollowUp] = None
 
 

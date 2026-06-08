@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..deps import CurrentUser, current_user, db_dep, require_role
-from ..errors import conflict, forbidden, not_found
+from ..errors import conflict, forbidden, not_found, unprocessable
 from ..dateutils import snap_to_monday
 from ..models import Appointment, Consultation, Doctor, QueueEntry
 from ..routers.appointments import _slot_taken
@@ -18,7 +18,7 @@ from ..schemas import (
     FollowUpWeeks,
 )
 from ..services.signature import decode_signature
-from ..services.storage import object_key, put_bytes
+from ..services.storage import get_bytes, object_key, put_bytes
 
 
 def _doctor(db: Session, user: CurrentUser) -> Doctor:
@@ -126,9 +126,18 @@ def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = D
     c, appt = _own_consultation(db, cid, user)
     if c.status != "draft":
         raise conflict("consultation_locked")
-    # decode_signature raises signature_required / invalid_signature_format /
-    # signature_too_large depending on what's wrong with the payload.
-    signature_bytes = decode_signature(payload.signature)
+    if payload.signature:
+        # decode_signature raises invalid_signature_format / signature_too_large
+        # depending on what's wrong with a supplied (drawn / one-off) signature.
+        signature_bytes = decode_signature(payload.signature)
+    else:
+        # No drawn signature — fall back to the doctor's saved default. We copy
+        # its bytes onto a fresh per-consultation object below, so a later
+        # change to the saved signature never mutates this signed consultation.
+        doctor = _doctor(db, user)
+        if not doctor.default_signature_key:
+            raise unprocessable("signature_required")
+        signature_bytes = get_bytes(doctor.default_signature_key)
     # Doctor may submit while the meeting is still live (in_progress) or after
     # the healthworker has ended it (awaiting_notes). The submit itself
     # finalizes the appointment; we don't make the doctor wait on the HW.

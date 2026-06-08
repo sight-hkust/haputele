@@ -122,7 +122,13 @@ def _wipe_setup_state():
         # DELETE), silently suppressing the delete. We disable it for the
         # duration of the wipe. (See bug note in the feature-end summary.)
         db.execute(text("DELETE FROM appointment_attachments"))
+        # consultations_locked_guard (migration 0001) raises on UPDATE/DELETE
+        # of a completed consultation to enforce immutability. The wipe has to
+        # clear those too between tests, so disable it for the delete — same
+        # pattern as appointments_locked_guard below.
+        db.execute(text("ALTER TABLE consultations DISABLE TRIGGER consultations_locked_guard"))
         db.execute(text("DELETE FROM consultations"))
+        db.execute(text("ALTER TABLE consultations ENABLE TRIGGER consultations_locked_guard"))
         db.execute(text("DELETE FROM preconsultation"))
         db.execute(text("DELETE FROM consents"))
         db.execute(text("ALTER TABLE appointments DISABLE TRIGGER appointments_locked_guard"))
