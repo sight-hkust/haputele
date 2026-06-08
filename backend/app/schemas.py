@@ -42,7 +42,8 @@ class DoctorBase(BaseModel):
     qualifications: str
     practitionerAddress: str
     instituteName: str
-    instituteContact: str
+    # Institute phone is optional (§1.7 prescriptions are valid without it).
+    instituteContact: Optional[str] = None
     rubberStampImage: str  # base64
 
 
@@ -53,6 +54,10 @@ class DoctorCreate(DoctorBase):
     # own. Requires the email service to be configured; the endpoint will
     # 422 `email_not_configured` otherwise.
     password: Optional[str] = None
+    # Optional saved e-signature, base64 data URL (same shape as the rubber
+    # stamp). When present the doctor can finalise consultations without
+    # drawing a signature each time.
+    defaultSignatureImage: Optional[str] = None
 
 
 class DoctorOnboardingPeek(BaseModel):
@@ -99,8 +104,12 @@ class DoctorOnboardingSubmit(BaseModel):
     qualifications: str
     practitionerAddress: str
     instituteName: str
-    instituteContact: str
+    # Institute phone is optional (§1.7 prescriptions are valid without it).
+    instituteContact: Optional[str] = None
     rubberStampImage: str  # base64
+    # Optional saved e-signature, base64 data URL. Lets the doctor skip
+    # drawing a signature on every consultation.
+    defaultSignatureImage: Optional[str] = None
 
 
 class DoctorInviteCreate(BaseModel):
@@ -135,6 +144,28 @@ class DoctorUpdate(BaseModel):
     active: Optional[bool] = None
 
 
+class DoctorSelfUpdate(BaseModel):
+    """Partial self-service profile update (PATCH /doctors/me).
+
+    Only the practice-profile fields a doctor may change themselves —
+    identity/credential fields (name, email, SLMC number) stay admin-only.
+    A field is applied only when explicitly present in the payload
+    (tracked via model_fields_set), so omission leaves it unchanged.
+
+    Image fields carry a base64 data URL to set/replace. To remove the
+    saved e-signature send clearDefaultSignature=true (a bare null on
+    defaultSignatureImage is treated as "unchanged", not "clear").
+    """
+    contact: Optional[str] = None
+    qualifications: Optional[str] = None
+    practitionerAddress: Optional[str] = None
+    instituteName: Optional[str] = None
+    instituteContact: Optional[str] = None
+    rubberStampImage: Optional[str] = None
+    defaultSignatureImage: Optional[str] = None
+    clearDefaultSignature: bool = False
+
+
 class DoctorOut(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -148,8 +179,16 @@ class DoctorOut(BaseModel):
     qualifications: str
     practitionerAddress: str = Field(validation_alias="practitioner_address")
     instituteName: str = Field(validation_alias="institute_name")
-    instituteContact: str = Field(validation_alias="institute_contact")
+    instituteContact: Optional[str] = Field(default=None, validation_alias="institute_contact")
+    # True when the doctor has saved a default e-signature. Derived from
+    # default_signature_key; the key itself is never exposed in JSON.
+    hasDefaultSignature: bool = Field(default=False, validation_alias="default_signature_key")
     active: bool
+
+    @field_validator("hasDefaultSignature", mode="before")
+    @classmethod
+    def _signature_key_to_bool(cls, v: Any) -> bool:
+        return bool(v)
     # Three-state lifecycle:
     #   "awaiting_setup"    → live unconsumed invite, doctor hasn't filled
     #                         out the form yet (or has filled it out and
