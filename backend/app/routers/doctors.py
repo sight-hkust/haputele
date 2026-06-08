@@ -18,13 +18,14 @@ from ..schemas import (
     DoctorInviteCreate,
     DoctorOut,
     DoctorRejectIn,
+    DoctorSelfUpdate,
     DoctorSummaryOut,
     DoctorUpdate,
 )
 from ..security import hash_password
 from ..services import doctor_invites as invites
 from ..services.email import is_configured as email_configured, send_templated
-from ..services.signature import decode_rubber_stamp
+from ..services.signature import decode_rubber_stamp, decode_signature
 from ..services.storage import delete_object, get_bytes, object_key, put_bytes
 
 
@@ -531,6 +532,113 @@ def doctor_summary(db: Session = Depends(db_dep)) -> DoctorSummaryOut:
         else:
             summary.active += 1
     return summary
+
+
+# ── Doctor self-service ───────────────────────────────────────────────
+# These literal "/me" routes MUST be declared before the "/{doctor_id}"
+# routes below, or FastAPI would match "me" as a (failing) int path param.
+
+def _current_doctor(db: Session, user: CurrentUser) -> Doctor:
+    doctor = db.scalar(select(Doctor).where(Doctor.username == user.username))
+    if doctor is None:
+        raise not_found("doctor_not_found")
+    return doctor
+
+
+def _self_out(db: Session, doctor: Doctor) -> DoctorOut:
+    out = DoctorOut.model_validate(doctor)
+    has_live = doctor.doctor_id in _doctors_with_live_invite(db, [doctor.doctor_id])
+    return _attach_status(out, doctor, has_live_invite=has_live)
+
+
+@router.get("/me", response_model=DoctorOut)
+def get_me(
+    db: Session = Depends(db_dep),
+    user: CurrentUser = Depends(require_role("doctor")),
+) -> DoctorOut:
+    """The calling doctor's own profile, resolved from their session."""
+    return _self_out(db, _current_doctor(db, user))
+
+
+# Self-editable practice-profile text fields → ORM columns. Identity and
+# credential fields (name, email, SLMC) are deliberately absent: a doctor
+# can't change those themselves — that stays on the admin PATCH /{id}.
+_SELF_TEXT_FIELDS = {
+    "contact": "contact",
+    "qualifications": "qualifications",
+    "practitionerAddress": "practitioner_address",
+    "instituteName": "institute_name",
+    "instituteContact": "institute_contact",
+}
+
+
+@router.patch("/me", response_model=DoctorOut)
+def update_me(
+    payload: DoctorSelfUpdate,
+    db: Session = Depends(db_dep),
+    user: CurrentUser = Depends(require_role("doctor")),
+) -> DoctorOut:
+    """Partial self-update of the calling doctor's practice profile.
+
+    Only fields explicitly present in the payload are applied. Images
+    (rubber stamp, e-signature) are validated, uploaded to S3 and swapped;
+    the superseded object is deleted only after the row commits.
+    """
+    doctor = _current_doctor(db, user)
+    sent = payload.model_fields_set
+
+    for field, col in _SELF_TEXT_FIELDS.items():
+        if field in sent:
+            value = getattr(payload, field)
+            # An empty institute phone clears to NULL rather than storing "".
+            if field == "instituteContact" and not (value or "").strip():
+                value = None
+            setattr(doctor, col, value)
+
+    superseded: list[str] = []
+
+    if "rubberStampImage" in sent and payload.rubberStampImage:
+        stamp = decode_rubber_stamp(payload.rubberStampImage)
+        mime, ext = _sniff_stamp(stamp)
+        key = object_key("doctors/stamps", ext)
+        put_bytes(key, stamp, mime)
+        if doctor.rubber_stamp_key:
+            superseded.append(doctor.rubber_stamp_key)
+        doctor.rubber_stamp_key = key
+
+    # clearDefaultSignature wins over a supplied image, so a payload that
+    # sets both is unambiguous (clear).
+    if payload.clearDefaultSignature:
+        if doctor.default_signature_key:
+            superseded.append(doctor.default_signature_key)
+        doctor.default_signature_key = None
+    elif "defaultSignatureImage" in sent and payload.defaultSignatureImage:
+        sig = decode_signature(payload.defaultSignatureImage)
+        key = object_key("doctors/signatures", "png")
+        put_bytes(key, sig, "image/png")
+        if doctor.default_signature_key:
+            superseded.append(doctor.default_signature_key)
+        doctor.default_signature_key = key
+
+    db.commit()
+    db.refresh(doctor)
+    # Delete superseded objects only after the new keys are committed — a
+    # failed commit rolls back to the old keys, so they must stay alive.
+    for key in superseded:
+        delete_object(key)
+    return _self_out(db, doctor)
+
+
+@router.get("/me/signature")
+def get_my_signature(
+    db: Session = Depends(db_dep),
+    user: CurrentUser = Depends(require_role("doctor")),
+) -> Response:
+    """Stream the calling doctor's saved e-signature PNG (404 if none)."""
+    doctor = _current_doctor(db, user)
+    if not doctor.default_signature_key:
+        raise not_found("no_signature")
+    return Response(content=get_bytes(doctor.default_signature_key), media_type="image/png")
 
 
 @router.get("/{doctor_id}", response_model=DoctorDetailOut,
