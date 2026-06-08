@@ -211,6 +211,7 @@ def consume_new_doctor(
     password: str,
     profile: dict,
     rubber_stamp: bytes,
+    default_signature: bytes | None = None,
 ) -> Doctor:
     """New mode: create Account + Doctor from the doctor's submission.
 
@@ -243,6 +244,14 @@ def consume_new_doctor(
     stamp_key = object_key("doctors/stamps", ext)
     put_bytes(stamp_key, rubber_stamp, mime)
 
+    # Optional saved e-signature — uploaded before the insert, same as the
+    # stamp, so a DB failure leaves a harmless orphan key rather than a row
+    # pointing at a missing object.
+    signature_key: str | None = None
+    if default_signature is not None:
+        signature_key = object_key("doctors/signatures", "png")
+        put_bytes(signature_key, default_signature, "image/png")
+
     now = datetime.now(timezone.utc)
     # If this email was rejected before, link the fresh submission back to
     # the most recent rejected attempt so the audit trail across re-tries
@@ -271,8 +280,9 @@ def consume_new_doctor(
         qualifications=profile["qualifications"],
         practitioner_address=profile["practitionerAddress"],
         institute_name=profile["instituteName"],
-        institute_contact=profile["instituteContact"],
+        institute_contact=profile.get("instituteContact") or None,
         rubber_stamp_key=stamp_key,
+        default_signature_key=signature_key,
         active=True,
         approved_at=None,  # awaits admin approval before login is allowed
         created_at=now,

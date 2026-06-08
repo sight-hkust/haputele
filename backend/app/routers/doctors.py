@@ -85,7 +85,8 @@ REQUIRED_PRESCRIPTION_FIELDS = (
     "slmcRegistrationNumber",
     "qualifications",
     "practitionerAddress",
-    "instituteContact",
+    # instituteContact is intentionally absent — the institute phone is
+    # optional (§1.7 prescriptions are valid without it).
     "rubberStampImage",
 )
 
@@ -153,6 +154,14 @@ def create_doctor(
     stamp_key = object_key("doctors/stamps", ext)
     put_bytes(stamp_key, stamp, mime)
 
+    # Optional saved e-signature — validated + uploaded up front; only the
+    # key lands on the row. Absent for doctors who'll keep signing manually.
+    signature_key: str | None = None
+    if payload.defaultSignatureImage:
+        sig = decode_signature(payload.defaultSignatureImage)
+        signature_key = object_key("doctors/signatures", "png")
+        put_bytes(signature_key, sig, "image/png")
+
     # In invite mode, generate a random password that's effectively
     # un-guessable. The doctor will replace it via the onboarding flow;
     # the value never leaves this function (no log, no return).
@@ -174,8 +183,9 @@ def create_doctor(
         qualifications=payload.qualifications,
         practitioner_address=payload.practitionerAddress,
         institute_name=payload.instituteName,
-        institute_contact=payload.instituteContact,
+        institute_contact=payload.instituteContact or None,
         rubber_stamp_key=stamp_key,
+        default_signature_key=signature_key,
         active=True,
         created_at=now,
         # Legacy path is auto-approved — admin typed every field, there's

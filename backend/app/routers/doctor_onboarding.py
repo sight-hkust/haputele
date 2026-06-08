@@ -33,7 +33,7 @@ from ..errors import unprocessable
 from ..models import Doctor
 from ..schemas import DoctorOnboardingPeek, DoctorOnboardingSubmit
 from ..services import doctor_invites as invites
-from ..services.signature import decode_rubber_stamp
+from ..services.signature import decode_rubber_stamp, decode_signature
 
 
 _logger = logging.getLogger("haputele.doctor_onboarding")
@@ -124,6 +124,17 @@ def complete(
     except Exception as exc:
         raise unprocessable("invalid_rubber_stamp_image", detail=str(exc))
 
+    # Optional saved e-signature — decoded here so a bad image fails the
+    # onboarding submit cleanly rather than deep in the service.
+    signature_bytes = (
+        decode_signature(submission.defaultSignatureImage)
+        if submission.defaultSignatureImage
+        else None
+    )
+
+    # Institute phone is optional; normalise blank/whitespace to None.
+    institute_contact = (submission.instituteContact or "").strip() or None
+
     doctor = invites.consume_new_doctor(
         db,
         raw_token=token,
@@ -137,9 +148,10 @@ def complete(
             "qualifications": submission.qualifications.strip(),
             "practitionerAddress": submission.practitionerAddress.strip(),
             "instituteName": submission.instituteName.strip(),
-            "instituteContact": submission.instituteContact.strip(),
+            "instituteContact": institute_contact,
         },
         rubber_stamp=stamp_bytes,
+        default_signature=signature_bytes,
     )
     _logger.info(
         "new doctor self-onboarded (awaiting approval): doctor_id=%s username=%s",
