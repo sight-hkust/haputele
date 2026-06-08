@@ -232,8 +232,12 @@ export type DoctorCreateRequest = {
   qualifications: string;
   practitionerAddress: string;
   instituteName: string;
-  instituteContact: string;
+  // Institute phone is optional.
+  instituteContact?: string;
   rubberStampImage: string; // base64 (data: URL prefix accepted by backend)
+  // Optional saved e-signature, base64 data URL. Lets the doctor skip
+  // drawing a signature on every consultation.
+  defaultSignatureImage?: string;
 };
 
 export function useCreateDoctor() {
@@ -536,14 +540,52 @@ export function useSubmitConsultation(consultationId: number) {
   });
 }
 
-// Resolve the current doctor's row by matching JWT username — backend
-// availability endpoints take a doctor_id in the path, so the doctor's own
-// pages need this lookup. Reuses the standard /doctors list (cached).
+// The calling doctor's own profile, straight from GET /doctors/me. Backend
+// availability endpoints take a doctor_id in the path, and the consultation
+// flow needs hasDefaultSignature, so the doctor's own pages lean on this.
+// Only enabled for doctor sessions (the endpoint is doctor-only).
 export function useCurrentDoctor() {
   const { session } = useAuth();
-  const list = useDoctorList();
-  const doctor = list.data?.find((d) => d.username === session?.username) ?? null;
-  return { doctor, isLoading: list.isLoading, error: list.error };
+  const fetcher = useAuthedApi();
+  const query = useQuery({
+    queryKey: ["doctors", "me"],
+    queryFn: () => fetcher<Doctor>("/doctors/me"),
+    enabled: session?.role === "doctor",
+  });
+  return {
+    doctor: query.data ?? null,
+    hasDefaultSignature: query.data?.hasDefaultSignature ?? false,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  };
+}
+
+// Absolute URL streaming the calling doctor's saved e-signature PNG. Used as
+// an <img src>; the cookie is sent automatically (same-origin / credentials).
+// A cache-busting param is the caller's job after a replace.
+export const MY_SIGNATURE_URL = `${API_URL}/doctors/me/signature`;
+
+export type DoctorSelfUpdateRequest = {
+  contact?: string;
+  qualifications?: string;
+  practitionerAddress?: string;
+  instituteName?: string;
+  instituteContact?: string;
+  rubberStampImage?: string;
+  defaultSignatureImage?: string;
+  clearDefaultSignature?: boolean;
+};
+
+// Doctor self-service profile edit (PATCH /doctors/me). Invalidates the
+// cached "me" profile (and the doctor list, which the admin views share).
+export function useUpdateMyProfile() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<Doctor, ApiError, DoctorSelfUpdateRequest>({
+    mutationFn: (body) => fetcher("/doctors/me", { method: "PATCH", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+  });
 }
 
 // ── Doctor availability ──────────────────────────────────────────────
