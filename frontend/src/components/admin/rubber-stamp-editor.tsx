@@ -13,10 +13,13 @@ export function RubberStampEditor({
   source,
   onCancel,
   onSave,
+  description = "Crop the stamp tightly. Optionally remove the white paper background so it lays cleanly on the prescription.",
 }: {
   source: string;
   onCancel: () => void;
   onSave: (next: string) => void;
+  // Overridable so the same editor reads correctly for signatures too.
+  description?: string;
 }) {
   const imgRef = useRef<HTMLImageElement>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
@@ -93,9 +96,7 @@ export function RubberStampEditor({
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-sm text-[var(--muted-foreground)]">
-        Crop the stamp tightly. Optionally remove the white paper background so it lays cleanly on the prescription.
-      </p>
+      <p className="text-sm text-[var(--muted-foreground)]">{description}</p>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
         <div className="flex flex-col gap-3">
