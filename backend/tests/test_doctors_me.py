@@ -121,6 +121,17 @@ def test_patch_me_set_and_clear_signature(doctor_client):
     assert doctor_client.get("/doctors/me").json()["hasDefaultSignature"] is False
 
 
+def test_get_me_stamp_streams(doctor_client):
+    # Upload a stamp via self-update, then it should stream back.
+    doctor_client.patch(
+        "/doctors/me", json={"rubberStampImage": _PNG_DATA_URL}, headers=_csrf(doctor_client)
+    )
+    r = doctor_client.get("/doctors/me/stamp")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "image/png"
+    assert r.content == _PNG_1x1_BYTES
+
+
 def test_get_me_signature_streams_then_404(doctor_client):
     assert doctor_client.get("/doctors/me/signature").status_code == 404
     doctor_client.patch(

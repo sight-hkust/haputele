@@ -13,6 +13,7 @@ import { RubberStampUploader } from "@/components/admin/rubber-stamp-uploader";
 import { SignatureInput } from "@/components/doctor/signature-input";
 import {
   MY_SIGNATURE_URL,
+  MY_STAMP_URL,
   useCurrentDoctor,
   useUpdateMyProfile,
   type DoctorSelfUpdateRequest,
@@ -41,9 +42,10 @@ export default function DoctorProfilePage() {
     instituteName: "",
     instituteContact: "",
   });
-  // A freshly captured rubber stamp / signature to send. `undefined` = leave
-  // the stored one untouched; for the signature, `clearSignature` removes it.
-  const [stamp, setStamp] = useState<string | null>(null);
+  // Seed the uploader with the existing stamp streamed from the server; it's
+  // only resent when the doctor actually replaces it (stampDirty). Once
+  // replaced, `stamp` holds the new data URL instead of the URL.
+  const [stamp, setStamp] = useState<string | null>(MY_STAMP_URL);
   const [stampDirty, setStampDirty] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
   const [clearSignature, setClearSignature] = useState(false);

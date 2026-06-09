@@ -566,6 +566,10 @@ export function useCurrentDoctor() {
 // A cache-busting param is the caller's job after a replace.
 export const MY_SIGNATURE_URL = `${API_URL}/doctors/me/signature`;
 
+// Same, for the calling doctor's rubber stamp image. Streamed rather than
+// inlined into /doctors/me so the doctor's every-page profile fetch stays lean.
+export const MY_STAMP_URL = `${API_URL}/doctors/me/stamp`;
+
 export type DoctorSelfUpdateRequest = {
   contact?: string;
   qualifications?: string;

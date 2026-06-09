@@ -651,6 +651,22 @@ def get_my_signature(
     return Response(content=get_bytes(doctor.default_signature_key), media_type="image/png")
 
 
+@router.get("/me/stamp")
+def get_my_stamp(
+    db: Session = Depends(db_dep),
+    user: CurrentUser = Depends(require_role("doctor")),
+) -> Response:
+    """Stream the calling doctor's rubber stamp image. Served as a stream
+    (not inlined into /doctors/me) so the profile page can show the existing
+    stamp without bloating every /me call the doctor pages make."""
+    doctor = _current_doctor(db, user)
+    if not doctor.rubber_stamp_key:
+        raise not_found("no_stamp")
+    data = get_bytes(doctor.rubber_stamp_key)
+    mime, _ = _sniff_stamp(data)
+    return Response(content=data, media_type=mime)
+
+
 @router.get("/{doctor_id}", response_model=DoctorDetailOut,
             dependencies=[Depends(require_role("admin", "doctor", "healthworker", "sys-admin"))])
 def get_doctor(doctor_id: int, db: Session = Depends(db_dep)) -> DoctorDetailOut:
