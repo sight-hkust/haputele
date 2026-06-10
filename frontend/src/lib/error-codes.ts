@@ -8,6 +8,7 @@ const MESSAGES: Record<string, string> = {
   session_consent_required: "Patient session consent is required first.",
   doctor_slot_taken: "That doctor already has another appointment at this time. Pick a different slot.",
   invalid_state: "This action isn't valid for the current appointment status.",
+  livekit_not_configured: "Video calling isn't configured on this server — contact your administrator. The appointment is unaffected; retry once it's fixed.",
   consultation_locked: "This consultation has been signed and locked — no further edits.",
   preconsult_locked: "Preconsult is locked — the meeting has already started.",
   consultation_not_ready: "The consultation isn't complete yet — the prescription PDF isn't available.",
