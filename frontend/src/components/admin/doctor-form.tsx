@@ -4,13 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { z } from "zod";
-import { BadgeCheck, ContactRound, IdCard, Mail, Stamp } from "lucide-react";
+import { BadgeCheck, ContactRound, IdCard, Mail, PenLine, Stamp } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Textarea } from "@/components/primitives/select";
 import { RubberStampUploader } from "@/components/admin/rubber-stamp-uploader";
+import { SignatureInput } from "@/components/doctor/signature-input";
 import type { Doctor } from "@/types/api";
 
 // Mode-aware schema — username + password are required at create time, omitted/optional on edit.
@@ -24,7 +25,8 @@ const baseFields = {
   qualifications: z.string().min(1, "Qualifications are required (§1.7)"),
   practitionerAddress: z.string().min(1, "Practitioner address is required (§1.7)"),
   instituteName: z.string().min(1, "Institute name is required"),
-  instituteContact: z.string().min(1, "Institute contact is required (§1.7)"),
+  // Institute phone is optional — §1.7 prescriptions are valid without it.
+  instituteContact: z.string().optional(),
 };
 
 // Password validity now depends on `onboardingMode`. Zod can't peek at
@@ -53,8 +55,10 @@ export type DoctorFormPayload = {
   qualifications: string;
   practitionerAddress: string;
   instituteName: string;
-  instituteContact: string;
+  instituteContact?: string;
   rubberStampImage?: string; // base64 — required on create, optional on update
+  // base64 PNG saved e-signature — only captured on create / self-onboarding.
+  defaultSignatureImage?: string;
   username?: string; // create only
   password?: string;
 };
@@ -94,6 +98,9 @@ export function DoctorForm({
   const [stamp, setStamp] = useState<string | null>(initial?.rubberStampImage ?? null);
   const [stampDirty, setStampDirty] = useState(false);
   const [stampError, setStampError] = useState<string | null>(null);
+  // Optional saved e-signature, captured on create / self-onboarding only.
+  // null = none provided (the doctor will sign each consultation by hand).
+  const [signature, setSignature] = useState<string | null>(null);
   // Onboarding-mode picker. "invite" (default) tells the backend to email
   // the doctor a link to set their own password. "manual" preserves the
   // legacy flow — admin types the password and shares it offline. Only
@@ -164,11 +171,13 @@ export function DoctorForm({
       qualifications: v.qualifications.trim(),
       practitionerAddress: v.practitionerAddress.trim(),
       instituteName: v.instituteName.trim(),
-      instituteContact: v.instituteContact.trim(),
+      instituteContact: v.instituteContact?.trim() || undefined,
       rubberStampImage: stampToSend ?? undefined,
     };
     if (isCreate) {
       payload.username = v.username?.trim();
+      // Saved e-signature is optional and only captured on create paths.
+      if (signature) payload.defaultSignatureImage = signature;
       if (isSelfOnboarding) {
         // Self-onboarding: password is always sent (validated above).
         payload.password = v.password;
@@ -286,7 +295,7 @@ export function DoctorForm({
       <Section
         Icon={BadgeCheck}
         title="Sri Lanka §1.7 prescription requirements"
-        hint="These five fields plus the rubber stamp are reproduced verbatim on every prescription PDF this doctor signs. They're required at account creation."
+        hint="These fields plus the rubber stamp are reproduced on every prescription PDF this doctor signs. All are required at account creation except the institute phone."
       >
         {/* autoComplete="off" everywhere in this section — browsers see
             field ids like "practitionerAddress" / "instituteName" and
@@ -305,11 +314,11 @@ export function DoctorForm({
             <Input id="instituteName" autoComplete="off" {...register("instituteName")} />
           </Field>
           <Field
-            label="Institute contact *"
+            label="Institute contact"
             htmlFor="instituteContact"
             error={errors.instituteContact?.message}
           >
-            <Input id="instituteContact" autoComplete="off" {...register("instituteContact")} />
+            <Input id="instituteContact" autoComplete="off" {...register("instituteContact")} placeholder="Optional" />
           </Field>
           <Field label="Qualifications *" htmlFor="qualifications" full error={errors.qualifications?.message}>
             <Textarea id="qualifications" rows={3} autoComplete="off" {...register("qualifications")} placeholder="e.g. MBBS, MD" />
@@ -335,6 +344,16 @@ export function DoctorForm({
         />
         {stampError && <p className="mt-2 text-xs text-rose-600">{stampError}</p>}
       </Section>
+
+      {isCreate && (
+        <Section
+          Icon={PenLine}
+          title="Default e-signature"
+          hint="Optional. Save a signature once and it's applied automatically on every consultation — no need to sign each time. You can still draw a one-off signature per consultation, and you can add or change this later from your profile."
+        >
+          <SignatureInput value={signature} onChange={setSignature} />
+        </Section>
+      )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {onCancel && (

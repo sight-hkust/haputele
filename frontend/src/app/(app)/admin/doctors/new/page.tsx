@@ -192,6 +192,7 @@ function ManualPanel({
             instituteName: payload.instituteName,
             instituteContact: payload.instituteContact,
             rubberStampImage: payload.rubberStampImage!,
+            defaultSignatureImage: payload.defaultSignatureImage,
           },
           { onSuccess: (doc) => onCreated(doc.id) },
         );

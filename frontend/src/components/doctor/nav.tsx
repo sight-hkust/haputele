@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, Clock, UserCog } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 
 const NAV = [
   { href: "/doctor", label: "Calendar", Icon: CalendarDays, exact: true },
   { href: "/doctor/availability", label: "Availability", Icon: Clock },
+  { href: "/doctor/profile", label: "Profile", Icon: UserCog },
 ];
 
 // Doctor section is calendar-centric — kept open for adding history/profile

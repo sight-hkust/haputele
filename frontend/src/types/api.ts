@@ -73,7 +73,12 @@ export type Doctor = {
   qualifications: string;
   practitionerAddress: string;
   instituteName: string;
-  instituteContact: string;
+  // Institute phone is optional — null when the doctor didn't provide one.
+  instituteContact: string | null;
+  // True when the doctor has saved a default e-signature (lets them finalise
+  // consultations without drawing one each time). The image itself is fetched
+  // separately from GET /doctors/me/signature, never inlined here.
+  hasDefaultSignature?: boolean;
   active: boolean;
   // Four-state lifecycle (server-computed):
   //   awaiting_setup    → live unconsumed invite, no form submission yet
@@ -533,7 +538,9 @@ export type AppointmentCancelResponse = {
 
 // ── Submit consultation ──────────────────────────────────────────────
 export type SubmitConsultationRequest = {
-  signature: string;
+  // Optional: omit to finalise with the doctor's saved default e-signature.
+  // Required only when the doctor has no saved signature.
+  signature?: string;
   followUp?: FollowUpInput;
 };
 
