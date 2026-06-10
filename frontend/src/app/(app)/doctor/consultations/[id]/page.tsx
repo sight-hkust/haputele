@@ -19,7 +19,11 @@ export default function ConsultationPage() {
   // Pull appointment via the consultation's appointmentId once we have it.
   const apt = useAppointment(consult.data?.appointmentId ?? null);
 
-  if (consult.error) {
+  // Hard-fail only when there's nothing to show. The consultation query
+  // refetches on every window focus (staleTime 0), so a transient refetch
+  // error with cached data present must NOT unmount the flow — that would
+  // wipe the doctor's stage, signature, and follow-up choice mid-consult.
+  if (consult.error && !consult.data) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
         <ErrorBanner>{explainError(consult.error.error)}</ErrorBanner>

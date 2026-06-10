@@ -29,6 +29,15 @@ export const SignatureCanvas = forwardRef<
   const drawingRef = useRef(false);
   const [hasInk, setHasInk] = useState(false);
 
+  // A freshly mounted canvas is always blank — tell the parent immediately so
+  // a `signed` flag from a previous mount (e.g. Review → Back → Review, which
+  // remounts this component and discards the ink) can't go stale and leave
+  // the submit button enabled with nothing to submit.
+  useEffect(() => {
+    onChange?.(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Set up the canvas at the device pixel ratio so strokes stay crisp on retina.
   useEffect(() => {
     const canvas = canvasRef.current!;
