@@ -213,12 +213,17 @@ def start_meeting(
     appt = _appt(db, appt_id)
     if appt.status != "data_collection":
         raise conflict("invalid_state", currentStatus=appt.status)
+    # Mint the token BEFORE committing the transition: if LiveKit is down or
+    # unconfigured this raises, and the appointment must stay in
+    # data_collection so the healthworker can retry. Committing first left it
+    # stranded in_progress with no meeting and every retry 409ing.
+    token_payload = _hw_token_for(db, appt, user)
     appt.status = "in_progress"
     db.commit()
     db.refresh(appt)
     return {
         "appointment": AppointmentOut.model_validate(appt).model_dump(),
-        **_hw_token_for(db, appt, user),
+        **token_payload,
     }
 
 
