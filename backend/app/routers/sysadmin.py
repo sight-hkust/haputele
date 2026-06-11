@@ -16,6 +16,7 @@ which is admin-gated. The sys-admin may edit its OWN profile + password
 — that would be a lockout.
 """
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, Response, status
 from pydantic import BaseModel, Field
@@ -32,10 +33,11 @@ from ..models import (
     Doctor,
     DoctorAvailability,
     QueueEntry,
+    SystemConfig,
 )
 from ..security import hash_password
 from ..services.passwords import validate_new_password
-from ..services.system_config import get_system_config
+from ..services.system_config import get_system_config, reload_system_config
 
 
 router = APIRouter(prefix="/sysadmin", tags=["sysadmin"])
@@ -74,6 +76,78 @@ def system_config(_: CurrentUser = Depends(require_role("sys-admin"))) -> dict:
         "appTimezone": cfg.app_timezone,
         "exportTimezone": cfg.export_timezone,
         "masterConsentVersion": cfg.master_consent_version,
+    }
+
+
+class SystemConfigUpdateIn(BaseModel):
+    # All fields are optional (PATCH semantics). Omitted = leave untouched;
+    # explicit null clears a nullable field to NULL.
+    instituteName: str | None = None
+    instituteAddressLines: list[str] | None = None
+    instituteContactPhone: str | None = None
+    instituteContactEmail: str | None = None
+    appTimezone: str | None = None
+    exportTimezone: str | None = None
+    masterConsentVersion: str | None = None
+
+
+def _valid_timezone(tz: str | None) -> bool:
+    if tz is None:
+        return True
+    try:
+        ZoneInfo(tz)
+        return True
+    except (ZoneInfoNotFoundError, KeyError):
+        return False
+
+
+@router.patch("/system-config")
+def update_system_config(
+    payload: SystemConfigUpdateIn,
+    db: Session = Depends(db_dep),
+    _: CurrentUser = Depends(require_role("sys-admin")),
+) -> dict:
+    """Edit the clinic / institute identity and system defaults. Reloads the
+    in-memory LiveConfig cache so runtime consumers (PDF, exports) see the
+    change immediately without a restart."""
+    row = db.get(SystemConfig, 1)
+    if row is None:
+        raise not_found("system_config_not_found")
+
+    fields = payload.model_dump(exclude_unset=True)
+
+    for tz_key in ("appTimezone", "exportTimezone"):
+        if tz_key in fields and not _valid_timezone(fields[tz_key]):
+            raise unprocessable("invalid_timezone")
+
+    if "instituteName" in fields:
+        row.institute_name = _clean(payload.instituteName)
+    if "instituteAddressLines" in fields:
+        row.institute_address_lines = payload.instituteAddressLines or None
+    if "instituteContactPhone" in fields:
+        row.institute_contact_phone = _clean(payload.instituteContactPhone)
+    if "instituteContactEmail" in fields:
+        row.institute_contact_email = _clean(payload.instituteContactEmail)
+    if "appTimezone" in fields:
+        row.app_timezone = payload.appTimezone
+    if "exportTimezone" in fields:
+        row.export_timezone = payload.exportTimezone
+    if "masterConsentVersion" in fields:
+        row.master_consent_version = _clean(payload.masterConsentVersion)
+
+    db.commit()
+    db.refresh(row)
+    reload_system_config(db)
+
+    return {
+        "initializedAt": row.initialized_at,
+        "instituteName": row.institute_name,
+        "instituteAddressLines": row.institute_address_lines,
+        "instituteContactPhone": row.institute_contact_phone,
+        "instituteContactEmail": row.institute_contact_email,
+        "appTimezone": row.app_timezone,
+        "exportTimezone": row.export_timezone,
+        "masterConsentVersion": row.master_consent_version,
     }
 
 

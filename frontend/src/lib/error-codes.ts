@@ -85,6 +85,9 @@ const MESSAGES: Record<string, string> = {
     "This action only applies to rejected doctors.",
   invalid_status:
     "Unknown doctor status filter.",
+  // Sys-admin system config.
+  system_config_not_found: "System configuration is missing — the system may not have been initialized.",
+  invalid_timezone: "That timezone isn't recognized. Use an IANA timezone name like Asia/Colombo or UTC.",
   // Sys-admin account management.
   account_disabled:
     "This account has been disabled. Contact your system administrator to re-enable it.",

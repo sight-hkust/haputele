@@ -426,7 +426,7 @@ export type SysadminMe = {
   contact: string | null;
 };
 
-// ── Sys-admin read-only views ─────────────────────────────────────────
+// ── Sys-admin system config ───────────────────────────────────────────
 
 export type SystemConfig = {
   initializedAt: string | null;
@@ -437,6 +437,17 @@ export type SystemConfig = {
   appTimezone: string | null;
   exportTimezone: string | null;
   masterConsentVersion: string | null;
+};
+
+// PATCH /sysadmin/system-config — all fields optional (PATCH semantics).
+export type SystemConfigUpdateRequest = {
+  instituteName?: string | null;
+  instituteAddressLines?: string[] | null;
+  instituteContactPhone?: string | null;
+  instituteContactEmail?: string | null;
+  appTimezone?: string | null;
+  exportTimezone?: string | null;
+  masterConsentVersion?: string | null;
 };
 
 // ── Wrappers used by certain endpoints ───────────────────────────────
