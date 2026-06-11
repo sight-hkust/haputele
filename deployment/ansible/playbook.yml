@@ -30,7 +30,14 @@
         group: "{{ ansible_user }}"
         mode: "0600"
         marker: "# {mark} ANSIBLE MANAGED — operator keys"
-        block: '{{ operator_authorized_keys | join("\n") }}'
+        # A for-loop, NOT `join("\n")`: ansible-core 2.19's templating engine
+        # stopped unescaping string constants, so join("\n") emits a literal
+        # backslash-n, collapsing every key onto one malformed line that sshd
+        # rejects wholesale (this locked all operators out).
+        block: |
+          {% for key in operator_authorized_keys %}
+          {{ key }}
+          {% endfor %}
 
     # ── TEMPORARY: SSH lockout investigation (remove once resolved) ──────────
     # Operator keys are present in the managed block (the task above reports
