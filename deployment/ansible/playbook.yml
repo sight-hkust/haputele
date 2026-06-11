@@ -39,46 +39,6 @@
           {{ key }}
           {% endfor %}
 
-    # ── TEMPORARY: SSH lockout investigation (remove once resolved) ──────────
-    # Operator keys are present in the managed block (the task above reports
-    # "ok") yet sshd refuses the key offer for at least one operator. Enforce
-    # the ownership/permissions sshd's StrictModes checks (no-ops when already
-    # correct), then dump the evidence into the CI log: file perms, the literal
-    # authorized_keys bytes (public keys only — safe to print), sshd's
-    # effective auth settings, and recent auth failures from the journal.
-    - name: Ensure admin home is not group/world-writable
-      ansible.builtin.file:
-        path: "/home/{{ ansible_user }}"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: "g-w,o-w"
-
-    - name: Ensure .ssh directory ownership and mode
-      ansible.builtin.file:
-        path: "/home/{{ ansible_user }}/.ssh"
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: "0700"
-
-    - name: Collect SSH diagnostics
-      ansible.builtin.shell: |
-        echo '== home/.ssh/authorized_keys perms =='
-        ls -ld /home/{{ ansible_user }} /home/{{ ansible_user }}/.ssh /home/{{ ansible_user }}/.ssh/authorized_keys
-        echo '== authorized_keys content (cat -A shows invisible chars) =='
-        cat -A /home/{{ ansible_user }}/.ssh/authorized_keys
-        echo '== sshd effective auth config =='
-        /usr/sbin/sshd -T 2>/dev/null | grep -iE 'authorizedkeysfile|pubkeyauthentication|pubkeyaccepted|strictmodes|allowusers|allowgroups|denyusers|maxauthtries' || true
-        echo '== recent sshd auth log (source IPs redacted — public repo, public logs) =='
-        journalctl -u ssh -u sshd -n 300 --no-pager | grep -iE 'denied|invalid|error|fail|refus|userauth|authentication' | tail -40 | sed -E 's/([0-9]{1,3}\.){3}[0-9]{1,3}/REDACTED-IP/g' || true
-      register: ssh_diag
-      changed_when: false
-
-    - name: Show SSH diagnostics
-      ansible.builtin.debug:
-        msg: "{{ ssh_diag.stdout_lines }}"
-    # ── END TEMPORARY ────────────────────────────────────────────────────────
-
     # The apt module needs python3-apt, which minimal Debian 12 cloud images may
     # lack. raw uses /bin/sh (no python deps) to bootstrap it before any apt task.
     - name: Bootstrap python3-apt
