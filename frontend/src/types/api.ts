@@ -106,9 +106,25 @@ export type Doctor = {
 export type DoctorSummary = {
   awaitingApproval: number;
   awaitingSetup: number;
+  // Open email-only invites whose doctor hasn't onboarded yet (live + expired).
+  invited: number;
   active: number;
   rejected: number;
   total: number;
+};
+
+// GET /doctors/invites — open email-only invites whose doctor hasn't completed
+// onboarding yet. No Doctor row exists for these; they're surfaced in the admin
+// queue's "Invited" tab so they're visible and can be resent / revoked.
+export type DoctorInvite = {
+  inviteId: number;
+  email: string;
+  // Optional admin-provided greeting hint; the real name is captured at onboarding.
+  familyName: string | null;
+  createdAt: string;
+  expiresAt: string;
+  // "invited" → live link; "invite_expired" → past expiry, resend to refresh.
+  status: "invited" | "invite_expired";
 };
 
 // ── Consent ──────────────────────────────────────────────────────────

@@ -87,8 +87,9 @@ def create_capture_session(
             created_by=user.username,
             appointment_id=payload.appointmentId,
         )
-    else:  # rubber_stamp — used from the admin doctor form
-        if user.role != "admin":
+    else:  # rubber_stamp — admin (create-doctor form) or a doctor
+        # managing their own stamp on the self-service profile page.
+        if user.role not in ("admin", "doctor"):
             raise forbidden()
         row, raw = capture.create_session(
             db, purpose=payload.purpose, created_by=user.username

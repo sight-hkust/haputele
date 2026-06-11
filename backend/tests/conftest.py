@@ -121,6 +121,10 @@ def _wipe_setup_state():
         # bug: as a BEFORE-DELETE trigger it returns NEW (which is NULL for
         # DELETE), silently suppressing the delete. We disable it for the
         # duration of the wipe. (See bug note in the feature-end summary.)
+        # capture_sessions (migration 0015) references accounts(created_by)
+        # and appointments(appointment_id); wipe it first so the deletes below
+        # don't trip its foreign keys.
+        db.execute(text("DELETE FROM capture_sessions"))
         db.execute(text("DELETE FROM appointment_attachments"))
         # consultations_locked_guard (migration 0001) raises on UPDATE/DELETE
         # of a completed consultation to enforce immutability. The wipe has to

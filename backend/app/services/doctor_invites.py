@@ -155,6 +155,84 @@ def _revoke_live_invites(
         row.consumed_at = now
 
 
+def list_open(db: Session) -> list[DoctorInvite]:
+    """Open email-only invites: doctor-less and unconsumed, newest first.
+
+    These are the `issue_new_doctor` invites whose doctor hasn't completed
+    onboarding yet. Includes expired-but-unconsumed rows so the admin can
+    still see and resend a lapsed invite (the caller tags each row's
+    live/expired status). Once consumed — a Doctor row is created and the
+    invite linked to it — the row drops out, and the doctor instead shows
+    in the regular doctor list as awaiting_approval.
+    """
+    return list(
+        db.scalars(
+            select(DoctorInvite)
+            .where(
+                DoctorInvite.doctor_id.is_(None),
+                DoctorInvite.consumed_at.is_(None),
+            )
+            .order_by(DoctorInvite.created_at.desc(), DoctorInvite.id.desc())
+        ).all()
+    )
+
+
+def count_open(db: Session) -> int:
+    """Count of open invites — drives the admin queue's 'Invited' badge."""
+    return db.scalar(
+        select(func.count())
+        .select_from(DoctorInvite)
+        .where(
+            DoctorInvite.doctor_id.is_(None),
+            DoctorInvite.consumed_at.is_(None),
+        )
+    ) or 0
+
+
+def _get_open_invite(db: Session, *, invite_id: int) -> DoctorInvite:
+    """Load an open (doctor-less, unconsumed) invite by id, or 404.
+
+    A consumed or doctor-linked row isn't an "open invite" — the doctor
+    either onboarded or the invite was already revoked — so it's not
+    actionable here and we 404 rather than letting a stale id through.
+    """
+    invite = db.get(DoctorInvite, invite_id)
+    if invite is None or invite.doctor_id is not None or invite.consumed_at is not None:
+        raise not_found("invite_not_found")
+    return invite
+
+
+def revoke_open(db: Session, *, invite_id: int) -> None:
+    """Revoke an open invite by stamping consumed_at — the same supersede
+    convention `_revoke_live_invites` uses. The link stops working
+    (`lookup_live` rejects consumed tokens) and the row leaves `list_open`,
+    while staying on the table for audit. 404 if it isn't an open invite.
+    """
+    invite = _get_open_invite(db, invite_id=invite_id)
+    invite.consumed_at = datetime.now(timezone.utc)
+    db.commit()
+
+
+def resend_new_doctor(db: Session, *, invite_id: int) -> tuple[DoctorInvite, str]:
+    """Re-issue a fresh new-doctor invite from an existing open invite.
+
+    Revokes the source row first, then mints a new token via
+    `issue_new_doctor`. The explicit revoke matters for an *expired*
+    source: `issue_new_doctor` only supersedes *live* invites, so without
+    it the expired row would linger and `list_open` would show a duplicate.
+
+    Raises 409 `email_already_used` (from `issue_new_doctor`) if the
+    address has become a live doctor since the invite was sent — the
+    request then rolls back, leaving the source invite untouched.
+    """
+    invite = _get_open_invite(db, invite_id=invite_id)
+    email = invite.email
+    family_name = invite.family_name
+    invite.consumed_at = datetime.now(timezone.utc)
+    db.flush()
+    return issue_new_doctor(db, email=email, family_name=family_name)
+
+
 def lookup_live(db: Session, *, raw_token: str) -> DoctorInvite:
     """Resolve a raw token to its DoctorInvite row, asserting liveness.
 

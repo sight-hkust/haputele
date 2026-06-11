@@ -30,6 +30,7 @@ import type {
   ResetAccountPasswordRequest,
   DiagnosisEntry,
   Doctor,
+  DoctorInvite,
   DoctorSummary,
   InitializeSystemRequest,
   InitializeSystemResponse,
@@ -283,7 +284,52 @@ export function useInviteDoctor() {
   const qc = useQueryClient();
   return useMutation<DoctorInviteResponse, ApiError, DoctorInviteRequest>({
     mutationFn: (body) => fetcher("/doctors/invites", { method: "POST", body }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["doctor-invites"] });
+      qc.invalidateQueries({ queryKey: ["doctors"] });
+    },
+  });
+}
+
+// Open email-only invites for the admin queue's "Invited" tab. These live in
+// doctor_invites (no Doctor row yet), so they get their own query key —
+// resend/revoke invalidate both it and ["doctors"] so the tab badges stay in
+// sync with the per-status counts.
+export function useDoctorInvites() {
+  const fetcher = useAuthedApi();
+  return useQuery({
+    queryKey: ["doctor-invites"],
+    queryFn: () => fetcher<DoctorInvite[]>("/doctors/invites"),
+  });
+}
+
+// Re-issue + re-send an open invite. The previous link dies; a 409
+// `email_already_used` means the doctor has since onboarded (refresh to see
+// them under "Awaiting approval").
+export function useResendDoctorInvite() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<DoctorInvite, ApiError, number>({
+    mutationFn: (inviteId) =>
+      fetcher(`/doctors/invites/${inviteId}/resend`, { method: "POST" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["doctor-invites"] });
+      qc.invalidateQueries({ queryKey: ["doctors"] });
+    },
+  });
+}
+
+// Revoke an open invite (kills the link, drops it from the list).
+export function useRevokeDoctorInvite() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<void, ApiError, number>({
+    mutationFn: (inviteId) =>
+      fetcher(`/doctors/invites/${inviteId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["doctor-invites"] });
+      qc.invalidateQueries({ queryKey: ["doctors"] });
+    },
   });
 }
 
