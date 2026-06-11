@@ -16,6 +16,7 @@ from ..schemas import (
     DoctorCreate,
     DoctorDetailOut,
     DoctorInviteCreate,
+    DoctorInviteOut,
     DoctorOut,
     DoctorRejectIn,
     DoctorSelfUpdate,
@@ -281,6 +282,63 @@ def _send_new_doctor_invite(db: Session, invite: DoctorInvite, raw_token: str) -
         )
 
 
+def _invite_out(invite: DoctorInvite, *, now: datetime) -> DoctorInviteOut:
+    """Serialise an open invite, tagging live vs expired from expires_at."""
+    out = DoctorInviteOut.model_validate(invite)
+    out.status = "invited" if invite.expires_at > now else "invite_expired"
+    return out
+
+
+# These literal "/invites" routes MUST be declared before the
+# "/{doctor_id}" routes below, or FastAPI would match "invites" as a
+# (failing) int path param.
+@router.get("/invites", response_model=list[DoctorInviteOut],
+            dependencies=[Depends(require_role("admin", "sys-admin"))])
+def list_open_invites(db: Session = Depends(db_dep)) -> list[DoctorInviteOut]:
+    """Open email-only invites whose doctor hasn't onboarded yet.
+
+    Surfaced in the admin queue's "Invited" tab so an invited doctor is
+    visible — and resendable / revocable — in the window between "Send
+    invite" and the doctor completing the onboarding form. Includes
+    expired-but-unconsumed invites (tagged `invite_expired`) so a lapsed
+    invite can be resent instead of silently vanishing.
+    """
+    now = datetime.now(timezone.utc)
+    return [_invite_out(inv, now=now) for inv in invites.list_open(db)]
+
+
+@router.post("/invites/{invite_id}/resend", response_model=DoctorInviteOut,
+             dependencies=[Depends(require_role("admin", "sys-admin"))])
+def resend_open_invite(invite_id: int, db: Session = Depends(db_dep)) -> DoctorInviteOut:
+    """Re-issue and re-send an open invite's onboarding link. The previous
+    link stops working immediately.
+
+    404 `invite_not_found` if it isn't an open invite (already consumed,
+    doctor-linked, or unknown). 409 `email_already_used` if the address has
+    since become a live doctor — they completed onboarding between page
+    load and resend, so refresh to find them in the approval queue.
+    """
+    if not email_configured():
+        raise unprocessable("email_not_configured")
+    invite, raw_token = invites.resend_new_doctor(db, invite_id=invite_id)
+    _send_new_doctor_invite(db, invite, raw_token)
+    _logger.info(
+        "open invite resent: source_id=%s new_invite_id=%s email=%s",
+        invite_id, invite.id, invite.email,
+    )
+    return _invite_out(invite, now=datetime.now(timezone.utc))
+
+
+@router.delete("/invites/{invite_id}", status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(require_role("admin", "sys-admin"))])
+def revoke_open_invite(invite_id: int, db: Session = Depends(db_dep)) -> Response:
+    """Revoke an open invite — kills the link and removes it from the
+    queue. 404 `invite_not_found` if it isn't an open invite."""
+    invites.revoke_open(db, invite_id=invite_id)
+    _logger.info("open invite revoked: invite_id=%s", invite_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.post("/{doctor_id}/approve", response_model=DoctorOut)
 def approve_doctor(
     doctor_id: int,
@@ -513,6 +571,11 @@ def list_doctors(
         )
         for r in rows
     ]
+    # A doctor with a live setup invite (awaiting_setup) hasn't set a password
+    # and can't log in yet, so they're not bookable/usable. Hide them from the
+    # booking/colleague views; admins still see them to act on.
+    if user.role not in ("admin", "sys-admin"):
+        out = [d for d in out if d.onboardingStatus != "awaiting_setup"]
     if status is not None:
         out = [d for d in out if d.onboardingStatus == status]
     return out
@@ -541,6 +604,9 @@ def doctor_summary(db: Session = Depends(db_dep)) -> DoctorSummaryOut:
             summary.rejected += 1
         else:
             summary.active += 1
+    # Open email-only invites live in doctor_invites (no Doctor row yet), so
+    # they're counted separately from the row-derived buckets above.
+    summary.invited = invites.count_open(db)
     return summary
 
 

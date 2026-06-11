@@ -123,6 +123,25 @@ class DoctorInviteCreate(BaseModel):
     familyName: str | None = None
 
 
+class DoctorInviteOut(BaseModel):
+    """An open email-only invite (the doctor hasn't onboarded yet),
+    surfaced in the admin queue's 'Invited' tab so it's visible — and
+    resendable / revocable — before any Doctor row exists.
+
+    `status` is computed in the router from expiry, not stored:
+      "invited"        → live, the onboarding link still works.
+      "invite_expired" → unconsumed but past expires_at; resend to refresh.
+    """
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    inviteId: int = Field(validation_alias="id")
+    email: str
+    familyName: Optional[str] = Field(default=None, validation_alias="family_name")
+    createdAt: datetime = Field(validation_alias="created_at")
+    expiresAt: datetime = Field(validation_alias="expires_at")
+    status: str = "invited"
+
+
 class DoctorRejectIn(BaseModel):
     """Admin's reject payload. `reason` is shown to the doctor on a
     pending/rejected screen and stored on the Doctor row for audit."""
@@ -225,6 +244,9 @@ class DoctorSummaryOut(BaseModel):
     """
     awaitingApproval: int = 0
     awaitingSetup: int = 0
+    # Open email-only invites whose doctor hasn't onboarded yet (live +
+    # expired). Drives the "Invited" tab badge.
+    invited: int = 0
     active: int = 0
     rejected: int = 0
     total: int = 0
