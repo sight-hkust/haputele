@@ -94,6 +94,11 @@ const MESSAGES: Record<string, string> = {
   account_in_use:
     "This account has records attached to it and can't be deleted. Disable it instead to block sign-in while keeping its history.",
   request_failed: "Something went wrong. Try again.",
+  // Generic server-side errors — shown when the backend doesn't return a
+  // recognisable domain code (e.g. unhandled exception or schema mismatch).
+  internal_error: "Something went wrong on the server. Try again in a moment.",
+  validation_failed: "The form data couldn't be validated. Check your inputs and try again.",
+  forbidden: "You don't have permission to do that.",
 };
 
 export function explainError(code: string, fallback?: string): string {
