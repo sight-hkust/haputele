@@ -65,6 +65,7 @@ import type {
   SubmitConsultationResponse as TSubmitConsultationResponse,
   SysadminMe,
   SystemConfig,
+  SystemConfigUpdateRequest,
   VerifySetupTokenRequest,
   VerifySetupTokenResponse,
 } from "@/types/api";
@@ -1005,6 +1006,18 @@ export function useSystemConfig() {
   return useQuery({
     queryKey: ["sysadmin", "system-config"],
     queryFn: () => fetcher<SystemConfig>("/sysadmin/system-config"),
+  });
+}
+
+export function useUpdateSystemConfig() {
+  const fetcher = useAuthedApi();
+  const qc = useQueryClient();
+  return useMutation<SystemConfig, ApiError, SystemConfigUpdateRequest>({
+    mutationFn: (body) =>
+      fetcher<SystemConfig>("/sysadmin/system-config", { method: "PATCH", body }),
+    onSuccess: (data) => {
+      qc.setQueryData(["sysadmin", "system-config"], data);
+    },
   });
 }
 
