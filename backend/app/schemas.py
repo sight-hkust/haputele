@@ -160,6 +160,8 @@ class DoctorUpdate(BaseModel):
     instituteName: Optional[str] = None
     instituteContact: Optional[str] = None
     rubberStampImage: Optional[str] = None
+    defaultSignatureImage: Optional[str] = None
+    clearDefaultSignature: bool = False
     active: Optional[bool] = None
 
 

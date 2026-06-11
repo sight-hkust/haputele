@@ -57,8 +57,9 @@ export type DoctorFormPayload = {
   instituteName: string;
   instituteContact?: string;
   rubberStampImage?: string; // base64 — required on create, optional on update
-  // base64 PNG saved e-signature — only captured on create / self-onboarding.
+  // base64 PNG saved e-signature — set to replace, clearDefaultSignature to remove.
   defaultSignatureImage?: string;
+  clearDefaultSignature?: boolean;
   username?: string; // create only
   password?: string;
 };
@@ -98,9 +99,13 @@ export function DoctorForm({
   const [stamp, setStamp] = useState<string | null>(initial?.rubberStampImage ?? null);
   const [stampDirty, setStampDirty] = useState(false);
   const [stampError, setStampError] = useState<string | null>(null);
-  // Optional saved e-signature, captured on create / self-onboarding only.
-  // null = none provided (the doctor will sign each consultation by hand).
+  // Saved e-signature state. On create, starts null. On update, we track:
+  //   - replacingSignature: true → SignatureInput shown to set a new one
+  //   - clearSignature: true → send clearDefaultSignature to the backend
+  //   - signature: non-null new image the doctor drew/uploaded this session
   const [signature, setSignature] = useState<string | null>(null);
+  const [clearSignature, setClearSignature] = useState(false);
+  const [replacingSignature, setReplacingSignature] = useState(false);
   // Onboarding-mode picker. "invite" (default) tells the backend to email
   // the doctor a link to set their own password. "manual" preserves the
   // legacy flow — admin types the password and shares it offline. Only
@@ -176,7 +181,6 @@ export function DoctorForm({
     };
     if (isCreate) {
       payload.username = v.username?.trim();
-      // Saved e-signature is optional and only captured on create paths.
       if (signature) payload.defaultSignatureImage = signature;
       if (isSelfOnboarding) {
         // Self-onboarding: password is always sent (validated above).
@@ -185,8 +189,14 @@ export function DoctorForm({
         payload.password = v.password;
       }
       // admin invite mode → payload.password stays undefined; backend fires invite
-    } else if (v.password && v.password.trim()) {
-      payload.password = v.password;
+    } else {
+      // Update mode — include signature changes if any.
+      if (clearSignature) {
+        payload.clearDefaultSignature = true;
+      } else if (signature) {
+        payload.defaultSignatureImage = signature;
+      }
+      if (v.password && v.password.trim()) payload.password = v.password;
     }
     onSubmit(payload);
   });
@@ -345,15 +355,56 @@ export function DoctorForm({
         {stampError && <p className="mt-2 text-xs text-rose-600">{stampError}</p>}
       </Section>
 
-      {isCreate && (
-        <Section
-          Icon={PenLine}
-          title="Default e-signature"
-          hint="Optional. Save a signature once and it's applied automatically on every consultation — no need to sign each time. You can still draw a one-off signature per consultation, and you can add or change this later from your profile."
-        >
-          <SignatureInput value={signature} onChange={setSignature} />
-        </Section>
-      )}
+      <Section
+        Icon={PenLine}
+        title="Default e-signature"
+        hint={isCreate
+          ? "Optional. Save a signature once and it's applied automatically on every consultation — no need to sign each time."
+          : "Replaces or removes the doctor's saved e-signature."}
+      >
+        {/* Update mode: show "on file" state with replace / clear actions */}
+        {!isCreate && (() => {
+          const hasOnFile = !!initial?.hasDefaultSignature;
+          const showOnFile = hasOnFile && !clearSignature && !replacingSignature && !signature;
+          if (showOnFile) {
+            return (
+              <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+                <div className="flex-1">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
+                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">The doctor has a saved default e-signature.</p>
+                </div>
+                <button type="button" onClick={() => setReplacingSignature(true)}
+                  className="text-sm text-[var(--accent)] hover:underline">Replace</button>
+                <button type="button" onClick={() => setClearSignature(true)}
+                  className="text-sm text-rose-600 hover:underline">Remove</button>
+              </div>
+            );
+          }
+          if (clearSignature) {
+            return (
+              <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+                <div className="flex-1 text-sm text-rose-700">Signature will be removed on save.</div>
+                <button type="button" onClick={() => setClearSignature(false)}
+                  className="text-sm text-[var(--accent)] hover:underline">Undo</button>
+              </div>
+            );
+          }
+          // replacingSignature=true or no prior signature — show the input
+          return (
+            <div className="flex flex-col gap-2">
+              <SignatureInput value={signature} onChange={setSignature} />
+              {(replacingSignature || !hasOnFile) && signature === null && (
+                <button type="button" onClick={() => { setReplacingSignature(false); setSignature(null); }}
+                  className="self-start text-xs text-[var(--muted-foreground)] hover:underline">
+                  {hasOnFile ? "Keep existing" : "Skip"}
+                </button>
+              )}
+            </div>
+          );
+        })()}
+        {/* Create mode: plain optional input */}
+        {isCreate && <SignatureInput value={signature} onChange={setSignature} />}
+      </Section>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {onCancel && (

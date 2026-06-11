@@ -250,7 +250,10 @@ export function useCreateDoctor() {
   });
 }
 
-export type DoctorUpdateRequest = Partial<DoctorCreateRequest> & { active?: boolean };
+export type DoctorUpdateRequest = Partial<DoctorCreateRequest> & {
+  active?: boolean;
+  clearDefaultSignature?: boolean;
+};
 
 export function useUpdateDoctor(id: number) {
   const fetcher = useAuthedApi();
