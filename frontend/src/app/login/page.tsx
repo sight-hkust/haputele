@@ -67,7 +67,10 @@ function LoginScreen() {
     try {
       const res = await api<LoginResponse>("/auth/login", {
         method: "POST",
-        body: { username, password },
+        // Trim both fields — a stray leading/trailing space pasted into
+        // either turns a valid login into invalid_credentials. Passwords
+        // are stored trimmed everywhere they're set, so this stays in sync.
+        body: { username: username.trim(), password: password.trim() },
       });
       login({ username: res.username, role: res.role, expiresAt: res.expiresAt });
       const next = search.get("next") || ROLE_HOMES[res.role];

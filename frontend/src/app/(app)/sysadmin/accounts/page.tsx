@@ -410,13 +410,16 @@ function CreateAccountModal({ open, onClose }: { open: boolean; onClose: () => v
     e.preventDefault();
     setLocalError(null);
     if (!username.trim()) return setLocalError("Username is required.");
-    if (password.length < MIN_PASSWORD_LEN)
+    // Trim before validating/sending so the stored secret matches what
+    // /auth/login trims on the way back in.
+    const pw = password.trim();
+    if (pw.length < MIN_PASSWORD_LEN)
       return setLocalError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
-    if (password !== confirm) return setLocalError("Passwords do not match.");
+    if (pw !== confirm.trim()) return setLocalError("Passwords do not match.");
     create.mutate(
       {
         username: username.trim(),
-        password,
+        password: pw,
         role,
         fullName: fullName.trim() || undefined,
         contact: contact.trim() || undefined,

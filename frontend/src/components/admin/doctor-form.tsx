@@ -184,9 +184,10 @@ export function DoctorForm({
       if (signature) payload.defaultSignatureImage = signature;
       if (isSelfOnboarding) {
         // Self-onboarding: password is always sent (validated above).
-        payload.password = v.password;
+        // Trimmed so it matches what /auth/login trims on the way back in.
+        payload.password = v.password?.trim();
       } else if (onboardingMode === "manual" && v.password) {
-        payload.password = v.password;
+        payload.password = v.password.trim();
       }
       // admin invite mode → payload.password stays undefined; backend fires invite
     } else {
@@ -196,7 +197,8 @@ export function DoctorForm({
       } else if (signature) {
         payload.defaultSignatureImage = signature;
       }
-      if (v.password && v.password.trim()) payload.password = v.password;
+      // Trimmed so it matches what /auth/login trims on the way back in.
+      if (v.password && v.password.trim()) payload.password = v.password.trim();
     }
     onSubmit(payload);
   });
