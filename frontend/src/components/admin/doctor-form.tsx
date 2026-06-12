@@ -169,8 +169,9 @@ export function DoctorForm({
       return;
     }
     // Whenever a password is being set (create, manual, self-onboarding, or an
-    // edit-mode rotation), the confirmation must match it.
-    if (v.password && v.password.trim() && v.password !== v.passwordConfirm) {
+    // edit-mode rotation), the confirmation must match it. Compared trimmed to
+    // match what the submit handler sends and what /auth/login trims back in.
+    if (v.password && v.password.trim() && v.password.trim() !== (v.passwordConfirm ?? "").trim()) {
       setPasswordError("Passwords do not match.");
       return;
     }
