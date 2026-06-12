@@ -134,6 +134,7 @@ export function QrCaptureModal({
           });
           if (!res.ok) {
             relayHandledRef.current = false;
+            setError("Couldn't retrieve the photo — try scanning the QR again.");
             return;
           }
           const blob = await res.blob();
@@ -144,6 +145,7 @@ export function QrCaptureModal({
           onClose();
         } catch {
           relayHandledRef.current = false;
+          setError("Couldn't retrieve the photo — check your connection and try again.");
         }
       })();
     }

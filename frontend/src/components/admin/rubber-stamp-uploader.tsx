@@ -10,8 +10,16 @@ import { Modal } from "@/components/primitives/modal";
 import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
 import { RubberStampEditor } from "@/components/admin/rubber-stamp-editor";
 
-const MAX_BYTES = 1_000_000; // 1 MB — keeps the patient PDF lean
+const MAX_INPUT_BYTES = 1_000_000; // 1 MB input file limit
+const MAX_OUTPUT_BYTES = 1_000_000; // 1 MB — must match the backend rubber_stamp policy
 const ACCEPTED = ["image/png", "image/jpeg"];
+
+// Approximate decoded byte size of a base64 data URL without allocating it.
+function dataUrlByteSize(dataUrl: string): number {
+  const base64 = dataUrl.includes(",") ? dataUrl.slice(dataUrl.indexOf(",") + 1) : dataUrl;
+  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
+  return Math.floor((base64.length * 3) / 4) - padding;
+}
 
 // Reads a file → base64 data URL (`data:image/png;base64,…`). The backend
 // strips the data: prefix on its own, so either form is acceptable.
@@ -37,14 +45,14 @@ export function RubberStampUploader({
   const [qrOpen, setQrOpen] = useState(false);
 
   // Validate then read a file → base64 data URL → open the editor. Shared by
-  // the file picker and the camera capture.
+  // the file picker, camera capture, and QR relay.
   const processFile = (file: File) => {
     setError(null);
     if (!ACCEPTED.includes(file.type)) {
       setError("Use a PNG or JPEG.");
       return;
     }
-    if (file.size > MAX_BYTES) {
+    if (file.size > MAX_INPUT_BYTES) {
       setError("Image must be under 1 MB.");
       return;
     }
@@ -55,6 +63,19 @@ export function RubberStampUploader({
     };
     reader.onerror = () => setError("Couldn't read the file. Try again.");
     reader.readAsDataURL(file);
+  };
+
+  // Validate the editor output before committing it. Phone photos re-encoded
+  // as PNG can exceed the server's 1 MB limit — catch it here with a clear
+  // message rather than a server-side rejection after the whole form submits.
+  const acceptEdited = (next: string) => {
+    if (dataUrlByteSize(next) > MAX_OUTPUT_BYTES) {
+      setError("Stamp image is over 1 MB after processing — crop tighter or remove the background.");
+      return;
+    }
+    setError(null);
+    onChange(next);
+    setEditorSource(null);
   };
 
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -213,10 +234,7 @@ export function RubberStampUploader({
           <RubberStampEditor
             source={editorSource}
             onCancel={() => setEditorSource(null)}
-            onSave={(next) => {
-              onChange(next);
-              setEditorSource(null);
-            }}
+            onSave={acceptEdited}
           />
         )}
       </Modal>
