@@ -8,6 +8,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { RubberStampEditor } from "@/components/admin/rubber-stamp-editor";
 import { SignatureCanvas, type SignatureCanvasHandle } from "@/components/doctor/signature-canvas";
+import { useFileDrop } from "@/lib/use-file-drop";
 
 // Uploads accept PNG/JPEG (a photo of a signature is fine) — the editor crops
 // and removes the paper background, then re-encodes to PNG. Pre-edit budget is
@@ -43,10 +44,9 @@ export function SignatureInput({
   // The uploaded image being cropped / background-removed in the editor modal.
   const [editorSource, setEditorSource] = useState<string | null>(null);
 
-  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // allow re-picking the same file
-    if (!file) return;
+  // Validate then read a file → data URL → open the editor. Shared by the file
+  // picker and drag-and-drop.
+  const processFile = (file: File) => {
     setError(null);
     if (!ACCEPTED.includes(file.type)) {
       setError("Use a PNG or JPEG image.");
@@ -64,6 +64,14 @@ export function SignatureInput({
     reader.onerror = () => setError("Couldn't read the file. Try again.");
     reader.readAsDataURL(file);
   };
+
+  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (file) processFile(file);
+  };
+
+  const { isDragging, dropProps } = useFileDrop((files) => processFile(files[0]));
 
   // Editor "Apply" — accept the cropped PNG only if it fits the server cap,
   // otherwise keep the editor open and nudge the doctor to crop tighter.
@@ -133,15 +141,23 @@ export function SignatureInput({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="group flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-6 py-10 transition-colors hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/[0.03]"
+          {...dropProps}
+          className={
+            "group flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-10 transition-colors " +
+            (isDragging
+              ? "border-[var(--accent)] bg-[var(--accent)]/[0.06]"
+              : "border-[var(--border)] bg-[var(--muted)]/30 hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/[0.03]")
+          }
         >
           <div className="rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] p-3 text-white shadow-accent transition-transform duration-300 group-hover:scale-110">
             <Upload className="h-5 w-5" />
           </div>
           <div className="text-center">
-            <div className="text-sm font-semibold tracking-[-0.01em]">Upload signature</div>
+            <div className="text-sm font-semibold tracking-[-0.01em]">
+              {isDragging ? "Drop image to upload" : "Upload signature"}
+            </div>
             <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              PNG or JPEG · crop &amp; remove background after upload
+              Drag &amp; drop or click · PNG or JPEG · crop &amp; remove background after upload
             </div>
           </div>
         </button>

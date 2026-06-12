@@ -37,6 +37,7 @@ const createSchema = z.object({
   ...baseFields,
   username: z.string().min(1, "Username is required"),
   password: z.string().optional(),
+  passwordConfirm: z.string().optional(),
 });
 
 type OnboardingMode = "invite" | "manual";
@@ -44,6 +45,7 @@ type OnboardingMode = "invite" | "manual";
 const updateSchema = z.object({
   ...baseFields,
   password: z.string().optional(),
+  passwordConfirm: z.string().optional(),
 });
 
 export type DoctorFormPayload = {
@@ -137,6 +139,7 @@ export function DoctorForm({
       instituteContact: initial?.instituteContact ?? "",
       username: "",
       password: "",
+      passwordConfirm: "",
     } as Values,
   });
 
@@ -163,6 +166,13 @@ export function DoctorForm({
     }
     if (isCreate && isSelfOnboarding && (!v.password || !v.password.trim())) {
       setPasswordError("Pick a password.");
+      return;
+    }
+    // Whenever a password is being set (create, manual, self-onboarding, or an
+    // edit-mode rotation), the confirmation must match it. Compared trimmed to
+    // match what the submit handler sends and what /auth/login trims back in.
+    if (v.password && v.password.trim() && v.password.trim() !== (v.passwordConfirm ?? "").trim()) {
+      setPasswordError("Passwords do not match.");
       return;
     }
     setPasswordError(null);
@@ -287,13 +297,26 @@ export function DoctorForm({
               in admin "invite" create mode since the doctor will set it
               via the onboarding link. */}
           {(!isCreate || isSelfOnboarding || onboardingMode === "manual") && (
-            <Field
-              label={isCreate ? "Password *" : "New password (leave blank to keep)"}
-              htmlFor="password"
-              error={passwordError ?? errors.password?.message}
-            >
-              <Input id="password" type="password" {...register("password")} autoComplete="new-password" />
-            </Field>
+            <>
+              <Field
+                label={isCreate ? "Password *" : "New password (leave blank to keep)"}
+                htmlFor="password"
+                error={passwordError ?? errors.password?.message}
+              >
+                <Input id="password" type="password" {...register("password")} autoComplete="new-password" />
+              </Field>
+              <Field
+                label={isCreate ? "Confirm password *" : "Confirm new password"}
+                htmlFor="passwordConfirm"
+              >
+                <Input
+                  id="passwordConfirm"
+                  type="password"
+                  {...register("passwordConfirm")}
+                  autoComplete="new-password"
+                />
+              </Field>
+            </>
           )}
         </div>
         {isCreate && !isSelfOnboarding && onboardingMode === "invite" && (

@@ -8,7 +8,9 @@ import { Button } from "@/components/primitives/button";
 import { cn } from "@/lib/cn";
 
 // Lightweight modal — backdrop fade + content scale-in. No focus trap library;
-// for forms-with-submit-button this is fine. Esc to close.
+// for forms-with-submit-button this is fine. Closes ONLY via the X button (or an
+// explicit in-content action) — a backdrop click or Esc no longer dismisses it,
+// so half-typed forms aren't lost to a stray click outside the box.
 export function Modal({
   open,
   onClose,
@@ -24,16 +26,14 @@ export function Modal({
   children: ReactNode;
   className?: string;
 }) {
+  // Lock body scroll while open. Esc intentionally does not close — see header.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return (
     <AnimatePresence>
@@ -44,7 +44,6 @@ export function Modal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/30 px-4 backdrop-blur-sm"
-          onClick={onClose}
           role="dialog"
           aria-modal
         >
@@ -53,7 +52,6 @@ export function Modal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            onClick={(e) => e.stopPropagation()}
             className={cn(
               "relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl",
               className,
