@@ -7,9 +7,9 @@ import { useEffect } from "react";
 import { Button } from "@/components/primitives/button";
 
 // Image lightbox styled as a popup window — a framed panel with a header bar
-// (title + an explicit X close button) and the image in the body. Esc or
-// backdrop click also close. Used so attachments open in-app instead of a raw
-// new-tab file view.
+// (title + an explicit X close button) and the image in the body. Closes only
+// via the X button (no Esc or backdrop click), matching every other modal.
+// Used so attachments open in-app instead of a raw new-tab file view.
 export function ImagePreviewModal({
   open,
   onClose,
@@ -23,16 +23,15 @@ export function ImagePreviewModal({
   alt: string;
   title?: string | null;
 }) {
+  // Lock body scroll while open. Closes only via the X button — no Esc or
+  // backdrop click — matching every other modal.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return (
     <AnimatePresence>
@@ -43,7 +42,6 @@ export function ImagePreviewModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/50 p-4 backdrop-blur-sm sm:p-8"
-          onClick={onClose}
           role="dialog"
           aria-modal
         >
@@ -52,7 +50,6 @@ export function ImagePreviewModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            onClick={(e) => e.stopPropagation()}
             className="flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl"
           >
             <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">

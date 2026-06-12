@@ -44,17 +44,15 @@ export function CameraCaptureModal({
     setShot(url);
   };
 
-  // Esc to close + lock body scroll while open.
+  // Lock body scroll while open. Closes only via the X button — no Esc or
+  // backdrop click, so a stray click can't drop you out mid-capture.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open]);
 
   // Start/stop the stream as the modal opens or the camera is flipped. We keep
   // the stream live after a shot so "Retake" is instant.
@@ -175,7 +173,6 @@ export function CameraCaptureModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/50 p-4 backdrop-blur-sm sm:p-8"
-          onClick={onClose}
           role="dialog"
           aria-modal
         >
@@ -184,7 +181,6 @@ export function CameraCaptureModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            onClick={(e) => e.stopPropagation()}
             className="flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl"
           >
             <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
