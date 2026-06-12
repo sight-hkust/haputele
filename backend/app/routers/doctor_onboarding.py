@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from ..deps import db_dep
@@ -121,6 +121,8 @@ def complete(
     submission = DoctorOnboardingSubmit.model_validate(payload)
     try:
         stamp_bytes = decode_rubber_stamp(submission.rubberStampImage)
+    except HTTPException:
+        raise  # let rubber_stamp_too_large / invalid_rubber_stamp_image propagate as-is
     except Exception as exc:
         raise unprocessable("invalid_rubber_stamp_image", detail=str(exc))
 

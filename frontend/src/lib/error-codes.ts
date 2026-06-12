@@ -85,6 +85,9 @@ const MESSAGES: Record<string, string> = {
     "This action only applies to rejected doctors.",
   invalid_status:
     "Unknown doctor status filter.",
+  // Sys-admin system config.
+  system_config_not_found: "System configuration is missing — the system may not have been initialized.",
+  invalid_timezone: "That timezone isn't recognized. Use an IANA timezone name like Asia/Colombo or UTC.",
   // Sys-admin account management.
   account_disabled:
     "This account has been disabled. Contact your system administrator to re-enable it.",
@@ -94,6 +97,11 @@ const MESSAGES: Record<string, string> = {
   account_in_use:
     "This account has records attached to it and can't be deleted. Disable it instead to block sign-in while keeping its history.",
   request_failed: "Something went wrong. Try again.",
+  // Generic server-side errors — shown when the backend doesn't return a
+  // recognisable domain code (e.g. unhandled exception or schema mismatch).
+  internal_error: "Something went wrong on the server. Try again in a moment.",
+  validation_failed: "The form data couldn't be validated. Check your inputs and try again.",
+  forbidden: "You don't have permission to do that.",
 };
 
 export function explainError(code: string, fallback?: string): string {

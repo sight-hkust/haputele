@@ -320,6 +320,8 @@ export default function DoctorDetailPage() {
             };
             if (payload.password) body.password = payload.password;
             if (payload.rubberStampImage) body.rubberStampImage = payload.rubberStampImage;
+            if (payload.defaultSignatureImage) body.defaultSignatureImage = payload.defaultSignatureImage;
+            if (payload.clearDefaultSignature) body.clearDefaultSignature = true;
             update.mutate(body);
           }}
           onCancel={() => router.push("/admin")}

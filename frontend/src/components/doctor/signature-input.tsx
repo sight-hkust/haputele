@@ -178,6 +178,7 @@ export function SignatureInput({
             description="Crop tightly around your signature. Remove the white paper background so it lays cleanly on the prescription."
             onCancel={() => setEditorSource(null)}
             onSave={acceptEdited}
+            forcePng
           />
         )}
       </Modal>

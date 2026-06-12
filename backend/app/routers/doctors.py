@@ -766,13 +766,14 @@ def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(d
     }
     data = payload.model_dump(exclude_unset=True)
 
-    superseded_key: str | None = None
+    superseded: list[str] = []
     if "rubberStampImage" in data and data["rubberStampImage"] is not None:
         stamp = decode_rubber_stamp(data.pop("rubberStampImage"))
         mime, ext = _sniff_stamp(stamp)
         new_key = object_key("doctors/stamps", ext)
         put_bytes(new_key, stamp, mime)
-        superseded_key = doctor.rubber_stamp_key
+        if doctor.rubber_stamp_key:
+            superseded.append(doctor.rubber_stamp_key)
         doctor.rubber_stamp_key = new_key
     else:
         data.pop("rubberStampImage", None)
@@ -784,6 +785,21 @@ def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(d
     else:
         data.pop("password", None)
 
+    # clearDefaultSignature wins over a supplied image, same as update_me.
+    clear_sig = data.pop("clearDefaultSignature", False)
+    new_sig_image = data.pop("defaultSignatureImage", None)
+    if clear_sig:
+        if doctor.default_signature_key:
+            superseded.append(doctor.default_signature_key)
+        doctor.default_signature_key = None
+    elif new_sig_image:
+        sig = decode_signature(new_sig_image)
+        sig_key = object_key("doctors/signatures", "png")
+        put_bytes(sig_key, sig, "image/png")
+        if doctor.default_signature_key:
+            superseded.append(doctor.default_signature_key)
+        doctor.default_signature_key = sig_key
+
     for k, v in data.items():
         col = field_map.get(k)
         if col is not None:
@@ -791,10 +807,10 @@ def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(d
 
     db.commit()
     db.refresh(doctor)
-    # Drop the superseded object only once the new key is committed — a failed
-    # commit rolls back to old_key, so we must not delete it pre-commit.
-    if superseded_key:
-        delete_object(superseded_key)
+    # Drop superseded objects only after the new keys are committed — a failed
+    # commit rolls back to old keys, so we must not delete them pre-commit.
+    for key in superseded:
+        delete_object(key)
     out = DoctorOut.model_validate(doctor)
     has_live = doctor.doctor_id in _doctors_with_live_invite(db, [doctor.doctor_id])
     return _attach_status(out, doctor, has_live_invite=has_live)

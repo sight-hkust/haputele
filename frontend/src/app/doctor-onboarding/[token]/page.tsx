@@ -238,11 +238,14 @@ function RotationPanel({
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (password.length < MIN_PASSWORD_LEN) {
+    // Trim before validating/sending so the stored secret matches what
+    // /auth/login trims on the way back in.
+    const pw = password.trim();
+    if (pw.length < MIN_PASSWORD_LEN) {
       setError(`Choose a password at least ${MIN_PASSWORD_LEN} characters long.`);
       return;
     }
-    if (password !== confirm) {
+    if (pw !== confirm.trim()) {
       setError("Passwords don't match. Re-enter to confirm.");
       return;
     }
@@ -250,7 +253,7 @@ function RotationPanel({
     try {
       await api(`/doctor-onboarding/${token}`, {
         method: "POST",
-        body: { password },
+        body: { password: pw },
         skipAuthRedirect: true,
       });
       onDone();

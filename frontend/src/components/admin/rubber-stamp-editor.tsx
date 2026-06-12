@@ -14,12 +14,18 @@ export function RubberStampEditor({
   onCancel,
   onSave,
   description = "Crop the stamp tightly. Optionally remove the white paper background so it lays cleanly on the prescription.",
+  forcePng = false,
 }: {
   source: string;
   onCancel: () => void;
   onSave: (next: string) => void;
   // Overridable so the same editor reads correctly for signatures too.
   description?: string;
+  // When true the output is always PNG (required for signatures — the backend
+  // rejects JPEG for that asset type). Leave false for rubber stamps: the
+  // editor uses JPEG when no background has been removed (much smaller for
+  // phone photos) and PNG only when transparency is needed.
+  forcePng?: boolean;
 }) {
   const imgRef = useRef<HTMLImageElement>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
@@ -91,7 +97,13 @@ export function RubberStampEditor({
     if (!img || !completed) return;
     const out = document.createElement("canvas");
     drawProcessed(img, completed, removeBg, threshold, out);
-    onSave(out.toDataURL("image/png"));
+    // Use PNG when transparency is needed (background removed) or explicitly
+    // required by the caller (e.g. signature — backend only accepts PNG magic
+    // bytes). Fall back to JPEG for opaque stamps: a phone photo re-encoded
+    // as PNG can be 5–10× larger than the same image as a high-quality JPEG,
+    // which routinely causes the 1 MB server limit to be hit.
+    const mime = forcePng || removeBg ? "image/png" : "image/jpeg";
+    onSave(out.toDataURL(mime, mime === "image/jpeg" ? 0.92 : undefined));
   };
 
   return (

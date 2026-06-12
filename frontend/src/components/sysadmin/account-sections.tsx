@@ -44,7 +44,7 @@ export function ProfileSection({
       {update.error ? <ErrorBanner>{explainError(update.error.error)}</ErrorBanner> : null}
       <div>
         <Button
-          onClick={() => update.mutate({ username: account.username, body: { fullName, contact } }, { onSuccess: onSaved })}
+          onClick={() => update.mutate({ username: account.username, body: { fullName: fullName.trim(), contact: contact.trim() } }, { onSuccess: onSaved })}
           disabled={!dirty || update.isPending}
         >
           {update.isPending ? "Saving…" : "Save changes"}
@@ -66,11 +66,14 @@ export function PasswordSection({ username, self = false }: { username: string; 
     e.preventDefault();
     setPwError(null);
     setPwDone(false);
-    if (password.length < MIN_PASSWORD_LEN)
+    // Trim before validating/sending so the stored secret matches what
+    // /auth/login trims on the way back in.
+    const pw = password.trim();
+    if (pw.length < MIN_PASSWORD_LEN)
       return setPwError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
-    if (password !== confirm) return setPwError("Passwords do not match.");
+    if (pw !== confirm.trim()) return setPwError("Passwords do not match.");
     resetPw.mutate(
-      { username, password },
+      { username, password: pw },
       {
         onSuccess: () => {
           setPassword("");
