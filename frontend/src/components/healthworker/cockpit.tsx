@@ -52,6 +52,10 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
   const sessionConsentQ = useGetSessionConsent(aptId);
   const sessionConsent = sessionConsentQ.data ?? null;
   const sessionConsented = !!(sessionConsent?.agreed && !sessionConsent.revokedAt);
+  // Distinguish "not consented" from "still loading the consent status" — a
+  // consent_pending appointment always already has consent, so we mustn't flash
+  // the "record consent first" notice before the query resolves.
+  const sessionConsentResolved = !sessionConsentQ.isPending;
 
   return (
     <div className="flex flex-col gap-6">
@@ -78,6 +82,7 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
         appointmentId={aptId}
         editable={appointment.status === "consent_pending" || appointment.status === "data_collection"}
         sessionConsented={sessionConsented}
+        sessionConsentResolved={sessionConsentResolved}
         preconsult={preconsult}
         currentStatus={appointment.status}
       />
@@ -365,12 +370,14 @@ function VitalsStep({
   appointmentId,
   editable,
   sessionConsented,
+  sessionConsentResolved,
   preconsult,
   currentStatus,
 }: {
   appointmentId: number;
   editable: boolean;
   sessionConsented: boolean;
+  sessionConsentResolved: boolean;
   preconsult: AppointmentDetail["preconsult"];
   currentStatus: string;
 }) {
@@ -408,7 +415,8 @@ function VitalsStep({
   if (currentStatus === "cancelled") return null;
 
   const showLockedNotice = !editable && !!preconsult;
-  const showWaitNotice = editable && !sessionConsented;
+  // Only once we know consent is genuinely absent — not merely still loading.
+  const showWaitNotice = editable && sessionConsentResolved && !sessionConsented;
 
   return (
     <Card variant="elevated" className="p-6">
