@@ -84,15 +84,19 @@ export function SystemConfigForm({ config }: { config: SystemConfig }) {
 
   function handleSave() {
     setDone(false);
+    // Trim free-text fields so a stray space can't drift the saved identity
+    // away from what the setup wizard stores (it trims the same fields).
+    // Address lines are already trimmed by textToAddr; timezones come from a
+    // <Select> so they need no trimming.
     update.mutate(
       {
-        instituteName: instituteName || null,
+        instituteName: instituteName.trim() || null,
         instituteAddressLines: textToAddr(addressText),
-        instituteContactPhone: phone || null,
-        instituteContactEmail: email || null,
+        instituteContactPhone: phone.trim() || null,
+        instituteContactEmail: email.trim() || null,
         appTimezone: appTz || null,
         exportTimezone: exportTz || null,
-        masterConsentVersion: consentVersion || null,
+        masterConsentVersion: consentVersion.trim() || null,
       },
       { onSuccess: () => setDone(true) },
     );

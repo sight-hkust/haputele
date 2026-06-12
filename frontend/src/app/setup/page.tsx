@@ -283,11 +283,14 @@ function ConfigureStage({
 
     if (!username.trim()) next.username = "Username is required.";
 
-    if (!password) next.password = "Password is required.";
-    else if (password.length < 10) next.password = "Password must be at least 10 characters.";
+    // Validate the trimmed password so whitespace can't pad a short secret
+    // past the length gate, and so it matches what /auth/login submits.
+    const pw = password.trim();
+    if (!pw) next.password = "Password is required.";
+    else if (pw.length < 10) next.password = "Password must be at least 10 characters.";
 
     if (!passwordConfirm) next.passwordConfirm = "Confirm your password.";
-    else if (password && password !== passwordConfirm) next.passwordConfirm = "Passwords don't match.";
+    else if (pw && pw !== passwordConfirm.trim()) next.passwordConfirm = "Passwords don't match.";
 
     if (!instituteName.trim()) next.instituteName = "Institute name is required.";
 
@@ -303,7 +306,7 @@ function ConfigureStage({
     try {
       const result = await initialize.mutateAsync({
         body: {
-          sysAdmin: { username: username.trim(), password },
+          sysAdmin: { username: username.trim(), password: pw },
           instituteIdentity: {
             name: instituteName.trim(),
             addressLines: lines,
