@@ -9,7 +9,7 @@ import { Button } from "@/components/primitives/button";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { LoginHeroGraphic } from "@/components/marketing/login-hero-graphic";
-import { ROLE_HOMES, useAuth, type Role } from "@/lib/auth";
+import { resolveLoginRedirect, useAuth, type Role } from "@/lib/auth";
 import { ApiError, api } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
@@ -56,7 +56,7 @@ function LoginScreen() {
   // page that would immediately 409 setup_required.
   useEffect(() => {
     if (loading || !session || !setupLoaded || uninitialized) return;
-    const next = search.get("next") || ROLE_HOMES[session.role];
+    const next = resolveLoginRedirect(search.get("next"), session.role);
     router.replace(next);
   }, [session, loading, setupLoaded, uninitialized, router, search]);
 
@@ -73,7 +73,7 @@ function LoginScreen() {
         body: { username: username.trim(), password: password.trim() },
       });
       login({ username: res.username, role: res.role, expiresAt: res.expiresAt });
-      const next = search.get("next") || ROLE_HOMES[res.role];
+      const next = resolveLoginRedirect(search.get("next"), res.role);
       router.replace(next);
     } catch (err) {
       // Backend returns a stable `invalid_credentials` code regardless of
