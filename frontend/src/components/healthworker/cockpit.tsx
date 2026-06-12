@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -26,6 +26,7 @@ import { VitalsForm } from "@/components/healthworker/vitals-form";
 import { MeetingModal } from "@/components/meeting/meeting-modal";
 import { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
+import { parseVitalsValidationError } from "@/lib/vitals";
 import {
   useCancelAppointment,
   useEndMeeting,
@@ -375,9 +376,38 @@ function VitalsStep({
 }) {
   const upsert = useUpsertPreconsult(appointmentId);
 
+  // Briefly confirm a successful save so the HW knows the vitals were stored —
+  // there's no other signal once the form re-renders with the same values.
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  useEffect(() => {
+    if (!upsert.isSuccess) return;
+    setSavedAt(fmtTime(new Date().toISOString()));
+    const t = setTimeout(() => setSavedAt(null), 4000);
+    return () => clearTimeout(t);
+  }, [upsert.isSuccess, upsert.data]);
+
+  // Split the mutation error: a 422 maps onto individual inputs; any other
+  // conflict (locked, consent revoked mid-flow) becomes a single clear banner.
+  // Memoised on the error instance so `fieldErrors` keeps a stable identity
+  // while the error is unchanged — otherwise the form's setError effect would
+  // re-fire every render and re-flag a field the HW is mid-way through fixing.
+  // Kept above the early return below so the hook order is stable every render.
+  const err = upsert.error as ApiError | null;
+  const { fieldErrors, banner } = useMemo(() => {
+    if (!err) return { fieldErrors: undefined, banner: null as string | null };
+    if (err.status === 422) {
+      const p = parseVitalsValidationError(err);
+      const b =
+        p.formError ??
+        (Object.keys(p.fieldErrors).length === 0 ? explainError(err.error) : null);
+      return { fieldErrors: p.fieldErrors, banner: b };
+    }
+    return { fieldErrors: undefined, banner: explainError(err.error) };
+  }, [err]);
+
   if (currentStatus === "cancelled") return null;
 
-  const showLockedNotice = !editable && preconsult;
+  const showLockedNotice = !editable && !!preconsult;
   const showWaitNotice = editable && !sessionConsented;
 
   return (
@@ -392,7 +422,7 @@ function VitalsStep({
             {showLockedNotice
               ? "Locked — the meeting has started or already concluded."
               : showWaitNotice
-                ? "Record session consent first."
+                ? "Session consent is needed before vitals can be entered."
                 : preconsult
                   ? "Update before the meeting starts."
                   : "Capture height, weight, BP, pulse, temperature."}
@@ -400,11 +430,35 @@ function VitalsStep({
         </div>
       </div>
 
+      {/* Gating is stated up front, in colour, so the HW understands *why* the
+          form is read-only rather than finding a dead Save button. */}
+      {showWaitNotice && (
+        <ErrorBanner tone="amber" className="mb-4">
+          Record the patient&rsquo;s session consent above before entering vitals.
+        </ErrorBanner>
+      )}
+      {showLockedNotice && (
+        <ErrorBanner tone="amber" className="mb-4">
+          These vitals are locked — the meeting has started or concluded, so they can no longer be
+          edited.
+        </ErrorBanner>
+      )}
+      {savedAt && (
+        <div
+          role="status"
+          className="mb-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+        >
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>Vitals saved at {savedAt}.</span>
+        </div>
+      )}
+
       <VitalsForm
         initial={preconsult ?? null}
         submitting={upsert.isPending}
         disabled={!editable || !sessionConsented}
-        errorMessage={upsert.error ? explainError((upsert.error as ApiError).error) : null}
+        errorMessage={banner}
+        serverFieldErrors={fieldErrors}
         onSubmit={(v) => upsert.mutate(v)}
       />
     </Card>
