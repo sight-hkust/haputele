@@ -1,12 +1,18 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Textarea } from "@/components/primitives/select";
+import {
+  PRIMARY_COMPLAINT_MAX,
+  validateBloodPressurePair,
+  validateVital,
+  type VitalField,
+} from "@/lib/vitals";
 import type { Preconsult, PreconsultRequest } from "@/types/api";
 
 type VitalsValues = {
@@ -33,16 +39,31 @@ export function VitalsForm({
   initial,
   submitting,
   errorMessage,
+  serverFieldErrors,
   disabled,
   onSubmit,
 }: {
   initial?: Preconsult | null;
   submitting: boolean;
+  /** Banner-level message — a non-field conflict, or a form-wide validation note. */
   errorMessage?: string | null;
+  /** Server 422s mapped back onto the inputs that tripped them. */
+  serverFieldErrors?: Partial<Record<VitalField, string>>;
   disabled?: boolean;
   onSubmit: (v: PreconsultRequest) => void;
 }) {
-  const { register, handleSubmit } = useForm<VitalsValues>({
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    trigger,
+    setError,
+    formState: { errors },
+  } = useForm<VitalsValues>({
+    // Validate as the HW tabs through, and re-check on every edit once a field
+    // has erred — so a corrected typo clears its red state immediately.
+    mode: "onBlur",
+    reValidateMode: "onChange",
     defaultValues: {
       primaryComplaint: initial?.primaryComplaint ?? "",
       height: initial?.height?.toString() ?? "",
@@ -53,6 +74,16 @@ export function VitalsForm({
       temperature: initial?.temperature?.toString() ?? "",
     },
   });
+
+  // Mirror server-reported field errors onto the inputs. The server is the
+  // final authority on bounds, so even if the client check is bypassed the
+  // offending field still lights up with a precise message.
+  useEffect(() => {
+    if (!serverFieldErrors) return;
+    for (const [field, message] of Object.entries(serverFieldErrors)) {
+      if (message) setError(field as VitalField, { type: "server", message });
+    }
+  }, [serverFieldErrors, setError]);
 
   const submit = handleSubmit((v) =>
     onSubmit({
@@ -68,8 +99,14 @@ export function VitalsForm({
     }),
   );
 
+  // Per-field rules. Empty stays valid (vitals are optional); out-of-range and
+  // the diastolic<systolic pair are the only failures we raise client-side.
+  const rule = (field: VitalField) => ({
+    validate: (value: string) => validateVital(field, value) ?? true,
+  });
+
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5">
+    <form onSubmit={submit} noValidate className="flex flex-col gap-5">
       {errorMessage && <ErrorBanner>{errorMessage}</ErrorBanner>}
 
       {/* FEEDBACK §2: doctors need the *reason* for the visit before the call.
@@ -81,17 +118,42 @@ export function VitalsForm({
           rows={3}
           placeholder="Why is the patient here today? e.g. cough for 3 days, infected wound on right hand…"
           disabled={disabled}
-          {...register("primaryComplaint")}
+          aria-invalid={!!errors.primaryComplaint}
+          {...register("primaryComplaint", {
+            maxLength: {
+              value: PRIMARY_COMPLAINT_MAX,
+              message: `Keep the complaint under ${PRIMARY_COMPLAINT_MAX} characters.`,
+            },
+          })}
         />
+        {errors.primaryComplaint && <FieldError message={errors.primaryComplaint.message} />}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Vital label="Height (cm)" id="height" {...register("height")} disabled={disabled} />
-        <Vital label="Weight (kg)" id="weight" {...register("weight")} disabled={disabled} />
-        <Vital label="Pulse (bpm)" id="pulse" {...register("pulse")} disabled={disabled} />
-        <Vital label="Systolic BP (mmHg)" id="sysBp" {...register("sysBp")} disabled={disabled} />
-        <Vital label="Diastolic BP (mmHg)" id="diaBp" {...register("diaBp")} disabled={disabled} />
-        <Vital label="Temperature (°C)" id="temperature" step="0.1" {...register("temperature")} disabled={disabled} />
+        <Vital label="Height (cm)" id="height" disabled={disabled}
+          error={errors.height?.message} {...register("height", rule("height"))} />
+        <Vital label="Weight (kg)" id="weight" disabled={disabled}
+          error={errors.weight?.message} {...register("weight", rule("weight"))} />
+        <Vital label="Pulse (bpm)" id="pulse" disabled={disabled}
+          error={errors.pulse?.message} {...register("pulse", rule("pulse"))} />
+        <Vital label="Systolic BP (mmHg)" id="sysBp" disabled={disabled}
+          error={errors.sysBp?.message}
+          {...register("sysBp", {
+            ...rule("sysBp"),
+            // Re-check the pair when systolic changes so a now-valid ordering
+            // clears the diastolic error (and vice-versa).
+            onBlur: () => { if (getValues("diaBp").trim()) void trigger("diaBp"); },
+          })} />
+        <Vital label="Diastolic BP (mmHg)" id="diaBp" disabled={disabled}
+          error={errors.diaBp?.message}
+          {...register("diaBp", {
+            validate: (value: string) =>
+              validateVital("diaBp", value) ??
+              validateBloodPressurePair(getValues("sysBp"), value) ??
+              true,
+          })} />
+        <Vital label="Temperature (°C)" id="temperature" step="0.1" disabled={disabled}
+          error={errors.temperature?.message} {...register("temperature", rule("temperature"))} />
       </div>
       {!disabled && (
         <div className="flex justify-end">
@@ -104,6 +166,11 @@ export function VitalsForm({
   );
 }
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs leading-snug text-rose-600">{message}</p>;
+}
+
 // forwardRef is essential — RHF's `register()` returns a `ref` callback that
 // must reach the underlying <input>. A plain function component swallows it
 // silently, leaving every field unread on submit (PUT body was all-null).
@@ -114,11 +181,23 @@ const Vital = forwardRef<
     id: string;
     step?: string;
     disabled?: boolean;
+    error?: string;
   } & React.InputHTMLAttributes<HTMLInputElement>
->(({ label, id, step, disabled, ...rest }, ref) => (
+>(({ label, id, step, disabled, error, ...rest }, ref) => (
   <div className="flex flex-col gap-2">
     <Label htmlFor={id}>{label}</Label>
-    <Input ref={ref} id={id} type="number" inputMode="decimal" step={step ?? "1"} disabled={disabled} {...rest} />
+    <Input
+      ref={ref}
+      id={id}
+      type="number"
+      inputMode="decimal"
+      step={step ?? "1"}
+      disabled={disabled}
+      aria-invalid={!!error}
+      className={error ? "border-rose-300 focus-visible:ring-rose-400" : undefined}
+      {...rest}
+    />
+    <FieldError message={error} />
   </div>
 ));
 Vital.displayName = "Vital";
