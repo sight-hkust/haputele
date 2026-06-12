@@ -100,7 +100,7 @@ const MESSAGES: Record<string, string> = {
   // Generic server-side errors — shown when the backend doesn't return a
   // recognisable domain code (e.g. unhandled exception or schema mismatch).
   internal_error: "Something went wrong on the server. Try again in a moment.",
-  validation_failed: "The form data couldn't be validated. Check your inputs and try again.",
+  validation_failed: "Some entries are out of range or incomplete. Check the highlighted fields and try again.",
   forbidden: "You don't have permission to do that.",
 };
 

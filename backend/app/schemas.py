@@ -594,13 +594,28 @@ class SessionConsentIn(BaseModel):
 # ── Preconsult ────────────────────────────────────────────────────────
 
 class PreconsultIn(BaseModel):
-    height: Optional[int] = None
-    weight: Optional[int] = None
-    sysBp: Optional[int] = None
-    diaBp: Optional[int] = None
-    pulse: Optional[int] = None
-    temperature: Optional[Decimal] = None
-    primaryComplaint: Optional[str] = None
+    # Plausibility bounds — reject obvious typos (BP 1200, temp 400 °C) so a
+    # doctor never opens the call to nonsense vitals. Ranges are deliberately
+    # generous: they catch fat-finger errors, not genuine clinical outliers.
+    # Every bound mirrors VITALS_BOUNDS in frontend/src/lib/vitals.ts — keep
+    # the two in sync. A failed bound surfaces as a 422 whose `loc` ends in the
+    # field name, which the client maps back onto the offending input.
+    height: Optional[int] = Field(default=None, ge=30, le=250)          # cm
+    weight: Optional[int] = Field(default=None, ge=1, le=400)           # kg
+    sysBp: Optional[int] = Field(default=None, ge=50, le=300)           # mmHg
+    diaBp: Optional[int] = Field(default=None, ge=30, le=200)           # mmHg
+    pulse: Optional[int] = Field(default=None, ge=20, le=300)           # bpm
+    temperature: Optional[Decimal] = Field(default=None, ge=30, le=45)  # °C
+    primaryComplaint: Optional[str] = Field(default=None, max_length=2000)
+
+    @model_validator(mode="after")
+    def _diastolic_below_systolic(self) -> "PreconsultIn":
+        # Only meaningful when both halves of the reading are present. The
+        # message text carries the field name so the client can attach the
+        # error to the diastolic input rather than the whole form.
+        if self.sysBp is not None and self.diaBp is not None and self.diaBp >= self.sysBp:
+            raise ValueError("diaBp_must_be_below_sysBp")
+        return self
 
 
 class PreconsultOut(BaseModel):
