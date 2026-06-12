@@ -13,5 +13,5 @@
 # NOTE: the referenced tag must already exist in GHCR before you apply, or the
 # Ansible `docker compose pull` step fails. For a new semver, push the git tag and
 # wait for the "Build Docker images" workflow to go green first.
-docker_image_backend  = "ghcr.io/sight-hkust/haputele-backend:0.5.1"
-docker_image_frontend = "ghcr.io/sight-hkust/haputele-frontend:0.5.1"
+docker_image_backend  = "ghcr.io/sight-hkust/haputele-backend:0.7.0"
+docker_image_frontend = "ghcr.io/sight-hkust/haputele-frontend:0.7.0"
