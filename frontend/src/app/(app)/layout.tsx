@@ -4,22 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { Topbar } from "@/components/shell/topbar";
-import { ROLE_HOMES, useAuth } from "@/lib/auth";
-
-// URL segment → role mapping. The sys-admin role uses a "sysadmin" URL segment
-// (no hyphen) because Next dynamic-route filenames forbid hyphens and we keep
-// segment <-> role 1:1 for the layout guard.
-const SEGMENT_TO_ROLE = {
-  admin: "admin",
-  doctor: "doctor",
-  healthworker: "healthworker",
-  sysadmin: "sys-admin",
-} as const;
-type SectionSegment = keyof typeof SEGMENT_TO_ROLE;
-
-function isSectionSegment(s: string | undefined): s is SectionSegment {
-  return s !== undefined && s in SEGMENT_TO_ROLE;
-}
+import { ROLE_HOMES, SEGMENT_TO_ROLE, useAuth } from "@/lib/auth";
 
 // Auth gate + role guard for everything under (app). If you're at /admin/* but
 // signed in as a doctor, you're redirected to /doctor (server-side ACLs are still
@@ -29,19 +14,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const { session, loading } = useAuth();
 
+  // The first path segment names the role section. If it's a section that
+  // isn't this user's, they're on a page they don't belong on. Computed during
+  // render (not just in the effect) so we can gate the children below.
+  const segment = pathname.split("/").filter(Boolean)[0];
+  const roleMismatch =
+    !!session &&
+    segment !== undefined &&
+    segment in SEGMENT_TO_ROLE &&
+    SEGMENT_TO_ROLE[segment] !== session.role;
+
   useEffect(() => {
     if (loading) return;
     if (!session) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
       return;
     }
-    const segment = pathname.split("/").filter(Boolean)[0];
-    if (isSectionSegment(segment) && SEGMENT_TO_ROLE[segment] !== session.role) {
+    if (roleMismatch) {
       router.replace(ROLE_HOMES[session.role]);
     }
-  }, [session, loading, router, pathname]);
+  }, [session, loading, router, pathname, roleMismatch]);
 
-  if (loading || !session) {
+  // Gate rendering until we know the user belongs on this exact path. Without
+  // the `roleMismatch` check the wrong-role page renders for one frame before
+  // the effect above redirects — the "doctor's page flashes when a health
+  // worker signs in" bug.
+  if (loading || !session || roleMismatch) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">

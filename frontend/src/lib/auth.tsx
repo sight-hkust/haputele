@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { api } from "./api";
 
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Rehydrate from the cookie on mount. /auth/me returns 200 when the
   // session cookie is still valid; the api() wrapper turns a 401 into a
@@ -86,8 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // still drop the session.
     }
     setSession(null);
+    // Drop every cached query so the next user never sees the previous one's
+    // data flash before their own request resolves. The cache is keyed by
+    // endpoint, not by user, so a stale `/doctors/me` would otherwise paint
+    // for a frame after a different person signs in.
+    queryClient.clear();
     router.replace("/login");
-  }, [router]);
+  }, [router, queryClient]);
 
   return (
     <AuthContext.Provider value={{ session, loading, login, logout }}>{children}</AuthContext.Provider>
@@ -106,3 +113,29 @@ export const ROLE_HOMES: Record<Role, string> = {
   healthworker: "/healthworker/appointments",
   "sys-admin": "/sysadmin",
 };
+
+// First URL segment → role. The sys-admin role uses the "sysadmin" segment
+// (no hyphen) because Next route folders can't contain hyphens. Single source
+// of truth for the (app) layout guard and the login redirect.
+export const SEGMENT_TO_ROLE: Record<string, Role> = {
+  admin: "admin",
+  doctor: "doctor",
+  healthworker: "healthworker",
+  sysadmin: "sys-admin",
+};
+
+// Does this path live in the given role's section? Every protected page lives
+// under a role segment, so a path that doesn't match the user's role is one
+// they don't belong on.
+export function pathMatchesRole(pathname: string, role: Role): boolean {
+  const segment = pathname.split("/").filter(Boolean)[0];
+  return segment !== undefined && SEGMENT_TO_ROLE[segment] === role;
+}
+
+// Where to send a user after sign-in: honour an explicit `?next=` only when it
+// belongs to their own role, otherwise fall back to their home. This stops a
+// stale or cross-role `next` (e.g. a doctor's 401 left `?next=/doctor`, then a
+// health worker signs in) from bouncing them through another role's page.
+export function resolveLoginRedirect(nextParam: string | null, role: Role): string {
+  return nextParam && pathMatchesRole(nextParam, role) ? nextParam : ROLE_HOMES[role];
+}
