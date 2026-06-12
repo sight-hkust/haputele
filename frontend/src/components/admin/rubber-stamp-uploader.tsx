@@ -9,6 +9,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
 import { RubberStampEditor } from "@/components/admin/rubber-stamp-editor";
+import { useFileDrop } from "@/lib/use-file-drop";
 
 const MAX_BYTES = 1_000_000; // 1 MB — keeps the patient PDF lean
 const ACCEPTED = ["image/png", "image/jpeg"];
@@ -64,10 +65,20 @@ export function RubberStampUploader({
     if (file) processFile(file);
   };
 
+  // Drag a PNG/JPEG anywhere onto the uploader (empty dropzone or the captured
+  // card) to load it into the editor — same path as the file picker.
+  const { isDragging, dropProps } = useFileDrop((files) => processFile(files[0]));
+
   return (
     <div className="flex flex-col gap-3">
       {value ? (
-        <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+        <div
+          {...dropProps}
+          className={
+            "flex items-center gap-4 rounded-xl border bg-[var(--card)] p-4 transition-colors " +
+            (isDragging ? "border-[var(--accent)] bg-[var(--accent)]/[0.04]" : "border-[var(--border)]")
+          }
+        >
           <button
             type="button"
             onClick={() => setPreviewOpen(true)}
@@ -141,15 +152,23 @@ export function RubberStampUploader({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="group flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-6 py-10 transition-colors hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/[0.03]"
+            {...dropProps}
+            className={
+              "group flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-10 transition-colors " +
+              (isDragging
+                ? "border-[var(--accent)] bg-[var(--accent)]/[0.06]"
+                : "border-[var(--border)] bg-[var(--muted)]/30 hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/[0.03]")
+            }
           >
             <div className="rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] p-3 text-white shadow-accent transition-transform duration-300 group-hover:scale-110">
               <Stamp className="h-5 w-5" />
             </div>
             <div className="text-center">
-              <div className="text-sm font-semibold tracking-[-0.01em]">Upload rubber stamp</div>
+              <div className="text-sm font-semibold tracking-[-0.01em]">
+                {isDragging ? "Drop image to upload" : "Upload rubber stamp"}
+              </div>
               <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-                PNG or JPEG · &lt; 1 MB · crop &amp; remove background after upload
+                Drag &amp; drop or click · PNG or JPEG · &lt; 1 MB · crop &amp; remove background after upload
               </div>
             </div>
           </button>

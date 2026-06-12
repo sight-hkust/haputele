@@ -17,6 +17,7 @@ import {
   useDeleteAttachment,
   useUploadAttachment,
 } from "@/lib/use-api";
+import { useFileDrop } from "@/lib/use-file-drop";
 import type { AppointmentStatus, AttachmentMeta } from "@/types/api";
 
 const READONLY_STATES: AppointmentStatus[] = ["completed", "cancelled"];
@@ -60,8 +61,22 @@ export function AttachmentsPanel({
     if (fileInput.current) fileInput.current.value = "";
   };
 
+  // Drag photos straight onto the card to upload them — disabled once the
+  // appointment is locked or while an upload is already in flight.
+  const { isDragging, dropProps } = useFileDrop((files) => uploadFiles(files), {
+    multiple: true,
+    disabled: readonly || upload.isPending,
+  });
+
   return (
-    <Card variant="elevated" className="p-6">
+    <Card
+      variant="elevated"
+      {...dropProps}
+      className={
+        "p-6 transition-colors " +
+        (isDragging ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--background)]" : "")
+      }
+    >
       <div className="mb-4 flex items-start gap-3">
         <div className="rounded-xl bg-[var(--accent)]/10 p-2">
           <Camera className="h-5 w-5 text-[var(--accent)]" />
@@ -130,7 +145,7 @@ export function AttachmentsPanel({
         </div>
       ) : (
         <p className="rounded-xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]">
-          No photos yet.
+          {readonly ? "No photos." : "No photos yet — drag photos here or use the buttons above."}
         </p>
       )}
 
