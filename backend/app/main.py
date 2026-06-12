@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -77,12 +78,18 @@ async def _validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     rid = _request_id(request)
+    # exc.errors() can carry non-JSON-serialisable bits: when a field/model
+    # validator raises ValueError, Pydantic stashes the exception object under
+    # ctx["error"]. Passing that straight to JSONResponse would blow up inside
+    # the error handler (500 instead of a clean 422). jsonable_encoder walks the
+    # structure and stringifies any Exception, mirroring FastAPI's own default
+    # validation handler.
     return JSONResponse(
         status_code=422,
         content={
             "detail": {
                 "error": "validation_failed",
-                "errors": exc.errors(),
+                "errors": jsonable_encoder(exc.errors(), custom_encoder={Exception: str}),
                 "requestId": rid,
             },
         },

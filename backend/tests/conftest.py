@@ -134,6 +134,11 @@ def _wipe_setup_state():
         db.execute(text("DELETE FROM consultations"))
         db.execute(text("ALTER TABLE consultations ENABLE TRIGGER consultations_locked_guard"))
         db.execute(text("DELETE FROM preconsultation"))
+        # patients.master_consent_id references consents via a plain FK (no
+        # ON DELETE), so a patient holding an active master consent would block
+        # the consents wipe. Null those refs first — the patient rows are
+        # deleted a few statements down.
+        db.execute(text("UPDATE patients SET master_consent_id = NULL"))
         db.execute(text("DELETE FROM consents"))
         db.execute(text("ALTER TABLE appointments DISABLE TRIGGER appointments_locked_guard"))
         db.execute(text("DELETE FROM appointments"))

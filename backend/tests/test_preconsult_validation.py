@@ -44,6 +44,9 @@ def ready_appointment(seeded_doctor):
         master = Consent(
             patient_id=patient.patient_id,
             scope="master",
+            # The consents_check constraint (migration 0001) requires a master
+            # consent to carry a version (and no appointment_id).
+            version="v1",
             agreed=True,
             captured_at=datetime.now(timezone.utc),
             signature_key="signatures/master/test.png",
