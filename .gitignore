@@ -49,6 +49,7 @@ scripts/assets/doctor_stamp.png
 *.md
 # ...except the top-level README, which ships with the repo.
 !/README.md
+!docs/**/*.md
 
 # Archived documentation — kept locally, never committed.
 stale_documentation/
@@ -56,3 +57,6 @@ stale_documentation/
 
 # local worktree test env (not for commit)
 backend/.test-env.sh
+
+# Git worktrees
+.worktrees/
