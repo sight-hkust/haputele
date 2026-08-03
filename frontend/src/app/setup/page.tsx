@@ -558,9 +558,12 @@ function OperatingAccountsStage() {
   // Pure validator — never touches state, returns the message or undefined.
   const validateRow = (r: DraftAccount): string | undefined => {
     if (!r.username.trim()) return "Username is required.";
-    if (!r.password) return "Password is required.";
-    if (r.password.length < 10) return "Password must be at least 10 characters.";
-    if (r.password !== r.passwordConfirm) return "Passwords do not match.";
+    // Validate the trimmed password so whitespace can't pad a short secret
+    // past the length gate, and so it matches what /auth/login submits.
+    const pw = r.password.trim();
+    if (!pw) return "Password is required.";
+    if (pw.length < 10) return "Password must be at least 10 characters.";
+    if (pw !== r.passwordConfirm.trim()) return "Passwords do not match.";
     return undefined;
   };
 
@@ -611,7 +614,10 @@ function OperatingAccountsStage() {
         try {
           await create.mutateAsync({
             username: r.username.trim(),
-            password: r.password,
+            // Trimmed so it matches what /auth/login trims on the way back in —
+            // an untrimmed password here creates an account that can never
+            // authenticate, since the backend stores the bytes it is given.
+            password: r.password.trim(),
             role,
           });
           setter((rows) => rows.filter((existing) => existing.id !== r.id));
