@@ -4,7 +4,37 @@ This guide establishes a coherent, professional workflow for all developers cont
 
 ---
 
-## 1. Issue Management Workflow
+## 1. Start the Project Locally
+
+The supported local startup path is Docker Compose. Follow the [Local quick start](../README.md#local-quick-start-docker-compose) to build the stack, complete the first-run wizard, and verify the API health endpoint.
+
+The short version, from the repository root:
+
+```bash
+docker compose up --build -d
+docker compose ps
+docker compose exec api cat /data/setup-token
+```
+
+Then open <http://localhost:3000> and complete the setup wizard. An `.env` file is optional; if you create one from `.env.example`, keep `NEXT_PUBLIC_API_URL` empty for the standard same-origin Compose setup.
+
+Application containers contain production-style builds rather than live-mounted source files. Rebuild the affected service after making changes:
+
+```bash
+docker compose up --build -d api       # backend changes
+docker compose up --build -d frontend  # frontend changes
+```
+
+Before opening a pull request, confirm that Compose still resolves and both application images build:
+
+```bash
+docker compose config --quiet
+docker compose build api frontend
+```
+
+---
+
+## 2. Issue Management Workflow
 
 Every change in the codebase must correspond to an open GitHub issue.
 
@@ -20,7 +50,7 @@ Every change in the codebase must correspond to an open GitHub issue.
 
 ---
 
-## 2. Coding & Implementation Best Practices
+## 3. Coding & Implementation Best Practices
 
 1. **Test-Driven Development (TDD)**:
    * Whenever fixing a bug or adding a feature, write a test first (in `backend/tests/` for Python, or frontend unit tests if applicable).
@@ -35,7 +65,7 @@ Every change in the codebase must correspond to an open GitHub issue.
 
 ---
 
-## 3. Commit Message Standards (Conventional Commits)
+## 4. Commit Message Standards (Conventional Commits)
 
 We use the [Conventional Commits](https://www.conventionalcommits.org/) specification. This keeps the git history searchable and enables automated changelogs.
 
@@ -52,7 +82,7 @@ Format: `<type>(<scope>): <description>`
 
 ---
 
-## 4. Pull Request (PR) & Review Process
+## 5. Pull Request (PR) & Review Process
 
 All code changes must go through a Pull Request before merging into `main`.
 

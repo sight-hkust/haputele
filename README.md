@@ -1,17 +1,72 @@
 # HapuTele
 
-Telemedicine platform for the HapuTele program — a FastAPI + Postgres backend in `backend/`, a Next.js 14 (App Router) frontend in `frontend/`, and an S3-compatible object store for blobs (signatures, rubber stamps, attachments), all orchestrated by `docker compose`. In dev the object store is a local `rustfs` container; in prod it points at real S3. Video transport is LiveKit (Cloud or self-hosted).
+Telemedicine platform for the HapuTele program — a FastAPI + Postgres backend in `backend/`, a Next.js 15 (App Router) frontend in `frontend/`, and an S3-compatible object store for blobs (signatures, rubber stamps, attachments), all orchestrated by Docker Compose. In development the object store is a local `rustfs` container; in production it points at real S3. Video transport is LiveKit (Cloud or self-hosted).
 
 The live API contract is browsable at `/docs` (Swagger) once the stack is up; the database schema is defined by the Alembic migrations under `backend/alembic/versions/`.
 
-## Run with Docker
+## Local quick start (Docker Compose)
+
+### Prerequisites
+
+- Git
+- Docker Desktop, or Docker Engine with the Compose v2 plugin
+- At least 4 GB of memory available to Docker
+
+Verify Docker before continuing:
 
 ```bash
-cp .env.example .env             # first time only — adjust JWT_SECRET, passwords, LiveKit + S3 creds
-docker compose up --build        # builds and starts db + rustfs + api + frontend
+docker --version
+docker compose version
 ```
 
-Once the containers are up:
+### 1. Clone and start the stack
+
+```bash
+git clone https://github.com/sight-hkust/haputele.git
+cd haputele
+docker compose up --build -d
+```
+
+The local stack has working development defaults, so an `.env` file is not required for the first startup. To change ports, timezone, or optional integrations, copy the sample first:
+
+```bash
+cp .env.example .env
+```
+
+Keep `NEXT_PUBLIC_API_URL` empty for the normal Compose setup. This makes browser requests use the frontend's same-origin `/api` proxy. LiveKit and Resend are optional and remain disabled until their credentials are supplied.
+
+Check startup progress:
+
+```bash
+docker compose ps
+docker compose logs -f api
+```
+
+The first build can take several minutes. The API is ready when its logs show that Uvicorn is running. Press `Ctrl+C` to stop following logs; the containers continue running in the background.
+
+### 2. Initialize the application
+
+Read the one-time setup token:
+
+```bash
+docker compose exec api cat /data/setup-token
+```
+
+Open <http://localhost:3000>. A fresh installation redirects to the setup wizard. Paste the token, create the sys-admin account, enter the institute settings, and optionally create admin and healthworker accounts.
+
+### 3. Verify the local stack
+
+```bash
+curl --fail http://localhost:8000/health
+```
+
+Expected response:
+
+```json
+{"status":"ok"}
+```
+
+Local services:
 
 | Service  | URL                                  |
 |----------|--------------------------------------|
@@ -22,7 +77,7 @@ Once the containers are up:
 | Setup status | http://localhost:8000/setup/status |
 | Object store (rustfs console) | http://localhost:9001 (login with `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`) |
 
-Boot sequence (`backend/entrypoint.sh`): wait for Postgres → `alembic upgrade head` → `python -m app.scripts.bootstrap_setup_token` (generates/reuses the first-run setup token) → `exec uvicorn`. On startup the API's lifespan also calls `ensure_bucket()` and refuses to come up against a missing/unreachable object store. `api` waits for both `db` and `rustfs` to pass their healthchecks before starting; `frontend` only `depends_on` `api` (no health condition), so it may come up momentarily before the API is serving.
+Boot sequence (`backend/entrypoint.sh`): wait for Postgres → `alembic upgrade head` → `python -m app.scripts.bootstrap_setup_token` (generates/reuses the first-run setup token) → `exec uvicorn`. On startup the API's lifespan also calls `ensure_bucket()` and refuses to come up against a missing/unreachable object store. `api` waits for both `db` and `rustfs` to pass their healthchecks before starting; `frontend` only `depends_on` `api` (no health condition), so it may come up momentarily before the API is serving. Refresh the frontend after the API becomes ready if the first request fails.
 
 ### First-run setup
 
@@ -34,7 +89,7 @@ docker compose logs api | grep -A1 "first-run setup token"
 docker compose exec api cat /data/setup-token
 ```
 
-POST that token to `/setup/verify-token` to receive a 15-minute setup-session JWT, then POST the institute identity, sys-admin credentials, timezone, and master consent version to `/setup/initialize`. After init the token file is deleted and `/setup/*` routes (except `/setup/status`) return `409 setup_already_completed`. The exact request/response shapes are in Swagger at `/docs`.
+The browser wizard sends the token to `/setup/verify-token`, then submits the institute identity, sys-admin credentials, timezone, and master consent version to `/setup/initialize`. After initialization the token file is deleted and `/setup/*` routes (except `/setup/status`) return `409 setup_already_completed`. The exact request/response shapes are in Swagger at `/docs`.
 
 ### Default credentials
 
@@ -54,15 +109,29 @@ All four roles are unified behind a single `/login` form — there are no role t
 ### Common operations
 
 ```bash
+docker compose up -d                                # start existing containers
+docker compose up --build -d api frontend           # rebuild app containers after code/dependency changes
+docker compose ps                                   # show container state and published ports
 docker compose logs -f api                          # tail backend logs
 docker compose logs -f frontend                     # tail Next.js logs
 docker compose exec api python -m app.scripts.bootstrap_setup_token  # re-print setup token banner if uninitialized
 docker compose exec api cat /data/setup-token       # read on-disk setup token plaintext
-docker compose exec api python -m demo_seed         # populate demo data (manual, not on boot)
 docker compose exec db psql -U hapu haputele        # psql shell
 docker compose down                                 # stop containers (keep all volumes)
 docker compose down -v                              # stop AND wipe all volumes (db_data + api_data + rustfs_data)
 ```
+
+`docker compose down -v` permanently deletes the local database, setup state, and object-store data. Use it only when you intentionally want a fresh installation.
+
+### Startup troubleshooting
+
+- **A port is already in use:** copy `.env.example` to `.env`, change the matching host-side port (`POSTGRES_PORT`, `API_PORT`, `FRONTEND_PORT`, `S3_PORT`, or `S3_CONSOLE_PORT`), and start again.
+- **A container exits or restarts:** run `docker compose ps` and `docker compose logs <service>`; replace `<service>` with `db`, `rustfs`, `api`, or `frontend`.
+- **The setup token file is missing:** wait for the API to finish migrations, then check `docker compose logs api`. The file is removed after initialization by design.
+- **You need a completely fresh setup:** run `docker compose down -v`, then `docker compose up --build -d` and retrieve the new token.
+- **Video or email features report "not configured":** this is expected in the default local stack. Add real LiveKit or Resend values to `.env` only when developing those integrations.
+
+For contribution workflow and review conventions, see [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
 ### Schema migrations
 
@@ -146,24 +215,25 @@ To run against managed Postgres, replace the `db` service with a `DATABASE_URL` 
 ## Project layout
 
 ```
-HapuTele2.0/
+haputele/
 ├── docker-compose.yml          # db (postgres:16-alpine) + rustfs (S3) + api + frontend; api_data volume mounts /data
 ├── .env.example                # all runtime config (env layer)
 ├── config.yaml.example         # same keys for the optional YAML config layer (CONFIG_FILE)
+├── scripts/
+│   └── demo_seed.py            # optional host-side demo data builder
 ├── backend/                    # FastAPI service
 │   ├── Dockerfile              # python:3.12-slim
 │   ├── entrypoint.sh           # wait-for-db → alembic upgrade → bootstrap_setup_token → uvicorn
-│   ├── alembic.ini / alembic/  # migrations (0001 … 0007 at HEAD)
+│   ├── alembic.ini / alembic/  # versioned database migrations
 │   ├── requirements.txt
 │   ├── requirements-dev.txt    # pytest + httpx (for backend/tests/)
-│   ├── demo_seed.py            # opt-in demo data builder (manual, not on boot)
 │   ├── tests/                  # pytest + FastAPI TestClient (first-run setup integration tests)
 │   └── app/                    # FastAPI source
 │       ├── middleware/         # setup_gate (pre-init 409s), request_id
 │       ├── routers/            # setup, sysadmin, auth, doctors, patients, livekit_webhook, ...
 │       ├── scripts/            # bootstrap_setup_token (generate/reuse/rotate setup token)
 │       └── services/           # system_config (LiveConfig cache), signature, livekit, storage (S3)
-└── frontend/                   # Next.js 14 (App Router) client
+└── frontend/                   # Next.js 15 (App Router) client
     ├── Dockerfile              # node:20-alpine, three-stage standalone build
     ├── next.config.mjs         # /api/* rewrite → http://api:8000
     └── src/{app,components,lib,types}/
