@@ -36,7 +36,7 @@ from ..models import (
     SystemConfig,
 )
 from ..security import hash_password
-from ..services.passwords import validate_new_password
+from ..services.credentials import NewPassword, NewUsername
 from ..services.system_config import get_system_config, reload_system_config
 
 
@@ -228,8 +228,8 @@ def _clean(value: str | None) -> str | None:
 
 
 class AccountCreateIn(BaseModel):
-    username: str = Field(min_length=1, max_length=255)
-    password: str
+    username: NewUsername
+    password: NewPassword
     # Pydantic validates `role` against the literal; an unknown value
     # surfaces as a 422 from the framework before our handler runs.
     role: Literal["admin", "healthworker"]
@@ -253,7 +253,8 @@ def create_account(
     db: Session = Depends(db_dep),
     _: CurrentUser = Depends(require_role("sys-admin")),
 ) -> AccountOut:
-    validate_new_password(payload.password)
+    # Credential rules live on AccountCreateIn's field types — Pydantic has
+    # already rejected a bad payload before this handler runs.
     # Fast-path duplicate check; the PK below is authoritative against races.
     if db.get(Account, payload.username):
         raise unprocessable("username_taken")
@@ -351,7 +352,7 @@ def update_account(
 
 
 class PasswordResetIn(BaseModel):
-    password: str
+    password: NewPassword
 
 
 @router.post("/accounts/{username}/reset-password", status_code=status.HTTP_204_NO_CONTENT)
@@ -365,7 +366,7 @@ def reset_password(
     out-of-band — operating accounts carry no email for a reset link), or
     change the sys-admin's own password."""
     account = _self_editable_account(db, username, user)
-    validate_new_password(payload.password)
+    # Password rules enforced by PasswordResetIn.password's type.
     account.password = hash_password(payload.password)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

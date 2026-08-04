@@ -11,6 +11,7 @@ import { SectionLabel } from "@/components/primitives/section-label";
 import { LoginHeroGraphic } from "@/components/marketing/login-hero-graphic";
 import { resolveLoginRedirect, useAuth, type Role } from "@/lib/auth";
 import { ApiError, api } from "@/lib/api";
+import { loginWhitespaceHint } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import { useSetupStatus } from "@/lib/use-api";
@@ -67,10 +68,13 @@ function LoginScreen() {
     try {
       const res = await api<LoginResponse>("/auth/login", {
         method: "POST",
-        // Trim both fields — a stray leading/trailing space pasted into
-        // either turns a valid login into invalid_credentials. Passwords
-        // are stored trimmed everywhere they're set, so this stays in sync.
-        body: { username: username.trim(), password: password.trim() },
+        // Verbatim — deliberately NOT trimmed. Login proves a credential; it
+        // never normalises one. Credential rules are enforced where a
+        // password is *set*, so what's stored already has no edge whitespace
+        // and trimming here could only ever mask a typo. It would also
+        // reintroduce the write/login asymmetry that once made a first-run
+        // account impossible to sign in to. See lib/credentials.ts.
+        body: { username, password },
       });
       login({ username: res.username, role: res.role, expiresAt: res.expiresAt });
       const next = resolveLoginRedirect(search.get("next"), res.role);
@@ -82,7 +86,14 @@ function LoginScreen() {
       // are intentionally specific because only the legitimate owner
       // ever sees them (you have to have entered the right password).
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-        setError(explainError(err.error));
+        // The server can't tell us *why* it failed — same code for every
+        // mode, by design. But we can see what was typed, and the user
+        // can't: a stray space in a masked password field is invisible.
+        // Offer it as a possible explanation alongside the real error.
+        const hint = err.error === "invalid_credentials"
+          ? loginWhitespaceHint(username, password)
+          : null;
+        setError([explainError(err.error), hint].filter(Boolean).join(" "));
       } else {
         setError("Couldn't reach the server. Try again in a moment.");
       }

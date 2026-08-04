@@ -11,6 +11,7 @@ import { Card } from "@/components/primitives/card";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { ApiError, api } from "@/lib/api";
+import { passwordError } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 
@@ -238,14 +239,17 @@ function RotationPanel({
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    // Trim before validating/sending so the stored secret matches what
-    // /auth/login trims on the way back in.
-    const pw = password.trim();
-    if (pw.length < MIN_PASSWORD_LEN) {
+    // Rejected, never repaired — see lib/credentials.ts.
+    const pwErr = passwordError(password);
+    if (pwErr) {
+      setError(pwErr);
+      return;
+    }
+    if (password.length < MIN_PASSWORD_LEN) {
       setError(`Choose a password at least ${MIN_PASSWORD_LEN} characters long.`);
       return;
     }
-    if (pw !== confirm.trim()) {
+    if (password !== confirm) {
       setError("Passwords don't match. Re-enter to confirm.");
       return;
     }
@@ -253,7 +257,7 @@ function RotationPanel({
     try {
       await api(`/doctor-onboarding/${token}`, {
         method: "POST",
-        body: { password: pw },
+        body: { password },
         skipAuthRedirect: true,
       });
       onDone();
@@ -317,6 +321,10 @@ function RotationPanel({
             autoFocus
             required
           />
+          {/* Live: a stray space is invisible in a masked field. */}
+          {passwordError(password) && (
+            <p className="text-xs text-rose-600">{passwordError(password)}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">

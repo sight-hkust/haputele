@@ -57,6 +57,13 @@ const MESSAGES: Record<string, string> = {
   setup_password_too_short: "Choose a password at least 10 characters long.",
   setup_password_weak: "That password is on the common-weak list. Pick something less obvious.",
   setup_username_taken: "That username is already in use.",
+  // Credential whitespace policy (backend/app/services/credentials.py). The
+  // forms catch these before submitting; these strings are the fallback for
+  // a direct API call or a client that skipped validation.
+  username_whitespace: "Username cannot contain spaces.",
+  username_required: "Username is required.",
+  username_too_long: "That username is too long.",
+  password_whitespace: "Password cannot start or end with a space.",
   setup_address_required: "Provide at least one institute address line.",
   setup_institute_name_required: "Institute name is required.",
   setup_institute_phone_required: "Institute contact phone is required.",

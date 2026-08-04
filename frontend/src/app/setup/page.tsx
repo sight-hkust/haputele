@@ -11,6 +11,7 @@ import { SectionLabel } from "@/components/primitives/section-label";
 import { Select } from "@/components/primitives/select";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { passwordError, usernameError } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import {
@@ -281,16 +282,26 @@ function ConfigureStage({
     // in one pass. If anything is wrong, no API call fires.
     const next: Record<string, string> = {};
 
-    if (!username.trim()) next.username = "Username is required.";
+    // Credentials are validated, never repaired — see lib/credentials.ts.
+    // What the operator types is exactly what gets stored and exactly what
+    // they will type at login.
+    if (!username) {
+      next.username = "Username is required.";
+    } else {
+      const err = usernameError(username);
+      if (err) next.username = err;
+    }
 
-    // Validate the trimmed password so whitespace can't pad a short secret
-    // past the length gate, and so it matches what /auth/login submits.
-    const pw = password.trim();
-    if (!pw) next.password = "Password is required.";
-    else if (pw.length < 10) next.password = "Password must be at least 10 characters.";
+    if (!password) {
+      next.password = "Password is required.";
+    } else {
+      const err = passwordError(password);
+      if (err) next.password = err;
+      else if (password.length < 10) next.password = "Password must be at least 10 characters.";
+    }
 
     if (!passwordConfirm) next.passwordConfirm = "Confirm your password.";
-    else if (pw && pw !== passwordConfirm.trim()) next.passwordConfirm = "Passwords don't match.";
+    else if (password && password !== passwordConfirm) next.passwordConfirm = "Passwords don't match.";
 
     if (!instituteName.trim()) next.instituteName = "Institute name is required.";
 
@@ -306,7 +317,8 @@ function ConfigureStage({
     try {
       const result = await initialize.mutateAsync({
         body: {
-          sysAdmin: { username: username.trim(), password: pw },
+          // Verbatim — credentials are validated above, never rewritten.
+          sysAdmin: { username, password },
           instituteIdentity: {
             name: instituteName.trim(),
             addressLines: lines,
@@ -348,7 +360,7 @@ function ConfigureStage({
     >
       {/* Sys-admin account */}
       <FieldGroup title="Sys-admin account">
-        <Field label="Username" htmlFor="sa-user" error={errors.username}>
+        <Field label="Username" htmlFor="sa-user" error={errors.username ?? usernameError(username) ?? undefined}>
           <Input
             id="sa-user"
             value={username}
@@ -361,7 +373,7 @@ function ConfigureStage({
           label="Password"
           htmlFor="sa-pw"
           hint="At least 10 characters. Avoid words like 'admin'."
-          error={errors.password}
+          error={errors.password ?? passwordError(password) ?? undefined}
         >
           <Input
             id="sa-pw"
@@ -557,13 +569,19 @@ function OperatingAccountsStage() {
 
   // Pure validator — never touches state, returns the message or undefined.
   const validateRow = (r: DraftAccount): string | undefined => {
-    if (!r.username.trim()) return "Username is required.";
-    // Validate the trimmed password so whitespace can't pad a short secret
-    // past the length gate, and so it matches what /auth/login submits.
-    const pw = r.password.trim();
-    if (!pw) return "Password is required.";
-    if (pw.length < 10) return "Password must be at least 10 characters.";
-    if (pw !== r.passwordConfirm.trim()) return "Passwords do not match.";
+    if (!r.username) return "Username is required.";
+    const nameErr = usernameError(r.username);
+    if (nameErr) return nameErr;
+
+    if (!r.password) return "Password is required.";
+    // Edge-whitespace before length: whitespace would otherwise pad a short
+    // secret past the gate ("1234 5678 " is ten characters, four of them
+    // real). Rejected rather than trimmed — see lib/credentials.ts.
+    const pwErr = passwordError(r.password);
+    if (pwErr) return pwErr;
+    if (r.password.length < 10) return "Password must be at least 10 characters.";
+
+    if (r.password !== r.passwordConfirm) return "Passwords do not match.";
     return undefined;
   };
 
@@ -613,11 +631,12 @@ function OperatingAccountsStage() {
       ): Promise<boolean> => {
         try {
           await create.mutateAsync({
-            username: r.username.trim(),
-            // Trimmed so it matches what /auth/login trims on the way back in —
-            // an untrimmed password here creates an account that can never
-            // authenticate, since the backend stores the bytes it is given.
-            password: r.password.trim(),
+            // Verbatim. validateRow above has already rejected anything the
+            // policy disallows, so there is nothing left to repair — and
+            // repairing here is what once produced accounts that could never
+            // authenticate. See lib/credentials.ts.
+            username: r.username,
+            password: r.password,
             role,
           });
           setter((rows) => rows.filter((existing) => existing.id !== r.id));
@@ -748,6 +767,11 @@ function AccountDraftRow({
     />
   );
 
+  // A stray space is invisible in a masked field, so surface it as the
+  // operator types rather than making them press submit to find out.
+  const liveCredentialError =
+    usernameError(value.username) ?? passwordError(value.password) ?? null;
+
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {showLabel ? (
@@ -763,9 +787,11 @@ function AccountDraftRow({
           {confirmInput}
         </>
       )}
-      {value.error && (
+      {/* Live credential feedback, shown while the field is still on screen.
+          `value.error` (set at submit) wins when present. */}
+      {(value.error ?? liveCredentialError) && (
         <div className="md:col-span-3">
-          <ErrorPill>{value.error}</ErrorPill>
+          <ErrorPill>{value.error ?? liveCredentialError}</ErrorPill>
         </div>
       )}
       {onRemove && (

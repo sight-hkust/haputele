@@ -4,10 +4,17 @@ from typing import Annotated, Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
+from .services.credentials import NewPassword, NewUsername
+
 
 # ── Auth ──────────────────────────────────────────────────────────────
 
 class LoginIn(BaseModel):
+    # Deliberately plain `str`, NOT NewUsername/NewPassword. Login verifies
+    # a credential; it never sets policy. Validating here would reject
+    # accounts whose credentials predate the current rules — locking out
+    # exactly the users the rules exist to protect. Whatever the client
+    # sends is checked verbatim against the stored value.
     username: str
     password: str
     role: Optional[Literal["admin", "doctor", "healthworker"]] = None
@@ -48,12 +55,12 @@ class DoctorBase(BaseModel):
 
 
 class DoctorCreate(DoctorBase):
-    username: str
+    username: NewUsername
     # Optional — if omitted/empty, the system creates the account with a
     # random password and emails the doctor an invite link to set their
     # own. Requires the email service to be configured; the endpoint will
     # 422 `email_not_configured` otherwise.
-    password: Optional[str] = None
+    password: Optional[NewPassword] = None
     # Optional saved e-signature, base64 data URL (same shape as the rubber
     # stamp). When present the doctor can finalise consultations without
     # drawing a signature each time.
@@ -80,7 +87,7 @@ class DoctorOnboardingPeek(BaseModel):
 
 class DoctorOnboardingComplete(BaseModel):
     """Rotation-flow payload — just a new password."""
-    password: str
+    password: NewPassword
 
 
 class DoctorOnboardingSubmit(BaseModel):
@@ -95,8 +102,8 @@ class DoctorOnboardingSubmit(BaseModel):
     Server validates §1.7 mandatory fields are present. RubberStampImage
     is a base64 data URL (the same shape the admin form already uses).
     """
-    username: str
-    password: str
+    username: NewUsername
+    password: NewPassword
     givenName: str
     familyName: str
     contact: str
@@ -153,7 +160,7 @@ class DoctorUpdate(BaseModel):
     familyName: Optional[str] = None
     contact: Optional[str] = None
     email: Optional[EmailStr] = None
-    password: Optional[str] = None
+    password: Optional[NewPassword] = None
     slmcRegistrationNumber: Optional[str] = None
     qualifications: Optional[str] = None
     practitionerAddress: Optional[str] = None

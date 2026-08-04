@@ -24,6 +24,7 @@ import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { Select } from "@/components/primitives/select";
 import { cn } from "@/lib/cn";
+import { passwordError, usernameError } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { useAccountRoster, useCreateOperatingAccount } from "@/lib/use-api";
 import type { AccountRole, AccountRosterEntry, OperatingAccountRole } from "@/types/api";
@@ -409,17 +410,20 @@ function CreateAccountModal({ open, onClose }: { open: boolean; onClose: () => v
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
-    if (!username.trim()) return setLocalError("Username is required.");
-    // Trim before validating/sending so the stored secret matches what
-    // /auth/login trims on the way back in.
-    const pw = password.trim();
-    if (pw.length < MIN_PASSWORD_LEN)
+    if (!username) return setLocalError("Username is required.");
+    // Credentials are rejected, never repaired — see lib/credentials.ts.
+    const nameErr = usernameError(username);
+    if (nameErr) return setLocalError(nameErr);
+    const pwErr = passwordError(password);
+    if (pwErr) return setLocalError(pwErr);
+    if (password.length < MIN_PASSWORD_LEN)
       return setLocalError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
-    if (pw !== confirm.trim()) return setLocalError("Passwords do not match.");
+    if (password !== confirm) return setLocalError("Passwords do not match.");
     create.mutate(
       {
-        username: username.trim(),
-        password: pw,
+        // Verbatim; fullName/contact keep trimming — they aren't credentials.
+        username,
+        password,
         role,
         fullName: fullName.trim() || undefined,
         contact: contact.trim() || undefined,
@@ -446,7 +450,7 @@ function CreateAccountModal({ open, onClose }: { open: boolean; onClose: () => v
         <Field label="Phone / contact (optional)">
           <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="e.g. +94 77 123 4567" />
         </Field>
-        <Field label="Password">
+        <Field label="Password" error={passwordError(password) ?? undefined}>
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
         </Field>
         <Field label="Confirm password">
@@ -469,11 +473,20 @@ function CreateAccountModal({ open, onClose }: { open: boolean; onClose: () => v
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+  error,
+}: {
+  label: string;
+  children: React.ReactNode;
+  error?: string;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
       {children}
+      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
     </div>
   );
 }

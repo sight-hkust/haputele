@@ -31,7 +31,7 @@ from ..security import (
     hash_password,
     set_session_cookies,
 )
-from ..services.passwords import validate_new_password
+from ..services.credentials import NewPassword, NewUsername
 from ..services.system_config import get_system_config, reload_system_config
 
 
@@ -101,8 +101,8 @@ class VerifyTokenOut(BaseModel):
 
 
 class SysAdminIn(BaseModel):
-    username: str = Field(min_length=1, max_length=255)
-    password: str
+    username: NewUsername
+    password: NewPassword
 
 
 class InstituteIdentityIn(BaseModel):
@@ -167,7 +167,9 @@ def initialize(
     if get_system_config().is_initialized:
         raise conflict("setup_already_completed")
 
-    validate_new_password(body.sysAdmin.password)
+    # Credential rules are enforced by the NewUsername / NewPassword types on
+    # SysAdminIn — Pydantic has already rejected a bad payload before we get
+    # here, so there is no imperative validate call to forget.
 
     # Block obviously-empty institute identity fields.
     addr_lines = [s for s in body.instituteIdentity.addressLines if s.strip()]

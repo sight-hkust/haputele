@@ -33,19 +33,13 @@ from ..errors import unprocessable
 from ..models import Doctor
 from ..schemas import DoctorOnboardingPeek, DoctorOnboardingSubmit
 from ..services import doctor_invites as invites
+from ..services.credentials import validate_new_password
 from ..services.signature import decode_rubber_stamp, decode_signature
 
 
 _logger = logging.getLogger("haputele.doctor_onboarding")
 
 router = APIRouter(prefix="/doctor-onboarding", tags=["doctor-onboarding"])
-
-
-# Minimum password length the onboarding flow enforces. Deliberately
-# generous-but-not-stupid: doctors aren't picking these at scale, and
-# very long minimums push them toward writing it down. Tighten later
-# if you add a real password policy elsewhere in the system.
-_MIN_PASSWORD_LEN = 8
 
 
 @router.get("/{token}", response_model=DoctorOnboardingPeek)
@@ -101,9 +95,13 @@ def complete(
     invite or vice versa.
     """
     invite = invites.lookup_live(db, raw_token=token)
-    password = payload.get("password") or ""
-    if len(password) < _MIN_PASSWORD_LEN:
-        raise unprocessable("password_too_short", minLength=_MIN_PASSWORD_LEN)
+    # This endpoint takes a raw dict (it dispatches on invite mode, not on
+    # payload shape), so no field type has run yet — and the rotation branch
+    # below never builds a typed model at all. Validate up front so both
+    # modes get exactly the same rules as every other credential-setting
+    # path. The new-doctor branch re-validates via DoctorOnboardingSubmit;
+    # the check is pure and idempotent, so that costs nothing.
+    password = validate_new_password(payload.get("password") or "")
 
     if invite.doctor_id is not None:
         # Rotation: ignore anything other than password.
@@ -140,7 +138,9 @@ def complete(
     doctor = invites.consume_new_doctor(
         db,
         raw_token=token,
-        username=submission.username.strip(),
+        # No .strip() — NewUsername rejects whitespace outright rather than
+        # silently repairing it, so what was submitted is what gets stored.
+        username=submission.username,
         password=submission.password,
         profile={
             "givenName": submission.givenName.strip(),

@@ -228,8 +228,28 @@ def test_onboarding_complete_rejects_short_password(client, seeded_doctor):
     r = client.post(f"/doctor-onboarding/{raw}", json={"password": "short"})
     assert r.status_code == 422
     body = r.json()["detail"]
-    assert body["error"] == "password_too_short"
-    assert body.get("minLength") == 8
+    # Doctor onboarding used to carry its own 8-char rule. It now shares the
+    # single credential policy with every other password-setting path, so the
+    # code and the minimum are the common ones.
+    assert body["error"] == "setup_password_too_short"
+    assert body.get("min") == 10
+
+
+def test_onboarding_complete_rejects_edge_whitespace_password(client, seeded_doctor):
+    """The rotation branch takes a raw dict, so no field type runs on it —
+    this proves the explicit validate call in the router covers that gap."""
+    from app.database import SessionLocal
+    from app.services import doctor_invites
+
+    db = SessionLocal()
+    try:
+        _, raw = doctor_invites.issue(db, doctor_id=seeded_doctor.doctor_id)
+    finally:
+        db.close()
+
+    r = client.post(f"/doctor-onboarding/{raw}", json={"password": "trailing-space "})
+    assert r.status_code == 422
+    assert r.json()["detail"]["error"] == "password_whitespace"
 
 
 def test_onboarding_complete_is_single_use(client, seeded_doctor):
