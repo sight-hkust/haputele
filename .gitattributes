@@ -1,0 +1,5 @@
+# Shell scripts run inside Linux containers and in CI. They must keep LF
+# endings — a CRLF checkout on Windows appends \r to the shebang, so the
+# kernel looks for an interpreter literally named "/bin/sh\r" and the
+# container dies with "exec ./entrypoint.sh: no such file or directory".
+*.sh text eol=lf
