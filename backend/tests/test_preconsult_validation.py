@@ -109,6 +109,19 @@ def test_out_of_range_vital_is_rejected_with_field_location(hw_client, ready_app
     assert _preconsult(appt_id) is None
 
 
+def test_temperature_with_more_than_one_decimal_place_is_rejected(hw_client, ready_appointment):
+    appt_id = ready_appointment
+    r = hw_client.put(
+        f"/appointments/{appt_id}/preconsult",
+        json={"temperature": 36.75},
+        headers=_csrf(hw_client),
+    )
+    assert r.status_code == 422, r.text
+    locs = [e["loc"][-1] for e in r.json()["detail"]["errors"]]
+    assert "temperature" in locs
+    assert _preconsult(appt_id) is None
+
+
 def test_diastolic_at_or_above_systolic_is_rejected(hw_client, ready_appointment):
     appt_id = ready_appointment
     r = hw_client.put(
