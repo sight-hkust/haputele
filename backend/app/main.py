@@ -74,6 +74,34 @@ async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONR
     return JSONResponse(status_code=exc.status_code, content={"detail": body}, headers=headers)
 
 
+_SECRET_FIELD_NAMES = frozenset({"password", "passwordConfirm", "newPassword"})
+
+
+def _redact_secret_inputs(errors: list) -> list:
+    """Blank the echoed `input` value for credential fields.
+
+    Pydantic reports the offending value under `input` so a client can
+    highlight it. For a password that means the 422 body contains the secret
+    the caller just tried to set, which then lands in browser devtools, proxy
+    logs and any error-reporting sink. Every credential-setting endpoint can
+    emit one of these, so the redaction belongs here rather than at each
+    call site.
+
+    `loc` is checked at every depth: nested models produce locs like
+    ("body", "sysAdmin", "password").
+
+    Only RequestValidationError needs this. Our own `unprocessable(...)`
+    422s never carry the submitted value at all.
+    """
+    redacted = []
+    for err in errors:
+        loc = err.get("loc") or ()
+        if any(isinstance(part, str) and part in _SECRET_FIELD_NAMES for part in loc):
+            err = {**err, "input": "<redacted>"}
+        redacted.append(err)
+    return redacted
+
+
 async def _validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
@@ -89,7 +117,10 @@ async def _validation_exception_handler(
         content={
             "detail": {
                 "error": "validation_failed",
-                "errors": jsonable_encoder(exc.errors(), custom_encoder={Exception: str}),
+                "errors": jsonable_encoder(
+                    _redact_secret_inputs(exc.errors()),
+                    custom_encoder={Exception: str},
+                ),
                 "requestId": rid,
             },
         },

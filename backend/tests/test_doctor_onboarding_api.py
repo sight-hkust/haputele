@@ -236,8 +236,10 @@ def test_onboarding_complete_rejects_short_password(client, seeded_doctor):
 
 
 def test_onboarding_complete_rejects_edge_whitespace_password(client, seeded_doctor):
-    """The rotation branch takes a raw dict, so no field type runs on it —
-    this proves the explicit validate call in the router covers that gap."""
+    """The rotation branch receives a raw dict, so the policy only applies
+    because the router parses it into DoctorOnboardingComplete — whose
+    `password` field carries the NewPassword type. Delete that parse and
+    this test is what notices."""
     from app.database import SessionLocal
     from app.services import doctor_invites
 
