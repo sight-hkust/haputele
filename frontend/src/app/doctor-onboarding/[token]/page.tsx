@@ -11,7 +11,12 @@ import { Card } from "@/components/primitives/card";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { ApiError, api } from "@/lib/api";
-import { passwordError } from "@/lib/credentials";
+import {
+  MIN_PASSWORD_LEN,
+  PASSWORD_LENGTH_HINT,
+  newPasswordError,
+  passwordError,
+} from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 
@@ -24,8 +29,6 @@ type PeekResponse = {
   familyName?: string | null;
   givenName?: string | null;
 };
-
-const MIN_PASSWORD_LEN = 8;
 
 type PageState =
   | { mode: "loading" }
@@ -240,13 +243,9 @@ function RotationPanel({
     e.preventDefault();
     setError(null);
     // Rejected, never repaired — see lib/credentials.ts.
-    const pwErr = passwordError(password);
+    const pwErr = newPasswordError(password);
     if (pwErr) {
       setError(pwErr);
-      return;
-    }
-    if (password.length < MIN_PASSWORD_LEN) {
-      setError(`Choose a password at least ${MIN_PASSWORD_LEN} characters long.`);
       return;
     }
     if (password !== confirm) {
@@ -316,7 +315,7 @@ function RotationPanel({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
-            placeholder={`At least ${MIN_PASSWORD_LEN} characters`}
+            placeholder={PASSWORD_LENGTH_HINT}
             minLength={MIN_PASSWORD_LEN}
             autoFocus
             required
@@ -387,8 +386,13 @@ function NewDoctorPanel({
   const onSubmit = async (payload: DoctorFormPayload) => {
     setErrorMessage(null);
     setErrorMissing(undefined);
-    if (!payload.password || payload.password.length < MIN_PASSWORD_LEN) {
-      setErrorMessage(`Choose a password at least ${MIN_PASSWORD_LEN} characters long.`);
+    // Panel-level backstop. DoctorForm already applies the same rules per
+    // field; this catches a payload that reached us some other way.
+    const pwErr = !payload.password
+      ? "Choose a password."
+      : newPasswordError(payload.password);
+    if (pwErr) {
+      setErrorMessage(pwErr);
       return;
     }
     if (!payload.username) {

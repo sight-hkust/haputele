@@ -13,6 +13,8 @@ import { Textarea } from "@/components/primitives/select";
 import { RubberStampUploader } from "@/components/admin/rubber-stamp-uploader";
 import { SignatureInput } from "@/components/doctor/signature-input";
 import {
+  MIN_PASSWORD_LEN,
+  newPasswordError as newPasswordRuleError,
   passwordError as passwordRuleError,
   usernameError as usernameRuleError,
 } from "@/lib/credentials";
@@ -185,7 +187,11 @@ export function DoctorForm({
       }
     }
     if (v.password) {
-      const pwErr = passwordRuleError(v.password);
+      // Full policy, not just whitespace: this form is the create path, the
+      // rotation path AND the embedded new-doctor onboarding path, and it
+      // used to apply no length rule at all — so every password it accepted
+      // that was under the minimum came back as a server-side 422.
+      const pwErr = newPasswordRuleError(v.password);
       if (pwErr) {
         setPasswordError(pwErr);
         return;
@@ -335,7 +341,13 @@ export function DoctorForm({
                   ?? errors.password?.message
                 }
               >
-                <Input id="password" type="password" {...register("password")} autoComplete="new-password" />
+                <Input
+                  id="password"
+                  type="password"
+                  {...register("password")}
+                  autoComplete="new-password"
+                  minLength={MIN_PASSWORD_LEN}
+                />
               </Field>
               <Field
                 label={isCreate ? "Confirm password *" : "Confirm new password"}

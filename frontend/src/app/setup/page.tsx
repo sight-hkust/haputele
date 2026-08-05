@@ -11,7 +11,13 @@ import { SectionLabel } from "@/components/primitives/section-label";
 import { Select } from "@/components/primitives/select";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { passwordError, usernameError } from "@/lib/credentials";
+import {
+  MIN_PASSWORD_LEN,
+  PASSWORD_LENGTH_HINT,
+  newPasswordError,
+  passwordError,
+  usernameError,
+} from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import {
@@ -295,9 +301,8 @@ function ConfigureStage({
     if (!password) {
       next.password = "Password is required.";
     } else {
-      const err = passwordError(password);
+      const err = newPasswordError(password);
       if (err) next.password = err;
-      else if (password.length < 10) next.password = "Password must be at least 10 characters.";
     }
 
     if (!passwordConfirm) next.passwordConfirm = "Confirm your password.";
@@ -372,7 +377,7 @@ function ConfigureStage({
         <Field
           label="Password"
           htmlFor="sa-pw"
-          hint="At least 10 characters. Avoid words like 'admin'."
+          hint={`${PASSWORD_LENGTH_HINT}. Avoid words like 'admin'.`}
           error={errors.password ?? passwordError(password) ?? undefined}
         >
           <Input
@@ -574,12 +579,12 @@ function OperatingAccountsStage() {
     if (nameErr) return nameErr;
 
     if (!r.password) return "Password is required.";
-    // Edge-whitespace before length: whitespace would otherwise pad a short
-    // secret past the gate ("1234 5678 " is ten characters, four of them
-    // real). Rejected rather than trimmed — see lib/credentials.ts.
-    const pwErr = passwordError(r.password);
+    // newPasswordError checks edge whitespace BEFORE length: whitespace would
+    // otherwise pad a short secret past the gate ("1234 5678 " is ten
+    // characters, four of them real). Rejected rather than trimmed — see
+    // lib/credentials.ts.
+    const pwErr = newPasswordError(r.password);
     if (pwErr) return pwErr;
-    if (r.password.length < 10) return "Password must be at least 10 characters.";
 
     if (r.password !== r.passwordConfirm) return "Passwords do not match.";
     return undefined;
@@ -753,7 +758,7 @@ function AccountDraftRow({
       value={value.password}
       onChange={(e) => onChange({ password: e.target.value })}
       autoComplete="new-password"
-      minLength={10}
+      minLength={MIN_PASSWORD_LEN}
     />
   );
   const confirmInput = (

@@ -6,11 +6,9 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
-import { passwordError } from "@/lib/credentials";
+import { newPasswordError, passwordError } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { useResetAccountPassword, useUpdateAccount } from "@/lib/use-api";
-
-export const MIN_PASSWORD_LEN = 10;
 
 // The slice of an account these editable sections need. Both the roster
 // entry and the /sysadmin/me payload are structurally compatible.
@@ -68,10 +66,8 @@ export function PasswordSection({ username, self = false }: { username: string; 
     setPwError(null);
     setPwDone(false);
     // Rejected, never repaired — see lib/credentials.ts.
-    const pwErr = passwordError(password);
+    const pwErr = newPasswordError(password);
     if (pwErr) return setPwError(pwErr);
-    if (password.length < MIN_PASSWORD_LEN)
-      return setPwError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
     if (password !== confirm) return setPwError("Passwords do not match.");
     resetPw.mutate(
       { username, password },

@@ -24,7 +24,7 @@ import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { Select } from "@/components/primitives/select";
 import { cn } from "@/lib/cn";
-import { passwordError, usernameError } from "@/lib/credentials";
+import { newPasswordError, passwordError, usernameError } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { useAccountRoster, useCreateOperatingAccount } from "@/lib/use-api";
 import type { AccountRole, AccountRosterEntry, OperatingAccountRole } from "@/types/api";
@@ -35,8 +35,6 @@ const ROLE_LABEL: Record<AccountRole, string> = {
   healthworker: "Healthworker",
   doctor: "Doctor",
 };
-
-const MIN_PASSWORD_LEN = 10;
 
 type SortKey = "username" | "role" | "status";
 type SortDir = "asc" | "desc";
@@ -414,10 +412,8 @@ function CreateAccountModal({ open, onClose }: { open: boolean; onClose: () => v
     // Credentials are rejected, never repaired — see lib/credentials.ts.
     const nameErr = usernameError(username);
     if (nameErr) return setLocalError(nameErr);
-    const pwErr = passwordError(password);
+    const pwErr = newPasswordError(password);
     if (pwErr) return setLocalError(pwErr);
-    if (password.length < MIN_PASSWORD_LEN)
-      return setLocalError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
     if (password !== confirm) return setLocalError("Passwords do not match.");
     create.mutate(
       {
