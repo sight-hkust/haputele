@@ -109,6 +109,7 @@ export function parseVitalsValidationError(err: ApiError | null | undefined): Pa
   const rawErrors = (err.detail?.errors ?? []) as Array<{
     loc?: unknown[];
     msg?: string;
+    type?: string;
   }>;
   if (!Array.isArray(rawErrors) || rawErrors.length === 0) {
     return { fieldErrors: {}, formError: null };
@@ -124,7 +125,13 @@ export function parseVitalsValidationError(err: ApiError | null | undefined): Pa
 
     if (KNOWN_FIELDS.has(last)) {
       const field = last as VitalField;
-      fieldErrors[field] = outOfRangeMessage(field);
+      // Pydantic tags each error with a `type`; a precision failure
+      // (decimal_max_places) is not a range problem, so give it the same
+      // message the client-side validator uses instead of "between X and Y".
+      fieldErrors[field] =
+        String(e.type ?? "") === "decimal_max_places"
+          ? decimalPlacesMessage(field)
+          : outOfRangeMessage(field);
       continue;
     }
 
@@ -144,4 +151,9 @@ export function parseVitalsValidationError(err: ApiError | null | undefined): Pa
 function outOfRangeMessage(field: VitalField): string {
   const { label, unit, min, max } = VITALS_BOUNDS[field];
   return `${label} looks off — enter a value between ${min} and ${max} ${unit}. Double-check the reading.`;
+}
+
+function decimalPlacesMessage(field: VitalField): string {
+  const { label, maxDecimalPlaces } = VITALS_BOUNDS[field];
+  return `${label} can have at most ${maxDecimalPlaces ?? 1} decimal place.`;
 }
