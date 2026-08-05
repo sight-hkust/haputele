@@ -45,6 +45,13 @@ jobs:
           filters: |
             backend:
               - 'backend/**'
+              # tests/test_credential_policy_frontend_parity.py asserts the
+              # frontend's MIN_PASSWORD_LEN matches services/credentials.py.
+              # Without this line a frontend-only PR that edits the mirror
+              # skips backend-test entirely and the drift ships — which is
+              # exactly how the doctor-onboarding form ended up promising 8
+              # against a backend that enforced 10.
+              - 'frontend/src/lib/credentials.ts'
             frontend:
               - 'frontend/**'
 
