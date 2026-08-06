@@ -1,8 +1,6 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { api } from "./api";
 
@@ -29,8 +27,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const queryClient = useQueryClient();
 
   // Rehydrate from the cookie on mount. /auth/me returns 200 when the
   // session cookie is still valid; the api() wrapper turns a 401 into a
@@ -83,18 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api("/auth/logout", { method: "POST", skipAuthRedirect: true });
     } catch {
-      // Best-effort: if the backend rejects (e.g. session already
-      // expired), the cookies may not be cleared — but the UI should
-      // still drop the session.
+      // Best-effort: leave this document even if the session already expired
+      // or the backend is unavailable. Auth bootstrap will recheck any cookie.
     }
-    setSession(null);
-    // Drop every cached query so the next user never sees the previous one's
-    // data flash before their own request resolves. The cache is keyed by
-    // endpoint, not by user, so a stale `/doctors/me` would otherwise paint
-    // for a frame after a different person signs in.
-    queryClient.clear();
-    router.replace("/login");
-  }, [router, queryClient]);
+    // Keep the React session intact until this document unloads. Clearing it
+    // first lets the still-mounted protected layout turn the old pathname into
+    // `/login?next=...`, causing the next same-role login to resume that route.
+    // Replacing the document also discards every in-memory cached query.
+    window.location.replace("/login");
+  }, []);
 
   return (
     <AuthContext.Provider value={{ session, loading, login, logout }}>{children}</AuthContext.Provider>
@@ -128,6 +121,7 @@ export const SEGMENT_TO_ROLE: Record<string, Role> = {
 // under a role segment, so a path that doesn't match the user's role is one
 // they don't belong on.
 export function pathMatchesRole(pathname: string, role: Role): boolean {
+  if (!pathname.startsWith("/") || pathname.startsWith("//")) return false;
   const segment = pathname.split("/").filter(Boolean)[0];
   return segment !== undefined && SEGMENT_TO_ROLE[segment] === role;
 }
