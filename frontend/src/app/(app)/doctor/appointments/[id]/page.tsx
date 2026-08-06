@@ -19,16 +19,18 @@ import { StatusBadge } from "@/components/primitives/status-badge";
 import { explainError } from "@/lib/error-codes";
 import { fmtDateTime } from "@/lib/format";
 import { useAppointment, useCreateOrGetDraft } from "@/lib/use-api";
+import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function DoctorAppointmentDetail() {
   const params = useParams<{ id: string }>();
-  const id = parseInt(params.id, 10);
+  const id = parseIdParam(params.id);
   const router = useRouter();
 
-  const apt = useAppointment(Number.isFinite(id) ? id : null);
+  const apt = useAppointment(id);
   const draft = useCreateOrGetDraft();
 
   if (apt.error) {
+    throwNotFoundIf404(apt.error);
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
         <ErrorBanner>{explainError(apt.error.error)}</ErrorBanner>

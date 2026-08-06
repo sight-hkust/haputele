@@ -10,17 +10,19 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import { explainError } from "@/lib/error-codes";
 import { fullName } from "@/lib/format";
+import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 import { usePatient, useUpsertProfile } from "@/lib/use-api";
 
 export default function PatientProfilePage() {
   const params = useParams<{ id: string }>();
-  const id = parseInt(params.id, 10);
+  const id = parseIdParam(params.id);
   const router = useRouter();
 
-  const patientQ = usePatient(Number.isFinite(id) ? id : null);
+  const patientQ = usePatient(id);
   const upsert = useUpsertProfile(id);
 
   if (patientQ.error) {
+    throwNotFoundIf404(patientQ.error);
     return (
       <div className="mx-auto max-w-4xl px-6 py-12">
         <ErrorBanner>{explainError(patientQ.error.error)}</ErrorBanner>

@@ -28,10 +28,11 @@ import {
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { ageFromDob, fmtDate, fmtDateTime, fullName } from "@/lib/format";
+import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function PatientDetailPage() {
   const params = useParams<{ id: string }>();
-  const id = parseInt(params.id, 10);
+  const id = parseIdParam(params.id);
   const router = useRouter();
   const patientQ = usePatient(id);
   const historyQ = usePatientHistory(id);
@@ -49,6 +50,7 @@ export default function PatientDetailPage() {
     );
   }
   if (patientQ.error || !patientQ.data) {
+    throwNotFoundIf404(patientQ.error);
     return (
       <div className="mx-auto max-w-7xl px-6 py-12">
         <ErrorBanner>{explainError(patientQ.error?.error ?? "patient_not_found")}</ErrorBanner>
