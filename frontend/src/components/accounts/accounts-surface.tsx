@@ -14,7 +14,10 @@ import {
   Users,
 } from "lucide-react";
 
+import Link from "next/link";
+
 import { AccountPanel } from "@/components/sysadmin/account-panel";
+import { InvitePanel } from "@/components/doctors/new-doctor-surface";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
@@ -36,6 +39,12 @@ const ROLE_LABEL: Record<AccountRole, string> = {
   doctor: "Doctor",
 };
 
+/** A role offered in the create form's dropdown. "doctor" is a UI-only
+ *  member: picking it swaps the modal to the doctor invite, which posts to
+ *  /doctors/invites. POST /accounts still only ever receives an operating
+ *  role. */
+export type CreatableRole = OperatingAccountRole | "doctor";
+
 /** What this caller may see and create.
  *
  * The roster itself is already scoped server-side by the caller's role
@@ -46,15 +55,16 @@ const ROLE_LABEL: Record<AccountRole, string> = {
 export type AccountsSurfaceProps = {
   header: { label: string; title: string; highlight: string; subtitle: string };
   /** Roles this caller may create, in display order. */
-  creatableRoles: OperatingAccountRole[];
+  creatableRoles: CreatableRole[];
   addButtonLabel: string;
   createTitle: string;
   createDescription: string;
   emptyTitle: string;
   emptyDescription: string;
-  /** Rendered above the grid — used by the sys-admin surface to offer
-   *  doctor creation, which goes through a different API entirely. */
-  headerExtra?: React.ReactNode;
+  /** Where "type the full profile yourself" goes when Doctor is picked.
+   *  Required if `creatableRoles` includes "doctor" — the full §1.7 form
+   *  is far too tall for the modal, so that path opens its own page. */
+  manualDoctorHref?: string;
 };
 
 type SortKey = "username" | "role" | "status";
@@ -80,7 +90,7 @@ export function AccountsSurface({
   createDescription,
   emptyTitle,
   emptyDescription,
-  headerExtra,
+  manualDoctorHref,
 }: AccountsSurfaceProps) {
   const { data, error, isLoading } = useAccountRoster();
   const [createOpen, setCreateOpen] = useState(false);
@@ -155,13 +165,10 @@ export function AccountsSurface({
           highlight={header.highlight}
           subtitle={header.subtitle}
         />
-        <div className="flex flex-wrap items-center gap-2">
-          {headerExtra}
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" />
-            {addButtonLabel}
-          </Button>
-        </div>
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus className="h-4 w-4" />
+          {addButtonLabel}
+        </Button>
       </div>
 
       {error ? <ErrorBanner>{explainError(error.error)}</ErrorBanner> : null}
@@ -291,6 +298,7 @@ export function AccountsSurface({
         roles={creatableRoles}
         title={createTitle}
         description={createDescription}
+        manualDoctorHref={manualDoctorHref}
       />
     </div>
   );
@@ -441,12 +449,14 @@ function CreateAccountModal({
   roles,
   title,
   description,
+  manualDoctorHref,
 }: {
   open: boolean;
   onClose: () => void;
-  roles: OperatingAccountRole[];
+  roles: CreatableRole[];
   title: string;
   description: string;
+  manualDoctorHref?: string;
 }) {
   const create = useCreateOperatingAccount();
   const [username, setUsername] = useState("");
@@ -454,7 +464,7 @@ function CreateAccountModal({
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [role, setRole] = useState<OperatingAccountRole>(roles[0]);
+  const [role, setRole] = useState<CreatableRole>(roles[0]);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const reset = () => {
@@ -476,6 +486,9 @@ function CreateAccountModal({
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
+    // Doctors never reach here — that branch renders the invite panel, which
+    // owns its own submit. Guarding also narrows `role` for POST /accounts.
+    if (role === "doctor") return;
     if (!username) return setLocalError("Username is required.");
     // Credentials are rejected, never repaired — see lib/credentials.ts.
     const nameErr = usernameError(username);
@@ -498,15 +511,15 @@ function CreateAccountModal({
 
   return (
     <Modal open={open} onClose={close} title={title} description={description}>
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <Field label="Username">
-          <Input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" autoFocus />
-        </Field>
+      {/* The role picker sits ABOVE the body rather than inside it: it
+          decides which body you get, and a doctor's invite form is its own
+          <form>, which can't legally nest inside the operating-account one. */}
+      <div className="flex flex-col gap-4">
         {/* With one creatable role there is nothing to choose — the role is
             fixed and stated in the modal description instead. */}
         {roles.length > 1 ? (
           <Field label="Role">
-            <Select value={role} onChange={(e) => setRole(e.target.value as OperatingAccountRole)}>
+            <Select value={role} onChange={(e) => setRole(e.target.value as CreatableRole)}>
               {roles.map((r) => (
                 <option key={r} value={r}>
                   {ROLE_LABEL[r]}
@@ -515,31 +528,62 @@ function CreateAccountModal({
             </Select>
           </Field>
         ) : null}
-        <Field label="Full name (optional)">
-          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Alice Adams" />
-        </Field>
-        <Field label="Phone / contact (optional)">
-          <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="e.g. +94 77 123 4567" />
-        </Field>
-        <Field label="Password" error={passwordError(password) ?? undefined}>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
-        </Field>
-        <Field label="Confirm password">
-          <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
-        </Field>
 
-        {localError ? <ErrorBanner>{localError}</ErrorBanner> : null}
-        {create.error ? <ErrorBanner>{explainError(create.error.error)}</ErrorBanner> : null}
+        {role === "doctor" ? (
+          <InvitePanel
+            showHeading={false}
+            onDone={close}
+            extra={
+              <div className="flex flex-col gap-2 border-t border-[var(--border)] pt-4">
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  They fill in their own clinical profile and you approve it
+                  before they can log in — so they&rsquo;ll appear in this list
+                  once they&rsquo;ve finished setting up, not straight away.
+                </p>
+                {manualDoctorHref ? (
+                  <Link
+                    href={manualDoctorHref}
+                    onClick={close}
+                    className="w-fit text-xs font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+                  >
+                    Need to type the full profile yourself?
+                  </Link>
+                ) : null}
+              </div>
+            }
+          />
+        ) : (
+          <form onSubmit={submit} className="flex flex-col gap-4">
+            <Field label="Username">
+              <Input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" autoFocus />
+            </Field>
+            <Field label="Full name (optional)">
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Alice Adams" />
+            </Field>
+            <Field label="Phone / contact (optional)">
+              <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="e.g. +94 77 123 4567" />
+            </Field>
+            <Field label="Password" error={passwordError(password) ?? undefined}>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+            </Field>
+            <Field label="Confirm password">
+              <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+            </Field>
 
-        <div className="mt-2 flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={close}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={create.isPending}>
-            {create.isPending ? "Creating…" : "Create account"}
-          </Button>
-        </div>
-      </form>
+            {localError ? <ErrorBanner>{localError}</ErrorBanner> : null}
+            {create.error ? <ErrorBanner>{explainError(create.error.error)}</ErrorBanner> : null}
+
+            <div className="mt-2 flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={close}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={create.isPending}>
+                {create.isPending ? "Creating…" : "Create account"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </div>
     </Modal>
   );
 }

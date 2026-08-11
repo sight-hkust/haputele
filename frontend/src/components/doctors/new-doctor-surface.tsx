@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, IdCard, Mail } from "lucide-react";
@@ -35,11 +35,20 @@ export type NewDoctorSurfaceProps = {
    *  doctor detail route — its roster opens doctors in an inline panel —
    *  so it just returns to the roster. */
   createdHref: (doctorId: number) => string;
+  /** Which panel to open on. Callers that already offer the invite
+   *  elsewhere (the sys-admin's Add-account modal) deep-link straight to
+   *  "manual" so the user isn't made to pick twice. */
+  initialMode?: Mode;
 };
 
-export function NewDoctorSurface({ returnHref, backLabel, createdHref }: NewDoctorSurfaceProps) {
+export function NewDoctorSurface({
+  returnHref,
+  backLabel,
+  createdHref,
+  initialMode = "invite",
+}: NewDoctorSurfaceProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("invite");
+  const [mode, setMode] = useState<Mode>(initialMode);
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-12">
@@ -92,7 +101,23 @@ export function NewDoctorSurface({ returnHref, backLabel, createdHref }: NewDoct
  * Invite panel — email + optional name hint, fires POST /doctors/invites
  * ────────────────────────────────────────────────────────────────── */
 
-function InvitePanel({ onDone }: { onDone: () => void }) {
+/** Exported so the sys-admin's Add-account modal can render the same
+ *  invite form inline, rather than duplicating the fields and the
+ *  `useInviteDoctor` call. The full manual form can't be shared that way —
+ *  it's 583 lines and the Modal primitive has no scroll container (#67) —
+ *  so the modal links out to this page for that path instead. */
+export function InvitePanel({
+  onDone,
+  showHeading = true,
+  extra,
+}: {
+  onDone: () => void;
+  /** Off inside a modal, whose own title already says what this is. */
+  showHeading?: boolean;
+  /** Rendered just above the buttons — the modal puts its "type the full
+   *  profile yourself" link here. */
+  extra?: ReactNode;
+}) {
   const invite = useInviteDoctor();
   const [email, setEmail] = useState("");
   const [familyName, setFamilyName] = useState("");
@@ -110,14 +135,16 @@ function InvitePanel({ onDone }: { onDone: () => void }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-display text-2xl tracking-[-0.01em]">Invite a doctor by email</h2>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          They&rsquo;ll receive a link to set up their account. Once they submit
-          their profile you&rsquo;ll be able to review and approve from the
-          doctor&rsquo;s page.
-        </p>
-      </div>
+      {showHeading && (
+        <div className="flex flex-col gap-1">
+          <h2 className="font-display text-2xl tracking-[-0.01em]">Invite a doctor by email</h2>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            They&rsquo;ll receive a link to set up their account. Once they submit
+            their profile you&rsquo;ll be able to review and approve from the
+            doctor&rsquo;s page.
+          </p>
+        </div>
+      )}
 
       {invite.error && (
         <ErrorBanner>{explainError(invite.error.error)}</ErrorBanner>
@@ -149,6 +176,8 @@ function InvitePanel({ onDone }: { onDone: () => void }) {
           enters their full name themselves.
         </p>
       </div>
+
+      {extra}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <Button type="button" variant="secondary" onClick={onDone}>
