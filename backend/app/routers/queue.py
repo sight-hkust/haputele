@@ -3,13 +3,14 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..dateutils import snap_to_monday
 from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, not_found, unprocessable
 from ..models import Appointment, Doctor, Patient, QueueEntry
-from ..routers.appointments import _slot_taken
+from ..routers.appointments import _on_slot_conflict, _slot_taken
 from ..schemas import (
     AppointmentOut,
     QueueBookIn,
@@ -179,12 +180,24 @@ def book_queue_entry(qid: int, payload: QueueBookIn, db: Session = Depends(db_de
         status="scheduled",
     )
     db.add(appt)
-    db.flush()  # get appt.appointment_id without committing
+    try:
+        db.flush()  # get appt.appointment_id without committing
+    except IntegrityError:
+        # A concurrent booking won the slot race on the partial unique
+        # index before this flush. The queue entry stays 'pending' so the
+        # healthworker can retry — only the appointment insert is rolled
+        # back, and the loser gets the same 409 the pre-check would raise.
+        _on_slot_conflict(db, payload.doctorId, payload.scheduledAt)
 
     entry.status = "booked"
     entry.appointment_id = appt.appointment_id
     entry.booked_at = datetime.now(timezone.utc)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # The commit is the other race window (a row committed between our
+        # flush and commit). Same resolution: surface doctor_slot_taken.
+        _on_slot_conflict(db, payload.doctorId, payload.scheduledAt)
     db.refresh(entry)
     db.refresh(appt)
     return {

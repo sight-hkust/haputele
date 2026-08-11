@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import and_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..deps import CurrentUser, current_user, db_dep, require_role
@@ -82,6 +83,25 @@ def _slot_taken(db: Session, doctor_id: int, scheduled_at: datetime, exclude_id:
     return db.scalar(stmt) is not None
 
 
+def _on_slot_conflict(db: Session, doctor_id: int, scheduled_at: datetime) -> None:
+    """Turn a lost concurrent-insert race into the same 409 the pre-check
+    raises, rather than a raw 500.
+
+    `create_appointment` / `book_queue_entry` pre-check the slot with
+    `_slot_taken`, but two requests can both see it free and then race on
+    the partial unique index `appointments_doctor_slot_unique` (doctor_id,
+    scheduled_at WHERE status <> 'cancelled'). The loser's commit raises an
+    IntegrityError; rolling back the poisoned session and re-confirming the
+    slot is now taken surfaces the same `doctor_slot_taken` conflict the
+    client already understands. The DB index is the ultimate source of
+    truth here — this guard just makes its verdict legible.
+    """
+    db.rollback()
+    if _slot_taken(db, doctor_id, scheduled_at):
+        raise conflict("doctor_slot_taken")
+    raise  # unexpected unique violation — let it surface, don't swallow it.
+
+
 @router.post("", response_model=AppointmentOut, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role("healthworker"))])
 def create_appointment(payload: AppointmentCreate, db: Session = Depends(db_dep)) -> AppointmentOut:
@@ -101,7 +121,14 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(db_dep)
         status="scheduled",
     )
     db.add(appt)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # A concurrent request won the slot race on the partial unique
+        # index. Surface the same 409 the pre-check would, so a double
+        # click (or rapid concurrent POSTs) can't strand a second row or
+        # leak a 500.
+        _on_slot_conflict(db, payload.doctorId, payload.scheduledAt)
     db.refresh(appt)
     return AppointmentOut.model_validate(appt)
 

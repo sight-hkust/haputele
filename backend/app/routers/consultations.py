@@ -2,13 +2,14 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, forbidden, not_found, unprocessable
 from ..dateutils import snap_to_monday
 from ..models import Appointment, Consultation, Doctor, QueueEntry
-from ..routers.appointments import _slot_taken
+from ..routers.appointments import _on_slot_conflict, _slot_taken
 from ..schemas import (
     AppointmentOut,
     ConsultationOut,
@@ -159,7 +160,14 @@ def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = D
             status="scheduled",
         )
         db.add(follow_up_appt)
-        db.flush()
+        try:
+            db.flush()
+        except IntegrityError:
+            # A concurrent request won the slot race on the partial unique
+            # index before this flush. Nothing else has been mutated yet in
+            # this submit, so rolling back is clean and the doctor gets the
+            # same 409 the pre-check would raise.
+            _on_slot_conflict(db, appt.doctor_id, payload.followUp.scheduledAt)
         c.follow_up_date = payload.followUp.scheduledAt.date()
         c.follow_up_appointment_id = follow_up_appt.appointment_id
     elif isinstance(payload.followUp, FollowUpWeeks):
