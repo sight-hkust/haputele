@@ -77,6 +77,20 @@ docker compose exec api alembic revision -m "..."   # author new migration
 
 Adding a column requires both an Alembic migration AND a `models.py` mapping update. Adding a constraint requires a migration only. The migrations themselves are the table-by-table source of truth.
 
+#### Migration 0017 — pre-existing whitespace usernames
+
+`0017_username_no_whitespace` adds a CHECK forbidding whitespace in `accounts.username`. It applies the constraint `NOT VALID` first — which still rejects every new and updated row — and only promotes it with `VALIDATE CONSTRAINT` once it has confirmed the table is clean. On a clean database that all happens in one transaction and the end state is an ordinary validated constraint; **no operator action is needed.**
+
+If the database already holds a whitespace-bearing username (possible before this policy shipped), the upgrade **succeeds anyway** and logs a `MANUAL REMEDIATION REQUIRED` banner listing the offending usernames in `repr()` form so the invisible character is visible. It does not repair them: `username` is the primary key, so trimming `' alice'` to `'alice'` can collide with an existing account or silently merge two people's records.
+
+```bash
+docker compose logs api | grep -A 30 "MANUAL REMEDIATION"   # see the offenders
+docker compose exec db psql -U hapu haputele -c \
+  "SELECT convalidated FROM pg_constraint WHERE conname = 'accounts_username_no_whitespace';"
+```
+
+Those accounts are already unreachable — login is an exact primary-key lookup against what the user types, and nobody can type a leading space they cannot see. For each one, either `DELETE FROM accounts WHERE username = '<old>';` or rename it to a name you have checked is free, then finish with `ALTER TABLE accounts VALIDATE CONSTRAINT accounts_username_no_whitespace;`.
+
 ## Configuration
 
 Config can come from environment variables, a `.env` file, or an optional YAML file (`config.yaml`, path overridable with `CONFIG_FILE`). Precedence, highest → lowest, is **real env vars > `.env` > `config.yaml` > code defaults** (see `backend/app/config.py`). `.env.example` documents the env layer; `config.yaml.example` documents the same keys for the YAML layer. A missing YAML file is fine — it just contributes nothing.

@@ -12,6 +12,12 @@ import { Input, Label } from "@/components/primitives/input";
 import { Textarea } from "@/components/primitives/select";
 import { RubberStampUploader } from "@/components/admin/rubber-stamp-uploader";
 import { SignatureInput } from "@/components/doctor/signature-input";
+import {
+  MIN_PASSWORD_LEN,
+  newPasswordError as newPasswordRuleError,
+  passwordError as passwordRuleError,
+  usernameError as usernameRuleError,
+} from "@/lib/credentials";
 import type { Doctor } from "@/types/api";
 
 // Mode-aware schema — username + password are required at create time, omitted/optional on edit.
@@ -124,6 +130,9 @@ export function DoctorForm({
   const {
     register,
     handleSubmit,
+    // `watch` drives the live credential warnings below — a stray space is
+    // invisible in a masked field, so we flag it as it's typed.
+    watch,
     formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(isCreate ? createSchema : updateSchema) as never,
@@ -159,19 +168,39 @@ export function DoctorForm({
       isCreate
       && !isSelfOnboarding
       && onboardingMode === "manual"
-      && (!v.password || !v.password.trim())
+      && !v.password
     ) {
       setPasswordError("Password is required when sharing credentials manually.");
       return;
     }
-    if (isCreate && isSelfOnboarding && (!v.password || !v.password.trim())) {
+    if (isCreate && isSelfOnboarding && !v.password) {
       setPasswordError("Pick a password.");
       return;
     }
+    // Credential rules — rejected, never repaired. What is typed is what gets
+    // stored and what will be typed at login. See lib/credentials.ts.
+    if (isCreate && v.username) {
+      const nameErr = usernameRuleError(v.username);
+      if (nameErr) {
+        setPasswordError(nameErr);
+        return;
+      }
+    }
+    if (v.password) {
+      // Full policy, not just whitespace: this form is the create path, the
+      // rotation path AND the embedded new-doctor onboarding path, and it
+      // used to apply no length rule at all — so every password it accepted
+      // that was under the minimum came back as a server-side 422.
+      const pwErr = newPasswordRuleError(v.password);
+      if (pwErr) {
+        setPasswordError(pwErr);
+        return;
+      }
+    }
     // Whenever a password is being set (create, manual, self-onboarding, or an
-    // edit-mode rotation), the confirmation must match it. Compared trimmed to
-    // match what the submit handler sends and what /auth/login trims back in.
-    if (v.password && v.password.trim() && v.password.trim() !== (v.passwordConfirm ?? "").trim()) {
+    // edit-mode rotation), the confirmation must match it — compared raw, since
+    // edge whitespace has already been rejected above.
+    if (v.password && v.password !== (v.passwordConfirm ?? "")) {
       setPasswordError("Passwords do not match.");
       return;
     }
@@ -190,14 +219,15 @@ export function DoctorForm({
       rubberStampImage: stampToSend ?? undefined,
     };
     if (isCreate) {
-      payload.username = v.username?.trim();
+      // Credentials go verbatim; every other field above keeps its trim —
+      // they aren't credentials and nobody types them at a login prompt.
+      payload.username = v.username;
       if (signature) payload.defaultSignatureImage = signature;
       if (isSelfOnboarding) {
         // Self-onboarding: password is always sent (validated above).
-        // Trimmed so it matches what /auth/login trims on the way back in.
-        payload.password = v.password?.trim();
+        payload.password = v.password;
       } else if (onboardingMode === "manual" && v.password) {
-        payload.password = v.password.trim();
+        payload.password = v.password;
       }
       // admin invite mode → payload.password stays undefined; backend fires invite
     } else {
@@ -207,8 +237,8 @@ export function DoctorForm({
       } else if (signature) {
         payload.defaultSignatureImage = signature;
       }
-      // Trimmed so it matches what /auth/login trims on the way back in.
-      if (v.password && v.password.trim()) payload.password = v.password.trim();
+      // Edit-mode rotation. Verbatim — validated above, never repaired.
+      if (v.password) payload.password = v.password;
     }
     onSubmit(payload);
   });
@@ -281,7 +311,11 @@ export function DoctorForm({
         )}
         <div className="grid gap-4 sm:grid-cols-2">
           {isCreate ? (
-            <Field label="Username *" htmlFor="username" error={errors.username?.message}>
+            <Field
+              label="Username *"
+              htmlFor="username"
+              error={usernameRuleError(watch("username") ?? "") ?? errors.username?.message}
+            >
               <Input id="username" {...register("username")} autoComplete="off" />
             </Field>
           ) : (
@@ -301,9 +335,19 @@ export function DoctorForm({
               <Field
                 label={isCreate ? "Password *" : "New password (leave blank to keep)"}
                 htmlFor="password"
-                error={passwordError ?? errors.password?.message}
+                error={
+                  passwordError
+                  ?? passwordRuleError(watch("password") ?? "")
+                  ?? errors.password?.message
+                }
               >
-                <Input id="password" type="password" {...register("password")} autoComplete="new-password" />
+                <Input
+                  id="password"
+                  type="password"
+                  {...register("password")}
+                  autoComplete="new-password"
+                  minLength={MIN_PASSWORD_LEN}
+                />
               </Field>
               <Field
                 label={isCreate ? "Confirm password *" : "Confirm new password"}

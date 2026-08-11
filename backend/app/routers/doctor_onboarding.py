@@ -23,15 +23,21 @@ no doctors exist before first-run setup completes.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
 from ..deps import db_dep
 from ..errors import unprocessable
 from ..models import Doctor
-from ..schemas import DoctorOnboardingPeek, DoctorOnboardingSubmit
+from ..schemas import (
+    DoctorOnboardingComplete,
+    DoctorOnboardingPeek,
+    DoctorOnboardingSubmit,
+)
 from ..services import doctor_invites as invites
 from ..services.signature import decode_rubber_stamp, decode_signature
 
@@ -40,12 +46,33 @@ _logger = logging.getLogger("haputele.doctor_onboarding")
 
 router = APIRouter(prefix="/doctor-onboarding", tags=["doctor-onboarding"])
 
+_M = TypeVar("_M", bound=BaseModel)
 
-# Minimum password length the onboarding flow enforces. Deliberately
-# generous-but-not-stupid: doctors aren't picking these at scale, and
-# very long minimums push them toward writing it down. Tighten later
-# if you add a real password policy elsewhere in the system.
-_MIN_PASSWORD_LEN = 8
+
+def _parse_body(model: type[_M], payload: dict[str, Any]) -> _M:
+    """`model_validate`, but with FastAPI's error envelope instead of a 500.
+
+    This is the one endpoint that parses its body by hand — the schema is
+    chosen by the invite's mode, which lives in the database — so nothing
+    has already turned a Pydantic error into an HTTP response for us. Left
+    alone, a ValidationError is not a RequestValidationError and so misses
+    main.py's 422 handler entirely, escaping to the catch-all as a 500. On a
+    public, unauthenticated endpoint, for input the caller fully controls.
+
+    Re-raising as RequestValidationError routes it through the very handler
+    FastAPI uses for every ordinary body model, so a hand-parsed body and a
+    framework-parsed one produce identical 422s.
+
+    HTTPException is deliberately NOT caught. The credential validators in
+    services/credentials.py raise it, and Pydantic lets non-ValueError
+    exceptions through untouched — so `password_whitespace` /
+    `setup_password_too_short` keep their specific codes instead of
+    collapsing into a generic `validation_failed`.
+    """
+    try:
+        return model.model_validate(payload)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors(), body=payload) from exc
 
 
 @router.get("/{token}", response_model=DoctorOnboardingPeek)
@@ -101,14 +128,20 @@ def complete(
     invite or vice versa.
     """
     invite = invites.lookup_live(db, raw_token=token)
-    password = payload.get("password") or ""
-    if len(password) < _MIN_PASSWORD_LEN:
-        raise unprocessable("password_too_short", minLength=_MIN_PASSWORD_LEN)
+    # Dispatch first, THEN parse. The body arrives as a raw dict because the
+    # schema depends on the invite, so each branch hands it to the model
+    # that branch expects — and the NewUsername / NewPassword field types on
+    # those models are what apply the credential policy here, exactly as
+    # they do on the other six credential-setting paths. Validating the
+    # password by hand before the branch (as this did) meant one code path
+    # reimplementing the rules, and it accepted anything truthy: a JSON
+    # number reached str.strip() and 500'd.
 
     if invite.doctor_id is not None:
         # Rotation: ignore anything other than password.
+        rotation = _parse_body(DoctorOnboardingComplete, payload)
         doctor = invites.consume_rotation(
-            db, raw_token=token, new_password=password,
+            db, raw_token=token, new_password=rotation.password,
         )
         _logger.info(
             "doctor rotation onboarded: doctor_id=%s username=%s",
@@ -118,7 +151,7 @@ def complete(
 
     # New-doctor flow: validate the full payload. Email is intentionally
     # not part of the submission — the invite owns that value.
-    submission = DoctorOnboardingSubmit.model_validate(payload)
+    submission = _parse_body(DoctorOnboardingSubmit, payload)
     try:
         stamp_bytes = decode_rubber_stamp(submission.rubberStampImage)
     except HTTPException:
@@ -140,7 +173,9 @@ def complete(
     doctor = invites.consume_new_doctor(
         db,
         raw_token=token,
-        username=submission.username.strip(),
+        # No .strip() — NewUsername rejects whitespace outright rather than
+        # silently repairing it, so what was submitted is what gets stored.
+        username=submission.username,
         password=submission.password,
         profile={
             "givenName": submission.givenName.strip(),

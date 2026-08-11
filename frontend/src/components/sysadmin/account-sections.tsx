@@ -6,10 +6,9 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
+import { newPasswordError, passwordError } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { useResetAccountPassword, useUpdateAccount } from "@/lib/use-api";
-
-export const MIN_PASSWORD_LEN = 10;
 
 // The slice of an account these editable sections need. Both the roster
 // entry and the /sysadmin/me payload are structurally compatible.
@@ -66,14 +65,12 @@ export function PasswordSection({ username, self = false }: { username: string; 
     e.preventDefault();
     setPwError(null);
     setPwDone(false);
-    // Trim before validating/sending so the stored secret matches what
-    // /auth/login trims on the way back in.
-    const pw = password.trim();
-    if (pw.length < MIN_PASSWORD_LEN)
-      return setPwError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
-    if (pw !== confirm.trim()) return setPwError("Passwords do not match.");
+    // Rejected, never repaired — see lib/credentials.ts.
+    const pwErr = newPasswordError(password);
+    if (pwErr) return setPwError(pwErr);
+    if (password !== confirm) return setPwError("Passwords do not match.");
     resetPw.mutate(
-      { username, password: pw },
+      { username, password },
       {
         onSuccess: () => {
           setPassword("");
@@ -92,7 +89,7 @@ export function PasswordSection({ username, self = false }: { username: string; 
             ? "Change your own password. You'll keep your current session."
             : "Set a new password and share it with them directly — they can sign in with it immediately."}
         </p>
-        <Field label="New password">
+        <Field label="New password" error={passwordError(password) ?? undefined}>
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
         </Field>
         <Field label="Confirm password">
@@ -159,11 +156,20 @@ export function Section({
   );
 }
 
-export function Field({ label, children }: { label: string; children: React.ReactNode }) {
+export function Field({
+  label,
+  children,
+  error,
+}: {
+  label: string;
+  children: React.ReactNode;
+  error?: string;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
       {children}
+      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
     </div>
   );
 }

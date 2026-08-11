@@ -1,6 +1,8 @@
 // Maps backend error codes (apiSequenceFlows.md "Error Codes") to UX-grade
 // English. Per §12, the API responds in English codes and the client translates.
 // Tamil/Sinhala come in Phase 5.
+import { PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/credentials";
+
 const MESSAGES: Record<string, string> = {
   invalid_credentials: "Incorrect username or password. Try again.",
   master_consent_required: "This patient has no active master consent — capture a fresh consent before continuing.",
@@ -54,16 +56,26 @@ const MESSAGES: Record<string, string> = {
   setup_session_invalid: "Your setup session expired. Restart the wizard with a fresh token.",
   csrf_failed: "Your setup session got out of sync. Restart the wizard with a fresh token. If it keeps happening, clear localhost cookies in your browser.",
   setup_token_missing: "No setup token is active. Restart the api container to mint a new one.",
-  setup_password_too_short: "Choose a password at least 10 characters long.",
+  setup_password_too_short: PASSWORD_TOO_SHORT_MESSAGE,
   setup_password_weak: "That password is on the common-weak list. Pick something less obvious.",
   setup_username_taken: "That username is already in use.",
+  // Credential whitespace policy (backend/app/services/credentials.py). The
+  // forms catch these before submitting; these strings are the fallback for
+  // a direct API call or a client that skipped validation.
+  username_whitespace: "Username cannot contain spaces.",
+  username_required: "Username is required.",
+  username_too_long: "That username is too long.",
+  password_whitespace: "Password cannot start or end with a space.",
   setup_address_required: "Provide at least one institute address line.",
   setup_institute_name_required: "Institute name is required.",
   setup_institute_phone_required: "Institute contact phone is required.",
   // Doctor invite / onboarding flow.
   invite_not_found:
     "This invite link isn't valid. It may have expired or already been used. Ask your administrator to resend a new one.",
-  password_too_short: "Choose a password at least 8 characters long.",
+  // No `password_too_short` entry: doctor onboarding used to raise its own
+  // code with its own 8-character minimum. It shares the single credential
+  // policy now, so the code the backend actually emits is
+  // `setup_password_too_short` above.
   missing_password: "Choose a password.",
   email_not_configured:
     "Email isn't set up on the server, so an invite can't be sent. Ask an administrator to either configure the email service or create the account with a manual password.",

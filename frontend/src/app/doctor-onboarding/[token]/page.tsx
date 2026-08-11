@@ -11,6 +11,12 @@ import { Card } from "@/components/primitives/card";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { ApiError, api } from "@/lib/api";
+import {
+  MIN_PASSWORD_LEN,
+  PASSWORD_LENGTH_HINT,
+  newPasswordError,
+  passwordError,
+} from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 
@@ -23,8 +29,6 @@ type PeekResponse = {
   familyName?: string | null;
   givenName?: string | null;
 };
-
-const MIN_PASSWORD_LEN = 8;
 
 type PageState =
   | { mode: "loading" }
@@ -238,14 +242,13 @@ function RotationPanel({
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    // Trim before validating/sending so the stored secret matches what
-    // /auth/login trims on the way back in.
-    const pw = password.trim();
-    if (pw.length < MIN_PASSWORD_LEN) {
-      setError(`Choose a password at least ${MIN_PASSWORD_LEN} characters long.`);
+    // Rejected, never repaired — see lib/credentials.ts.
+    const pwErr = newPasswordError(password);
+    if (pwErr) {
+      setError(pwErr);
       return;
     }
-    if (pw !== confirm.trim()) {
+    if (password !== confirm) {
       setError("Passwords don't match. Re-enter to confirm.");
       return;
     }
@@ -253,7 +256,7 @@ function RotationPanel({
     try {
       await api(`/doctor-onboarding/${token}`, {
         method: "POST",
-        body: { password: pw },
+        body: { password },
         skipAuthRedirect: true,
       });
       onDone();
@@ -312,11 +315,15 @@ function RotationPanel({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
-            placeholder={`At least ${MIN_PASSWORD_LEN} characters`}
+            placeholder={PASSWORD_LENGTH_HINT}
             minLength={MIN_PASSWORD_LEN}
             autoFocus
             required
           />
+          {/* Live: a stray space is invisible in a masked field. */}
+          {passwordError(password) && (
+            <p className="text-xs text-rose-600">{passwordError(password)}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -379,8 +386,13 @@ function NewDoctorPanel({
   const onSubmit = async (payload: DoctorFormPayload) => {
     setErrorMessage(null);
     setErrorMissing(undefined);
-    if (!payload.password || payload.password.length < MIN_PASSWORD_LEN) {
-      setErrorMessage(`Choose a password at least ${MIN_PASSWORD_LEN} characters long.`);
+    // Panel-level backstop. DoctorForm already applies the same rules per
+    // field; this catches a payload that reached us some other way.
+    const pwErr = !payload.password
+      ? "Choose a password."
+      : newPasswordError(payload.password);
+    if (pwErr) {
+      setErrorMessage(pwErr);
       return;
     }
     if (!payload.username) {

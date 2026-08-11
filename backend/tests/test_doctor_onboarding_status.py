@@ -84,7 +84,7 @@ def test_list_endpoint_reports_status_per_doctor(
     r = admin_client.post(
         "/doctors",
         json=_doctor_payload(
-            username="dr_b", email="b@example.com", password="manual-pw",
+            username="dr_b", email="b@example.com", password="manual-password-1",
         ),
         headers=_csrf(admin_client),
     )
@@ -168,7 +168,7 @@ def test_status_uses_single_query_for_list(
     list call — exercising the batched IN-clause path."""
     # Three doctors: two awaiting, one active.
     for i, (username, password) in enumerate([
-        ("dr_w1", None), ("dr_w2", None), ("dr_w3", "manual-pw"),
+        ("dr_w1", None), ("dr_w2", None), ("dr_w3", "manual-password-1"),
     ]):
         body = _doctor_payload(
             username=username, email=f"{username}@example.com",
