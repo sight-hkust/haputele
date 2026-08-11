@@ -1041,7 +1041,7 @@ export function useAccountRoster() {
   const fetcher = useAuthedApi();
   return useQuery({
     queryKey: ["sysadmin", "accounts"],
-    queryFn: () => fetcher<AccountRosterEntry[]>("/sysadmin/accounts"),
+    queryFn: () => fetcher<AccountRosterEntry[]>("/accounts"),
   });
 }
 
@@ -1050,7 +1050,7 @@ export function useCreateOperatingAccount() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateOperatingAccountRequest) =>
-      fetcher<CreateOperatingAccountResponse>("/sysadmin/accounts", {
+      fetcher<CreateOperatingAccountResponse>("/accounts", {
         method: "POST",
         body,
       }),
@@ -1064,7 +1064,7 @@ export function useUpdateAccount() {
   const qc = useQueryClient();
   return useMutation<AccountRosterEntry, ApiError, { username: string; body: AccountUpdateRequest }>({
     mutationFn: ({ username, body }) =>
-      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}`, { method: "PATCH", body }),
+      fetcher(`/accounts/${encodeURIComponent(username)}`, { method: "PATCH", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
@@ -1076,7 +1076,7 @@ export function useResetAccountPassword() {
   const fetcher = useAuthedApi();
   return useMutation<void, ApiError, { username: string; password: string }>({
     mutationFn: ({ username, password }) =>
-      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/reset-password`, {
+      fetcher(`/accounts/${encodeURIComponent(username)}/reset-password`, {
         method: "POST",
         body: { password } satisfies ResetAccountPasswordRequest,
       }),
@@ -1090,7 +1090,7 @@ export function useDisableAccount() {
   const qc = useQueryClient();
   return useMutation<AccountRosterEntry, ApiError, string>({
     mutationFn: (username) =>
-      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/disable`, { method: "POST" }),
+      fetcher(`/accounts/${encodeURIComponent(username)}/disable`, { method: "POST" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
@@ -1100,7 +1100,7 @@ export function useEnableAccount() {
   const qc = useQueryClient();
   return useMutation<AccountRosterEntry, ApiError, string>({
     mutationFn: (username) =>
-      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}/enable`, { method: "POST" }),
+      fetcher(`/accounts/${encodeURIComponent(username)}/enable`, { method: "POST" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
@@ -1112,7 +1112,7 @@ export function useDeleteAccount() {
   const qc = useQueryClient();
   return useMutation<void, ApiError, string>({
     mutationFn: (username) =>
-      fetcher(`/sysadmin/accounts/${encodeURIComponent(username)}`, { method: "DELETE" }),
+      fetcher(`/accounts/${encodeURIComponent(username)}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }

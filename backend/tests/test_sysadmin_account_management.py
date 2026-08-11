@@ -48,7 +48,7 @@ def _initialize_and_login_sysadmin(client, seeded_setup_token):
 
 def _create_account(client, username, role, password="correct-horse-battery-staple"):
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": username, "password": password, "role": role},
         headers=_csrf(client),
     )
@@ -98,7 +98,7 @@ def test_roster_lists_others_and_excludes_sysadmin(client, seeded_setup_token):
     _create_account(client, "alice", "admin")
     _create_account(client, "bob", "healthworker")
 
-    r = client.get("/sysadmin/accounts")
+    r = client.get("/accounts")
     assert r.status_code == 200, r.text
     by_username = {row["username"]: row for row in r.json()}
 
@@ -114,7 +114,7 @@ def test_roster_lists_others_and_excludes_sysadmin(client, seeded_setup_token):
 def test_roster_shows_doctor_readonly(client, seeded_doctor):
     _seed_sysadmin_and_login(client)
 
-    r = client.get("/sysadmin/accounts")
+    r = client.get("/accounts")
     assert r.status_code == 200, r.text
     by_username = {row["username"]: row for row in r.json()}
 
@@ -124,17 +124,27 @@ def test_roster_shows_doctor_readonly(client, seeded_doctor):
     assert doctor_row["doctorActive"] is True
 
 
-def test_roster_requires_sys_admin(client, seeded_setup_token):
+def test_roster_hides_privileged_rows_from_admin(client, seeded_setup_token):
+    """An admin reaches the roster, but sees healthworkers only.
+
+    Admin and sys-admin rows are withheld entirely — not merely flagged
+    unmanageable. That list is the set of accounts worth attacking, so it
+    stays out of the response body rather than being filtered in the UI.
+    """
     _initialize_and_login_sysadmin(client, seeded_setup_token)
     _create_account(client, "alice", "admin")
+    _create_account(client, "bob", "healthworker")
 
     r = client.post("/auth/logout", headers=_csrf(client))
     assert r.status_code == 204
     r = client.post("/auth/login", json={"username": "alice", "password": "correct-horse-battery-staple"})
     assert r.status_code == 200
 
-    r = client.get("/sysadmin/accounts")
-    assert r.status_code == 403
+    r = client.get("/accounts")
+    assert r.status_code == 200, r.text
+    rows = r.json()
+    assert {row["username"] for row in rows} == {"bob"}
+    assert rows[0]["manageable"] is True
 
 
 # ── reset password ─────────────────────────────────────────────────────
@@ -145,7 +155,7 @@ def test_reset_password_lets_user_login_with_new_secret(client, seeded_setup_tok
     _create_account(client, "alice", "admin", password="old-correct-horse-staple")
 
     r = client.post(
-        "/sysadmin/accounts/alice/reset-password",
+        "/accounts/alice/reset-password",
         json={"password": "brand-new-horse-battery-staple"},
         headers=_csrf(client),
     )
@@ -167,7 +177,7 @@ def test_reset_password_rejects_weak(client, seeded_setup_token):
     _create_account(client, "alice", "admin")
 
     r = client.post(
-        "/sysadmin/accounts/alice/reset-password",
+        "/accounts/alice/reset-password",
         json={"password": "password1"},
         headers=_csrf(client),
     )
@@ -179,7 +189,7 @@ def test_reset_password_unknown_account_404(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     r = client.post(
-        "/sysadmin/accounts/ghost/reset-password",
+        "/accounts/ghost/reset-password",
         json={"password": "correct-horse-battery-staple"},
         headers=_csrf(client),
     )
@@ -192,7 +202,7 @@ def test_cannot_reset_doctor_password(client, seeded_doctor):
     _seed_sysadmin_and_login(client)
 
     r = client.post(
-        f"/sysadmin/accounts/{seeded_doctor.username}/reset-password",
+        f"/accounts/{seeded_doctor.username}/reset-password",
         json={"password": "correct-horse-battery-staple"},
         headers=_csrf(client),
     )
@@ -206,7 +216,7 @@ def test_sysadmin_can_reset_own_password(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     r = client.post(
-        "/sysadmin/accounts/ops/reset-password",
+        "/accounts/ops/reset-password",
         json={"password": "another-correct-horse-staple"},
         headers=_csrf(client),
     )
@@ -222,7 +232,7 @@ def test_sysadmin_can_edit_own_profile(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     r = client.patch(
-        "/sysadmin/accounts/ops",
+        "/accounts/ops",
         json={"fullName": "Ops Lead", "contact": "+94 11 000 1111"},
         headers=_csrf(client),
     )
@@ -254,11 +264,11 @@ def test_sysadmin_cannot_disable_self(client, seeded_setup_token):
     account, even though it can edit its own profile/password."""
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
-    r = client.post("/sysadmin/accounts/ops/disable", headers=_csrf(client))
+    r = client.post("/accounts/ops/disable", headers=_csrf(client))
     assert r.status_code == 403
     assert _error_code(r) == "cannot_manage_role"
 
-    r = client.delete("/sysadmin/accounts/ops", headers=_csrf(client))
+    r = client.delete("/accounts/ops", headers=_csrf(client))
     assert r.status_code == 403
     assert _error_code(r) == "cannot_manage_role"
 
@@ -270,7 +280,7 @@ def test_disable_blocks_login_enable_restores(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
     _create_account(client, "alice", "admin")
 
-    r = client.post("/sysadmin/accounts/alice/disable", headers=_csrf(client))
+    r = client.post("/accounts/alice/disable", headers=_csrf(client))
     assert r.status_code == 200, r.text
     assert r.json()["disabledAt"] is not None
 
@@ -282,7 +292,7 @@ def test_disable_blocks_login_enable_restores(client, seeded_setup_token):
 
     # Re-enable as the sys-admin, then alice can sign in again.
     _login_ops(client)
-    r = client.post("/sysadmin/accounts/alice/enable", headers=_csrf(client))
+    r = client.post("/accounts/alice/enable", headers=_csrf(client))
     assert r.status_code == 200, r.text
     assert r.json()["disabledAt"] is None
 
@@ -296,10 +306,10 @@ def test_disable_is_idempotent(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
     _create_account(client, "alice", "admin")
 
-    r1 = client.post("/sysadmin/accounts/alice/disable", headers=_csrf(client))
+    r1 = client.post("/accounts/alice/disable", headers=_csrf(client))
     assert r1.status_code == 200
     first_stamp = r1.json()["disabledAt"]
-    r2 = client.post("/sysadmin/accounts/alice/disable", headers=_csrf(client))
+    r2 = client.post("/accounts/alice/disable", headers=_csrf(client))
     assert r2.status_code == 200
     # Re-disabling doesn't move the original timestamp.
     assert r2.json()["disabledAt"] == first_stamp
@@ -309,7 +319,7 @@ def test_cannot_disable_doctor(client, seeded_doctor):
     _seed_sysadmin_and_login(client)
 
     r = client.post(
-        f"/sysadmin/accounts/{seeded_doctor.username}/disable",
+        f"/accounts/{seeded_doctor.username}/disable",
         headers=_csrf(client),
     )
     assert r.status_code == 403
@@ -323,10 +333,10 @@ def test_delete_unreferenced_account(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
     _create_account(client, "alice", "admin")
 
-    r = client.delete("/sysadmin/accounts/alice", headers=_csrf(client))
+    r = client.delete("/accounts/alice", headers=_csrf(client))
     assert r.status_code == 204, r.text
 
-    r = client.get("/sysadmin/accounts")
+    r = client.get("/accounts")
     assert "alice" not in {row["username"] for row in r.json()}
 
 
@@ -355,12 +365,12 @@ def test_delete_refuses_referenced_account(client, seeded_setup_token):
     finally:
         db.close()
 
-    r = client.delete("/sysadmin/accounts/alice", headers=_csrf(client))
+    r = client.delete("/accounts/alice", headers=_csrf(client))
     assert r.status_code == 409
     assert _error_code(r) == "account_in_use"
 
     # Still listed — the refusal didn't partially delete anything.
-    r = client.get("/sysadmin/accounts")
+    r = client.get("/accounts")
     assert "alice" in {row["username"] for row in r.json()}
 
 
@@ -368,7 +378,7 @@ def test_cannot_delete_doctor(client, seeded_doctor):
     _seed_sysadmin_and_login(client)
 
     r = client.delete(
-        f"/sysadmin/accounts/{seeded_doctor.username}",
+        f"/accounts/{seeded_doctor.username}",
         headers=_csrf(client),
     )
     assert r.status_code == 403
@@ -381,7 +391,7 @@ def test_cannot_delete_doctor(client, seeded_doctor):
 def test_create_with_profile_fields(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={
             "username": "alice",
             "password": "correct-horse-battery-staple",
@@ -393,7 +403,7 @@ def test_create_with_profile_fields(client, seeded_setup_token):
     )
     assert r.status_code == 201, r.text
 
-    r = client.get("/sysadmin/accounts")
+    r = client.get("/accounts")
     alice = {row["username"]: row for row in r.json()}["alice"]
     assert alice["fullName"] == "Alice Adams"
     assert alice["contact"] == "+94 11 222 3333"
@@ -404,7 +414,7 @@ def test_patch_updates_profile_fields(client, seeded_setup_token):
     _create_account(client, "alice", "admin")
 
     r = client.patch(
-        "/sysadmin/accounts/alice",
+        "/accounts/alice",
         json={"fullName": "Alice A. Adams", "contact": "+94 77 000 0000"},
         headers=_csrf(client),
     )
@@ -419,14 +429,14 @@ def test_patch_is_partial_and_can_clear(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
     _create_account(client, "alice", "admin")
     client.patch(
-        "/sysadmin/accounts/alice",
+        "/accounts/alice",
         json={"fullName": "Alice Adams", "contact": "+94 77 000 0000"},
         headers=_csrf(client),
     )
 
     # Patch only contact — fullName must survive untouched.
     r = client.patch(
-        "/sysadmin/accounts/alice",
+        "/accounts/alice",
         json={"contact": "+94 77 999 9999"},
         headers=_csrf(client),
     )
@@ -436,7 +446,7 @@ def test_patch_is_partial_and_can_clear(client, seeded_setup_token):
 
     # Explicit empty string clears the field to null.
     r = client.patch(
-        "/sysadmin/accounts/alice",
+        "/accounts/alice",
         json={"fullName": "   "},
         headers=_csrf(client),
     )
@@ -447,7 +457,7 @@ def test_patch_is_partial_and_can_clear(client, seeded_setup_token):
 def test_cannot_patch_doctor(client, seeded_doctor):
     _seed_sysadmin_and_login(client)
     r = client.patch(
-        f"/sysadmin/accounts/{seeded_doctor.username}",
+        f"/accounts/{seeded_doctor.username}",
         json={"fullName": "Hax"},
         headers=_csrf(client),
     )
@@ -457,7 +467,7 @@ def test_cannot_patch_doctor(client, seeded_doctor):
 
 def test_roster_exposes_doctor_id(client, seeded_doctor):
     _seed_sysadmin_and_login(client)
-    r = client.get("/sysadmin/accounts")
+    r = client.get("/accounts")
     doc = {row["username"]: row for row in r.json()}[seeded_doctor.username]
     assert doc["doctorId"] == seeded_doctor.doctor_id
 
@@ -496,6 +506,6 @@ def test_sysadmin_can_deactivate_doctor(client, seeded_doctor):
     r = client.delete(f"/doctors/{seeded_doctor.doctor_id}", headers=_csrf(client))
     assert r.status_code == 204, r.text
     # Reflected in the roster's read-only doctor row.
-    r = client.get("/sysadmin/accounts")
+    r = client.get("/accounts")
     doc = {row["username"]: row for row in r.json()}[seeded_doctor.username]
     assert doc["doctorActive"] is False

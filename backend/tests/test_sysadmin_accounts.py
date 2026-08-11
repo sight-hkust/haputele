@@ -1,8 +1,11 @@
-"""Integration tests for POST /sysadmin/accounts.
+"""Integration tests for POST /accounts with a sys-admin caller.
 
 The setup wizard creates exactly one sys-admin. Operating accounts
 (admins, healthworkers) are created post-init through this endpoint,
 either from wizard stage 3 or from the future dev-dashboard.
+
+The endpoint also serves `admin` callers, who may create healthworkers
+only — see test_account_role_matrix.py for the full caller × target grid.
 """
 
 
@@ -55,7 +58,7 @@ def test_create_admin_account(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": "alice", "password": "correct-horse-battery-staple", "role": "admin"},
         headers=_csrf(client),
     )
@@ -67,7 +70,7 @@ def test_create_healthworker_account(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": "bob", "password": "correct-horse-battery-staple", "role": "healthworker"},
         headers=_csrf(client),
     )
@@ -84,7 +87,7 @@ def test_multiple_admins_and_healthworkers_allowed(client, seeded_setup_token):
 
     for name in ("alice", "bob"):
         r = client.post(
-            "/sysadmin/accounts",
+            "/accounts",
             json={"username": name, "password": "correct-horse-battery-staple", "role": "admin"},
             headers=_csrf(client),
         )
@@ -92,7 +95,7 @@ def test_multiple_admins_and_healthworkers_allowed(client, seeded_setup_token):
 
     for name in ("carol", "dave"):
         r = client.post(
-            "/sysadmin/accounts",
+            "/accounts",
             json={"username": name, "password": "correct-horse-battery-staple", "role": "healthworker"},
             headers=_csrf(client),
         )
@@ -107,7 +110,7 @@ def test_rejects_disallowed_role(client, seeded_setup_token):
 
     for bad_role in ("doctor", "sys-admin", "patient", ""):
         r = client.post(
-            "/sysadmin/accounts",
+            "/accounts",
             json={"username": "alice", "password": "correct-horse-battery-staple", "role": bad_role},
             headers=_csrf(client),
         )
@@ -118,7 +121,7 @@ def test_rejects_short_password(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": "alice", "password": "short", "role": "admin"},
         headers=_csrf(client),
     )
@@ -130,7 +133,7 @@ def test_rejects_weak_password(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": "alice", "password": "password1", "role": "admin"},
         headers=_csrf(client),
     )
@@ -142,14 +145,14 @@ def test_rejects_duplicate_username(client, seeded_setup_token):
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": "alice", "password": "correct-horse-battery-staple", "role": "admin"},
         headers=_csrf(client),
     )
     assert r.status_code == 201
 
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": "alice", "password": "correct-horse-battery-staple", "role": "healthworker"},
         headers=_csrf(client),
     )
@@ -157,16 +160,20 @@ def test_rejects_duplicate_username(client, seeded_setup_token):
     assert _error_code(r) == "username_taken"
 
 
-def test_requires_sys_admin_role(client, seeded_setup_token):
-    """An authenticated `admin` user must NOT be able to call this — only
-    sys-admin can mint operating accounts. (Future: relax to admin if the
-    ops team wants admin to manage healthworkers; keep tight for now.)
+def test_admin_cannot_create_another_admin(client, seeded_setup_token):
+    """An `admin` may create healthworkers but never another admin.
+
+    This is the escalation gate: an admin who could mint admin accounts
+    could hand itself a second identity, and one who could then reset that
+    account's password has effectively become sys-admin. The wider matrix
+    lives in test_account_role_matrix.py; this keeps the single most
+    important case next to the creation tests.
     """
     _initialize_and_login_sysadmin(client, seeded_setup_token)
 
     # Create an admin via the endpoint, then log in as them and try again.
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": "alice", "password": "correct-horse-battery-staple", "role": "admin"},
         headers=_csrf(client),
     )
@@ -183,11 +190,20 @@ def test_requires_sys_admin_role(client, seeded_setup_token):
     assert r.json()["role"] == "admin"
 
     r = client.post(
-        "/sysadmin/accounts",
+        "/accounts",
         json={"username": "carol", "password": "correct-horse-battery-staple", "role": "admin"},
         headers=_csrf(client),
     )
     assert r.status_code == 403
+    assert _error_code(r) == "cannot_manage_role"
+
+    # …but the healthworker it IS allowed to create goes through.
+    r = client.post(
+        "/accounts",
+        json={"username": "carol", "password": "correct-horse-battery-staple", "role": "healthworker"},
+        headers=_csrf(client),
+    )
+    assert r.status_code == 201, r.text
 
 
 def test_requires_authentication(client):
@@ -219,7 +235,7 @@ def test_requires_authentication(client):
 
     with TestClient(app_main.app) as fresh_client:
         r = fresh_client.post(
-            "/sysadmin/accounts",
+            "/accounts",
             json={"username": "alice", "password": "correct-horse-battery-staple", "role": "admin"},
         )
         assert r.status_code == 401
