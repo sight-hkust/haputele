@@ -9,8 +9,12 @@ that talks to a real Postgres. The expectation is that the operator runs:
 
 The conftest creates the `haputele_test` database (idempotent), runs all
 Alembic migrations against it, and wipes setup-relevant tables before
-each test. It does NOT wipe `db_data` of the dev compose DB — they're
-different schemas.
+each test.
+
+That wipe is destructive and unconditional, so the target is checked first:
+the suite REFUSES to run unless the database name ends in `_test`. See
+dbguard.py — the check exists because this once ran against the dev database
+and deleted every account in it.
 
 If DATABASE_URL is not set, conftest defaults to the URL above. If the
 Postgres at that URL is not reachable, the tests are skipped (so a `make
@@ -27,6 +31,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
+
+from tests.dbguard import assert_test_database
 
 # Session cookies are Secure by default — browsers (and httpx) refuse to
 # send them over plain HTTP. TestClient mounts the app at `http://testserver`,
@@ -46,6 +52,12 @@ def _ensure_database_url() -> str:
         url = _DEFAULT_TEST_URL
         os.environ["DATABASE_URL"] = url
     return url
+
+
+# Guard at import time, not inside a fixture: this runs before collection, so
+# a fixture-ordering change or a test that bypasses `_bootstrap_test_db` can
+# never reach the wipe with a live database selected.
+assert_test_database(_ensure_database_url())
 
 
 def _pg_reachable(url: str) -> bool:
