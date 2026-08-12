@@ -147,6 +147,43 @@ Operational notes:
 - **Secret rotation rebuilds the VM.** Cloud-init `user_data` is immutable (ForceNew), so changing any secret changes the vault ciphertext and replaces the instance. Non-secret changes (new image tags, domain config) only re-run Ansible — no VM rebuild.
 - **Migrating off Nomad (one-time):** the old state still references the removed `nomad` provider, so run a `terraform destroy` of the previous stack before the first `apply`, or `terraform state rm` the `nomad_job.*` / `null_resource.wait_for_nomad` resources first.
 
+### Backups and restore
+
+Postgres lives on a host bind mount (`/opt/postgres/data`) on a single VM, so a lost disk is a total loss. A systemd timer dumps it nightly to a **separate** Cloudflare R2 bucket.
+
+| | |
+|---|---|
+| Schedule | 03:00 local (`haputele-backup.timer`), ±5 min jitter, catch-up on boot |
+| Destination | `s3://<BACKUP_S3_BUCKET>/postgres/haputele-<UTC timestamp>.dump` |
+| Format | `pg_dump -Fc` — compressed, selectively restorable |
+| Retention | 30 days, pruned after each successful upload |
+| Credentials | `BACKUP_S3_*` — a bucket-scoped R2 token, **not** the app's `S3_*` keys, so an app compromise cannot reach the backups |
+| Scope | The database only. Blobs (attachments, signatures) live in R2 already; they are not in the dump — see gaps below. |
+
+```bash
+systemctl list-timers haputele-backup     # when it next runs
+systemctl start haputele-backup.service   # back up now
+journalctl -u haputele-backup -n 50       # what happened last night
+
+/opt/haputele/restore.sh --list                                  # what is available
+/opt/haputele/restore.sh latest --yes-drop-existing              # restore newest
+/opt/haputele/restore.sh haputele-2026-08-12T031500Z.dump --yes-drop-existing
+```
+
+`restore.sh` is destructive — it drops existing objects before reloading — so the confirmation flag is mandatory. It validates the dump before touching the live database, stops `api`/`frontend` during the reload, and brings the stack back up even if the restore fails.
+
+**Rebuilding from nothing:** `terraform apply` → Ansible → `restore.sh latest --yes-drop-existing`. Expect to lose up to 24h of writes (whatever happened after the last nightly dump).
+
+**Rehearse it.** A backup nobody has restored from is a hypothesis. Do a full drill — seed, destroy, restore — and record how long it took here.
+
+Known gaps, in rough priority order:
+
+- **Secret rotation still rebuilds the VM** and therefore wipes `/opt/postgres/data` (see the ForceNew note above). Restoring from backup is now the documented recovery, but moving secrets out of `user_data` into the Ansible run would remove the coupling entirely.
+- **Blob deletion is unrecoverable.** The database stores object keys; the bytes are in R2. A DB restore cannot bring back a deleted attachment — enable R2 object versioning on the media bucket.
+- **No alerting.** A timer that silently stops firing looks exactly like one that is working. A dead-man's-switch ping at the end of `backup.sh` would close this.
+- **Dumps are not client-side encrypted.** R2 encrypts at rest, but the dumps contain patient data and anyone with the backup token can read them.
+- **Key escrow:** `secrets.yaml` has a single age recipient, and the deploy SSH key exists only in Terraform state. Losing either is a bad day; losing both during an incident is a much worse one.
+
 Other production gaps to plug before any non-dev deployment:
 
 - The bundled dev `docker-compose.yml` has no reverse proxy / TLS — put Caddy / Traefik / nginx in front of ports 3000 and 8000 if you deploy it directly. **TLS is mandatory** — `COOKIE_SECURE=true` is the default and browsers won't send the session cookie over plain HTTP. (The automated AWS deployment above already fronts the stack with Caddy + ACME TLS.)
