@@ -52,6 +52,18 @@ export function ageFromDob(dob: string | null | undefined): number | null {
   }
 }
 
+// Display form of ageFromDob — "20 years old". Patient headers previously
+// each built their own suffix ("20 yrs" vs "20 years"), so the same patient
+// read differently depending on the page. Returns null (not "—") for an
+// unknown dob because both callers drop the age from a " · "-joined list
+// rather than showing a placeholder. ageFromDob stays numeric for callers
+// that need to compute with the value.
+export function fmtAge(dob: string | null | undefined): string | null {
+  const years = ageFromDob(dob);
+  if (years === null) return null;
+  return `${years} ${years === 1 ? "year" : "years"} old`;
+}
+
 // Convert a datetime-local input value (e.g. "2026-04-29T09:00") to a UTC
 // ISO string by interpreting it in APP_TIMEZONE rather than the browser's
 // local timezone. Used by appointment booking so the time the user types

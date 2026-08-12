@@ -27,7 +27,7 @@ import {
   useUpdatePatient,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
-import { ageFromDob, fmtDate, fmtDateTime, fullName } from "@/lib/format";
+import { fmtAge, fmtDate, fmtDateTime, fullName } from "@/lib/format";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function PatientDetailPage() {
@@ -60,7 +60,7 @@ export default function PatientDetailPage() {
 
   const patient = patientQ.data.patient;
   const profile = patientQ.data.profile;
-  const age = ageFromDob(patient.dob);
+  const age = fmtAge(patient.dob);
   const apts = historyQ.data?.appointments ?? [];
 
   return (
@@ -79,7 +79,7 @@ export default function PatientDetailPage() {
         subtitle={
           [
             patient.gender,
-            age !== null ? `${age} years` : null,
+            age,
             patient.language ? `Prefers ${patient.language.toUpperCase()}` : null,
           ]
             .filter(Boolean)
