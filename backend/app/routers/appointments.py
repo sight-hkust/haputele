@@ -33,6 +33,7 @@ from ..schemas import (
     ProfileOut,
     QueueEntryOut,
 )
+from ..services.livekit import delete_room_best_effort
 
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
@@ -229,6 +230,10 @@ def cancel_appointment(appt_id: int, payload: AppointmentCancelIn,
     if appt.status in TERMINAL:
         raise conflict("invalid_state", currentStatus=appt.status)
 
+    # Tokens exist in data_collection; the room is live in in_progress.
+    # Tear it down after commit so a failed write never drops a still-open visit.
+    had_room = appt.status in ("data_collection", "in_progress")
+
     now = datetime.now(timezone.utc)
     appt.status = "cancelled"
     appt.cancellation_reason = payload.reason
@@ -271,6 +276,8 @@ def cancel_appointment(appt_id: int, payload: AppointmentCancelIn,
 
     db.commit()
     db.refresh(appt)
+    if had_room:
+        delete_room_best_effort(appt.appointment_id)
     out: dict = {"appointment": AppointmentOut.model_validate(appt).model_dump(mode="json")}
     if new_entry is not None:
         db.refresh(new_entry)
