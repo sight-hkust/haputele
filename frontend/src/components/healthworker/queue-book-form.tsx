@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, CalendarPlus } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
@@ -34,20 +34,38 @@ export function QueueBookForm({
   const [scheduledAt, setScheduledAt] = useState<string>(
     entry.targetDate ? `${entry.targetDate}T09:00` : "",
   );
+  const [submissionStarted, setSubmissionStarted] = useState(false);
+  const submissionLock = useRef(false);
+
+  useEffect(() => {
+    if (!book.isPending && submissionLock.current) {
+      submissionLock.current = false;
+      setSubmissionStarted(false);
+    }
+  }, [book.isPending]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!doctorId || !scheduledAt) return;
-    book.mutate(
-      {
-        doctorId: Number(doctorId),
-        scheduledAt: appLocalToUtcIso(scheduledAt),
-      },
-      {
-        onSuccess: (res) => onBooked(res.appointment),
-      },
-    );
+    if (!doctorId || !scheduledAt || submissionLock.current || book.isPending) return;
+    submissionLock.current = true;
+    setSubmissionStarted(true);
+    try {
+      book.mutate(
+        {
+          doctorId: Number(doctorId),
+          scheduledAt: appLocalToUtcIso(scheduledAt),
+        },
+        {
+          onSuccess: (res) => onBooked(res.appointment),
+        },
+      );
+    } catch (error) {
+      submissionLock.current = false;
+      setSubmissionStarted(false);
+      throw error;
+    }
   };
+  const busy = book.isPending || submissionStarted;
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
@@ -82,12 +100,12 @@ export function QueueBookForm({
       {book.error && <ErrorBanner>{explainError(book.error.error, book.error.message)}</ErrorBanner>}
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={onCancel} disabled={book.isPending}>
+        <Button type="button" variant="secondary" onClick={onCancel} disabled={busy}>
           Cancel
         </Button>
-        <Button type="submit" disabled={!doctorId || !scheduledAt || book.isPending}>
-          {book.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />}
-          {book.isPending ? "Booking…" : "Book appointment"}
+        <Button type="submit" disabled={!doctorId || !scheduledAt || busy}>
+          {busy ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />}
+          {busy ? "Booking…" : "Book appointment"}
         </Button>
       </div>
     </form>
