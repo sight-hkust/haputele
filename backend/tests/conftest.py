@@ -152,10 +152,12 @@ def _wipe_setup_state():
         # deleted a few statements down.
         db.execute(text("UPDATE patients SET master_consent_id = NULL"))
         db.execute(text("DELETE FROM consents"))
+        # Booked queue entries reference appointments, so clear them before
+        # deleting their appointment rows.
+        db.execute(text("DELETE FROM queue_entries"))
         db.execute(text("ALTER TABLE appointments DISABLE TRIGGER appointments_locked_guard"))
         db.execute(text("DELETE FROM appointments"))
         db.execute(text("ALTER TABLE appointments ENABLE TRIGGER appointments_locked_guard"))
-        db.execute(text("DELETE FROM queue_entries"))
         db.execute(text("DELETE FROM doctor_availability"))
         db.execute(text("DELETE FROM profile"))
         db.execute(text("DELETE FROM patients"))

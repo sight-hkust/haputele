@@ -2,13 +2,14 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, forbidden, not_found, unprocessable
 from ..dateutils import snap_to_monday
 from ..models import Appointment, Consultation, Doctor, QueueEntry
-from ..routers.appointments import _slot_taken
+from ..routers.appointments import _raise_slot_conflict, _slot_taken
 from ..schemas import (
     AppointmentOut,
     ConsultationOut,
@@ -28,8 +29,10 @@ def _doctor(db: Session, user: CurrentUser) -> Doctor:
     return d
 
 
-def _own_consultation(db: Session, cid: int, user: CurrentUser) -> tuple[Consultation, Appointment]:
-    c = db.get(Consultation, cid)
+def _own_consultation(
+    db: Session, cid: int, user: CurrentUser, *, for_update: bool = False
+) -> tuple[Consultation, Appointment]:
+    c = db.get(Consultation, cid, with_for_update=for_update)
     if not c:
         raise not_found("consultation_not_found")
     appt = db.get(Appointment, c.appointment_id)
@@ -123,7 +126,10 @@ def patch_consultation(cid: int, payload: ConsultationPatch, db: Session = Depen
                   dependencies=[Depends(require_role("doctor"))])
 def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = Depends(db_dep),
                         user: CurrentUser = Depends(current_user)):
-    c, appt = _own_consultation(db, cid, user)
+    # Serialize submissions for one consultation. Without this lock, two
+    # requests choosing different follow-up slots could both create an
+    # appointment before racing to finalize the same consultation.
+    c, appt = _own_consultation(db, cid, user, for_update=True)
     if c.status != "draft":
         raise conflict("consultation_locked")
     if payload.signature:
@@ -159,7 +165,10 @@ def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = D
             status="scheduled",
         )
         db.add(follow_up_appt)
-        db.flush()
+        try:
+            db.flush()
+        except IntegrityError as exc:
+            _raise_slot_conflict(db, exc)
         c.follow_up_date = payload.followUp.scheduledAt.date()
         c.follow_up_appointment_id = follow_up_appt.appointment_id
     elif isinstance(payload.followUp, FollowUpWeeks):

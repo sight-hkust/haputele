@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import NoReturn, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import and_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..deps import CurrentUser, current_user, db_dep, require_role
@@ -46,6 +47,7 @@ LIVE_STATES = (
     "awaiting_notes",
 )
 TERMINAL = ("completed", "cancelled")
+DOCTOR_SLOT_CONSTRAINT = "appointments_doctor_slot_unique"
 
 
 def _doctor_for_user(db: Session, user: CurrentUser) -> Doctor:
@@ -82,6 +84,19 @@ def _slot_taken(db: Session, doctor_id: int, scheduled_at: datetime, exclude_id:
     return db.scalar(stmt) is not None
 
 
+def _integrity_constraint(exc: IntegrityError) -> str | None:
+    """Return the Postgres constraint that caused an integrity failure."""
+    return getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
+
+
+def _raise_slot_conflict(db: Session, exc: IntegrityError) -> NoReturn:
+    """Restore the session and translate only the doctor-slot constraint."""
+    db.rollback()
+    if _integrity_constraint(exc) == DOCTOR_SLOT_CONSTRAINT:
+        raise conflict("doctor_slot_taken") from exc
+    raise exc
+
+
 @router.post("", response_model=AppointmentOut, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role("healthworker"))])
 def create_appointment(payload: AppointmentCreate, db: Session = Depends(db_dep)) -> AppointmentOut:
@@ -101,7 +116,10 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(db_dep)
         status="scheduled",
     )
     db.add(appt)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        _raise_slot_conflict(db, exc)
     db.refresh(appt)
     return AppointmentOut.model_validate(appt)
 
@@ -215,7 +233,10 @@ def update_appointment(appt_id: int, payload: AppointmentUpdate, db: Session = D
             raise conflict("doctor_slot_taken")
     appt.doctor_id = new_doctor
     appt.scheduled_at = new_time
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        _raise_slot_conflict(db, exc)
     db.refresh(appt)
     return AppointmentOut.model_validate(appt)
 
