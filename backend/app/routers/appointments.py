@@ -226,7 +226,7 @@ def cancel_appointment(appt_id: int, payload: AppointmentCancelIn,
                        db: Session = Depends(db_dep),
                        user: CurrentUser = Depends(current_user)):
     appt = _get_appt(db, appt_id)
-    if appt.status == "completed":
+    if appt.status in TERMINAL:
         raise conflict("invalid_state", currentStatus=appt.status)
 
     now = datetime.now(timezone.utc)
