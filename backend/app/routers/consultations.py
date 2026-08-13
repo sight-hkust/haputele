@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, forbidden, not_found, unprocessable
 from ..dateutils import snap_to_monday
-from ..models import Appointment, Consultation, Doctor, QueueEntry
+from ..models import Appointment, Consultation, Doctor, Patient, QueueEntry
 from ..routers.appointments import _reject_if_past, _slot_taken
 from ..schemas import (
     AppointmentOut,
@@ -126,6 +126,15 @@ def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = D
     c, appt = _own_consultation(db, cid, user)
     if c.status != "draft":
         raise conflict("consultation_locked")
+    # §1.7 makes the patient's age mandatory on the prescription, and age is
+    # derived from dob — so a patient without one can't be prescribed for.
+    # Caught here rather than at PDF-render time because this is the last
+    # moment the record can still be fixed: the healthworker adds the dob to
+    # the patient and the doctor retries, versus discovering it downstream on
+    # a signed consultation that can no longer be edited.
+    patient = db.get(Patient, appt.patient_id)
+    if not patient or not patient.dob:
+        raise unprocessable("patient_dob_required")
     if payload.signature:
         # decode_signature raises invalid_signature_format / signature_too_large
         # depending on what's wrong with a supplied (drawn / one-off) signature.
