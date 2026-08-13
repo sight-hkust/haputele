@@ -8,7 +8,7 @@ from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, forbidden, not_found, unprocessable
 from ..dateutils import snap_to_monday
 from ..models import Appointment, Consultation, Doctor, QueueEntry
-from ..routers.appointments import _slot_taken
+from ..routers.appointments import _reject_if_past, _slot_taken
 from ..schemas import (
     AppointmentOut,
     ConsultationOut,
@@ -150,6 +150,7 @@ def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = D
 
     if isinstance(payload.followUp, FollowUpAppointment):
         # Doctor books an exact follow-up appointment for themselves.
+        _reject_if_past(payload.followUp.scheduledAt)
         if _slot_taken(db, appt.doctor_id, payload.followUp.scheduledAt):
             raise conflict("doctor_slot_taken")
         follow_up_appt = Appointment(
