@@ -1,6 +1,7 @@
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-export function maskDobInput(raw: string): string {
+export function maskDobInput(raw: string, previous = ""): string {
+  const deleting = raw.length < previous.length;
   const iso = raw.match(ISO_DATE);
   if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
 
@@ -10,14 +11,14 @@ export function maskDobInput(raw: string): string {
     const digits = cleaned.slice(0, 8);
     return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)]
       .filter(Boolean)
-      .join("/") + (digits.length === 2 || digits.length === 4 ? "/" : "");
+      .join("/") + (!deleting && (digits.length === 2 || digits.length === 4) ? "/" : "");
   }
 
   const [day = "", month = "", year = ""] = cleaned.split("/", 3);
   const masked = [day.slice(0, 2), month.slice(0, 2), year.slice(0, 4)]
     .join("/")
     .replace(/\/+$/, cleaned.endsWith("/") ? "/" : "");
-  return month.length === 2 && !year && !masked.endsWith("/") ? `${masked}/` : masked;
+  return !deleting && month.length === 2 && !year && !masked.endsWith("/") ? `${masked}/` : masked;
 }
 
 export function parseDob(value: string | undefined): string | null {

@@ -229,7 +229,7 @@ function DobInput({
         value={value}
         aria-invalid={invalid}
         aria-describedby={invalid ? "dob-error" : undefined}
-        onChange={(event) => onChange(maskDobInput(event.target.value))}
+        onChange={(event) => onChange(maskDobInput(event.target.value, value))}
         onBlur={onBlur}
       />
       <Button

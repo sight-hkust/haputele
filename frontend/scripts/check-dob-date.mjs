@@ -4,6 +4,8 @@ import { displayDob, maskDobInput, parseDob } from "../src/lib/dob-date.ts";
 assert.equal(maskDobInput("12021990"), "12/02/1990");
 assert.equal(maskDobInput("12-02-1990"), "12/02/1990");
 assert.equal(maskDobInput("12/02"), "12/02/");
+assert.equal(maskDobInput("12/02", "12/02/"), "12/02");
+assert.equal(maskDobInput("12", "12/"), "12");
 assert.equal(maskDobInput("1990-02-12"), "12/02/1990");
 assert.equal(parseDob("1/2/1990"), "1990-02-01");
 assert.equal(parseDob("29/02/2024"), "2024-02-29");
