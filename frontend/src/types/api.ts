@@ -59,7 +59,9 @@ export type PatientCreateRequest = {
   address?: string;
 };
 
-export type PatientUpdateRequest = Partial<Omit<PatientCreateRequest, "masterConsent">>;
+export type PatientUpdateRequest = Partial<Omit<PatientCreateRequest, "masterConsent" | "dob">> & {
+  dob?: string | null;
+};
 
 // ── Doctor ───────────────────────────────────────────────────────────
 export type Doctor = {
