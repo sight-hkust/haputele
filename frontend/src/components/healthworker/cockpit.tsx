@@ -54,7 +54,9 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
   const sessionConsented = !!(sessionConsent?.agreed && !sessionConsent.revokedAt);
   // Distinguish "not consented" from "still loading the consent status" — a
   // consent_pending appointment always already has consent, so we mustn't flash
-  // the "record consent first" notice before the query resolves.
+  // the "record consent first" notice before the query resolves. (The status is
+  // named for the step it enters, not the one just finished; `statusLabel` in
+  // lib/format.ts is what keeps that off the badge.)
   const sessionConsentResolved = !sessionConsentQ.isPending;
 
   return (
