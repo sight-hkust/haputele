@@ -5,8 +5,9 @@ import { Download, FileArchive, FileSpreadsheet, type LucideProps } from "lucide
 
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
+import { DatePicker } from "@/components/primitives/date-picker";
 import { ErrorBanner } from "@/components/primitives/error-banner";
-import { Input, Label } from "@/components/primitives/input";
+import { Label } from "@/components/primitives/input";
 import { PageHeader } from "@/components/primitives/page-header";
 import { API_URL } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -68,11 +69,11 @@ export default function ExportsPage() {
       <Card variant="elevated" className="p-8">
         <div className="flex max-w-xs flex-col gap-2">
           <Label htmlFor="export-date">Date</Label>
-          <Input
+          <DatePicker
             id="export-date"
-            type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={setDate}
+            ariaLabel="Choose export date"
           />
           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
             Sri Lanka time · {EXPORT_TIMEZONE}

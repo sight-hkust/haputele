@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { DatePicker } from "@/components/primitives/date-picker";
 import { ErrorBanner } from "@/components/primitives/error-banner";
-import { Input, Label } from "@/components/primitives/input";
+import { Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { PatientPicker } from "@/components/healthworker/patient-picker";
 import { ApiError } from "@/lib/api";
@@ -143,13 +144,15 @@ export function QueueEntryForm({
           </Select>
         </Field>
         <Field label="Target week (optional)">
-          <Input
-            type="date"
+          <DatePicker
+            mode="week"
             value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
+            onChange={setTargetDate}
+            placeholder="Choose a target week"
+            ariaLabel="Choose target week"
           />
           <p className="text-[11px] text-[var(--muted-foreground)]">
-            Pick any day in the target week — we&rsquo;ll snap to that week&rsquo;s Monday.
+            Pick any day — the full Monday–Sunday week will be selected.
           </p>
         </Field>
       </div>

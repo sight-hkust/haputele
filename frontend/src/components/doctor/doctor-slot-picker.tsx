@@ -6,7 +6,8 @@ import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
-import { Input, Label } from "@/components/primitives/input";
+import { DatePicker } from "@/components/primitives/date-picker";
+import { Label } from "@/components/primitives/input";
 import { Select } from "@/components/primitives/select";
 import { startOfWeekLocal } from "@/components/doctor/availability-grid-utils";
 import { useAppointmentList, useDoctorAvailability } from "@/lib/use-api";
@@ -300,10 +301,11 @@ export function DoctorSlotPicker({
       <div className="mt-2 flex flex-col gap-1.5">
         <Label>Or pick another time</Label>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Input
-            type="date"
+          <DatePicker
             value={customDate}
-            onChange={(e) => setCustomDate(e.target.value)}
+            onChange={setCustomDate}
+            placeholder="Choose another date"
+            ariaLabel="Choose another appointment date"
           />
           <Select
             value={customTime}

@@ -1,12 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDays } from "lucide-react";
-import { useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/primitives/button";
+import { DatePicker } from "@/components/primitives/date-picker";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
@@ -203,18 +202,7 @@ function DobInput({
   onPickerChange: (value: string) => void;
   onBlur: () => void;
 }) {
-  const pickerRef = useRef<HTMLInputElement>(null);
   const today = appToday();
-
-  const openPicker = () => {
-    const picker = pickerRef.current;
-    if (!picker) return;
-    try {
-      picker.showPicker();
-    } catch {
-      picker.click();
-    }
-  };
 
   return (
     <div className="flex items-center gap-3">
@@ -232,25 +220,12 @@ function DobInput({
         onChange={(event) => onChange(maskDobInput(event.target.value, value))}
         onBlur={onBlur}
       />
-      <Button
-        type="button"
-        variant="secondary"
-        size="icon"
-        className="h-12 w-12 shrink-0"
-        aria-label="Choose date of birth from calendar"
-        onClick={openPicker}
-      >
-        <CalendarDays className="h-5 w-5" aria-hidden="true" />
-      </Button>
-      <input
-        ref={pickerRef}
-        type="date"
-        className="pointer-events-none absolute h-px w-px opacity-0"
-        tabIndex={-1}
-        aria-hidden="true"
+      <DatePicker
+        trigger="icon"
+        ariaLabel="Choose date of birth from calendar"
         max={today}
         value={parseDob(value) ?? ""}
-        onChange={(event) => onPickerChange(displayDob(event.target.value))}
+        onChange={(date) => onPickerChange(displayDob(date))}
       />
     </div>
   );
