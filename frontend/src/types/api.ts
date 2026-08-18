@@ -366,7 +366,10 @@ export type InitializeSystemResponse = {
   expiresAt: string;
 };
 
-// POST /sysadmin/accounts — sys-admin only. Doctors use POST /doctors.
+// POST /accounts — open to both administrative roles, but what each may
+// create differs: sys-admin → admin | healthworker, admin → healthworker
+// only. Creating a role outside your reach is a 403 `cannot_manage_role`.
+// Doctors are never created here; use POST /doctors.
 export type OperatingAccountRole = "admin" | "healthworker";
 
 export type CreateOperatingAccountRequest = {
@@ -382,9 +385,11 @@ export type CreateOperatingAccountResponse = {
   role: OperatingAccountRole;
 };
 
-// GET /sysadmin/accounts — full platform roster. Admins and healthworkers
-// are manageable; doctors and the sys-admin are read-only rows. Roles
-// beyond the operating two appear here, so this is the broad role union.
+// GET /accounts — the roster THIS caller may see. A sys-admin gets the
+// whole platform (admins + healthworkers manageable, doctors read-only);
+// an admin gets healthworkers only, with admin and sys-admin rows withheld
+// server-side rather than filtered here. Roles beyond the operating two can
+// appear, so this is the broad role union.
 export type AccountRole = "sys-admin" | "admin" | "healthworker" | "doctor";
 
 export type AccountRosterEntry = {
@@ -405,12 +410,12 @@ export type AccountRosterEntry = {
   doctorId: number | null;
 };
 
-// POST /sysadmin/accounts/{username}/reset-password
+// POST /accounts/{username}/reset-password
 export type ResetAccountPasswordRequest = {
   password: string;
 };
 
-// PATCH /sysadmin/accounts/{username} — edit ops-managed profile.
+// PATCH /accounts/{username} — edit ops-managed profile.
 export type AccountUpdateRequest = {
   fullName?: string;
   contact?: string;

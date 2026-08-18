@@ -43,13 +43,22 @@ There are no pre-seeded accounts by default — account creation is owned entire
 | Role         | Username          | Password                              | Created by |
 |--------------|-------------------|----------------------------------------|-----|
 | sys-admin    | (operator-chosen) | (operator-chosen, min 10 chars)        | `/setup/initialize` |
-| admin        | (operator-chosen) | (operator-chosen)                      | wizard stage 3 (optional) or `POST /sysadmin/accounts` |
-| healthworker | (operator-chosen) | (operator-chosen)                      | wizard stage 3 (optional) or `POST /sysadmin/accounts` |
-| doctor       | (operator-chosen) | (operator-chosen)                      | `POST /doctors` from the admin UI |
+| admin        | (operator-chosen) | (operator-chosen)                      | wizard stage 3 (optional) or `POST /accounts` (sys-admin only) |
+| healthworker | (operator-chosen) | (operator-chosen)                      | wizard stage 3 (optional) or `POST /accounts` (sys-admin or admin) |
+| doctor       | (operator-chosen) | (operator-chosen)                      | `POST /doctors` from the admin or sys-admin UI |
 
 All four roles are unified behind a single `/login` form — there are no role tabs. The backend looks up the account by username alone and the response carries the resolved role, which decides where the client lands.
 
-`sys-admin` is platform-administrative (logs, backups, observability) and is the **only** DB-enforced singleton (`accounts_one_sysadmin_idx`); it can only be minted by `/setup/initialize`, never by `/sysadmin/accounts`. As of migration `0007_relax_role_singletons`, **admin and healthworker are no longer singletons** — the operator can create as many of each as needed via the wizard or `POST /sysadmin/accounts`. (The old `accounts_one_admin_idx` / `accounts_one_healthworker_idx` indexes were a relic of the shared-kiosk `seed.py` era and have been dropped.)
+**Who may create and manage whom.** `/accounts` serves both administrative roles, but the target roles each may touch are derived from the caller, not from a fixed list:
+
+| Caller    | May create & manage      | Doctors                            |
+|-----------|--------------------------|------------------------------------|
+| sys-admin | admin, healthworker      | full lifecycle via `/doctors`      |
+| admin     | healthworker             | full lifecycle via `/doctors`      |
+
+An admin gets no reach over `admin` or `sys-admin` rows — not create, not reset-password, not even roster visibility, since `GET /accounts` withholds those rows rather than flagging them. That boundary is the point: an admin able to mint admins or reset an admin's password would have promoted itself to sys-admin. Every endpoint derives its gate from `manageable_roles()` in `routers/accounts.py`, and `tests/test_account_role_matrix.py` checks the whole caller × target × endpoint grid.
+
+`sys-admin` is platform-administrative (logs, backups, observability) and is the **only** DB-enforced singleton (`accounts_one_sysadmin_idx`); it can only be minted by `/setup/initialize`, never by `/accounts`. As of migration `0007_relax_role_singletons`, **admin and healthworker are no longer singletons** — the operator can create as many of each as needed via the wizard or `POST /accounts`. (The old `accounts_one_admin_idx` / `accounts_one_healthworker_idx` indexes were a relic of the shared-kiosk `seed.py` era and have been dropped.)
 
 ### Common operations
 
@@ -128,7 +137,7 @@ The compose stack is portable — copy this directory to any Docker host and run
 - `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` and a real `LIVEKIT_URL` (LiveKit Cloud or self-hosted). Point your LiveKit project's webhook at `POST /livekit/webhook` so meetings auto-finalise when a room closes.
 - Object storage: set `S3_ENDPOINT_URL` to your S3 endpoint (or empty for AWS S3), a real `S3_BUCKET`, and real `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`. The bundled `rustfs` container is **dev-only** — don't expose it as your production store.
 
-No admin/healthworker accounts are auto-created — the sys-admin is created through `/setup/initialize`, and admin/healthworker accounts are created afterwards via the wizard's optional stage 3 or `POST /sysadmin/accounts`.
+No admin/healthworker accounts are auto-created — the sys-admin is created through `/setup/initialize`, and admin/healthworker accounts are created afterwards via the wizard's optional stage 3 or `POST /accounts`.
 
 After deploy, run through the first-run wizard from a trusted machine. The setup token is printed to the api container's stdout and written to `/data/setup-token` (in the `api_data` named volume); a single `/setup/initialize` POST seals the system and the token becomes invalid.
 
@@ -174,7 +183,7 @@ HapuTele2.0/
 │   ├── tests/                  # pytest + FastAPI TestClient (first-run setup integration tests)
 │   └── app/                    # FastAPI source
 │       ├── middleware/         # setup_gate (pre-init 409s), request_id
-│       ├── routers/            # setup, sysadmin, auth, doctors, patients, livekit_webhook, ...
+│       ├── routers/            # setup, sysadmin, accounts, auth, doctors, patients, livekit_webhook, ...
 │       ├── scripts/            # bootstrap_setup_token (generate/reuse/rotate setup token)
 │       └── services/           # system_config (LiveConfig cache), signature, livekit, storage (S3)
 └── frontend/                   # Next.js 14 (App Router) client
