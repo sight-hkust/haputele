@@ -750,6 +750,7 @@ function CancelAction({
                   </span>
                   <DatePicker
                     mode="week"
+                    align="end"
                     value={rqTargetDate}
                     onChange={setRqTargetDate}
                     placeholder="Choose a target week"
