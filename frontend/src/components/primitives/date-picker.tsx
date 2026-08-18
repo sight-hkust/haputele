@@ -265,6 +265,7 @@ export function DatePicker({
                 const weekStart = inSelectedWeek && day.getDay() === 1;
                 const weekEnd = inSelectedWeek && day.getDay() === 0;
                 const isToday = isSameDay(day, today);
+                const outsideMonth = !isSameMonth(day, visibleMonth);
                 return (
                   <button
                     key={day.toISOString()}
@@ -280,9 +281,9 @@ export function DatePicker({
                     onKeyDown={(event) => moveWithKeyboard(event, day)}
                     className={cn(
                       "relative flex h-9 items-center justify-center text-sm tabular-nums transition-colors focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
-                      !isSameMonth(day, visibleMonth) && "text-[var(--muted-foreground)]/45",
+                      outsideMonth && "text-slate-400",
                       !disabled && !inSelectedWeek && "rounded-lg hover:bg-[var(--muted)]",
-                      disabled && "cursor-not-allowed text-[var(--muted-foreground)]/25",
+                      disabled && "cursor-not-allowed text-slate-200",
                       inSelectedWeek && "bg-[var(--accent)]/10 text-[var(--accent)]",
                       weekStart && "rounded-l-lg",
                       weekEnd && "rounded-r-lg",
