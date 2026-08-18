@@ -73,6 +73,7 @@ export default function ExportsPage() {
             id="export-date"
             value={date}
             onChange={setDate}
+            max={appToday(EXPORT_TIMEZONE)}
             ariaLabel="Choose export date"
           />
           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
