@@ -80,7 +80,13 @@ export function DatePicker({
     document.addEventListener("pointerdown", closeOnOutsideClick);
     document.addEventListener("keydown", closeOnEscape);
     requestAnimationFrame(() => {
-      panelRef.current?.querySelector<HTMLButtonElement>("[data-focus-date]")?.focus();
+      const panel = panelRef.current;
+      panel?.querySelector<HTMLButtonElement>("[data-focus-date]")?.focus({ preventScroll: true });
+      panel?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
     });
     return () => {
       document.removeEventListener("pointerdown", closeOnOutsideClick);
@@ -187,7 +193,7 @@ export function DatePicker({
           role="dialog"
           aria-label={mode === "week" ? "Choose target week" : ariaLabel}
           className={cn(
-            "absolute top-full z-50 mt-2 w-[20rem] max-w-[calc(100vw-3rem)] rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3 shadow-xl",
+            "absolute top-full z-50 mt-2 w-[20rem] max-w-[calc(100vw-3rem)] scroll-m-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3 shadow-xl",
             trigger === "icon" || align === "end" ? "right-0" : "left-0",
           )}
         >
