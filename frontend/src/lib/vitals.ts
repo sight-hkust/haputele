@@ -16,6 +16,8 @@ type Bound = {
   max: number;
   /** true → whole numbers only (everything except temperature). */
   integer: boolean;
+  /** Maximum fractional digits for decimal measurements. */
+  maxDecimalPlaces?: number;
 };
 
 export const VITALS_BOUNDS: Record<VitalField, Bound> = {
@@ -24,7 +26,14 @@ export const VITALS_BOUNDS: Record<VitalField, Bound> = {
   sysBp: { label: "Systolic BP", unit: "mmHg", min: 50, max: 300, integer: true },
   diaBp: { label: "Diastolic BP", unit: "mmHg", min: 30, max: 200, integer: true },
   pulse: { label: "Pulse", unit: "bpm", min: 20, max: 300, integer: true },
-  temperature: { label: "Temperature", unit: "°C", min: 30, max: 45, integer: false },
+  temperature: {
+    label: "Temperature",
+    unit: "°C",
+    min: 30,
+    max: 45,
+    integer: false,
+    maxDecimalPlaces: 1,
+  },
 };
 
 export const PRIMARY_COMPLAINT_MAX = 2000;
@@ -43,9 +52,13 @@ export function validateVital(field: VitalField, raw: string): string | null {
     return `${VITALS_BOUNDS[field].label} must be a number.`;
   }
 
-  const { label, unit, min, max, integer } = VITALS_BOUNDS[field];
+  const { label, unit, min, max, integer, maxDecimalPlaces } = VITALS_BOUNDS[field];
   if (integer && !Number.isInteger(num)) {
     return `${label} must be a whole number.`;
+  }
+  const decimalPart = value.split(".")[1] ?? "";
+  if (!integer && maxDecimalPlaces !== undefined && decimalPart.length > maxDecimalPlaces) {
+    return `${label} can have at most ${maxDecimalPlaces} decimal place.`;
   }
   if (num < min || num > max) {
     return `${label} looks off — enter a value between ${min} and ${max} ${unit}. Double-check the reading.`;
@@ -96,6 +109,7 @@ export function parseVitalsValidationError(err: ApiError | null | undefined): Pa
   const rawErrors = (err.detail?.errors ?? []) as Array<{
     loc?: unknown[];
     msg?: string;
+    type?: string;
   }>;
   if (!Array.isArray(rawErrors) || rawErrors.length === 0) {
     return { fieldErrors: {}, formError: null };
@@ -111,7 +125,13 @@ export function parseVitalsValidationError(err: ApiError | null | undefined): Pa
 
     if (KNOWN_FIELDS.has(last)) {
       const field = last as VitalField;
-      fieldErrors[field] = outOfRangeMessage(field);
+      // Pydantic tags each error with a `type`; a precision failure
+      // (decimal_max_places) is not a range problem, so give it the same
+      // message the client-side validator uses instead of "between X and Y".
+      fieldErrors[field] =
+        String(e.type ?? "") === "decimal_max_places"
+          ? decimalPlacesMessage(field)
+          : outOfRangeMessage(field);
       continue;
     }
 
@@ -131,4 +151,9 @@ export function parseVitalsValidationError(err: ApiError | null | undefined): Pa
 function outOfRangeMessage(field: VitalField): string {
   const { label, unit, min, max } = VITALS_BOUNDS[field];
   return `${label} looks off — enter a value between ${min} and ${max} ${unit}. Double-check the reading.`;
+}
+
+function decimalPlacesMessage(field: VitalField): string {
+  const { label, maxDecimalPlaces } = VITALS_BOUNDS[field];
+  return `${label} can have at most ${maxDecimalPlaces ?? 1} decimal place.`;
 }

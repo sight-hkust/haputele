@@ -612,7 +612,9 @@ class PreconsultIn(BaseModel):
     sysBp: Optional[int] = Field(default=None, ge=50, le=300)           # mmHg
     diaBp: Optional[int] = Field(default=None, ge=30, le=200)           # mmHg
     pulse: Optional[int] = Field(default=None, ge=20, le=300)           # bpm
-    temperature: Optional[Decimal] = Field(default=None, ge=30, le=45)  # °C
+    temperature: Optional[Decimal] = Field(
+        default=None, ge=30, le=45, decimal_places=1
+    )  # °C
     primaryComplaint: Optional[str] = Field(default=None, max_length=2000)
 
     @model_validator(mode="after")
