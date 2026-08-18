@@ -507,10 +507,14 @@ class AppointmentCreate(BaseModel):
     doctorId: int
     scheduledAt: datetime
 
+    _aware = field_validator("scheduledAt")(_require_aware)
+
 
 class AppointmentUpdate(BaseModel):
     doctorId: Optional[int] = None
     scheduledAt: Optional[datetime] = None
+
+    _aware = field_validator("scheduledAt")(_require_aware)
 
 
 class RequeueOnCancel(BaseModel):
