@@ -37,6 +37,7 @@ type DatePickerProps = {
   placeholder?: string;
   ariaLabel?: string;
   trigger?: "field" | "icon";
+  align?: "start" | "end";
   className?: string;
 };
 
@@ -53,6 +54,7 @@ export function DatePicker({
   placeholder = "Choose a date",
   ariaLabel = "Choose date",
   trigger = "field",
+  align = "start",
   className,
 }: DatePickerProps) {
   const generatedId = useId();
@@ -186,7 +188,7 @@ export function DatePicker({
           aria-label={mode === "week" ? "Choose target week" : ariaLabel}
           className={cn(
             "absolute top-full z-50 mt-2 w-[20rem] max-w-[calc(100vw-3rem)] rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3 shadow-xl",
-            trigger === "icon" ? "right-0" : "left-0",
+            trigger === "icon" || align === "end" ? "right-0" : "left-0",
           )}
         >
           <div className="mb-3 flex items-center gap-1">

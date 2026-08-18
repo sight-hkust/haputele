@@ -131,6 +131,7 @@ export function QueueEntryForm({
         <Field label="Target week (optional)">
           <DatePicker
             mode="week"
+            align="end"
             value={targetDate}
             onChange={setTargetDate}
             placeholder="Choose a target week"
