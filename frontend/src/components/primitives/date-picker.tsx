@@ -301,21 +301,11 @@ export function DatePicker({
             </div>
           </div>
 
-          <div className="mt-3 flex min-h-10 items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
-            <div className="min-w-0 text-xs text-[var(--muted-foreground)]" aria-live="polite">
-              {selected && (
-                <>
-                  <span className="block font-mono text-[9px] uppercase tracking-[0.12em]">
-                    {mode === "week" ? "Selected week" : "Selected date"}
-                  </span>
-                  <span className="font-medium text-[var(--foreground)]">{displayValue}</span>
-                </>
-              )}
-            </div>
-            {selected && (
+          {selected && (
+            <div className="mt-3 flex items-center justify-end gap-1 border-t border-[var(--border)] pt-3">
               <button
                 type="button"
-                className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent)]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent)]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                 onClick={() => {
                   onChange("");
                   setOpen(false);
@@ -323,8 +313,13 @@ export function DatePicker({
               >
                 Clear
               </button>
-            )}
-          </div>
+              {mode === "week" && (
+                <Button type="button" size="sm" onClick={() => setOpen(false)}>
+                  Done
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
