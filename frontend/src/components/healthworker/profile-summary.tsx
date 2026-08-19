@@ -97,6 +97,9 @@ export function ProfileSummary({ profile, editHref }: { profile: Profile | null;
             <ul className="flex flex-col gap-1 text-sm text-[var(--muted-foreground)]">
               {profile.lifestyle.smoking && <li>Smoking · {profile.lifestyle.smoking}</li>}
               {profile.lifestyle.alcohol && <li>Alcohol · {profile.lifestyle.alcohol}</li>}
+              {profile.lifestyle.betelAreca && (
+                <li>Betel / areca · {profile.lifestyle.betelAreca}</li>
+              )}
               {profile.lifestyle.occupation && <li>Occupation · {profile.lifestyle.occupation}</li>}
               {profile.lifestyle.physicalActivity && (
                 <li>Activity · {physicalActivityLabel(profile.lifestyle.physicalActivity)}</li>
@@ -164,6 +167,7 @@ function hasLifestyle(p: Profile): boolean {
   return !!(
     p.lifestyle?.smoking ||
     p.lifestyle?.alcohol ||
+    p.lifestyle?.betelAreca ||
     p.lifestyle?.occupation ||
     p.lifestyle?.physicalActivity
   );

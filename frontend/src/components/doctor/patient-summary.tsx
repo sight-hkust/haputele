@@ -238,6 +238,8 @@ function ProfileFacts({ profile }: { profile: Profile }) {
   const lifestyle: string[] = [];
   if (profile.lifestyle.smoking) lifestyle.push(`Smoking · ${profile.lifestyle.smoking}`);
   if (profile.lifestyle.alcohol) lifestyle.push(`Alcohol · ${profile.lifestyle.alcohol}`);
+  if (profile.lifestyle.betelAreca)
+    lifestyle.push(`Betel / areca · ${profile.lifestyle.betelAreca}`);
   if (profile.lifestyle.occupation) lifestyle.push(`Occupation · ${profile.lifestyle.occupation}`);
   if (lifestyle.length) sections.push({ title: "Lifestyle", items: lifestyle });
 

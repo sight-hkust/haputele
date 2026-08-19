@@ -186,6 +186,7 @@ def upsert_profile(patient_id: int, payload: ProfileIn, db: Session = Depends(db
     profile.existing_medications = [m.model_dump(exclude_none=True) for m in payload.medications]
     profile.smoking = payload.lifestyle.smoking
     profile.alcohol = payload.lifestyle.alcohol
+    profile.betel_areca = payload.lifestyle.betelAreca
     profile.occupation = payload.lifestyle.occupation
     profile.physical_activity = payload.lifestyle.physicalActivity
     profile.updated_at = datetime.now(timezone.utc)

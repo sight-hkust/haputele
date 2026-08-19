@@ -130,6 +130,11 @@ class Profile(Base):
     )
     smoking: Mapped[str | None] = mapped_column(String(20))
     alcohol: Mapped[str | None] = mapped_column(String(20))
+    # Betel quid / areca nut chewing — the leading oral-cancer risk factor in
+    # South Asia, and invisible to the smoking and alcohol columns above, which
+    # skew heavily male in the region. Issue #64 calls this "acorn", which was a
+    # mishearing of "areca" in the field notes it was transcribed from.
+    betel_areca: Mapped[str | None] = mapped_column(String(20))
     occupation: Mapped[str | None] = mapped_column(String(255))
     physical_activity: Mapped[str | None] = mapped_column(String(255))
     updated_at: Mapped[datetime] = mapped_column(
