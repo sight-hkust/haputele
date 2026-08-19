@@ -14,6 +14,7 @@ from .middleware.setup_gate import SetupRequiredMiddleware
 from .observability import configure_logging
 from .security import CSRF_HEADER_NAME
 from .routers import (
+    accounts,
     appointments,
     attachments,
     auth,
@@ -177,6 +178,7 @@ def create_app() -> FastAPI:
 
     app.include_router(setup.router)
     app.include_router(sysadmin.router)
+    app.include_router(accounts.router)
     app.include_router(auth.router)
     app.include_router(doctors.router)
     app.include_router(patients.router)

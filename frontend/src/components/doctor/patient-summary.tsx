@@ -238,7 +238,7 @@ function ProfileFacts({ profile }: { profile: Profile }) {
   const lifestyle: string[] = [];
   if (profile.lifestyle.smoking) lifestyle.push(`Smoking · ${profile.lifestyle.smoking}`);
   if (profile.lifestyle.alcohol) lifestyle.push(`Alcohol · ${profile.lifestyle.alcohol}`);
-  if (profile.lifestyle.occupation) lifestyle.push(`Job · ${profile.lifestyle.occupation}`);
+  if (profile.lifestyle.occupation) lifestyle.push(`Occupation · ${profile.lifestyle.occupation}`);
   if (lifestyle.length) sections.push({ title: "Lifestyle", items: lifestyle });
 
   if (!sections.length) {

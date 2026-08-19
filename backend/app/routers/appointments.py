@@ -6,8 +6,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
 from ..deps import CurrentUser, current_user, db_dep, require_role
-from ..errors import conflict, forbidden, not_found
-from ..dateutils import snap_to_monday
+from ..errors import conflict, forbidden, not_found, unprocessable
+from ..dateutils import is_past_slot, snap_to_monday
 from ..models import (
     Appointment,
     AppointmentAttachment,
@@ -83,6 +83,23 @@ def _slot_taken(db: Session, doctor_id: int, scheduled_at: datetime, exclude_id:
     return db.scalar(stmt) is not None
 
 
+def _reject_if_past(scheduled_at: datetime) -> None:
+    """Refuse to schedule an appointment whose slot has already elapsed.
+
+    The picker hides past slots, but the UI filters against the *browser*
+    clock and a tab left open overnight still offers stale chips — so the
+    server is the authority. `serverNow` goes in the body to make a skewed
+    client diagnosable from the response alone.
+    """
+    now = datetime.now(timezone.utc)
+    if is_past_slot(scheduled_at, now):
+        raise unprocessable(
+            "appointment_in_past",
+            scheduledAt=scheduled_at.isoformat(),
+            serverNow=now.isoformat(),
+        )
+
+
 @router.post("", response_model=AppointmentOut, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role("healthworker"))])
 def create_appointment(payload: AppointmentCreate, db: Session = Depends(db_dep)) -> AppointmentOut:
@@ -92,6 +109,7 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(db_dep)
     doctor = db.get(Doctor, payload.doctorId)
     if not doctor or not doctor.active:
         raise not_found("doctor_not_found")
+    _reject_if_past(payload.scheduledAt)
     if _slot_taken(db, payload.doctorId, payload.scheduledAt):
         raise conflict("doctor_slot_taken")
 
@@ -211,6 +229,11 @@ def update_appointment(appt_id: int, payload: AppointmentUpdate, db: Session = D
         d = db.get(Doctor, payload.doctorId)
         if not d or not d.active:
             raise not_found("doctor_not_found")
+    # Only vet the time when it is actually being moved — reassigning the
+    # doctor on an appointment that has already started is legitimate, and
+    # must not trip the past-slot guard on its unchanged scheduled_at.
+    if new_time != appt.scheduled_at:
+        _reject_if_past(new_time)
     if (new_doctor, new_time) != (appt.doctor_id, appt.scheduled_at):
         if _slot_taken(db, new_doctor, new_time, exclude_id=appt.appointment_id):
             raise conflict("doctor_slot_taken")

@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/primitives/button";
 import { useAppointmentList, useQueueList } from "@/lib/use-api";
-import { fmtDateTime, fmtTargetWeek } from "@/lib/format";
+import { fmtDateTime, fmtTargetWeek, statusLabel } from "@/lib/format";
 import type { QueueEntry } from "@/types/api";
 
 // Beneath the patient picker on the booking form: surface what's already
@@ -65,7 +65,7 @@ export function PatientContext({
                   <Clock className="h-3 w-3" />
                   {fmtDateTime(a.scheduledAt)} · {a.doctorName}
                   <span className="font-mono uppercase tracking-[0.1em] text-[10px] text-amber-700">
-                    ({a.status.replace(/_/g, " ")})
+                    ({statusLabel(a.status)})
                   </span>
                 </Link>
               </li>
