@@ -28,10 +28,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
 Select.displayName = "Select";
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  ({ className, rows = 4, ...props }, ref) => (
+  ({ className, rows = 4, autoComplete = "off", ...props }, ref) => (
     <textarea
       ref={ref}
       rows={rows}
+      autoComplete={autoComplete}
       className={cn(
         "flex w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm",
         "text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60",

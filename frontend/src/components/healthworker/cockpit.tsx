@@ -751,6 +751,7 @@ function CancelAction({
                   </span>
                   <input
                     type="date"
+                    autoComplete="off"
                     value={rqTargetDate}
                     onChange={(e) => setRqTargetDate(e.target.value)}
                     className="h-10 rounded-lg border border-[var(--border)] bg-transparent px-3 text-sm"

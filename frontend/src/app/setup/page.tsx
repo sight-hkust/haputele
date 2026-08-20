@@ -371,7 +371,7 @@ function ConfigureStage({
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="e.g. ops"
-            autoComplete="username"
+            autoComplete="off"
           />
         </Field>
         <Field
@@ -747,7 +747,7 @@ function AccountDraftRow({
       aria-label="Username"
       value={value.username}
       onChange={(e) => onChange({ username: e.target.value })}
-      autoComplete="username"
+      autoComplete="off"
     />
   );
   const passwordInput = (
