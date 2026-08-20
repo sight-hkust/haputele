@@ -35,7 +35,7 @@ export function PatientSummary({
       <Card variant="elevated" className="p-6">
         <div className="mb-4 flex items-center gap-2">
           <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
             Patient
           </span>
         </div>
@@ -52,7 +52,7 @@ export function PatientSummary({
             .join(" · ")}
         </p>
         {patient.nationalId && (
-          <p className="mt-2 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+          <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
             NID · {patient.nationalId}
           </p>
         )}
@@ -64,7 +64,7 @@ export function PatientSummary({
       <Card variant="elevated" className="border-[var(--accent)]/30 bg-[var(--accent)]/[0.04] p-6">
         <div className="mb-3 flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
             Primary complaint
           </span>
         </div>
@@ -81,7 +81,7 @@ export function PatientSummary({
         <Card className="p-6">
           <div className="mb-3 flex items-center gap-2">
             <Camera className="h-4 w-4 text-[var(--accent)]" />
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
               Photos · {attachments.length}
             </span>
           </div>
@@ -100,7 +100,7 @@ export function PatientSummary({
       <Card className="p-6">
         <div className="mb-4 flex items-center gap-2">
           <HeartPulse className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
             Preconsult vitals
           </span>
         </div>
@@ -133,7 +133,7 @@ export function PatientSummary({
         <Card className="p-6">
           <div className="mb-4 flex items-center gap-2">
             <Activity className="h-4 w-4 text-[var(--accent)]" />
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
               History at a glance
             </span>
           </div>
@@ -179,11 +179,11 @@ function DoctorAttachmentThumb({
           />
         </>
       ) : error ? (
-        <div className="flex h-full w-full items-center justify-center p-2 text-center text-xs text-rose-600">
+        <div className="flex h-full w-full items-center justify-center p-2 text-center text-[10px] text-rose-600">
           Load failed
         </div>
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted-foreground)]">
+        <div className="flex h-full w-full items-center justify-center text-[10px] text-[var(--muted-foreground)]">
           …
         </div>
       )}
@@ -194,7 +194,7 @@ function DoctorAttachmentThumb({
 function Vital({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <div>
-      <dt className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <dt className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
         {label}
       </dt>
       <dd className="mt-1 text-sm font-semibold tracking-[-0.01em]">
@@ -249,7 +249,7 @@ function ProfileFacts({ profile }: { profile: Profile }) {
     <div className="flex flex-col gap-4">
       {sections.map((s) => (
         <div key={s.title}>
-          <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
             {s.title}
           </div>
           <ul className="mt-1.5 flex flex-wrap gap-1.5">
