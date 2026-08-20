@@ -4,6 +4,19 @@ const config: Config = {
   content: ["./src/**/*.{ts,tsx,js,jsx,mdx}"],
   theme: {
     extend: {
+      // Type scale raised one step app-wide (#58, #55). The clinic's users are
+      // largely seniors, and the UI had drifted to 10-14px almost everywhere.
+      // Overriding the scale here lifts every text-xs/sm/base/lg call site at
+      // once. Sizes carry an explicit line-height — bumping size alone leaves
+      // the old leading and reads cramped. xl and above are deliberately left
+      // at Tailwind's defaults: headings are already large enough, and holding
+      // them fixed keeps reflow contained to body copy.
+      fontSize: {
+        xs: ["0.8125rem", { lineHeight: "1.125rem" }],   // 13px / 18px
+        sm: ["0.9375rem", { lineHeight: "1.375rem" }],   // 15px / 22px
+        base: ["1.0625rem", { lineHeight: "1.625rem" }], // 17px / 26px
+        lg: ["1.1875rem", { lineHeight: "1.75rem" }],    // 19px / 28px
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

@@ -7,7 +7,9 @@
     --background: #fafafa;
     --foreground: #0f172a;
     --muted: #f1f5f9;
-    --muted-foreground: #64748b;
+    /* slate-600, not slate-500 (#57). The old value cleared AA at 4.76:1 but
+       sat on 10-11px text everywhere; this reaches 7.6:1 on white (AAA). */
+    --muted-foreground: #475569;
     --accent: #0052ff;
     --accent-secondary: #4d7cff;
     --accent-foreground: #ffffff;
