@@ -454,11 +454,12 @@ export function useCancelAppointment(id: number) {
   const qc = useQueryClient();
   return useMutation<AppointmentCancelResponse, ApiError, AppointmentCancelRequest>({
     mutationFn: (body) => fetcher(`/appointments/${id}/cancel`, { method: "POST", body }),
-    onSuccess: (res) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments", id] });
       qc.invalidateQueries({ queryKey: ["appointments", "list"] });
-      // If a fresh queue entry was created, refresh queue lists too.
-      if (res.queueEntry) qc.invalidateQueries({ queryKey: ["queue"] });
+      // Linked booked queue rows are auto-cancelled even when requeue is
+      // omitted, so always refresh queue lists.
+      qc.invalidateQueries({ queryKey: ["queue"] });
     },
   });
 }
