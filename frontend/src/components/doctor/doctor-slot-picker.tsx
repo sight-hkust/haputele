@@ -5,6 +5,7 @@ import { addDays, format, parseISO } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Input, Label } from "@/components/primitives/input";
 import { Select } from "@/components/primitives/select";
@@ -244,7 +245,7 @@ export function DoctorSlotPicker({
         </Button>
         <div className="flex min-w-[10rem] flex-col items-center">
           <span className="text-sm font-semibold tracking-[-0.01em]">{weekLabel}</span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+          <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
             {weekRangeLabel}
           </span>
         </div>
@@ -271,9 +272,9 @@ export function DoctorSlotPicker({
 
       {/* Chip grid ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <Eyebrow>
           Open slots that week (15-min)
-        </span>
+        </Eyebrow>
         {loading ? (
           <div className="flex items-center gap-2 py-2 text-xs text-[var(--muted-foreground)]">
             <Loader2 className="h-3 w-3 animate-spin" /> Loading…
@@ -284,11 +285,11 @@ export function DoctorSlotPicker({
               const slots = slotsByDay.get(d.ymd) ?? [];
               return (
                 <div key={d.ymd} className="grid grid-cols-[6.5rem_1fr] items-baseline gap-3">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                  <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
                     {d.label}
                   </span>
                   {slots.length === 0 ? (
-                    <span className="text-[11px] text-[var(--muted-foreground)]/70">
+                    <span className="text-xs text-[var(--muted-foreground)]">
                       {declaredDays.has(d.ymd)
                         ? "No slots remaining"
                         : "No declared availability"}
@@ -303,7 +304,7 @@ export function DoctorSlotPicker({
                             type="button"
                             onClick={() => pickSlot(slot)}
                             className={cn(
-                              "rounded-lg border px-2 py-0.5 font-mono text-[11px] tabular-nums transition-all",
+                              "rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums transition-all",
                               isSelected
                                 ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]"
                                 : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-400",

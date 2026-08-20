@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Input } from "@/components/primitives/input";
 import { usePatientList } from "@/lib/use-api";
 import type { Patient } from "@/types/api";
@@ -45,9 +46,9 @@ export function PatientPicker({
     return (
       <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3">
         <div className="text-sm">
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <Eyebrow>
             For patient
-          </span>
+          </Eyebrow>
           <div className="mt-1 font-medium">
             {fullName(picked)}{" "}
             <span className="font-mono text-xs text-[var(--muted-foreground)]">· #{picked.id}</span>
@@ -60,7 +61,7 @@ export function PatientPicker({
             setQuery("");
             setOpen(false);
           }}
-          className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
+          className="inline-flex items-center gap-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
         >
           <X className="h-3 w-3" />
           Change

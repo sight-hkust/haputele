@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { DoctorForm, type DoctorFormPayload } from "@/components/admin/doctor-form";
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { Input, Label } from "@/components/primitives/input";
@@ -142,9 +143,9 @@ export default function DoctorOnboardingPage() {
 
 function LoadingPanel() {
   return (
-    <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+    <Eyebrow>
       Checking your invitation…
-    </span>
+    </Eyebrow>
   );
 }
 
@@ -478,12 +479,12 @@ function NewDoctorPanel({
       <motion.div variants={fadeInUp}>
         <Card className="flex items-center justify-between gap-3 border-[var(--accent)]/20 bg-[var(--accent)]/[0.04] p-4">
           <div>
-            <div className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Invitation email
             </div>
             <div className="mt-1 text-sm">{peek.email}</div>
           </div>
-          <span className="rounded-full bg-[var(--accent)]/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--accent)]">
+          <span className="rounded-full bg-[var(--accent)]/10 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
             Locked
           </span>
         </Card>

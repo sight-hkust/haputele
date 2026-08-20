@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Search, UserPlus, Users } from "lucide-react";
 
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
@@ -88,7 +89,7 @@ export default function PatientListPage() {
       ) : (
         <>
           <Card className="overflow-hidden p-0">
-            <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-4 border-b border-[var(--border)] bg-[var(--muted)]/30 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-4 border-b border-[var(--border)] bg-[var(--muted)]/30 px-6 py-3 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               <span>Name</span>
               <span>National ID</span>
               <span>Contact</span>
@@ -104,15 +105,15 @@ export default function PatientListPage() {
                   >
                     <div>
                       <div className="text-sm font-semibold tracking-[-0.01em]">{fullName(p)}</div>
-                      <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                      <div className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
                         ID #{p.id} · {p.gender}
                       </div>
                     </div>
-                    <span className="font-mono text-[11px] text-[var(--muted-foreground)]">
+                    <span className="font-mono text-xs text-[var(--muted-foreground)]">
                       {p.nationalId ?? "—"}
                     </span>
                     <span className="text-sm text-[var(--muted-foreground)]">{p.contact ?? "—"}</span>
-                    <span className="text-right font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                    <span className="text-right font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
                       {fmtRelative(p.createdAt)}
                     </span>
                   </button>
@@ -139,9 +140,9 @@ function Pagination({ page, hasNext, onChange }: { page: number; hasNext: boolea
         <ChevronLeft className="h-4 w-4" />
         Prev
       </Button>
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <Eyebrow>
         Page {page}
-      </span>
+      </Eyebrow>
       <Button variant="secondary" size="sm" disabled={!hasNext} onClick={() => onChange(page + 1)}>
         Next
         <ChevronRight className="h-4 w-4" />

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   ExternalLink,
   FileSignature,
   Stethoscope,
@@ -11,6 +10,7 @@ import {
 
 import { PatientSummary } from "@/components/doctor/patient-summary";
 import { VisitHistoryPanel } from "@/components/doctor/visit-history";
+import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
@@ -60,13 +60,7 @@ export default function DoctorAppointmentDetail() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
-      <Link
-        href="/doctor"
-        className="inline-flex w-fit items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--accent)]"
-      >
-        <ArrowLeft className="h-3 w-3" />
-        Back to calendar
-      </Link>
+      <BackLink href="/doctor">Back to calendar</BackLink>
 
       <PageHeader
         label={`Appointment #${appointment.id}`}

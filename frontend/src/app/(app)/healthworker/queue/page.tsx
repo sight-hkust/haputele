@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Inbox, Loader2, Plus } from "lucide-react";
 
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
@@ -84,7 +85,7 @@ export default function QueuePage() {
             </Select>
           </Filter>
         </div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           Sort: urgent first → soonest target week → longest waiting
         </p>
       </div>
@@ -166,9 +167,9 @@ export default function QueuePage() {
 function Filter({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <Eyebrow>
         {label}
-      </span>
+      </Eyebrow>
       {children}
     </div>
   );

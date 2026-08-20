@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  ArrowLeft,
   CalendarPlus,
   ClipboardList,
   History,
@@ -12,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 
+import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
@@ -65,13 +65,7 @@ export default function PatientDetailPage() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
-      <Link
-        href="/healthworker/patients"
-        className="inline-flex w-fit items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--accent)]"
-      >
-        <ArrowLeft className="h-3 w-3" />
-        Back to patients
-      </Link>
+      <BackLink href="/healthworker/patients">Back to patients</BackLink>
 
       <PageHeader
         label={`Patient #${patient.id}`}
@@ -111,7 +105,7 @@ export default function PatientDetailPage() {
         <Card variant="elevated" className="p-8">
           <div className="mb-6 flex items-center gap-2">
             <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--accent)]">
+            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
               Demographics
             </h2>
           </div>
@@ -137,7 +131,7 @@ export default function PatientDetailPage() {
         <Card className="p-8">
           <div className="mb-5 flex items-center gap-2">
             <History className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--accent)]">
+            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
               Appointment history
             </h2>
           </div>
@@ -154,7 +148,7 @@ export default function PatientDetailPage() {
                     className="block rounded-lg px-2 py-3 transition-colors hover:bg-[var(--muted)]/40"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                      <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
                         {fmtDateTime(a.scheduledAt)}
                       </span>
                       <StatusBadge status={a.status} />
@@ -232,7 +226,7 @@ function Field({
 }) {
   return (
     <div className={className}>
-      <dt className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <dt className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
         {label}
       </dt>
       <dd className={mono ? "mt-1 font-mono text-sm" : "mt-1 text-sm"}>{value}</dd>

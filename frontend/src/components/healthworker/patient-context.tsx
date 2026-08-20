@@ -46,7 +46,7 @@ export function PatientContext({
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-3">
-      <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-amber-800">
+      <p className="font-mono text-xs uppercase tracking-[0.15em] text-amber-800">
         This patient already has
       </p>
 
@@ -64,7 +64,7 @@ export function PatientContext({
                 >
                   <Clock className="h-3 w-3" />
                   {fmtDateTime(a.scheduledAt)} · {a.doctorName}
-                  <span className="font-mono uppercase tracking-[0.1em] text-[10px] text-amber-700">
+                  <span className="font-mono uppercase tracking-[0.1em] text-xs text-amber-700">
                     ({statusLabel(a.status)})
                   </span>
                 </Link>
@@ -89,13 +89,13 @@ export function PatientContext({
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                     <span className="font-medium capitalize">{e.source.replace("_", "-")}</span>
                     {e.priority === "urgent" && (
-                      <span className="font-mono text-[10px] uppercase text-rose-600">urgent</span>
+                      <span className="font-mono text-xs uppercase text-rose-600">urgent</span>
                     )}
                     {e.targetDate && (
                       <span className="text-amber-800/80">{fmtTargetWeek(e.targetDate).toLowerCase()}</span>
                     )}
                   </div>
-                  {e.notes && <span className="line-clamp-2 text-[11px] text-amber-900/70">{e.notes}</span>}
+                  {e.notes && <span className="line-clamp-2 text-xs text-amber-900/70">{e.notes}</span>}
                 </div>
                 <Button size="sm" onClick={() => onBookQueueEntry(e)}>
                   <CalendarPlus className="h-3 w-3" />

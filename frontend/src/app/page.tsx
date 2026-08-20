@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ROLE_HOMES, useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
+import { Eyebrow } from "@/components/primitives/eyebrow";
 
 // Root entry point. Bounce based on system + session state:
 //   1. If system_config.initialized_at IS NULL → /setup (first-run wizard).
@@ -47,9 +48,9 @@ export default function Index() {
 
   return (
     <main className="flex min-h-screen items-center justify-center">
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <Eyebrow>
         Loading…
-      </span>
+      </Eyebrow>
     </main>
   );
 }

@@ -13,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
@@ -190,9 +191,9 @@ function MasterConsentGate({
         <div className="flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <Eyebrow>
               Master consent
-            </span>
+            </Eyebrow>
             <p className="text-sm font-medium">Active for {patientName || "this patient"}</p>
           </div>
         </div>
@@ -295,9 +296,9 @@ function SessionConsentStep({
         <div className="flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <Eyebrow>
               Session consent
-            </span>
+            </Eyebrow>
             <p className="text-sm font-medium">
               Patient consented{consentTime ? ` at ${fmtTime(consentTime)}` : ""}
             </p>
@@ -324,7 +325,7 @@ function SessionConsentStep({
                 Record consent
               </Button>
               {!masterAvailable && (
-                <span className="self-center font-mono text-[11px] uppercase tracking-[0.12em] text-amber-700">
+                <span className="self-center font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
                   Master consent required first
                 </span>
               )}
@@ -694,7 +695,7 @@ function CancelAction({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
+          className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
         >
           Cancel this appointment
         </button>
@@ -733,9 +734,9 @@ function CancelAction({
             <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                  <Eyebrow>
                     Priority
-                  </span>
+                  </Eyebrow>
                   <select
                     value={rqPriority}
                     onChange={(e) => setRqPriority(e.target.value as "routine" | "urgent")}
@@ -746,9 +747,9 @@ function CancelAction({
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                  <Eyebrow>
                     Target week
-                  </span>
+                  </Eyebrow>
                   <input
                     type="date"
                     value={rqTargetDate}
@@ -803,9 +804,9 @@ export function CockpitHeader({
     <Card className="p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <Eyebrow>
             Appointment #{appointment.id}
-          </span>
+          </Eyebrow>
           <h2 className="mt-1 font-display text-2xl tracking-[-0.01em]">
             {patient ? `${patient.given} ${patient.family}` : "Patient"}
           </h2>

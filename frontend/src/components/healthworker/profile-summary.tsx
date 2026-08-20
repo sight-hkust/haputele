@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Activity, AlertCircle, ClipboardList, Pencil, Pill, Stethoscope } from "lucide-react";
 
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { diseaseLabel, physicalActivityLabel } from "@/lib/medical-codes";
@@ -17,7 +18,7 @@ export function ProfileSummary({ profile, editHref }: { profile: Profile | null;
       <Card className="p-8">
         <div className="mb-3 flex items-center gap-2">
           <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
             Patient profile
           </span>
         </div>
@@ -40,7 +41,7 @@ export function ProfileSummary({ profile, editHref }: { profile: Profile | null;
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
             Patient profile
           </span>
         </div>
@@ -106,7 +107,7 @@ export function ProfileSummary({ profile, editHref }: { profile: Profile | null;
         )}
       </div>
 
-      <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <p className="mt-6 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
         Updated {fmtRelative(profile.updatedAt)}
       </p>
     </Card>
@@ -126,9 +127,9 @@ function Block({
     <div>
       <div className="mb-2 flex items-center gap-2">
         <Icon className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <Eyebrow>
           {title}
-        </span>
+        </Eyebrow>
       </div>
       {children}
     </div>

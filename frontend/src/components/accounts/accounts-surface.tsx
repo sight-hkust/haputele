@@ -18,6 +18,7 @@ import Link from "next/link";
 
 import { AccountPanel } from "@/components/sysadmin/account-panel";
 import { InvitePanel } from "@/components/doctors/new-doctor-surface";
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
@@ -321,7 +322,7 @@ function StatChip({
     <div className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-2">
       <span className={cn("h-1.5 w-1.5 rounded-full", dot)} aria-hidden />
       <span className="font-display text-lg leading-none tracking-[-0.01em]">{value}</span>
-      <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">{label}</span>
+      <Eyebrow>{label}</Eyebrow>
     </div>
   );
 }
@@ -345,7 +346,7 @@ function SortableTh({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="group inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+        className="group inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
       >
         {label}
         {isActive ? (
@@ -364,7 +365,7 @@ function SortableTh({
 
 function RoleBadge({ role }: { role: AccountRole }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+    <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
       {ROLE_LABEL[role]}
     </span>
   );
@@ -374,7 +375,7 @@ function StatePill({ active, label }: { active: boolean; label: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-[0.12em]",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em]",
         active
           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
           : "border-rose-200 bg-rose-50 text-rose-700",

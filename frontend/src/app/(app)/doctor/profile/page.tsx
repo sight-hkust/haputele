@@ -216,7 +216,7 @@ export default function DoctorProfilePage() {
                 />
               </div>
               <div className="flex-1">
-                <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
+                <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">Applied automatically when you finalise a consultation.</p>
               </div>
               <div className="flex flex-col gap-1.5">

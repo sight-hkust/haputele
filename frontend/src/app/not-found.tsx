@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { ROLE_HOMES, useAuth } from "@/lib/auth";
+import { Eyebrow } from "@/components/primitives/eyebrow";
 
 // Global not-found boundary for any unmatched URL. Next renders this for paths
 // with no matching route (and for explicit notFound() calls) inside the root
@@ -26,9 +27,9 @@ export default function NotFound() {
   if (loading || !session) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <Eyebrow>
           Loading…
-        </span>
+        </Eyebrow>
       </main>
     );
   }
@@ -36,9 +37,9 @@ export default function NotFound() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
       <div className="flex flex-col gap-2">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <Eyebrow>
           Error 404
-        </span>
+        </Eyebrow>
         <h1 className="font-display text-4xl tracking-[-0.02em] sm:text-5xl">Page not found</h1>
         <p className="max-w-md text-[var(--muted-foreground)]">
           The page you&apos;re looking for doesn&apos;t exist or has moved.

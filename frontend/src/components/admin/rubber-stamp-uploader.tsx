@@ -111,7 +111,7 @@ export function RubberStampUploader({
             <img src={value} alt="Rubber stamp preview" className="max-h-full max-w-full object-contain" />
           </button>
           <div className="flex-1">
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-600">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
               Stamp captured
             </div>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
@@ -188,7 +188,7 @@ export function RubberStampUploader({
               <div className="text-sm font-semibold tracking-[-0.01em]">
                 {isDragging ? "Drop image to upload" : "Upload rubber stamp"}
               </div>
-              <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+              <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
                 Drag &amp; drop or click · PNG or JPEG · &lt; 1 MB · crop &amp; remove background after upload
               </div>
             </div>

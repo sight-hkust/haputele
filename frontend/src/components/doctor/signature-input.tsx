@@ -104,7 +104,7 @@ export function SignatureInput({
             <img src={value} alt="Saved e-signature preview" className="max-h-full max-w-full object-contain" />
           </div>
           <div className="flex-1">
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-600">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
               Signature ready
             </div>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
@@ -156,7 +156,7 @@ export function SignatureInput({
             <div className="text-sm font-semibold tracking-[-0.01em]">
               {isDragging ? "Drop image to upload" : "Upload signature"}
             </div>
-            <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Drag &amp; drop or click · PNG or JPEG · crop &amp; remove background after upload
             </div>
           </div>

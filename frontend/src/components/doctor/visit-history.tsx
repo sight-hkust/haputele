@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, History } from "lucide-react";
 
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Card } from "@/components/primitives/card";
 import { fmtDate } from "@/lib/format";
 import { diagnosisLabel } from "@/lib/medical-codes";
@@ -40,7 +41,7 @@ export function VisitHistoryPanel({
       >
         <div className="flex items-center gap-2">
           <History className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
             Previous visits {items.length > 0 ? `· ${items.length}` : ""}
           </span>
         </div>
@@ -81,9 +82,9 @@ function VisitItem({ item }: { item: HistoryConsultationItem }) {
   return (
     <li className="rounded-xl border border-[var(--border)] p-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <Eyebrow>
           {fmtDate(item.date)}
-        </span>
+        </Eyebrow>
       </div>
       {dx.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">

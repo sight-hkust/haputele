@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { ConsultationFlow } from "@/components/doctor/consultation-flow";
 import { PatientSummary } from "@/components/doctor/patient-summary";
 import { DoctorCallPanel } from "@/components/meeting/doctor-call-panel";
+import { Eyebrow } from "@/components/primitives/eyebrow";
+import { BackLink } from "@/components/primitives/back-link";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { useAppointment, useConsultation } from "@/lib/use-api";
@@ -54,13 +54,7 @@ export default function ConsultationPage() {
 
   return (
     <div className="mx-auto flex max-w-[110rem] flex-col gap-10 px-6 py-12">
-      <Link
-        href={`/doctor/appointments/${apt.data.appointment.id}`}
-        className="inline-flex w-fit items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--accent)]"
-      >
-        <ArrowLeft className="h-3 w-3" />
-        Back to appointment
-      </Link>
+      <BackLink href={`/doctor/appointments/${apt.data.appointment.id}`}>Back to appointment</BackLink>
 
       <div
         className={
@@ -78,10 +72,10 @@ export default function ConsultationPage() {
           </aside>
         )}
         <div className="flex flex-col gap-6 lg:order-2">
-          <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <Eyebrow>
             <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] align-middle" />
             {readOnly ? "Record · locked" : "Consultation · in progress"}
-          </span>
+          </Eyebrow>
           <ConsultationFlow
             consultation={consult.data}
             appointmentId={apt.data.appointment.id}

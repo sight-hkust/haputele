@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { AppointmentCockpit, CockpitHeader } from "@/components/healthworker/cockpit";
+import { BackLink } from "@/components/primitives/back-link";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
@@ -33,13 +32,7 @@ export default function AppointmentDetailPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-12">
-      <Link
-        href="/healthworker/appointments"
-        className="inline-flex w-fit items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--accent)]"
-      >
-        <ArrowLeft className="h-3 w-3" />
-        Back to calendar
-      </Link>
+      <BackLink href="/healthworker/appointments">Back to calendar</BackLink>
 
       <PageHeader
         label="Cockpit"

@@ -203,7 +203,7 @@ export default function HealthworkerAvailabilityPage() {
               .
             </p>
           )}
-          <p className="mb-2 flex items-center gap-2 text-[11px] text-[var(--muted-foreground)]">
+          <p className="mb-2 flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
             <span
               aria-hidden
               className="inline-block h-3 w-5 rounded-sm border border-[var(--border)]"

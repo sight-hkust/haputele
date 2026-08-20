@@ -235,7 +235,7 @@ function AttachmentThumb({
             }}
             disabled={remove.isPending}
             className={
-              "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors " +
+              "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] transition-colors " +
               (confirming
                 ? "bg-rose-600 text-white"
                 : "text-[var(--muted-foreground)] hover:bg-rose-50 hover:text-rose-700")

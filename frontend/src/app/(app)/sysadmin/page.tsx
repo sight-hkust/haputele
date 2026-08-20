@@ -44,7 +44,7 @@ export default function SysAdminHome() {
         ) : (
           <Card className="p-6">
             <dl className="mb-4 flex flex-col gap-1 border-b border-[var(--border)] pb-4">
-              <dt className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+              <dt className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
                 Initialized at
               </dt>
               <dd className="text-sm text-[var(--foreground)]">

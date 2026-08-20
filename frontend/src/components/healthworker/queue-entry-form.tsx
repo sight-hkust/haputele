@@ -148,7 +148,7 @@ export function QueueEntryForm({
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
           />
-          <p className="text-[11px] text-[var(--muted-foreground)]">
+          <p className="text-xs text-[var(--muted-foreground)]">
             Pick any day in the target week — we&rsquo;ll snap to that week&rsquo;s Monday.
           </p>
         </Field>
@@ -220,7 +220,7 @@ function DuplicateConfirm({
           >
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium">{e.source === "walk_in" ? "Walk-in" : e.source === "screening" ? "Screening" : "Follow-up"}</span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+              <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
                 #{e.id} · {e.priority}
               </span>
             </div>

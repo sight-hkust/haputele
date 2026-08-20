@@ -414,7 +414,7 @@ export function ConsultationFlow({
                       />
                     </div>
                     <div className="flex-1">
-                      <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-600">
+                      <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
                         Saved signature
                       </div>
                       <p className="mt-1 text-sm text-[var(--muted-foreground)]">
@@ -471,7 +471,7 @@ export function ConsultationFlow({
                 {update.isPending ? "Saving…" : "Save draft"}
               </Button>
               {savedAt && !update.isPending && (
-                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-600">
+                <span className="font-mono text-xs uppercase tracking-[0.12em] text-emerald-600">
                   Saved {fmtRelative(savedAt)}
                 </span>
               )}
@@ -544,7 +544,7 @@ function CompletedNotice({ signedAt }: { signedAt: string | null }) {
     <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
       <CheckCircle2 className="h-5 w-5 text-emerald-700" />
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-700">
+        <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-700">
           Locked & signed
         </div>
         <div className="text-sm font-semibold tracking-[-0.01em]">

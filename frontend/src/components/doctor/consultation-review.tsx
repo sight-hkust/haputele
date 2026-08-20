@@ -16,7 +16,7 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
       />
       <div className="relative flex flex-col gap-8">
         <div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-white/60">
             Final review
           </span>
           <h2 className="mt-2 font-display text-3xl tracking-[-0.02em]">
@@ -121,7 +121,7 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
 function ReviewBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-white/60">
+      <h3 className="mb-3 font-mono text-xs uppercase tracking-[0.15em] text-white/60">
         {title}
       </h3>
       {children}
@@ -133,7 +133,7 @@ function ReviewKv({ k, v }: { k: string; v?: string | null }) {
   if (!v || !v.trim()) return null;
   return (
     <div className="mb-2 last:mb-0">
-      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-white/50">{k}</span>
+      <span className="font-mono text-xs uppercase tracking-[0.12em] text-white/50">{k}</span>
       <p className="mt-0.5 text-sm leading-relaxed text-white/90">{v}</p>
     </div>
   );

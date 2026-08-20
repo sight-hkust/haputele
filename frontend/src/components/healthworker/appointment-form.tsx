@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Label } from "@/components/primitives/input";
@@ -135,9 +136,9 @@ export function AppointmentForm({
 
       {hidePatientPicker && patientLabel ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm">
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <Eyebrow>
             For patient
-          </span>
+          </Eyebrow>
           <div className="mt-1 font-medium">{patientLabel}</div>
         </div>
       ) : (
