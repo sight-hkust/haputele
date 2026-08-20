@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { addDays, format, parseISO } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
@@ -11,7 +11,7 @@ import { Label } from "@/components/primitives/input";
 import { Select } from "@/components/primitives/select";
 import { startOfWeekLocal } from "@/components/doctor/availability-grid-utils";
 import { useAppointmentList, useDoctorAvailability } from "@/lib/use-api";
-import { APP_TIMEZONE } from "@/lib/format";
+import { APP_TIMEZONE, appToday } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 // Slot picker for one doctor, one week at a time. Three controls in one frame:
@@ -28,8 +28,16 @@ import { cn } from "@/lib/cn";
 //
 // Already-booked slots (other appointments) never appear; the existing
 // _slot_taken backend check is the safety net.
+//
+// Elapsed slots never appear either. A slot counts as elapsed only once its
+// *whole* window has passed — the slot you are currently inside stays
+// bookable so a HW can start the consultation right away. The backend
+// mirrors this exactly (BOOKING_GRACE in app/dateutils.py) and is the
+// authority, since the filter here runs on the browser clock.
 
 const SLOT_MIN = 15;
+const SLOT_MS = SLOT_MIN * 60 * 1000;
+const NOW_TICK_MS = 60_000; // re-filter every minute so a long-open tab can't go stale
 const HORIZON_WEEKS = 12; // backend caps to 92 days; 12 weeks = 84 days
 const VISIBLE_HOUR_MIN = 7; // 07:00 — earliest "Or pick another time" slot
 const VISIBLE_HOUR_MAX = 20; // 20:00 — exclusive upper bound
@@ -72,6 +80,14 @@ export function DoctorSlotPicker({
     return defaultWeeksAhead;
   });
 
+  // Ticking "now" — a picker left open at 09:00 must stop offering 09:15
+  // once that slot has run out, without the user reloading.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), NOW_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
   const weekStartLocal = useMemo(
     () => startOfWeekLocal(addDays(new Date(), weeksAhead * 7)),
     [weeksAhead],
@@ -103,9 +119,12 @@ export function DoctorSlotPicker({
   );
 
   // Open slots inside declared availability for the visible week, by ymd.
-  const slotsByDay = useMemo(() => {
-    const result = new Map<string, Date[]>();
-    const slotMs = SLOT_MIN * 60 * 1000;
+  // `declaredDays` records which days had *any* declared window before the
+  // booked/elapsed filters ran, so an emptied-out day can say "no slots
+  // left" instead of wrongly claiming the doctor declared nothing.
+  const { byDay: slotsByDay, declaredDays } = useMemo(() => {
+    const byDay = new Map<string, Date[]>();
+    const declared = new Set<string>();
     const weekStartMs = parseISO(
       fromZonedTime(`${format(weekStartLocal, "yyyy-MM-dd")} 00:00:00`, APP_TIMEZONE).toISOString(),
     ).getTime();
@@ -116,18 +135,20 @@ export function DoctorSlotPicker({
       const wEnd = parseISO(w.endAt).getTime();
       const t0 = Math.max(wStart, weekStartMs);
       const tEnd = Math.min(wEnd, weekEndMs);
-      for (let t = t0; t + slotMs <= tEnd; t += slotMs) {
-        if (bookedAt.has(t)) continue;
+      for (let t = t0; t + SLOT_MS <= tEnd; t += SLOT_MS) {
         const slot = new Date(t);
         const ymd = formatInTimeZone(slot, APP_TIMEZONE, "yyyy-MM-dd");
-        const list = result.get(ymd) ?? [];
+        declared.add(ymd);
+        if (bookedAt.has(t)) continue;
+        if (t + SLOT_MS <= nowMs) continue; // whole slot elapsed
+        const list = byDay.get(ymd) ?? [];
         list.push(slot);
-        result.set(ymd, list);
+        byDay.set(ymd, list);
       }
     }
-    for (const list of result.values()) list.sort((a, b) => a.getTime() - b.getTime());
-    return result;
-  }, [allWindows, bookedAt, weekStartLocal]);
+    for (const list of byDay.values()) list.sort((a, b) => a.getTime() - b.getTime());
+    return { byDay, declaredDays: declared };
+  }, [allWindows, bookedAt, weekStartLocal, nowMs]);
 
   const days = useMemo(
     () =>
@@ -183,8 +204,9 @@ export function DoctorSlotPicker({
     onChange(`${date}T${t}`);
   };
 
-  // 15-min options for the "Or pick another time" select. Booked instants
-  // for the chosen date are flagged disabled.
+  // 15-min options for the "Or pick another time" select. Booked and
+  // elapsed instants for the chosen date are flagged disabled — kept in the
+  // list rather than dropped so the 07:00–20:00 rows stay in fixed positions.
   const customSlotOptions = useMemo(() => {
     if (!customDate) return [];
     const out: { value: string; label: string; disabled: boolean }[] = [];
@@ -194,11 +216,13 @@ export function DoctorSlotPicker({
       const hh = String(h).padStart(2, "0");
       const mm = String(min).padStart(2, "0");
       const ts = fromZonedTime(`${customDate} ${hh}:${mm}:00`, APP_TIMEZONE).getTime();
-      const disabled = bookedAt.has(ts);
-      out.push({ value: `${hh}:${mm}`, label: `${hh}:${mm}${disabled ? " · booked" : ""}`, disabled });
+      const booked = bookedAt.has(ts);
+      const past = ts + SLOT_MS <= nowMs;
+      const suffix = booked ? " · booked" : past ? " · past" : "";
+      out.push({ value: `${hh}:${mm}`, label: `${hh}:${mm}${suffix}`, disabled: booked || past });
     }
     return out;
-  }, [customDate, bookedAt]);
+  }, [customDate, bookedAt, nowMs]);
 
   const weekLabel =
     weeksAhead === 0 ? "This week" : weeksAhead === 1 ? "Next week" : `+${weeksAhead} weeks`;
@@ -266,7 +290,9 @@ export function DoctorSlotPicker({
                   </span>
                   {slots.length === 0 ? (
                     <span className="text-[11px] text-[var(--muted-foreground)]/70">
-                      No declared availability
+                      {declaredDays.has(d.ymd)
+                        ? "No slots remaining"
+                        : "No declared availability"}
                     </span>
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
@@ -304,6 +330,7 @@ export function DoctorSlotPicker({
           <DatePicker
             value={customDate}
             onChange={setCustomDate}
+            min={appToday()}
             placeholder="Choose another date"
             ariaLabel="Choose another appointment date"
           />
