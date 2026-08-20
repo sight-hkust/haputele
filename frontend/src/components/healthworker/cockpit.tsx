@@ -191,9 +191,9 @@ function MasterConsentGate({
         <div className="flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
-            <Eyebrow>
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Master consent
-            </Eyebrow>
+            </span>
             <p className="text-sm font-medium">Active for {patientName || "this patient"}</p>
           </div>
         </div>
@@ -296,9 +296,9 @@ function SessionConsentStep({
         <div className="flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
-            <Eyebrow>
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Session consent
-            </Eyebrow>
+            </span>
             <p className="text-sm font-medium">
               Patient consented{consentTime ? ` at ${fmtTime(consentTime)}` : ""}
             </p>

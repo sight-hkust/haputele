@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
@@ -108,9 +107,9 @@ function LoginScreen() {
   if (!setupLoaded || uninitialized) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <Eyebrow>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           Loading…
-        </Eyebrow>
+        </span>
       </main>
     );
   }
