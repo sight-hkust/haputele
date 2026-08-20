@@ -15,6 +15,7 @@ import {
 
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
+import { DatePicker } from "@/components/primitives/date-picker";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { Textarea } from "@/components/primitives/select";
@@ -749,11 +750,13 @@ function CancelAction({
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
                     Target week
                   </span>
-                  <input
-                    type="date"
+                  <DatePicker
+                    mode="week"
+                    align="end"
                     value={rqTargetDate}
-                    onChange={(e) => setRqTargetDate(e.target.value)}
-                    className="h-10 rounded-lg border border-[var(--border)] bg-transparent px-3 text-sm"
+                    onChange={setRqTargetDate}
+                    placeholder="Choose a target week"
+                    ariaLabel="Choose target week"
                   />
                 </div>
               </div>

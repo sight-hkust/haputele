@@ -1,5 +1,6 @@
 import { differenceInYears, formatDistanceToNow, parseISO } from "date-fns";
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
+import { formatWeekRange } from "@/lib/calendar-date";
 
 // Single-source-of-truth for the application timezone. The DB stays in UTC;
 // every visible timestamp is converted to APP_TIMEZONE at render time so the
@@ -105,9 +106,9 @@ export function statusLabel(s: string): string {
   return STATUS_LABELS[s] ?? s.replace(/_/g, " ");
 }
 
-// Queue target-date is stored as the Monday of the target week (snapped on
-// the backend). Render it as "Week of d MMM" so the fuzzy semantics show.
+// Queue target-date is stored canonically as Monday; render the full range so
+// the week semantics stay explicit without making Monday look like the choice.
 export function fmtTargetWeek(yyyyMmDd: string | null | undefined): string {
   if (!yyyyMmDd) return "—";
-  return `Week of ${fmtDate(yyyyMmDd)}`;
+  return `Week · ${formatWeekRange(yyyyMmDd)}`;
 }
