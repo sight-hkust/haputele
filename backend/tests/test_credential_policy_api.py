@@ -37,7 +37,7 @@ point of this change:
           test_setup_initialize_rejects_weak_password
       A4  test_setup_initialize_stores_credentials_verbatim
 
-    paths 2 & 3  POST /sysadmin/accounts (admin | healthworker)
+    paths 2 & 3  POST /accounts (admin | healthworker)
       A1  test_create_account_rejects_username_with_leading_space
           test_create_account_rejects_username_with_internal_space
           test_create_account_rejects_trailing_space_password
@@ -50,7 +50,7 @@ point of this change:
       A4  test_create_account_stores_username_verbatim
           test_login_does_not_trim_the_submitted_password
 
-    path 4  POST /sysadmin/accounts/{username}/reset-password
+    path 4  POST /accounts/{username}/reset-password
       A1  test_reset_password_rejects_edge_whitespace (both edges)
       A2  test_reset_password_passphrase_round_trips
       A3  test_reset_password_rejects_short_password (min == 10)
@@ -111,7 +111,7 @@ def _create_account(client, **overrides):
         "role": "admin",
     }
     body.update(overrides)
-    return client.post("/sysadmin/accounts", json=body, headers=_csrf(client))
+    return client.post("/accounts", json=body, headers=_csrf(client))
 
 
 # ── username: no whitespace anywhere ──────────────────────────────────
@@ -245,7 +245,7 @@ def test_internal_whitespace_password_is_accepted_and_usable(client, seeded_setu
     assert r.json()["role"] == "admin"
 
 
-# ── paths 2 & 3: POST /sysadmin/accounts, both roles ──────────────────
+# ── paths 2 & 3: POST /accounts, both roles ──────────────────
 
 
 @pytest.mark.parametrize("role", ["admin", "healthworker"])
@@ -306,12 +306,12 @@ def test_create_account_stores_username_verbatim(client, seeded_setup_token):
         db.close()
 
 
-# ── path 4: POST /sysadmin/accounts/{username}/reset-password ─────────
+# ── path 4: POST /accounts/{username}/reset-password ─────────
 
 
 def _reset_password(client, username, password):
     return client.post(
-        f"/sysadmin/accounts/{username}/reset-password",
+        f"/accounts/{username}/reset-password",
         json={"password": password},
         headers=_csrf(client),
     )
@@ -409,7 +409,7 @@ def test_non_credential_fields_still_trim(client, seeded_setup_token):
     r = _create_account(client, username="dave", fullName="  Dave Smith  ", contact="  +94 77  ")
     assert r.status_code == 201, r.text
 
-    roster = client.get("/sysadmin/accounts").json()
+    roster = client.get("/accounts").json()
     dave = next(row for row in roster if row["username"] == "dave")
     assert dave["fullName"] == "Dave Smith"
     assert dave["contact"] == "+94 77"

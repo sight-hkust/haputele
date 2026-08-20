@@ -11,11 +11,12 @@ import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { useAppointment, useConsultation } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function ConsultationPage() {
   const params = useParams<{ id: string }>();
-  const cid = parseInt(params.id, 10);
-  const consult = useConsultation(Number.isFinite(cid) ? cid : null);
+  const cid = parseIdParam(params.id);
+  const consult = useConsultation(cid);
   // Pull appointment via the consultation's appointmentId once we have it.
   const apt = useAppointment(consult.data?.appointmentId ?? null);
 
@@ -24,9 +25,20 @@ export default function ConsultationPage() {
   // error with cached data present must NOT unmount the flow — that would
   // wipe the doctor's stage, signature, and follow-up choice mid-consult.
   if (consult.error && !consult.data) {
+    throwNotFoundIf404(consult.error);
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
         <ErrorBanner>{explainError(consult.error.error)}</ErrorBanner>
+      </div>
+    );
+  }
+  // Same hard-fail for the linked appointment — without this branch an
+  // appointment fetch error left the page on the loading card forever.
+  if (apt.error && !apt.data) {
+    throwNotFoundIf404(apt.error);
+    return (
+      <div className="mx-auto max-w-5xl px-6 py-12">
+        <ErrorBanner>{explainError(apt.error.error)}</ErrorBanner>
       </div>
     );
   }

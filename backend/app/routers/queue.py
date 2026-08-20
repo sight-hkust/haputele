@@ -9,7 +9,7 @@ from ..dateutils import snap_to_monday
 from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, not_found, unprocessable
 from ..models import Appointment, Doctor, Patient, QueueEntry
-from ..routers.appointments import _slot_taken
+from ..routers.appointments import _reject_if_past, _slot_taken
 from ..schemas import (
     AppointmentOut,
     QueueBookIn,
@@ -169,6 +169,7 @@ def book_queue_entry(qid: int, payload: QueueBookIn, db: Session = Depends(db_de
     doctor = db.get(Doctor, payload.doctorId)
     if not doctor or not doctor.active:
         raise not_found("doctor_not_found")
+    _reject_if_past(payload.scheduledAt)
     if _slot_taken(db, payload.doctorId, payload.scheduledAt):
         raise conflict("doctor_slot_taken")
 

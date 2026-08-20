@@ -25,13 +25,14 @@ import {
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtDateTime } from "@/lib/format";
+import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function DoctorDetailPage() {
   const params = useParams<{ id: string }>();
-  const id = parseInt(params.id, 10);
+  const id = parseIdParam(params.id);
   const router = useRouter();
 
-  const doctor = useDoctor(Number.isFinite(id) ? id : null);
+  const doctor = useDoctor(id);
   const update = useUpdateDoctor(id);
   const deactivate = useDeactivateDoctor();
   const reissueInvite = useReissueDoctorInvite();
@@ -50,6 +51,7 @@ export default function DoctorDetailPage() {
   const [reapplyJustSent, setReapplyJustSent] = useState(false);
 
   if (doctor.error) {
+    throwNotFoundIf404(doctor.error);
     return (
       <div className="mx-auto max-w-4xl px-6 py-12">
         <ErrorBanner>{explainError(doctor.error.error)}</ErrorBanner>

@@ -87,8 +87,23 @@ export function doctorName(d: { givenName: string; familyName: string }): string
   return `Dr. ${d.givenName} ${d.familyName}`.trim();
 }
 
+// The §11 status values are named for the step being entered, not the step just
+// completed — `consent_pending` is reached *after* consent is captured, and
+// `data_collection` *after* the vitals are saved. Rendering them raw told the
+// health worker the opposite of the truth, so never show the raw value: map it
+// to whatever is actually outstanding.
+const STATUS_LABELS: Record<string, string> = {
+  scheduled:       "Scheduled",
+  consent_pending: "Vitals pending",
+  data_collection: "Ready to start",
+  in_progress:     "In progress",
+  awaiting_notes:  "Awaiting notes",
+  completed:       "Completed",
+  cancelled:       "Cancelled",
+};
+
 export function statusLabel(s: string): string {
-  return s.replace(/_/g, " ");
+  return STATUS_LABELS[s] ?? s.replace(/_/g, " ");
 }
 
 // Queue target-date is stored canonically as Monday; render the full range so

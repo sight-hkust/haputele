@@ -11,17 +11,19 @@ import { PageHeader } from "@/components/primitives/page-header";
 import { useAppointment, useDoctorList } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { doctorName } from "@/lib/format";
+import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function AppointmentDetailPage() {
   const params = useParams<{ id: string }>();
-  const id = parseInt(params.id, 10);
+  const id = parseIdParam(params.id);
 
-  const apt = useAppointment(Number.isFinite(id) ? id : null);
+  const apt = useAppointment(id);
   const doctors = useDoctorList();
 
   const doctor = doctors.data?.find((d) => d.id === apt.data?.appointment.doctorId);
 
   if (apt.error) {
+    throwNotFoundIf404(apt.error);
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
         <ErrorBanner>{explainError(apt.error.error)}</ErrorBanner>

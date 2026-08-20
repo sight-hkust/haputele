@@ -152,10 +152,14 @@ def _wipe_setup_state():
         # deleted a few statements down.
         db.execute(text("UPDATE patients SET master_consent_id = NULL"))
         db.execute(text("DELETE FROM consents"))
+        # queue_entries.appointment_id is a plain FK (no ON DELETE), so a
+        # *booked* queue entry pins its appointment row. Wipe the queue first
+        # or the appointments delete below trips the constraint and every
+        # subsequent test in the session errors out on the dirty database.
+        db.execute(text("DELETE FROM queue_entries"))
         db.execute(text("ALTER TABLE appointments DISABLE TRIGGER appointments_locked_guard"))
         db.execute(text("DELETE FROM appointments"))
         db.execute(text("ALTER TABLE appointments ENABLE TRIGGER appointments_locked_guard"))
-        db.execute(text("DELETE FROM queue_entries"))
         db.execute(text("DELETE FROM doctor_availability"))
         db.execute(text("DELETE FROM profile"))
         db.execute(text("DELETE FROM patients"))
