@@ -811,7 +811,7 @@ export function CockpitHeader({
           </h2>
           {/* This line is how a health worker confirms the right doctor was picked (#59),
              so it reads as a second-level heading rather than a grey subtitle. */}
-          <p className="mt-0.5 text-lg font-semibold text-[var(--foreground)]">{doctorName}</p>
+          <p className="mt-1 text-xl font-bold text-[var(--foreground)]">{doctorName}</p>
           <p className="mt-2 font-mono text-xs text-[var(--muted-foreground)]">
             Scheduled · {fmtDateTime(appointment.scheduledAt)}
           </p>
