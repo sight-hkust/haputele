@@ -190,7 +190,7 @@ function MasterConsentGate({
         <div className="flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Master consent
             </span>
             <p className="text-sm font-medium">Active for {patientName || "this patient"}</p>
