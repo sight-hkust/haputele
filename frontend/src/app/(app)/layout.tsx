@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { Topbar } from "@/components/shell/topbar";
 import { ROLE_HOMES, SEGMENT_TO_ROLE, useAuth } from "@/lib/auth";
-import { Eyebrow } from "@/components/primitives/eyebrow";
 
 // Auth gate + role guard for everything under (app). If you're at /admin/* but
 // signed in as a doctor, you're redirected to /doctor (server-side ACLs are still
@@ -43,9 +42,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (loading || !session || roleMismatch) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <Eyebrow>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           Loading…
-        </Eyebrow>
+        </span>
       </main>
     );
   }

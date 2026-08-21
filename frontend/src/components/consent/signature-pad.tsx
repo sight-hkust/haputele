@@ -3,7 +3,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Eraser } from "lucide-react";
 
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 
 // FEEDBACK §1: a "click to consent" loses legal meaning. This component is the
@@ -158,9 +157,9 @@ export const SignaturePad = forwardRef<SignaturePadHandle, Props>(function Signa
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <Eyebrow>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           {label}
-        </Eyebrow>
+        </span>
         <Button
           type="button"
           variant="secondary"

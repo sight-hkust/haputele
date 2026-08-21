@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { ConsultationFlow } from "@/components/doctor/consultation-flow";
 import { PatientSummary } from "@/components/doctor/patient-summary";
 import { DoctorCallPanel } from "@/components/meeting/doctor-call-panel";
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { BackLink } from "@/components/primitives/back-link";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
@@ -72,10 +71,10 @@ export default function ConsultationPage() {
           </aside>
         )}
         <div className="flex flex-col gap-6 lg:order-2">
-          <Eyebrow>
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
             <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] align-middle" />
             {readOnly ? "Record · locked" : "Consultation · in progress"}
-          </Eyebrow>
+          </span>
           <ConsultationFlow
             consultation={consult.data}
             appointmentId={apt.data.appointment.id}

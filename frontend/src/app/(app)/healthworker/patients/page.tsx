@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Search, UserPlus, Users } from "lucide-react";
 
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
@@ -140,9 +139,9 @@ function Pagination({ page, hasNext, onChange }: { page: number; hasNext: boolea
         <ChevronLeft className="h-4 w-4" />
         Prev
       </Button>
-      <Eyebrow>
+      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
         Page {page}
-      </Eyebrow>
+      </span>
       <Button variant="secondary" size="sm" disabled={!hasNext} onClick={() => onChange(page + 1)}>
         Next
         <ChevronRight className="h-4 w-4" />

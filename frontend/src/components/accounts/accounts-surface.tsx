@@ -18,7 +18,6 @@ import Link from "next/link";
 
 import { AccountPanel } from "@/components/sysadmin/account-panel";
 import { InvitePanel } from "@/components/doctors/new-doctor-surface";
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
@@ -322,7 +321,7 @@ function StatChip({
     <div className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-2">
       <span className={cn("h-1.5 w-1.5 rounded-full", dot)} aria-hidden />
       <span className="font-display text-lg leading-none tracking-[-0.01em]">{value}</span>
-      <Eyebrow>{label}</Eyebrow>
+      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">{label}</span>
     </div>
   );
 }

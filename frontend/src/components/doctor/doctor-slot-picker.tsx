@@ -5,7 +5,6 @@ import { addDays, format, parseISO } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Input, Label } from "@/components/primitives/input";
 import { Select } from "@/components/primitives/select";
@@ -272,9 +271,9 @@ export function DoctorSlotPicker({
 
       {/* Chip grid ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <Eyebrow>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           Open slots that week (15-min)
-        </Eyebrow>
+        </span>
         {loading ? (
           <div className="flex items-center gap-2 py-2 text-xs text-[var(--muted-foreground)]">
             <Loader2 className="h-3 w-3 animate-spin" /> Loading…

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ChevronDown, History } from "lucide-react";
 
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Card } from "@/components/primitives/card";
 import { fmtDate } from "@/lib/format";
 import { diagnosisLabel } from "@/lib/medical-codes";
@@ -82,9 +81,9 @@ function VisitItem({ item }: { item: HistoryConsultationItem }) {
   return (
     <li className="rounded-xl border border-[var(--border)] p-3">
       <div className="flex items-center justify-between gap-3">
-        <Eyebrow>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           {fmtDate(item.date)}
-        </Eyebrow>
+        </span>
       </div>
       {dx.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">

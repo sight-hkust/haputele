@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 
 const DEFAULT_THRESHOLD = 240; // luminance cutoff (0–255); brighter pixels become transparent
@@ -141,9 +140,9 @@ export function RubberStampEditor({
                 Rotate right
               </Button>
               {totalRotation !== 0 && (
-                <Eyebrow>
+                <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
                   {formatAngle(totalRotation)}°
-                </Eyebrow>
+                </span>
               )}
             </div>
             <div className="flex flex-col gap-1.5">

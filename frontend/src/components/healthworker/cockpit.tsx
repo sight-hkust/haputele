@@ -13,7 +13,6 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
@@ -734,9 +733,9 @@ function CancelAction({
             <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
-                  <Eyebrow>
+                  <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
                     Priority
-                  </Eyebrow>
+                  </span>
                   <select
                     value={rqPriority}
                     onChange={(e) => setRqPriority(e.target.value as "routine" | "urgent")}
@@ -747,9 +746,9 @@ function CancelAction({
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Eyebrow>
+                  <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
                     Target week
-                  </Eyebrow>
+                  </span>
                   <input
                     type="date"
                     value={rqTargetDate}
@@ -804,9 +803,9 @@ export function CockpitHeader({
     <Card className="p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <Eyebrow>
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
             Appointment #{appointment.id}
-          </Eyebrow>
+          </span>
           <h2 className="mt-1 font-display text-2xl tracking-[-0.01em]">
             {patient ? `${patient.given} ${patient.family}` : "Patient"}
           </h2>

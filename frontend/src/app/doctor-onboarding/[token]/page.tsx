@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { ArrowRight, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { DoctorForm, type DoctorFormPayload } from "@/components/admin/doctor-form";
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { Input, Label } from "@/components/primitives/input";
@@ -143,9 +142,9 @@ export default function DoctorOnboardingPage() {
 
 function LoadingPanel() {
   return (
-    <Eyebrow>
+    <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
       Checking your invitation…
-    </Eyebrow>
+    </span>
   );
 }
 

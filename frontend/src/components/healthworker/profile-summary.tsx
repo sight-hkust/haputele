@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Activity, AlertCircle, ClipboardList, Pencil, Pill, Stethoscope } from "lucide-react";
 
-import { Eyebrow } from "@/components/primitives/eyebrow";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { diseaseLabel, physicalActivityLabel } from "@/lib/medical-codes";
@@ -127,9 +126,9 @@ function Block({
     <div>
       <div className="mb-2 flex items-center gap-2">
         <Icon className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
-        <Eyebrow>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           {title}
-        </Eyebrow>
+        </span>
       </div>
       {children}
     </div>
