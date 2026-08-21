@@ -54,6 +54,10 @@
           - ca-certificates
           - curl
           - gnupg
+          # Uploads nightly dumps to R2. Chosen over the aws CLI for
+          # `rclone delete --min-age`, which does retention without hand-rolled
+          # date arithmetic. See files/backup.sh.
+          - rclone
         update_cache: true
         state: present
 
@@ -159,6 +163,44 @@
             chdir: "{{ app_dir }}"
           register: compose_up
           changed_when: true
+
+        # Backup tooling. Both scripts read their config from .env at runtime, so
+        # they are plain files rather than templates — what is in git is exactly
+        # what runs, and *.sh keeps LF endings per .gitattributes. 0700: they
+        # handle unencrypted patient data and hold no secrets of their own.
+        - name: Install backup and restore scripts
+          ansible.builtin.copy:
+            src: "{{ item }}"
+            dest: "{{ app_dir }}/{{ item }}"
+            mode: "0700"
+            owner: root
+            group: root
+          loop:
+            - backup.sh
+            - restore.sh
+
+        - name: Install backup systemd units
+          ansible.builtin.copy:
+            src: "{{ item }}"
+            dest: "/etc/systemd/system/{{ item }}"
+            mode: "0644"
+          loop:
+            - haputele-backup.service
+            - haputele-backup.timer
+          register: backup_units
+
+        - name: Reload systemd after unit changes
+          ansible.builtin.systemd:
+            daemon_reload: true
+          when: backup_units.changed
+
+        # The timer is enabled, not the service: the service is oneshot and is
+        # started *by* the timer (or by hand for a manual backup).
+        - name: Enable and start the nightly backup timer
+          ansible.builtin.systemd:
+            name: haputele-backup.timer
+            enabled: true
+            state: started
 
       always:
         - name: Remove staged vault from controller
