@@ -27,7 +27,9 @@ import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { Select } from "@/components/primitives/select";
 import { cn } from "@/lib/cn";
+import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { newPasswordError, passwordError, usernameError } from "@/lib/credentials";
+import { useCapsLock } from "@/lib/use-caps-lock";
 import { explainError } from "@/lib/error-codes";
 import { useAccountRoster, useCreateOperatingAccount } from "@/lib/use-api";
 import type { AccountRole, AccountRosterEntry, OperatingAccountRole } from "@/types/api";
@@ -463,6 +465,8 @@ function CreateAccountModal({
   const [fullName, setFullName] = useState("");
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
+  const passwordCaps = useCapsLock();
+  const confirmCaps = useCapsLock();
   const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState<CreatableRole>(roles[0]);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -564,10 +568,24 @@ function CreateAccountModal({
               <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="e.g. +94 77 123 4567" />
             </Field>
             <Field label="Password" error={passwordError(password) ?? undefined}>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                {...passwordCaps.capsLockProps}
+              />
+              <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
             </Field>
             <Field label="Confirm password">
-              <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+              <Input
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="new-password"
+                {...confirmCaps.capsLockProps}
+              />
+              <CapsLockHint id={confirmCaps.hintId} show={confirmCaps.capsLockOn} />
             </Field>
 
             {localError ? <ErrorBanner>{localError}</ErrorBanner> : null}

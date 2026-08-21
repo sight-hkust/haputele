@@ -8,6 +8,7 @@ import { ArrowRight, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
 import { DoctorForm, type DoctorFormPayload } from "@/components/admin/doctor-form";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
+import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { ApiError, api } from "@/lib/api";
@@ -19,6 +20,7 @@ import {
 } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
+import { useCapsLock } from "@/lib/use-caps-lock";
 
 // Peek response:
 //   mode "new"      → email + optional familyName hint. Doctor fills full profile.
@@ -235,6 +237,8 @@ function RotationPanel({
   onInvalid: (reason: string) => void;
 }) {
   const [password, setPassword] = useState("");
+  const passwordCaps = useCapsLock();
+  const confirmCaps = useCapsLock();
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -319,7 +323,9 @@ function RotationPanel({
             minLength={MIN_PASSWORD_LEN}
             autoFocus
             required
+            {...passwordCaps.capsLockProps}
           />
+          <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
           {/* Live: a stray space is invisible in a masked field. */}
           {passwordError(password) && (
             <p className="text-xs text-rose-600">{passwordError(password)}</p>
@@ -335,7 +341,9 @@ function RotationPanel({
             onChange={(e) => setConfirm(e.target.value)}
             autoComplete="new-password"
             required
+            {...confirmCaps.capsLockProps}
           />
+          <CapsLockHint id={confirmCaps.hintId} show={confirmCaps.capsLockOn} />
         </div>
 
         {error && (

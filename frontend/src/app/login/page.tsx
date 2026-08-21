@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { LoginHeroGraphic } from "@/components/marketing/login-hero-graphic";
@@ -14,6 +15,7 @@ import { ApiError, api } from "@/lib/api";
 import { loginWhitespaceHint } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
+import { useCapsLock } from "@/lib/use-caps-lock";
 import { useSetupStatus } from "@/lib/use-api";
 
 // Login response no longer carries the JWT — the backend sets it as an
@@ -43,6 +45,7 @@ function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const passwordCaps = useCapsLock();
 
   // Pre-init: nobody can sign in yet — bounce every visitor to the wizard so
   // the (app) guard's "no session → /login" path doesn't dead-end on a form
@@ -202,7 +205,9 @@ function LoginScreen() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
+                {...passwordCaps.capsLockProps}
               />
+              <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
             </div>
 
             {error && (
