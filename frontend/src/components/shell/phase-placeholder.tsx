@@ -80,7 +80,7 @@ export function PhasePlaceholder({
                     {f.description}
                   </p>
                 </div>
-                <div className="mt-auto flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                <div className="mt-auto flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
                   Coming soon
                   <ArrowUpRight className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>

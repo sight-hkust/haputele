@@ -36,7 +36,7 @@ export function ConsultationStepper({ current }: { current: ConsultationStage })
               <div className="flex flex-col leading-none">
                 <span
                   className={cn(
-                    "font-mono text-[10px] uppercase tracking-[0.15em]",
+                    "font-mono text-xs uppercase tracking-[0.15em]",
                     state === "future" ? "text-[var(--muted-foreground)]" : "text-[var(--accent)]",
                   )}
                 >

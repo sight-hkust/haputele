@@ -140,7 +140,7 @@ export function RubberStampEditor({
                 Rotate right
               </Button>
               {totalRotation !== 0 && (
-                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
                   {formatAngle(totalRotation)}°
                 </span>
               )}
@@ -154,7 +154,7 @@ export function RubberStampEditor({
                     <button
                       type="button"
                       onClick={() => setFine(0)}
-                      className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)] hover:underline"
+                      className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)] hover:underline"
                     >
                       Reset
                     </button>
@@ -176,7 +176,7 @@ export function RubberStampEditor({
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Preview
             </div>
             <div
@@ -217,7 +217,7 @@ export function RubberStampEditor({
                 onChange={(e) => setThreshold(parseInt(e.target.value, 10))}
                 className="w-full accent-[var(--accent)]"
               />
-              <p className="text-[11px] leading-snug text-[var(--muted-foreground)]">
+              <p className="text-xs leading-snug text-[var(--muted-foreground)]">
                 Higher = more aggressive (drops grey paper). Lower = preserves faint ink.
               </p>
             </div>

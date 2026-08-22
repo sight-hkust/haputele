@@ -135,7 +135,7 @@ export function AppointmentForm({
 
       {hidePatientPicker && patientLabel ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm">
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
             For patient
           </span>
           <div className="mt-1 font-medium">{patientLabel}</div>

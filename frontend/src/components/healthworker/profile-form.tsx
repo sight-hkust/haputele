@@ -171,7 +171,7 @@ export function ProfileForm({
         {/* Other conditions — repeater so multiple unlisted conditions can be captured. */}
         <div className="mt-6 flex items-end justify-between">
           <div>
-            <h4 className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <h4 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Other conditions
             </h4>
             <p className="mt-1 text-xs text-[var(--muted-foreground)]">

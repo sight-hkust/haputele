@@ -102,7 +102,7 @@ export function PasswordSection({ username, self = false }: { username: string; 
             {resetPw.isPending ? "Saving…" : self ? "Change password" : "Set new password"}
           </Button>
           {pwDone ? (
-            <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
+            <span className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Updated
             </span>
@@ -120,7 +120,7 @@ export function StatusHeader({ active, label, sub }: { active: boolean; label: s
     <div className="flex items-center gap-3">
       <span
         className={
-          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] " +
+          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-[0.12em] " +
           (active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")
         }
       >
@@ -145,7 +145,7 @@ export function Section({
     <section className="flex flex-col gap-3">
       <h3
         className={
-          "font-mono text-[10px] uppercase tracking-[0.15em] " +
+          "font-mono text-xs uppercase tracking-[0.15em] " +
           (tone === "danger" ? "text-rose-600" : "text-[var(--muted-foreground)]")
         }
       >

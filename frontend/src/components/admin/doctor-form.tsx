@@ -439,7 +439,7 @@ export function DoctorForm({
             return (
               <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
                 <div className="flex-1">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
+                  <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
                   <p className="mt-1 text-sm text-[var(--muted-foreground)]">The doctor has a saved default e-signature.</p>
                 </div>
                 <button type="button" onClick={() => setReplacingSignature(true)}

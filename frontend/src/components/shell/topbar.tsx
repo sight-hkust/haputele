@@ -28,7 +28,7 @@ export function Topbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="hidden font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)] md:inline">
+          <span className="hidden font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] md:inline">
             {session.username}
           </span>
           <Button variant="ghost" size="sm" onClick={logout}>

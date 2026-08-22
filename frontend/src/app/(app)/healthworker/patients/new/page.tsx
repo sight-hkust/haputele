@@ -82,7 +82,7 @@ export default function RegisterPatientPage() {
         <Card variant="elevated" className="p-8">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-emerald-700">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            <span className="font-mono text-[11px] uppercase tracking-[0.12em]">
+            <span className="font-mono text-xs uppercase tracking-[0.12em]">
               Master consent + signature captured
             </span>
           </div>

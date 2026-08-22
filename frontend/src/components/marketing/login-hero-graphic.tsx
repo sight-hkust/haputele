@@ -51,7 +51,7 @@ export function LoginHeroGraphic() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--accent)]" />
           </span>
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Consultation
             </div>
             <div className="text-sm font-semibold tracking-[-0.01em]">In progress</div>
@@ -70,7 +70,7 @@ export function LoginHeroGraphic() {
             <HeartPulse className="h-4 w-4 text-[var(--accent)]" />
           </div>
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Vitals
             </div>
             <div className="text-sm font-semibold tracking-[-0.01em]">
@@ -91,7 +91,7 @@ export function LoginHeroGraphic() {
             <Activity className="h-4 w-4 text-white" />
           </div>
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Today
             </div>
             <div className="text-sm font-semibold tracking-[-0.01em]">12 appointments</div>

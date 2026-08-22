@@ -168,7 +168,7 @@ function SetupWizard() {
           )}
 
           <motion.p variants={fadeIn} className="text-xs text-[var(--muted-foreground)]">
-            Stuck? Run <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-[11px]">docker compose logs api | grep -A1 banner</code> for the latest token banner.
+            Stuck? Run <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-xs">docker compose logs api | grep -A1 banner</code> for the latest token banner.
           </motion.p>
         </motion.div>
 
@@ -854,7 +854,7 @@ function TimezoneOptions({ zones, current }: { zones: string[]; current: string 
 function FieldGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-4 rounded-2xl border border-[var(--border)] bg-[var(--muted)]/30 p-5">
-      <legend className="px-2 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <legend className="px-2 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
         {title}
       </legend>
       {children}
