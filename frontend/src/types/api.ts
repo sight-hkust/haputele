@@ -51,7 +51,10 @@ export type PatientCreateRequest = {
   given: string;
   family: string;
   gender: string;
-  dob?: string;
+  // Required — the prescription PDF derives the §1.7-mandatory patient age
+  // from it. `PatientUpdateRequest` below is Partial<…>, so editing an older
+  // record without a dob stays possible.
+  dob: string;
   language?: Lang;
   screeningRef?: string;
   nationalId?: string;
