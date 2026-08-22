@@ -1,16 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Camera, Smartphone, Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, RotateCcw, RotateCw, Smartphone, Trash2, Upload } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
 import { CameraCaptureModal } from "@/components/primitives/camera-capture-modal";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
+import { Modal } from "@/components/primitives/modal";
 import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
 import { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
+import { rotateFile } from "@/lib/image-rotate";
 import {
   useAttachmentImage,
   useAttachments,
@@ -22,6 +24,12 @@ import type { AppointmentStatus, AttachmentMeta } from "@/types/api";
 
 const READONLY_STATES: AppointmentStatus[] = ["completed", "cancelled"];
 const ACCEPT = "image/jpeg,image/png,image/webp";
+
+// A photo picked or dragged in, held back from upload until the health worker
+// has had a chance to straighten it. `turn` accumulates 90° steps and is only
+// applied to the bytes at upload time, so spinning a photo back and forth
+// costs nothing and never re-encodes it more than once.
+type Staged = { file: File; url: string; turn: number };
 
 export function AttachmentsPanel({
   appointmentId,
@@ -36,6 +44,9 @@ export function AttachmentsPanel({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [staged, setStaged] = useState<Staged[]>([]);
+  const [selected, setSelected] = useState(0);
+  const [rotatingUpload, setRotatingUpload] = useState(false);
 
   const readonly = READONLY_STATES.includes(status);
 
@@ -55,15 +66,61 @@ export function AttachmentsPanel({
     }
   };
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    await uploadFiles(Array.from(files));
+  // Picked and dragged-in photos are staged for review rather than uploaded
+  // straight away (#71) — a phone shot of a wound or a referral letter is often
+  // sideways, and there is no endpoint that can replace an attachment's bytes
+  // afterwards, so straightening has to happen before it leaves the device.
+  const stage = (files: File[]) => {
+    if (files.length === 0) return;
+    setUploadError(null);
+    setStaged(files.map((file) => ({ file, url: URL.createObjectURL(file), turn: 0 })));
+    setSelected(0);
+  };
+
+  const clearStaged = () => {
+    setStaged((prev) => {
+      prev.forEach((s) => URL.revokeObjectURL(s.url));
+      return [];
+    });
+    setSelected(0);
     if (fileInput.current) fileInput.current.value = "";
   };
 
-  // Drag photos straight onto the card to upload them — disabled once the
-  // appointment is locked or while an upload is already in flight.
-  const { isDragging, dropProps } = useFileDrop((files) => uploadFiles(files), {
+  // Object URLs outlive the component otherwise — revoke whatever is still
+  // staged if the panel unmounts mid-review.
+  useEffect(() => {
+    return () => staged.forEach((s) => URL.revokeObjectURL(s.url));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const uploadStaged = async () => {
+    setRotatingUpload(true);
+    try {
+      const rotated = await Promise.all(staged.map((s) => rotateFile(s.file, s.turn)));
+      clearStaged();
+      await uploadFiles(rotated);
+    } catch {
+      // Rotation is the only thing that can fail here; uploadFiles reports its
+      // own errors. Keep the staged files so the worker can retry unrotated.
+      setUploadError("Couldn't rotate that image. Try uploading it without rotating.");
+    } finally {
+      setRotatingUpload(false);
+    }
+  };
+
+  const turnBy = (delta: 90 | -90) =>
+    setStaged((prev) =>
+      prev.map((s, i) => (i === selected ? { ...s, turn: s.turn + delta } : s)),
+    );
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    stage(Array.from(files));
+  };
+
+  // Drag photos straight onto the card — same review step as the picker.
+  // Disabled once the appointment is locked or while an upload is in flight.
+  const { isDragging, dropProps } = useFileDrop((files) => stage(files), {
     multiple: true,
     disabled: readonly || upload.isPending,
   });
@@ -148,6 +205,76 @@ export function AttachmentsPanel({
           {readonly ? "No photos." : "No photos yet — drag photos here or use the buttons above."}
         </p>
       )}
+
+      {/* Review before upload. Deliberately a large preview plus a fixed-height
+          thumbnail strip rather than a vertical list of full-size images: it
+          keeps the dialog short enough for a phone screen. */}
+      <Modal
+        open={staged.length > 0}
+        onClose={clearStaged}
+        title={staged.length > 1 ? `Review ${staged.length} photos` : "Review photo"}
+        description="Straighten anything that came out sideways, then upload."
+        className="max-w-2xl"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex h-[45vh] items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-3">
+            {staged[selected] && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={staged[selected].url}
+                alt={staged[selected].file.name}
+                style={{ transform: `rotate(${staged[selected].turn}deg)` }}
+                className="max-h-full max-w-full object-contain transition-transform"
+              />
+            )}
+          </div>
+
+          <div className="flex items-center justify-center gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => turnBy(-90)}>
+              <RotateCcw className="h-3.5 w-3.5" />
+              Rotate left
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => turnBy(90)}>
+              <RotateCw className="h-3.5 w-3.5" />
+              Rotate right
+            </Button>
+          </div>
+
+          {staged.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {staged.map((s, i) => (
+                <button
+                  key={s.url}
+                  type="button"
+                  onClick={() => setSelected(i)}
+                  title={s.file.name}
+                  className={
+                    "h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors " +
+                    (i === selected ? "border-[var(--accent)]" : "border-[var(--border)]")
+                  }
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={s.url}
+                    alt={s.file.name}
+                    style={{ transform: `rotate(${s.turn}deg)` }}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={clearStaged}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={uploadStaged} disabled={rotatingUpload}>
+              {rotatingUpload ? "Preparing…" : `Upload ${staged.length > 1 ? "all" : ""}`.trim()}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <CameraCaptureModal
         open={cameraOpen}
