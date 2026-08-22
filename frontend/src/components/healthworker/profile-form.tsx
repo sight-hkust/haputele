@@ -41,6 +41,7 @@ type FormShape = {
   lifestyle: {
     smoking: "" | NonNullable<Lifestyle["smoking"]>;
     alcohol: "" | NonNullable<Lifestyle["alcohol"]>;
+    betelAreca: "" | NonNullable<Lifestyle["betelAreca"]>;
     occupation: string;
     physicalActivity: string;
   };
@@ -77,6 +78,7 @@ function fromProfile(p: Profile | null): FormShape {
     lifestyle: {
       smoking: p?.lifestyle?.smoking ?? "",
       alcohol: p?.lifestyle?.alcohol ?? "",
+      betelAreca: p?.lifestyle?.betelAreca ?? "",
       occupation: p?.lifestyle?.occupation ?? "",
       physicalActivity: p?.lifestyle?.physicalActivity ?? "",
     },
@@ -116,6 +118,7 @@ function toRequest(v: FormShape): ProfileRequest {
   const lifestyle: Partial<Lifestyle> = {
     smoking: v.lifestyle.smoking || undefined,
     alcohol: v.lifestyle.alcohol || undefined,
+    betelAreca: v.lifestyle.betelAreca || undefined,
     occupation: v.lifestyle.occupation.trim() || undefined,
     physicalActivity: v.lifestyle.physicalActivity.trim() || undefined,
   };
@@ -326,6 +329,19 @@ export function ProfileForm({
               <option value="none">None</option>
               <option value="occasional">Occasional</option>
               <option value="regular">Regular</option>
+            </Select>
+          </div>
+          {/* One control for the quid as a whole — betel leaf and areca nut are
+              chewed together far more often than separately, so the label names
+              both rather than splitting them into two fields nobody fills in
+              consistently. */}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="ls-betel">Betel leaf / areca nut</Label>
+            <Select id="ls-betel" {...register("lifestyle.betelAreca")}>
+              <option value="">Not specified</option>
+              <option value="never">Never</option>
+              <option value="current">Currently chews</option>
+              <option value="prior">Prior use</option>
             </Select>
           </div>
           <div className="flex flex-col gap-2">

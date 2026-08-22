@@ -458,11 +458,16 @@ class ExistingMedicationEntry(BaseModel):
 
 SmokingStatus = Literal["never", "current", "prior"]
 AlcoholStatus = Literal["none", "occasional", "regular"]
+# Betel quid / areca nut chewing. Shaped like smoking rather than alcohol:
+# "prior" stays clinically meaningful for oral-cancer risk long after someone
+# stops, which a frequency scale (none/occasional/regular) cannot express.
+BetelArecaStatus = Literal["never", "current", "prior"]
 
 
 class Lifestyle(BaseModel):
     smoking: Optional[SmokingStatus] = None
     alcohol: Optional[AlcoholStatus] = None
+    betelAreca: Optional[BetelArecaStatus] = None
     occupation: Optional[str] = None
     physicalActivity: Optional[str] = None
 
@@ -500,6 +505,7 @@ class ProfileOut(BaseModel):
             "lifestyle": {
                 "smoking": value.smoking,
                 "alcohol": value.alcohol,
+                "betelAreca": value.betel_areca,
                 "occupation": value.occupation,
                 "physicalActivity": value.physical_activity,
             },
