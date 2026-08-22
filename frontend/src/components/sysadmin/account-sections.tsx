@@ -6,7 +6,9 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
+import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { newPasswordError, passwordError } from "@/lib/credentials";
+import { useCapsLock } from "@/lib/use-caps-lock";
 import { explainError } from "@/lib/error-codes";
 import { useResetAccountPassword, useUpdateAccount } from "@/lib/use-api";
 
@@ -57,6 +59,8 @@ export function ProfileSection({
 export function PasswordSection({ username, self = false }: { username: string; self?: boolean }) {
   const resetPw = useResetAccountPassword();
   const [password, setPassword] = useState("");
+  const passwordCaps = useCapsLock();
+  const confirmCaps = useCapsLock();
   const [confirm, setConfirm] = useState("");
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwDone, setPwDone] = useState(false);
@@ -90,10 +94,24 @@ export function PasswordSection({ username, self = false }: { username: string; 
             : "Set a new password and share it with them directly — they can sign in with it immediately."}
         </p>
         <Field label="New password" error={passwordError(password) ?? undefined}>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            {...passwordCaps.capsLockProps}
+          />
+          <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
         </Field>
         <Field label="Confirm password">
-          <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+          <Input
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="new-password"
+            {...confirmCaps.capsLockProps}
+          />
+          <CapsLockHint id={confirmCaps.hintId} show={confirmCaps.capsLockOn} />
         </Field>
         {pwError ? <ErrorBanner>{pwError}</ErrorBanner> : null}
         {resetPw.error ? <ErrorBanner>{explainError(resetPw.error.error)}</ErrorBanner> : null}

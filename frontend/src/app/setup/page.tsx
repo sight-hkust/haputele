@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, KeyRound, Plus, ServerCog, Trash2, Users } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { Select } from "@/components/primitives/select";
@@ -19,6 +20,7 @@ import {
   usernameError,
 } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
+import { useCapsLock } from "@/lib/use-caps-lock";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import {
   useCreateOperatingAccount,
@@ -269,6 +271,8 @@ function ConfigureStage({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const passwordCaps = useCapsLock();
+  const passwordConfirmCaps = useCapsLock();
   const [instituteName, setInstituteName] = useState("");
   const [addressLines, setAddressLines] = useState<string[]>([""]);
   const [contactPhone, setContactPhone] = useState("");
@@ -386,7 +390,9 @@ function ConfigureStage({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
+            {...passwordCaps.capsLockProps}
           />
+          <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
         </Field>
         <Field label="Confirm password" htmlFor="sa-pw2" error={errors.passwordConfirm}>
           <Input
@@ -395,7 +401,9 @@ function ConfigureStage({
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
             autoComplete="new-password"
+            {...passwordConfirmCaps.capsLockProps}
           />
+          <CapsLockHint id={passwordConfirmCaps.hintId} show={passwordConfirmCaps.capsLockOn} />
         </Field>
       </FieldGroup>
 
@@ -741,6 +749,9 @@ function AccountDraftRow({
   onRemove: (() => void) | null;
   showLabel: boolean;
 }) {
+  const passwordCaps = useCapsLock();
+  const confirmCaps = useCapsLock();
+
   const usernameInput = (
     <Input
       id={`${idPrefix}-user`}
@@ -750,26 +761,37 @@ function AccountDraftRow({
       autoComplete="off"
     />
   );
+  // Input + hint kept inside ONE element: in the !showLabel branch these
+  // variables drop straight into a 3-column grid, and a bare sibling hint
+  // would become a fourth grid cell and break the row's alignment.
   const passwordInput = (
-    <Input
-      id={`${idPrefix}-pw`}
-      aria-label="Password"
-      type="password"
-      value={value.password}
-      onChange={(e) => onChange({ password: e.target.value })}
-      autoComplete="new-password"
-      minLength={MIN_PASSWORD_LEN}
-    />
+    <div className="flex flex-col gap-1.5">
+      <Input
+        id={`${idPrefix}-pw`}
+        aria-label="Password"
+        type="password"
+        value={value.password}
+        onChange={(e) => onChange({ password: e.target.value })}
+        autoComplete="new-password"
+        minLength={MIN_PASSWORD_LEN}
+        {...passwordCaps.capsLockProps}
+      />
+      <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
+    </div>
   );
   const confirmInput = (
-    <Input
-      id={`${idPrefix}-pw2`}
-      aria-label="Confirm password"
-      type="password"
-      value={value.passwordConfirm}
-      onChange={(e) => onChange({ passwordConfirm: e.target.value })}
-      autoComplete="new-password"
-    />
+    <div className="flex flex-col gap-1.5">
+      <Input
+        id={`${idPrefix}-pw2`}
+        aria-label="Confirm password"
+        type="password"
+        value={value.passwordConfirm}
+        onChange={(e) => onChange({ passwordConfirm: e.target.value })}
+        autoComplete="new-password"
+        {...confirmCaps.capsLockProps}
+      />
+      <CapsLockHint id={confirmCaps.hintId} show={confirmCaps.capsLockOn} />
+    </div>
   );
 
   // A stray space is invisible in a masked field, so surface it as the
