@@ -186,7 +186,7 @@ function LoginScreen() {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
+                autoComplete="off"
                 placeholder="your.username"
                 autoFocus
                 required

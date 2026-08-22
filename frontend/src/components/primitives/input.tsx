@@ -11,10 +11,11 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement>;
 const BLOCKED_NUMBER_KEYS = new Set(["e", "E", "+", "-"]);
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type = "text", onKeyDown, ...props }, ref) => (
+  ({ className, type = "text", onKeyDown, autoComplete = "off", ...props }, ref) => (
     <input
       ref={ref}
       type={type}
+      autoComplete={autoComplete}
       onKeyDown={(event) => {
         if (type === "number" && BLOCKED_NUMBER_KEYS.has(event.key)) {
           event.preventDefault();
