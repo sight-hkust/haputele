@@ -188,8 +188,13 @@ def test_upgrade_reports_offenders_without_touching_them(at_0016):
     # Byte-for-byte unchanged — no trimming, no renaming, no deletion.
     assert _usernames(at_0016) == [" alice", "bo b"]
 
+    # The upgrade advanced instead of stalling — that, plus a zero exit, is the
+    # crash-loop property this test exists for. Deliberately not pinned to 0017
+    # being head: that only held while 0017 *was* the latest migration, and it
+    # broke the moment 0018 landed. What 0017 itself did is asserted above, via
+    # the constraint state and the untouched offenders.
     current = _alembic(at_0016, "current")
-    assert _REV_0017 in _output(current)
+    assert _REV_0016 not in _output(current)
 
 
 def test_not_valid_constraint_still_rejects_new_whitespace_writes(at_0016):

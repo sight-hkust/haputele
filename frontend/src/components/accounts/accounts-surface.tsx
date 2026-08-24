@@ -27,7 +27,9 @@ import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { Select } from "@/components/primitives/select";
 import { cn } from "@/lib/cn";
+import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { newPasswordError, passwordError, usernameError } from "@/lib/credentials";
+import { useCapsLock } from "@/lib/use-caps-lock";
 import { explainError } from "@/lib/error-codes";
 import { useAccountRoster, useCreateOperatingAccount } from "@/lib/use-api";
 import type { AccountRole, AccountRosterEntry, OperatingAccountRole } from "@/types/api";
@@ -321,7 +323,7 @@ function StatChip({
     <div className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-2">
       <span className={cn("h-1.5 w-1.5 rounded-full", dot)} aria-hidden />
       <span className="font-display text-lg leading-none tracking-[-0.01em]">{value}</span>
-      <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">{label}</span>
+      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">{label}</span>
     </div>
   );
 }
@@ -345,7 +347,7 @@ function SortableTh({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="group inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+        className="group inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
       >
         {label}
         {isActive ? (
@@ -364,7 +366,7 @@ function SortableTh({
 
 function RoleBadge({ role }: { role: AccountRole }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+    <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
       {ROLE_LABEL[role]}
     </span>
   );
@@ -374,7 +376,7 @@ function StatePill({ active, label }: { active: boolean; label: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-[0.12em]",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em]",
         active
           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
           : "border-rose-200 bg-rose-50 text-rose-700",
@@ -463,6 +465,8 @@ function CreateAccountModal({
   const [fullName, setFullName] = useState("");
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
+  const passwordCaps = useCapsLock();
+  const confirmCaps = useCapsLock();
   const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState<CreatableRole>(roles[0]);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -564,10 +568,24 @@ function CreateAccountModal({
               <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="e.g. +94 77 123 4567" />
             </Field>
             <Field label="Password" error={passwordError(password) ?? undefined}>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                {...passwordCaps.capsLockProps}
+              />
+              <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
             </Field>
             <Field label="Confirm password">
-              <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+              <Input
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="new-password"
+                {...confirmCaps.capsLockProps}
+              />
+              <CapsLockHint id={confirmCaps.hintId} show={confirmCaps.capsLockOn} />
             </Field>
 
             {localError ? <ErrorBanner>{localError}</ErrorBanner> : null}

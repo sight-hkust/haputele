@@ -51,7 +51,10 @@ export type PatientCreateRequest = {
   given: string;
   family: string;
   gender: string;
-  dob?: string;
+  // Required — the prescription PDF derives the §1.7-mandatory patient age
+  // from it. `PatientUpdateRequest` below is Partial<…>, so editing an older
+  // record without a dob stays possible.
+  dob: string;
   language?: Lang;
   screeningRef?: string;
   nationalId?: string;
@@ -206,6 +209,10 @@ export type ExistingMedicationEntry = {
 export type Lifestyle = {
   smoking: "never" | "current" | "prior" | null;
   alcohol: "none" | "occasional" | "regular" | null;
+  // Betel quid / areca nut chewing. Same never/current/prior shape as smoking,
+  // not alcohol's frequency scale — "prior" carries oral-cancer risk long after
+  // someone stops. (#64 calls it "acorn", a mishearing of "areca".)
+  betelAreca: "never" | "current" | "prior" | null;
   occupation: string | null;
   physicalActivity: string | null;
 };

@@ -16,7 +16,10 @@ const baseSchema = z.object({
   given: z.string().min(1, "Given name is required"),
   family: z.string().min(1, "Family name is required"),
   gender: z.string().min(1, "Gender is required"),
-  dob: z.string().optional().or(z.literal("")),
+  // Required: the prescription PDF must carry the patient's age (§1.7) and
+  // derives it from dob. Enforced here as well as server-side so a health
+  // worker finds out at intake rather than the doctor finding out at signing.
+  dob: z.string().min(1, "Date of birth is required"),
   language: z.enum(["en", "ta", "si"]).optional().or(z.literal("") as z.ZodType<"">),
   screeningRef: z.string().optional(),
   nationalId: z
@@ -82,7 +85,10 @@ export function PatientForm({
       given: v.given.trim(),
       family: v.family.trim(),
       gender: v.gender,
-      dob: strip(v.dob),
+      // Not `strip()`d like the optional fields below: zod guarantees a
+      // non-empty value, and strip's `string | undefined` return would widen
+      // it back out of the now-required `PatientCreateRequest["dob"]`.
+      dob: v.dob,
       language: (strip(v.language as string) as Lang | undefined) ?? undefined,
       screeningRef: strip(v.screeningRef),
       nationalId: strip(v.nationalId),
@@ -104,7 +110,7 @@ export function PatientForm({
         <Field label="Family name" htmlFor="family" error={errors.family?.message}>
           <Input id="family" {...register("family")} />
         </Field>
-        <Field label="Date of birth" htmlFor="dob">
+        <Field label="Date of birth" htmlFor="dob" error={errors.dob?.message}>
           <Input id="dob" type="date" {...register("dob")} />
         </Field>
         <Field label="Gender" htmlFor="gender" error={errors.gender?.message}>

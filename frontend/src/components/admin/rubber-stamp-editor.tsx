@@ -6,6 +6,7 @@ import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
 import { Button } from "@/components/primitives/button";
+import { rotateDataUrl } from "@/lib/image-rotate";
 
 const DEFAULT_THRESHOLD = 240; // luminance cutoff (0–255); brighter pixels become transparent
 
@@ -61,7 +62,7 @@ export function RubberStampEditor({
     let cancelled = false;
     setRotating(true);
     const timer = window.setTimeout(() => {
-      rotateImage(source, totalRotation)
+      rotateDataUrl(source, totalRotation)
         .then((next) => {
           if (!cancelled) setDisplaySrc(next);
         })
@@ -140,7 +141,7 @@ export function RubberStampEditor({
                 Rotate right
               </Button>
               {totalRotation !== 0 && (
-                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
                   {formatAngle(totalRotation)}°
                 </span>
               )}
@@ -154,7 +155,7 @@ export function RubberStampEditor({
                     <button
                       type="button"
                       onClick={() => setFine(0)}
-                      className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)] hover:underline"
+                      className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)] hover:underline"
                     >
                       Reset
                     </button>
@@ -176,7 +177,7 @@ export function RubberStampEditor({
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               Preview
             </div>
             <div
@@ -217,7 +218,7 @@ export function RubberStampEditor({
                 onChange={(e) => setThreshold(parseInt(e.target.value, 10))}
                 className="w-full accent-[var(--accent)]"
               />
-              <p className="text-[11px] leading-snug text-[var(--muted-foreground)]">
+              <p className="text-xs leading-snug text-[var(--muted-foreground)]">
                 Higher = more aggressive (drops grey paper). Lower = preserves faint ink.
               </p>
             </div>
@@ -247,34 +248,6 @@ function formatAngle(deg: number): string {
   // Avoid `-0.0` slipping into the label.
   if (Object.is(a, -0)) a = 0;
   return a.toFixed(1).replace(/\.0$/, "");
-}
-
-// Rotate `srcDataUrl` by `degrees` (any angle — buttons snap to 90°, the
-// fine slider supplies the rest). Always re-rotates from the caller's
-// original source so successive rotations don't compound encoding artefacts.
-async function rotateImage(srcDataUrl: string, degrees: number): Promise<string> {
-  const img = new Image();
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error("rotate_load_failed"));
-    img.src = srcDataUrl;
-  });
-  const rad = (degrees * Math.PI) / 180;
-  const sin = Math.abs(Math.sin(rad));
-  const cos = Math.abs(Math.cos(rad));
-  const w = img.naturalWidth;
-  const h = img.naturalHeight;
-  const cw = Math.round(w * cos + h * sin);
-  const ch = Math.round(w * sin + h * cos);
-  const cv = document.createElement("canvas");
-  cv.width = cw;
-  cv.height = ch;
-  const ctx = cv.getContext("2d");
-  if (!ctx) return srcDataUrl;
-  ctx.translate(cw / 2, ch / 2);
-  ctx.rotate(rad);
-  ctx.drawImage(img, -w / 2, -h / 2);
-  return cv.toDataURL("image/png");
 }
 
 function drawProcessed(

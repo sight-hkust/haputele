@@ -84,7 +84,7 @@ export default function QueuePage() {
             </Select>
           </Filter>
         </div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           Sort: urgent first → soonest target week → longest waiting
         </p>
       </div>
@@ -166,7 +166,7 @@ export default function QueuePage() {
 function Filter({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
         {label}
       </span>
       {children}

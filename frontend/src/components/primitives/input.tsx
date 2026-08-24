@@ -12,13 +12,14 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement>;
 const BLOCKED_NUMBER_KEYS = new Set(["e", "E", "+", "-"]);
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type = "text", onKeyDown, ...props }, ref) => {
+  ({ className, type = "text", onKeyDown, autoComplete = "off", ...props }, ref) => {
     const [passwordVisible, setPasswordVisible] = useState(false);
     const isPassword = type === "password";
     const input = (
       <input
         ref={ref}
         type={isPassword && passwordVisible ? "text" : type}
+        autoComplete={autoComplete}
         onKeyDown={(event) => {
           if (type === "number" && BLOCKED_NUMBER_KEYS.has(event.key)) {
             event.preventDefault();

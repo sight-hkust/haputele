@@ -355,7 +355,11 @@ class PatientCreate(BaseModel):
     given: str
     family: str
     gender: str
-    dob: Optional[date] = None
+    # Required: §1.7 makes the patient's age mandatory on every prescription
+    # and age is derived from dob. Patients predating this rule may still have
+    # a NULL dob (the column stays nullable); signing is blocked for them until
+    # someone backfills it via PatientUpdate.
+    dob: date
     language: Optional[Literal["en", "ta", "si"]] = None
     screeningRef: Optional[str] = None
     nationalId: Optional[str] = None
@@ -373,6 +377,9 @@ class PatientCreate(BaseModel):
 class PatientUpdate(BaseModel):
     given: Optional[str] = None
     family: Optional[str] = None
+    # Stays optional unlike PatientCreate: this is a partial update, where
+    # omitting a field means "leave it alone", not "clear it". This is also the
+    # path that backfills dob on a pre-§1.7 patient record.
     dob: Optional[date] = None
     gender: Optional[str] = None
     language: Optional[Literal["en", "ta", "si"]] = None
@@ -451,11 +458,16 @@ class ExistingMedicationEntry(BaseModel):
 
 SmokingStatus = Literal["never", "current", "prior"]
 AlcoholStatus = Literal["none", "occasional", "regular"]
+# Betel quid / areca nut chewing. Shaped like smoking rather than alcohol:
+# "prior" stays clinically meaningful for oral-cancer risk long after someone
+# stops, which a frequency scale (none/occasional/regular) cannot express.
+BetelArecaStatus = Literal["never", "current", "prior"]
 
 
 class Lifestyle(BaseModel):
     smoking: Optional[SmokingStatus] = None
     alcohol: Optional[AlcoholStatus] = None
+    betelAreca: Optional[BetelArecaStatus] = None
     occupation: Optional[str] = None
     physicalActivity: Optional[str] = None
 
@@ -493,6 +505,7 @@ class ProfileOut(BaseModel):
             "lifestyle": {
                 "smoking": value.smoking,
                 "alcohol": value.alcohol,
+                "betelAreca": value.betel_areca,
                 "occupation": value.occupation,
                 "physicalActivity": value.physical_activity,
             },

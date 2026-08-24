@@ -9,7 +9,7 @@ an already-signed consultation.
 from __future__ import annotations
 
 import base64
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import pytest
 
@@ -62,7 +62,12 @@ def scenario(initialized_system):
             active=True,
             approved_at=datetime.now(timezone.utc),
         )
-        patient = Patient(given_name="Pat", family_name="Ient", gender="female")
+        # dob is required to submit — §1.7 needs the age on the prescription.
+        # Set here so these tests exercise signature behaviour rather than
+        # tripping the dob gate (see test_prescription_pdf.py for that path).
+        patient = Patient(
+            given_name="Pat", family_name="Ient", gender="female", dob=date(1990, 5, 17),
+        )
         db.add(doctor)
         db.add(patient)
         db.flush()

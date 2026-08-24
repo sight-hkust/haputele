@@ -1,4 +1,5 @@
 import io
+from datetime import date
 
 from PIL import Image as PILImage
 from reportlab.lib import colors
@@ -44,11 +45,71 @@ def _img_or_blank(data: bytes | None, width: float, height: float):
         return Spacer(1, height)
 
 
+def age_on_date(dob: date, on: date) -> int:
+    """Whole years old on `on`. Both dates, no clock, no timezone.
+
+    `on` is passed in rather than read from today() on purpose — see
+    `patient_block` for why the prescription pins it to the appointment date.
+
+    The (month, day) comparison handles a Feb-29 birthday the same way the
+    rest of the calendar-arithmetic world does: someone born 2020-02-29 is
+    still 0 on 2021-02-28 and turns 1 on 2021-03-01.
+    """
+    return on.year - dob.year - ((on.month, on.day) < (dob.month, dob.day))
+
+
+def format_age(dob: date | None, on: date) -> str:
+    """Age for the prescription's Age cell — "45 years old", "1 year old".
+
+    Phrasing matches `fmtAge` in frontend/src/lib/format.ts so the printed
+    prescription and the on-screen patient headers never word the same fact
+    differently. Years only: an infant reads "0 years old", disambiguated by
+    the Date of birth cell rendered beside it.
+
+    Returns the em-dash placeholder for an absent dob (legacy patients — new
+    ones can't be created without it) and for a dob later than `on`, which
+    means a typo we shouldn't dress up as a negative age.
+    """
+    if dob is None:
+        return "—"
+    years = age_on_date(dob, on)
+    if years < 0:
+        return "—"
+    return f"{years} {'year' if years == 1 else 'years'} old"
+
+
+def patient_block(patient, appt_date: date) -> list[list[str]]:
+    """The prescription's patient table, as plain rows.
+
+    Split out from the renderer so the §1.7 fields can be asserted in tests
+    without a PDF parser (the backend has no such dependency, and this isn't
+    worth adding one for).
+
+    §1.7 makes *age* mandatory and doesn't mention date of birth. We print
+    both: age is the mandatory field, and the dob beside it is what makes
+    "0 years old" legible on an infant's prescription.
+    """
+    return [
+        ["Patient", f"{patient.given_name} {patient.family_name}", "Date", appt_date.isoformat()],
+        [
+            "Date of birth",
+            patient.dob.isoformat() if patient.dob else "—",
+            "Age",
+            format_age(patient.dob, appt_date),
+        ],
+        ["National ID", patient.n_id or "—", "", ""],
+    ]
+
+
 def render_prescription_pdf(*, patient, doctor, appointment, consultation) -> bytes:
     """Render a prescription summary per Sri Lanka §1.7.
 
     Mandatory items: patient name, age, date, generic names, doctor name, SLMC reg,
     qualifications, signature, rubber stamp, practitioner address, institute contact.
+
+    Date of birth is not one of them — it's printed alongside the mandatory age
+    as supplementary context (§1.7 sets minimums, not a closed list). See
+    `patient_block`.
     """
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -71,17 +132,19 @@ def render_prescription_pdf(*, patient, doctor, appointment, consultation) -> by
     # Appointment date is the SL-day, not the UTC-day — appointments scheduled
     # late evening SL time (early morning UTC the next day) would otherwise
     # show the wrong date on the prescription.
-    appt_date = appointment.scheduled_at.astimezone(app_tz()).date().isoformat()
-    dob = patient.dob.isoformat() if patient.dob else "—"
-    patient_block = [
-        ["Patient", f"{patient.given_name} {patient.family_name}", "Date", appt_date],
-        ["Date of birth", dob, "National ID", patient.n_id or "—"],
-    ]
-    t = Table(patient_block, colWidths=[3 * cm, 6 * cm, 3 * cm, 5 * cm])
+    # Age is computed against the appointment date, not today: the PDF is
+    # re-rendered from scratch on every download (per-consultation and bulk
+    # pharmacy export both), so measuring from "now" would make the same
+    # prescription print a different age on a later re-download.
+    appt_date = appointment.scheduled_at.astimezone(app_tz()).date()
+    t = Table(patient_block(patient, appt_date), colWidths=[3 * cm, 6 * cm, 3 * cm, 5 * cm])
     t.setStyle(TableStyle([
         ("FONT", (0, 0), (-1, -1), "Helvetica", 10),
         ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
-        ("BACKGROUND", (2, 0), (2, -1), colors.lightgrey),
+        # Rows 0-1 only — row 2's right-hand pair is the empty spill from
+        # National ID and shouldn't read as a labelled field.
+        ("BACKGROUND", (2, 0), (2, 1), colors.lightgrey),
+        ("SPAN", (2, 2), (3, 2)),
         ("BOX", (0, 0), (-1, -1), 0.5, colors.black),
         ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.grey),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),

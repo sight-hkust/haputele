@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { BackLink } from "@/components/primitives/back-link";
 import { ROLE_HOMES, useAuth } from "@/lib/auth";
 
 // Global not-found boundary for any unmatched URL. Next renders this for paths
@@ -44,12 +44,7 @@ export default function NotFound() {
           The page you&apos;re looking for doesn&apos;t exist or has moved.
         </p>
       </div>
-      <Link
-        href={ROLE_HOMES[session.role]}
-        className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)] hover:underline"
-      >
-        ← Back to your dashboard
-      </Link>
+      <BackLink href={ROLE_HOMES[session.role]}>Back to your dashboard</BackLink>
     </main>
   );
 }

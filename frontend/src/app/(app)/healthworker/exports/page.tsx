@@ -74,7 +74,7 @@ export default function ExportsPage() {
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
             Sri Lanka time · {EXPORT_TIMEZONE}
           </p>
         </div>

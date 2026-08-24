@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, IdCard, Mail } from "lucide-react";
+import { ArrowRight, IdCard, Mail } from "lucide-react";
 
 import { DoctorForm } from "@/components/admin/doctor-form";
+import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
@@ -52,13 +52,7 @@ export function NewDoctorSurface({
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-12">
-      <Link
-        href={returnHref}
-        className="inline-flex w-fit items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--accent)]"
-      >
-        <ArrowLeft className="h-3 w-3" />
-        {backLabel}
-      </Link>
+      <BackLink href={returnHref}>{backLabel}</BackLink>
 
       <PageHeader
         label="New doctor"
@@ -289,7 +283,7 @@ function ModeCard({
         <span className="flex items-center gap-2 text-sm font-semibold">
           {title}
           {recommended && (
-            <span className="rounded-full bg-[var(--accent)]/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--accent)]">
+            <span className="rounded-full bg-[var(--accent)]/10 px-2 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
               Recommended
             </span>
           )}

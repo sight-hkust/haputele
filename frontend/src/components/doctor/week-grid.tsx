@@ -154,7 +154,7 @@ export function WeekGrid({
           <div
             key={d.index}
             className={cn(
-              "px-1 pb-2 text-center font-mono text-[10px] uppercase tracking-[0.12em]",
+              "px-1 pb-2 text-center font-mono text-xs uppercase tracking-[0.12em]",
               d.isToday ? "text-[var(--accent)]" : "text-[var(--muted-foreground)]",
               d.isPast && "opacity-40",
             )}
@@ -206,7 +206,7 @@ function FragmentRow({
     <>
       <div
         className={cn(
-          "pr-2 text-right font-mono text-[10px] tabular-nums",
+          "pr-2 text-right font-mono text-xs tabular-nums",
           onHourBoundary
             ? "text-[var(--muted-foreground)]"
             : "text-[var(--muted-foreground)]/40",

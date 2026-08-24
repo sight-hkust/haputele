@@ -6,7 +6,9 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
+import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { newPasswordError, passwordError } from "@/lib/credentials";
+import { useCapsLock } from "@/lib/use-caps-lock";
 import { explainError } from "@/lib/error-codes";
 import { useResetAccountPassword, useUpdateAccount } from "@/lib/use-api";
 
@@ -57,6 +59,8 @@ export function ProfileSection({
 export function PasswordSection({ username, self = false }: { username: string; self?: boolean }) {
   const resetPw = useResetAccountPassword();
   const [password, setPassword] = useState("");
+  const passwordCaps = useCapsLock();
+  const confirmCaps = useCapsLock();
   const [confirm, setConfirm] = useState("");
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwDone, setPwDone] = useState(false);
@@ -90,10 +94,24 @@ export function PasswordSection({ username, self = false }: { username: string; 
             : "Set a new password and share it with them directly — they can sign in with it immediately."}
         </p>
         <Field label="New password" error={passwordError(password) ?? undefined}>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            {...passwordCaps.capsLockProps}
+          />
+          <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
         </Field>
         <Field label="Confirm password">
-          <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+          <Input
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="new-password"
+            {...confirmCaps.capsLockProps}
+          />
+          <CapsLockHint id={confirmCaps.hintId} show={confirmCaps.capsLockOn} />
         </Field>
         {pwError ? <ErrorBanner>{pwError}</ErrorBanner> : null}
         {resetPw.error ? <ErrorBanner>{explainError(resetPw.error.error)}</ErrorBanner> : null}
@@ -102,7 +120,7 @@ export function PasswordSection({ username, self = false }: { username: string; 
             {resetPw.isPending ? "Saving…" : self ? "Change password" : "Set new password"}
           </Button>
           {pwDone ? (
-            <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
+            <span className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Updated
             </span>
@@ -120,7 +138,7 @@ export function StatusHeader({ active, label, sub }: { active: boolean; label: s
     <div className="flex items-center gap-3">
       <span
         className={
-          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] " +
+          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-[0.12em] " +
           (active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")
         }
       >
@@ -145,7 +163,7 @@ export function Section({
     <section className="flex flex-col gap-3">
       <h3
         className={
-          "font-mono text-[10px] uppercase tracking-[0.15em] " +
+          "font-mono text-xs uppercase tracking-[0.15em] " +
           (tone === "danger" ? "text-rose-600" : "text-[var(--muted-foreground)]")
         }
       >

@@ -184,7 +184,7 @@ function QueueCard({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-base tracking-[-0.01em]">Queue</h2>
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
             {pending.length} pending · urgent first
           </p>
         </div>
@@ -345,7 +345,7 @@ function BookingCard({
       {mode.kind === "from-queue" && (
         <div className="flex items-start justify-between gap-2 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-3 py-2 text-xs">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
+            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
               Booking from queue · #{mode.entry.id}
             </div>
             <div className="mt-0.5 font-medium">{queuePatientLabel}</div>
@@ -400,7 +400,7 @@ function SubFrame({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           {title}
         </h3>
         <Button variant="ghost" size="sm" onClick={onBack}>

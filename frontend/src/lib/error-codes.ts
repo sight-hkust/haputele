@@ -18,6 +18,8 @@ const MESSAGES: Record<string, string> = {
   missing_prescription_fields: "Some §1.7 mandatory prescription fields are missing.",
   national_id_taken: "A patient with that National ID already exists.",
   signature_required: "A signature is required before continuing.",
+  patient_dob_required:
+    "This patient has no date of birth on record. Add it to the patient details before signing — §1.7 requires the patient's age on the prescription.",
   invalid_signature_format: "The signature image couldn't be decoded. Try signing again.",
   signature_too_large: "The signature image is too large. Try a smaller drawing.",
   attachment_too_large: "That file is too large — keep attachments under 10 MB.",

@@ -43,7 +43,7 @@ export function Modal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/30 px-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/30 p-4 backdrop-blur-sm sm:p-8"
           role="dialog"
           aria-modal
         >
@@ -53,7 +53,7 @@ export function Modal({
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
-              "relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl",
+              "relative flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl",
               className,
             )}
           >
@@ -63,14 +63,19 @@ export function Modal({
               </Button>
             </div>
             {(title || description) && (
-              <div className="flex flex-col gap-1.5 p-6 pb-3">
+              <div className="flex shrink-0 flex-col gap-1.5 p-6 pb-3">
                 {title && <h2 className="font-display text-xl tracking-[-0.01em]">{title}</h2>}
                 {description && (
                   <p className="text-sm text-[var(--muted-foreground)]">{description}</p>
                 )}
               </div>
             )}
-            <div className="p-6 pt-3">{children}</div>
+            {/* Only the body scrolls; the header above stays pinned so the title and the
+                close button remain reachable. Without this the panel had no height bound
+                at all, so tall content (the rubber-stamp editor worst of all) ran off both
+                ends of the viewport with body scroll locked — nothing could reach the save
+                button. Mirrors image-preview / camera-capture / qr-capture modals. */}
+            <div className="flex-1 overflow-y-auto p-6 pt-3">{children}</div>
           </motion.div>
         </motion.div>
       )}

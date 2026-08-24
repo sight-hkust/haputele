@@ -128,7 +128,7 @@ export default function AdminDoctors() {
               {n !== undefined && n > 0 && (
                 <span
                   className={cn(
-                    "inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 font-mono text-[10px]",
+                    "inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 font-mono text-xs",
                     key === "awaiting_approval"
                       ? "bg-sky-100 text-sky-700"
                       : "bg-[var(--muted)] text-[var(--muted-foreground)]",
@@ -221,13 +221,13 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
           Name hint: {invite.familyName}
         </p>
       )}
-      <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-[11px] text-[var(--muted-foreground)]">
+      <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-[var(--muted-foreground)]">
         <Clock className="h-3 w-3" />
         Sent {fmtRelative(invite.createdAt)}
       </p>
       <p
         className={cn(
-          "mt-1 font-mono text-[11px]",
+          "mt-1 font-mono text-xs",
           expired ? "text-rose-600" : "text-[var(--muted-foreground)]",
         )}
       >
@@ -291,12 +291,12 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
 
 function InviteStatusPill({ expired }: { expired: boolean }) {
   return expired ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-rose-700">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
       <MailX className="h-3 w-3" />
       Expired
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-amber-700">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
       <Mail className="h-3 w-3" />
       Awaiting setup
     </span>
@@ -322,7 +322,7 @@ function DoctorCard({ doctor: d, onReject }: { doctor: Doctor; onReject: () => v
         <h3 className="mt-4 font-display text-xl tracking-[-0.01em]">{doctorName(d)}</h3>
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">{d.email}</p>
         {d.submittedAt && (
-          <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-[11px] text-[var(--muted-foreground)]">
+          <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-[var(--muted-foreground)]">
             <Clock className="h-3 w-3" />
             Submitted {fmtRelative(d.submittedAt)}
           </p>
@@ -374,7 +374,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   const status = d.onboardingStatus ?? "active";
   if (status === "awaiting_setup") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-amber-700">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
         <Mail className="h-3 w-3" />
         Awaiting setup
       </span>
@@ -382,7 +382,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   }
   if (status === "awaiting_approval") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-sky-700">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-sky-700">
         <ShieldCheck className="h-3 w-3" />
         Awaiting approval
       </span>
@@ -390,7 +390,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   }
   if (status === "rejected") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-rose-700">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
         <XCircle className="h-3 w-3" />
         Rejected
       </span>
@@ -398,12 +398,12 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   }
   // active lifecycle — distinguish enabled vs deactivated
   return d.active ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
       <CheckCircle2 className="h-3 w-3" />
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--muted)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--muted)] px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
       <XCircle className="h-3 w-3" />
       Inactive
     </span>
@@ -463,7 +463,7 @@ function RejectModal({ target, onClose }: { target: Doctor | null; onClose: () =
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
         {label}
       </div>
       <div className="truncate text-xs text-[var(--foreground)]">{value}</div>

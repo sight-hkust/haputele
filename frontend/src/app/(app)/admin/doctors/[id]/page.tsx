@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Mail, RefreshCw, ShieldCheck, ShieldX, Trash2, ToggleLeft, ToggleRight, UserPlus2, XCircle } from "lucide-react";
+import { CheckCircle2, Mail, RefreshCw, ShieldCheck, ShieldX, Trash2, ToggleLeft, ToggleRight, UserPlus2, XCircle } from "lucide-react";
 
 import { DoctorForm } from "@/components/admin/doctor-form";
+import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
@@ -77,13 +78,7 @@ export default function DoctorDetailPage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-12">
-      <Link
-        href="/admin"
-        className="inline-flex w-fit items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--accent)]"
-      >
-        <ArrowLeft className="h-3 w-3" />
-        Back to doctors
-      </Link>
+      <BackLink href="/admin">Back to doctors</BackLink>
 
       <PageHeader
         label={`Doctor #${d.id}`}
@@ -114,7 +109,7 @@ export default function DoctorDetailPage() {
 
       {/* Audit line — when the submission came in, who acted on it, and a
           link back to a prior rejected attempt if this is a reapplication. */}
-      <div className="-mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-[var(--muted-foreground)]">
+      <div className="-mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-[var(--muted-foreground)]">
         {d.submittedAt && <span>Submitted {fmtDateTime(d.submittedAt)}</span>}
         {d.approvedAt && (
           <span>
@@ -207,7 +202,7 @@ export default function DoctorDetailPage() {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {reapplyJustSent && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
                   <CheckCircle2 className="h-3 w-3" />
                   Sent
                 </span>
@@ -267,7 +262,7 @@ export default function DoctorDetailPage() {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {inviteJustSent && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
                   <CheckCircle2 className="h-3 w-3" />
                   Sent
                 </span>

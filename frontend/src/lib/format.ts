@@ -40,9 +40,16 @@ export function fmtRelative(iso: string | null | undefined): string {
   }
 }
 
-// §1.7 prescription PDF requires patient age — derived from dob, computed
+// Patient age for the on-screen patient headers — derived from dob, computed
 // against today in APP_TIMEZONE so a "born today, viewed at midnight UTC"
 // edge case doesn't off-by-one.
+//
+// NOT the source of the §1.7 age on the prescription: that PDF is rendered
+// server-side (backend/app/pdf.py `format_age`) and computes age against the
+// appointment date rather than today, so re-downloading an old prescription
+// prints the age it was dispensed at. Expect these two to disagree for a
+// patient whose birthday fell between the appointment and now — that's the
+// intended behaviour, not drift.
 export function ageFromDob(dob: string | null | undefined): number | null {
   if (!dob) return null;
   try {
@@ -50,6 +57,18 @@ export function ageFromDob(dob: string | null | undefined): number | null {
   } catch {
     return null;
   }
+}
+
+// Display form of ageFromDob — "20 years old". Patient headers previously
+// each built their own suffix ("20 yrs" vs "20 years"), so the same patient
+// read differently depending on the page. Returns null (not "—") for an
+// unknown dob because both callers drop the age from a " · "-joined list
+// rather than showing a placeholder. ageFromDob stays numeric for callers
+// that need to compute with the value.
+export function fmtAge(dob: string | null | undefined): string | null {
+  const years = ageFromDob(dob);
+  if (years === null) return null;
+  return `${years} ${years === 1 ? "year" : "years"} old`;
 }
 
 // Convert a datetime-local input value (e.g. "2026-04-29T09:00") to a UTC

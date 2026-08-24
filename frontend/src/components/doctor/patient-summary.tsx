@@ -5,7 +5,7 @@ import { Activity, Camera, ClipboardList, HeartPulse, MessageSquare, Pill } from
 
 import { Card } from "@/components/primitives/card";
 import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
-import { ageFromDob, fmtDate } from "@/lib/format";
+import { fmtAge, fmtDate } from "@/lib/format";
 import { diseaseLabel } from "@/lib/medical-codes";
 import { useAttachmentImage } from "@/lib/use-api";
 import type { AttachmentMeta, Patient, Preconsult, Profile } from "@/types/api";
@@ -27,7 +27,7 @@ export function PatientSummary({
   attachments: AttachmentMeta[];
   appointmentId: number;
 }) {
-  const age = ageFromDob(patient.dob);
+  const age = fmtAge(patient.dob);
   const complaint = preconsult?.primaryComplaint?.trim();
 
   return (
@@ -45,7 +45,7 @@ export function PatientSummary({
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">
           {[
             patient.gender,
-            age !== null ? `${age} yrs` : null,
+            age,
             patient.dob ? `DOB ${fmtDate(patient.dob)}` : null,
           ]
             .filter(Boolean)
@@ -238,6 +238,8 @@ function ProfileFacts({ profile }: { profile: Profile }) {
   const lifestyle: string[] = [];
   if (profile.lifestyle.smoking) lifestyle.push(`Smoking · ${profile.lifestyle.smoking}`);
   if (profile.lifestyle.alcohol) lifestyle.push(`Alcohol · ${profile.lifestyle.alcohol}`);
+  if (profile.lifestyle.betelAreca)
+    lifestyle.push(`Betel / areca · ${profile.lifestyle.betelAreca}`);
   if (profile.lifestyle.occupation) lifestyle.push(`Occupation · ${profile.lifestyle.occupation}`);
   if (lifestyle.length) sections.push({ title: "Lifestyle", items: lifestyle });
 

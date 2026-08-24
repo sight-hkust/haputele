@@ -7,6 +7,7 @@ import { z } from "zod";
 import { BadgeCheck, ContactRound, IdCard, Mail, PenLine, Stamp } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Textarea } from "@/components/primitives/select";
@@ -18,6 +19,7 @@ import {
   passwordError as passwordRuleError,
   usernameError as usernameRuleError,
 } from "@/lib/credentials";
+import { useCapsLock } from "@/lib/use-caps-lock";
 import type { Doctor } from "@/types/api";
 
 // Mode-aware schema — username + password are required at create time, omitted/optional on edit.
@@ -151,6 +153,15 @@ export function DoctorForm({
       passwordConfirm: "",
     } as Values,
   });
+
+  // Hoisted out of the JSX so useCapsLock can COMPOSE with RHF's own onBlur
+  // instead of replacing it. Calling register() unconditionally is safe here:
+  // it only returns props, `shouldUnregister` is false (the default), and both
+  // fields are already seeded by defaultValues whether or not they render.
+  const passwordField = register("password");
+  const passwordConfirmField = register("passwordConfirm");
+  const passwordCaps = useCapsLock(passwordField);
+  const confirmCaps = useCapsLock(passwordConfirmField);
 
   const submit = handleSubmit((v) => {
     if (isCreate && !stamp) {
@@ -344,10 +355,12 @@ export function DoctorForm({
                 <Input
                   id="password"
                   type="password"
-                  {...register("password")}
+                  {...passwordField}
                   autoComplete="new-password"
                   minLength={MIN_PASSWORD_LEN}
+                  {...passwordCaps.capsLockProps}
                 />
+                <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
               </Field>
               <Field
                 label={isCreate ? "Confirm password *" : "Confirm new password"}
@@ -356,9 +369,11 @@ export function DoctorForm({
                 <Input
                   id="passwordConfirm"
                   type="password"
-                  {...register("passwordConfirm")}
+                  {...passwordConfirmField}
                   autoComplete="new-password"
+                  {...confirmCaps.capsLockProps}
                 />
+                <CapsLockHint id={confirmCaps.hintId} show={confirmCaps.capsLockOn} />
               </Field>
             </>
           )}
@@ -439,7 +454,7 @@ export function DoctorForm({
             return (
               <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
                 <div className="flex-1">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
+                  <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
                   <p className="mt-1 text-sm text-[var(--muted-foreground)]">The doctor has a saved default e-signature.</p>
                 </div>
                 <button type="button" onClick={() => setReplacingSignature(true)}
