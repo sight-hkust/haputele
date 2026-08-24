@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -93,6 +94,17 @@ export function AppointmentForm({
   // When the picker is in use (no preselected patient), we track the chosen
   // patient locally for the chip display.
   const [picked, setPicked] = useState<Patient | null>(null);
+  const [submissionStarted, setSubmissionStarted] = useState(false);
+  const submissionLock = useRef(false);
+
+  // The ref blocks a second submit before React can render the disabled
+  // button. Keep the local busy state until the parent mutation settles.
+  useEffect(() => {
+    if (!submitting && submissionLock.current) {
+      submissionLock.current = false;
+      setSubmissionStarted(false);
+    }
+  }, [submitting]);
 
   // Hydrate the picker chip when the form arrives with a `defaultPatientId`
   // (e.g. "Book" from a patient profile). The form value is already seeded by
@@ -116,18 +128,28 @@ export function AppointmentForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillQ.data]);
 
-  const submit = handleSubmit((v) =>
-    onSubmit({
-      patientId: v.patientId,
-      doctorId: v.doctorId,
-      // The datetime-local input value is interpreted as APP_TIMEZONE (Sri
-      // Lanka) regardless of the browser's tz, so what the healthworker
-      // types is exactly what gets stored.
-      scheduledAt: appLocalToUtcIso(v.scheduledAt),
-    }),
-  );
+  const submit = handleSubmit((v) => {
+    if (submissionLock.current || submitting) return;
+    submissionLock.current = true;
+    setSubmissionStarted(true);
+    try {
+      onSubmit({
+        patientId: v.patientId,
+        doctorId: v.doctorId,
+        // The datetime-local input value is interpreted as APP_TIMEZONE (Sri
+        // Lanka) regardless of the browser's tz, so what the healthworker
+        // types is exactly what gets stored.
+        scheduledAt: appLocalToUtcIso(v.scheduledAt),
+      });
+    } catch (error) {
+      submissionLock.current = false;
+      setSubmissionStarted(false);
+      throw error;
+    }
+  });
 
   const activeDoctors = doctors.filter((d) => d.active);
+  const busy = submitting || submissionStarted;
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
@@ -193,12 +215,13 @@ export function AppointmentForm({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={busy}>
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={submitting}>
-          {submitting ? "Booking…" : submitLabel}
+        <Button type="submit" disabled={busy}>
+          {busy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />}
+          {busy ? "Booking…" : submitLabel}
         </Button>
       </div>
     </form>

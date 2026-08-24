@@ -3,13 +3,14 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..dateutils import snap_to_monday
 from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, not_found, unprocessable
 from ..models import Appointment, Doctor, Patient, QueueEntry
-from ..routers.appointments import _reject_if_past, _slot_taken
+from ..routers.appointments import _raise_slot_conflict, _reject_if_past, _slot_taken
 from ..schemas import (
     AppointmentOut,
     QueueBookIn,
@@ -28,6 +29,14 @@ def _get_entry(db: Session, qid: int) -> QueueEntry:
     if not e:
         raise not_found("queue_entry_not_found")
     return e
+
+
+def _get_entry_for_update(db: Session, qid: int) -> QueueEntry:
+    """Lock a queue row so only one request can claim a pending entry."""
+    entry = db.get(QueueEntry, qid, with_for_update=True)
+    if not entry:
+        raise not_found("queue_entry_not_found")
+    return entry
 
 
 def _existing_pending(db: Session, patient_id: int, source: str) -> list[QueueEntry]:
@@ -162,7 +171,7 @@ def update_queue_entry(qid: int, payload: QueueEntryUpdate,
 @router.post("/{qid}/book", response_model=dict,
              dependencies=[Depends(require_role("healthworker"))])
 def book_queue_entry(qid: int, payload: QueueBookIn, db: Session = Depends(db_dep)):
-    entry = _get_entry(db, qid)
+    entry = _get_entry_for_update(db, qid)
     if entry.status != "pending":
         raise conflict("queue_not_pending", currentStatus=entry.status)
 
@@ -180,12 +189,18 @@ def book_queue_entry(qid: int, payload: QueueBookIn, db: Session = Depends(db_de
         status="scheduled",
     )
     db.add(appt)
-    db.flush()  # get appt.appointment_id without committing
+    try:
+        db.flush()  # get appt.appointment_id without committing
+    except IntegrityError as exc:
+        _raise_slot_conflict(db, exc)
 
     entry.status = "booked"
     entry.appointment_id = appt.appointment_id
     entry.booked_at = datetime.now(timezone.utc)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        _raise_slot_conflict(db, exc)
     db.refresh(entry)
     db.refresh(appt)
     return {
