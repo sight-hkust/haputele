@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { AppVersion } from "@/components/shell/app-version";
 import { Topbar } from "@/components/shell/topbar";
 import { ROLE_HOMES, SEGMENT_TO_ROLE, useAuth } from "@/lib/auth";
 
@@ -50,9 +51,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <Topbar />
-      {children}
+      <div className="flex-1">{children}</div>
+      <footer className="px-6 py-3 text-right">
+        <AppVersion />
+      </footer>
     </div>
   );
 }

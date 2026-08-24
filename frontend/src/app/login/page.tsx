@@ -9,6 +9,7 @@ import { Button } from "@/components/primitives/button";
 import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
+import { AppVersion } from "@/components/shell/app-version";
 import { LoginHeroGraphic } from "@/components/marketing/login-hero-graphic";
 import { resolveLoginRedirect, useAuth, type Role } from "@/lib/auth";
 import { ApiError, api } from "@/lib/api";
@@ -230,6 +231,7 @@ function LoginScreen() {
           <motion.p variants={fadeIn} className="text-sm text-[var(--muted-foreground)]">
             Need access? Contact your administrator.
           </motion.p>
+          <AppVersion />
         </motion.div>
 
         {/* Hero graphic — hidden on mobile so the form takes the screen */}

@@ -236,3 +236,5 @@ jobs:
           build-args: |
             ${{ matrix.name == 'frontend' && 'NEXT_PUBLIC_API_URL=' || '' }}
             ${{ matrix.name == 'frontend' && 'NEXT_PUBLIC_APP_TIMEZONE=Asia/Colombo' || '' }}
+            ${{ matrix.name == 'frontend' && format('NEXT_PUBLIC_APP_VERSION={0}', github.ref_type == 'tag' && github.ref_name || '') || '' }}
+            ${{ matrix.name == 'frontend' && format('NEXT_PUBLIC_APP_REVISION={0}', github.sha) || '' }}
