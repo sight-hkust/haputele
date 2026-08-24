@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from threading import Barrier
 
 import pytest
@@ -55,6 +55,7 @@ def draft_consultation(seeded_doctor):
             given_name="Followup",
             family_name="Patient",
             gender="female",
+            dob=date(1990, 5, 17),
         )
         db.add(patient)
         db.flush()
