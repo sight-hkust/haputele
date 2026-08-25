@@ -12,8 +12,18 @@ from ..pdf import render_prescription_pdf
 router = APIRouter(prefix="/appointments", tags=["summary"])
 
 
-@router.get("/{appt_id}/summary.pdf",
-            dependencies=[Depends(require_role("healthworker", "doctor"))])
+@router.get(
+    "/{appt_id}/summary.pdf",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "application/pdf": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
+    dependencies=[Depends(require_role("healthworker", "doctor"))],
+)
 def get_summary_pdf(appt_id: int, db: Session = Depends(db_dep)) -> Response:
     appt = db.get(Appointment, appt_id)
     if not appt:

@@ -1,12 +1,14 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import * as ApiClients from "@/gen/clients";
+import * as ApiQueries from "@/gen/query";
 
-import { API_URL, ApiError, api, readCookie } from "@/lib/api";
+import { API_URL, ApiError, api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { generatedApiClient } from "@/lib/generated-api-client";
 
-const CSRF_HEADER_NAME = "X-CSRF-Token";
 import type {
   Appointment,
   AppointmentCancelRequest,
@@ -23,6 +25,7 @@ import type {
   CaptureSessionStatus,
   Consent,
   Consultation,
+  ConsultationDraftResponse,
   AccountRosterEntry,
   AccountUpdateRequest,
   CreateOperatingAccountRequest,
@@ -70,31 +73,25 @@ import type {
   VerifySetupTokenResponse,
 } from "@/types/api";
 
-// ── Authed api caller ────────────────────────────────────────────────
-// Auth is cookie-based now — `api()` already attaches credentials and the
-// CSRF echo on its own. We keep this hook as the call-site convention so
-// the change diff stays small, but the body is just a thin pass-through.
-// The dep on `session` ensures consumers re-render after login/logout.
-export function useAuthedApi() {
-  const { session } = useAuth();
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `session` deliberately invalidates the memoized fetcher on login/logout so consumer effects re-run against the new session.
-  return useCallback(
-    <T>(path: string, options: Parameters<typeof api>[1] = {}) => api<T>(path, options),
-    [session],
-  );
+// Kubb owns each query function; application keys stay stable because domain
+// mutations invalidate groups spanning several OpenAPI operations. The shared
+// client normalizes Kubb ResponseError values to ApiError at runtime, so this is
+// the single type boundary between generated factories and application hooks.
+function useGeneratedQuery<TData>(generated: unknown, overrides: UseQueryOptions<TData, ApiError>) {
+  const generatedOptions = generated as UseQueryOptions<TData, ApiError>;
+  return useQuery<TData, ApiError>({ ...generatedOptions, ...overrides });
 }
 
 // ── Patients ─────────────────────────────────────────────────────────
 export function usePatientList(params: { search?: string; page?: number }) {
-  const fetcher = useAuthedApi();
   const search = params.search?.trim() || "";
   const page = params.page ?? 1;
-  const qs = new URLSearchParams();
-  if (search) qs.set("search", search);
-  qs.set("page", String(page));
-  return useQuery({
+  const generated = ApiQueries.listPatientsPatientsGetQueryOptions(
+    { query: { search: search || undefined, page } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<PatientListResponse>(generated, {
     queryKey: ["patients", "list", { search, page }],
-    queryFn: () => fetcher<PatientListResponse>(`/patients?${qs.toString()}`),
   });
 }
 
@@ -102,49 +99,70 @@ export function usePatientList(params: { search?: string; page?: number }) {
 // we expose both so the patient detail page can render the intake form summary
 // without a second round trip.
 export function usePatient(id: number | null, opts?: { enabled?: boolean }) {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.getPatientPatientsPatientIdGetQueryOptions(
+    { path: { patient_id: id ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<{ patient: Patient; profile: Profile | null }>(generated, {
     queryKey: ["patients", id],
-    queryFn: () => fetcher<{ patient: Patient; profile: Profile | null }>(`/patients/${id}`),
     enabled: !!id && (opts?.enabled ?? true),
   });
 }
 
 export function useUpsertProfile(patientId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Profile, ApiError, ProfileRequest>({
-    mutationFn: (body) => fetcher(`/patients/${patientId}/profile`, { method: "PUT", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.upsertProfilePatientsPatientIdProfilePut({
+        client: generatedApiClient,
+        path: { patient_id: patientId },
+        body,
+      });
+      return data as Profile;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["patients", patientId] });
-      qc.invalidateQueries({ queryKey: ["appointments"] }); // any open cockpit
+      qc.invalidateQueries({ queryKey: ["appointments"] });
     },
   });
 }
 
 export function usePatientHistory(id: number | null) {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.patientHistoryPatientsPatientIdHistoryGetQueryOptions(
+    { path: { patient_id: id ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<PatientHistory>(generated, {
     queryKey: ["patients", id, "history"],
-    queryFn: () => fetcher<PatientHistory>(`/patients/${id}/history`),
     enabled: !!id,
   });
 }
 
 export function useCreatePatient() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<PatientCreateResponse, ApiError, PatientCreateRequest>({
-    mutationFn: (body) => fetcher("/patients", { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.createPatientPatientsPost({
+        client: generatedApiClient,
+        body,
+      });
+      return data as PatientCreateResponse;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["patients", "list"] }),
   });
 }
 
 export function useUpdatePatient(id: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Patient, ApiError, PatientUpdateRequest>({
-    mutationFn: (body) => fetcher(`/patients/${id}`, { method: "PATCH", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.updatePatientPatientsPatientIdPatch({
+        client: generatedApiClient,
+        path: { patient_id: id },
+        body,
+      });
+      return data as Patient;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["patients", id] });
       qc.invalidateQueries({ queryKey: ["patients", "list"] });
@@ -153,29 +171,31 @@ export function useUpdatePatient(id: number) {
 }
 
 export function useDeletePatient() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, number>({
-    mutationFn: (id) => fetcher(`/patients/${id}`, { method: "DELETE" }),
+    mutationFn: async (id) => {
+      await ApiClients.deletePatientPatientsPatientIdDelete({
+        client: generatedApiClient,
+        path: { patient_id: id },
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["patients"] }),
   });
 }
 
 export function useReConsent(patientId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
-  // ReConsentRequest now carries a signatureImage — callers MUST pass it
-  // when agreed=true or the server returns 422 signature_required.
   return useMutation<ReConsentResponse, ApiError, ReConsentRequest>({
-    mutationFn: (body) =>
-      fetcher(`/patients/${patientId}/consents`, {
-        method: "POST",
-        body,
-      }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.reConsentPatientsPatientIdConsentsPost({
+        client: generatedApiClient,
+        path: { patient_id: patientId },
+        body: { ...body, scope: "master" },
+      });
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["patients", patientId] });
-      // Master consent gate lives on every appointment detail for this
-      // patient — bust the cache so the page reflects the fresh status.
       qc.invalidateQueries({ queryKey: ["appointments"] });
     },
   });
@@ -189,31 +209,33 @@ export type DoctorListFilter = {
 };
 
 export function useDoctorList(opts?: DoctorListFilter) {
-  const fetcher = useAuthedApi();
-  const qs = new URLSearchParams();
-  if (opts?.active !== undefined) qs.set("active", String(opts.active));
-  if (opts?.status) qs.set("status", opts.status);
-  const q = qs.toString();
-  return useQuery({
+  const generated = ApiQueries.listDoctorsDoctorsGetQueryOptions(
+    { query: { active: opts?.active, status: opts?.status } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<Doctor[]>(generated, {
     queryKey: ["doctors", "list", opts ?? {}],
-    queryFn: () => fetcher<Doctor[]>(`/doctors${q ? `?${q}` : ""}`),
   });
 }
 
 // Per-status counts for the approval-queue tab badges (admin only).
 export function useDoctorSummary() {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.doctorSummaryDoctorsSummaryGetQueryOptions(
+    {},
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<DoctorSummary>(generated, {
     queryKey: ["doctors", "summary"],
-    queryFn: () => fetcher<DoctorSummary>("/doctors/summary"),
   });
 }
 
 export function useDoctor(id: number | null) {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.getDoctorDoctorsDoctorIdGetQueryOptions(
+    { path: { doctor_id: id ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<Doctor>(generated, {
     queryKey: ["doctors", id],
-    queryFn: () => fetcher<Doctor>(`/doctors/${id}`),
     enabled: !!id,
   });
 }
@@ -241,10 +263,15 @@ export type DoctorCreateRequest = {
 };
 
 export function useCreateDoctor() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Doctor, ApiError, DoctorCreateRequest>({
-    mutationFn: (body) => fetcher("/doctors", { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.createDoctorDoctorsPost({
+        client: generatedApiClient,
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -255,10 +282,16 @@ export type DoctorUpdateRequest = Partial<DoctorCreateRequest> & {
 };
 
 export function useUpdateDoctor(id: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Doctor, ApiError, DoctorUpdateRequest>({
-    mutationFn: (body) => fetcher(`/doctors/${id}`, { method: "PATCH", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.updateDoctorDoctorsDoctorIdPatch({
+        client: generatedApiClient,
+        path: { doctor_id: id },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -267,10 +300,14 @@ export function useUpdateDoctor(id: number) {
 // doctor is revoked inside the backend `services.doctor_invites.issue()`,
 // so the old link stops working as soon as this resolves.
 export function useReissueDoctorInvite() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, number>({
-    mutationFn: (id) => fetcher(`/doctors/${id}/invites`, { method: "POST" }),
+    mutationFn: async (id) => {
+      await ApiClients.reissueInviteDoctorsDoctorIdInvitesPost({
+        client: generatedApiClient,
+        path: { doctor_id: id },
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -282,10 +319,15 @@ export type DoctorInviteRequest = { email: string; familyName?: string };
 export type DoctorInviteResponse = { inviteId: number; email: string };
 
 export function useInviteDoctor() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<DoctorInviteResponse, ApiError, DoctorInviteRequest>({
-    mutationFn: (body) => fetcher("/doctors/invites", { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.inviteNewDoctorDoctorsInvitesPost({
+        client: generatedApiClient,
+        body,
+      });
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["doctor-invites"] });
       qc.invalidateQueries({ queryKey: ["doctors"] });
@@ -298,10 +340,12 @@ export function useInviteDoctor() {
 // resend/revoke invalidate both it and ["doctors"] so the tab badges stay in
 // sync with the per-status counts.
 export function useDoctorInvites() {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.listOpenInvitesDoctorsInvitesGetQueryOptions(
+    {},
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<DoctorInvite[]>(generated, {
     queryKey: ["doctor-invites"],
-    queryFn: () => fetcher<DoctorInvite[]>("/doctors/invites"),
   });
 }
 
@@ -309,10 +353,15 @@ export function useDoctorInvites() {
 // `email_already_used` means the doctor has since onboarded (refresh to see
 // them under "Awaiting approval").
 export function useResendDoctorInvite() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<DoctorInvite, ApiError, number>({
-    mutationFn: (inviteId) => fetcher(`/doctors/invites/${inviteId}/resend`, { method: "POST" }),
+    mutationFn: async (inviteId) => {
+      const { data } = await ApiClients.resendOpenInviteDoctorsInvitesInviteIdResendPost({
+        client: generatedApiClient,
+        path: { invite_id: inviteId },
+      });
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["doctor-invites"] });
       qc.invalidateQueries({ queryKey: ["doctors"] });
@@ -322,10 +371,14 @@ export function useResendDoctorInvite() {
 
 // Revoke an open invite (kills the link, drops it from the list).
 export function useRevokeDoctorInvite() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, number>({
-    mutationFn: (inviteId) => fetcher(`/doctors/invites/${inviteId}`, { method: "DELETE" }),
+    mutationFn: async (inviteId) => {
+      await ApiClients.revokeOpenInviteDoctorsInvitesInviteIdDelete({
+        client: generatedApiClient,
+        path: { invite_id: inviteId },
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["doctor-invites"] });
       qc.invalidateQueries({ queryKey: ["doctors"] });
@@ -337,20 +390,30 @@ export function useRevokeDoctorInvite() {
 // "active". Reject stamps rejected_at + sets active=false; supply a
 // reason that's surfaced on the rejected doctor's login screen.
 export function useApproveDoctor() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Doctor, ApiError, number>({
-    mutationFn: (id) => fetcher(`/doctors/${id}/approve`, { method: "POST" }),
+    mutationFn: async (id) => {
+      const { data } = await ApiClients.approveDoctorDoctorsDoctorIdApprovePost({
+        client: generatedApiClient,
+        path: { doctor_id: id },
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
 
 export function useRejectDoctor() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Doctor, ApiError, { id: number; reason?: string }>({
-    mutationFn: ({ id, reason }) =>
-      fetcher(`/doctors/${id}/reject`, { method: "POST", body: { reason } }),
+    mutationFn: async ({ id, reason }) => {
+      const { data } = await ApiClients.rejectDoctorDoctorsDoctorIdRejectPost({
+        client: generatedApiClient,
+        path: { doctor_id: id },
+        body: { reason },
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -359,10 +422,15 @@ export function useRejectDoctor() {
 // full-profile (new-doctor) invite; the rejected row is preserved as
 // history and the new submission links back to it via previousDoctorId.
 export function useReinviteReapply() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<{ inviteId: number; email: string }, ApiError, number>({
-    mutationFn: (id) => fetcher(`/doctors/${id}/reinvite-reapply`, { method: "POST" }),
+    mutationFn: async (id) => {
+      const { data } = await ApiClients.reinviteReapplyDoctorsDoctorIdReinviteReapplyPost({
+        client: generatedApiClient,
+        path: { doctor_id: id },
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -370,10 +438,14 @@ export function useReinviteReapply() {
 // Hard-delete a rejected doctor record (right-to-erasure). Backend
 // refuses anything that isn't in the rejected state.
 export function usePurgeDoctor() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, number>({
-    mutationFn: (id) => fetcher(`/doctors/${id}/purge`, { method: "DELETE" }),
+    mutationFn: async (id) => {
+      await ApiClients.purgeDoctorDoctorsDoctorIdPurgeDelete({
+        client: generatedApiClient,
+        path: { doctor_id: id },
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -381,10 +453,14 @@ export function usePurgeDoctor() {
 // Soft-delete — backend sets active=false, preserves FK references on past
 // appointments / consultations.
 export function useDeactivateDoctor() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, number>({
-    mutationFn: (id) => fetcher(`/doctors/${id}`, { method: "DELETE" }),
+    mutationFn: async (id) => {
+      await ApiClients.deleteDoctorDoctorsDoctorIdDelete({
+        client: generatedApiClient,
+        path: { doctor_id: id },
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -397,50 +473,57 @@ export function useAppointmentList(params: {
   patientId?: number;
   doctorId?: number;
 }) {
-  const fetcher = useAuthedApi();
-  const qs = new URLSearchParams();
-  if (params.from) qs.set("from", params.from);
-  if (params.to) qs.set("to", params.to);
-  if (params.status) qs.set("status", params.status);
-  if (params.patientId) qs.set("patientId", String(params.patientId));
-  if (params.doctorId) qs.set("doctorId", String(params.doctorId));
-  return useQuery({
+  const generated = ApiQueries.listAppointmentsAppointmentsGetQueryOptions(
+    { query: params },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<CalendarAppointment[]>(generated, {
     queryKey: ["appointments", "list", params],
-    queryFn: () => fetcher<CalendarAppointment[]>(`/appointments?${qs.toString()}`),
   });
 }
 
 export function useAppointment(id: number | null) {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.getAppointmentAppointmentsApptIdGetQueryOptions(
+    { path: { appt_id: id ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<AppointmentDetail>(generated, {
     queryKey: ["appointments", id],
-    queryFn: () => fetcher<AppointmentDetail>(`/appointments/${id}`),
     enabled: !!id,
-    // The cockpit drives the state machine — re-poll on focus so cross-actor
-    // transitions (doctor finishing notes, e.g.) don't leave the UI stale.
     refetchOnWindowFocus: true,
     staleTime: 5_000,
   });
 }
 
 export function useCreateAppointment() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<
     Appointment,
     ApiError,
     { patientId: number; doctorId: number; scheduledAt: string }
   >({
-    mutationFn: (body) => fetcher("/appointments", { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.createAppointmentAppointmentsPost({
+        client: generatedApiClient,
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments", "list"] }),
   });
 }
 
 export function useUpdateAppointment(id: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Appointment, ApiError, { doctorId?: number; scheduledAt?: string }>({
-    mutationFn: (body) => fetcher(`/appointments/${id}`, { method: "PATCH", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.updateAppointmentAppointmentsApptIdPatch({
+        client: generatedApiClient,
+        path: { appt_id: id },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments", id] });
       qc.invalidateQueries({ queryKey: ["appointments", "list"] });
@@ -449,15 +532,19 @@ export function useUpdateAppointment(id: number) {
 }
 
 export function useCancelAppointment(id: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<AppointmentCancelResponse, ApiError, AppointmentCancelRequest>({
-    mutationFn: (body) => fetcher(`/appointments/${id}/cancel`, { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.cancelAppointmentAppointmentsApptIdCancelPost({
+        client: generatedApiClient,
+        path: { appt_id: id },
+        body,
+      });
+      return data as AppointmentCancelResponse;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments", id] });
       qc.invalidateQueries({ queryKey: ["appointments", "list"] });
-      // Linked booked queue rows are auto-cancelled even when requeue is
-      // omitted, so always refresh queue lists.
       qc.invalidateQueries({ queryKey: ["queue"] });
     },
   });
@@ -465,54 +552,74 @@ export function useCancelAppointment(id: number) {
 
 // ── Consent + preconsult + meeting transitions ───────────────────────
 export function useRecordSessionConsent(appointmentId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
-  // SessionConsentRequest carries an optional signatureImage. Server enforces
-  // it when agreed=true; declines stay signature-less.
   return useMutation<SessionConsentResponse, ApiError, SessionConsentRequest>({
-    mutationFn: (body) =>
-      fetcher(`/appointments/${appointmentId}/consent`, { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.recordSessionConsentAppointmentsApptIdConsentPost({
+        client: generatedApiClient,
+        path: { appt_id: appointmentId },
+        body: { ...body, scope: "session" },
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments", appointmentId] }),
   });
 }
 
 export function useGetSessionConsent(appointmentId: number | null) {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.getSessionConsentAppointmentsApptIdConsentGetQueryOptions(
+    { path: { appt_id: appointmentId ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<Consent | null>(generated, {
     queryKey: ["appointments", appointmentId, "consent"],
-    queryFn: () => fetcher<Consent | null>(`/appointments/${appointmentId}/consent`),
     enabled: !!appointmentId,
   });
 }
 
 export function useUpsertPreconsult(appointmentId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<
     { preconsult: Preconsult; appointment: Appointment },
     ApiError,
     PreconsultRequest
   >({
-    mutationFn: (body) =>
-      fetcher(`/appointments/${appointmentId}/preconsult`, { method: "PUT", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.upsertPreconsultAppointmentsApptIdPreconsultPut({
+        client: generatedApiClient,
+        path: { appt_id: appointmentId },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments", appointmentId] }),
   });
 }
 
 export function useStartMeeting(appointmentId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<StartMeetingResponse, ApiError, void>({
-    mutationFn: () => fetcher(`/appointments/${appointmentId}/start-meeting`, { method: "POST" }),
+    mutationFn: async () => {
+      const { data } = await ApiClients.startMeetingAppointmentsApptIdStartMeetingPost({
+        client: generatedApiClient,
+        path: { appt_id: appointmentId },
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments", appointmentId] }),
   });
 }
 
 export function useEndMeeting(appointmentId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Appointment, ApiError, void>({
-    mutationFn: () => fetcher(`/appointments/${appointmentId}/end-meeting`, { method: "POST" }),
+    mutationFn: async () => {
+      const { data } = await ApiClients.endMeetingAppointmentsApptIdEndMeetingPost({
+        client: generatedApiClient,
+        path: { appt_id: appointmentId },
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments", appointmentId] }),
   });
 }
@@ -521,33 +628,42 @@ export function useEndMeeting(appointmentId: number) {
 // button and by the healthworker re-open path after a page reload, where
 // `useStartMeeting`'s response is no longer in memory. No state change.
 export function useMeetingToken(appointmentId: number) {
-  const fetcher = useAuthedApi();
   return useMutation<MeetingTokenResponse, ApiError, void>({
-    mutationFn: () => fetcher(`/appointments/${appointmentId}/meeting-token`, { method: "POST" }),
+    mutationFn: async () => {
+      const { data } = await ApiClients.meetingTokenAppointmentsApptIdMeetingTokenPost({
+        client: generatedApiClient,
+        path: { appt_id: appointmentId },
+      });
+      return data;
+    },
   });
 }
 
 // ── Consultation (doctor flow) ───────────────────────────────────────
-export type ConsultationDraftResponse = { consultationId: number; draft: Consultation };
-
 export function useCreateOrGetDraft() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<ConsultationDraftResponse, ApiError, number>({
-    mutationFn: (appointmentId) =>
-      fetcher(`/appointments/${appointmentId}/consultation/draft`, { method: "POST" }),
+    mutationFn: async (appointmentId) => {
+      const { data } = await ApiClients.createOrGetDraftAppointmentsApptIdConsultationDraftPost({
+        client: generatedApiClient,
+        path: { appt_id: appointmentId },
+      });
+      return data as ConsultationDraftResponse;
+    },
     onSuccess: (_data, appointmentId) =>
       qc.invalidateQueries({ queryKey: ["appointments", appointmentId] }),
   });
 }
 
 export function useConsultation(consultationId: number | null) {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.getConsultationConsultationsCidGetQueryOptions(
+    { path: { cid: consultationId ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<Consultation>(generated, {
     queryKey: ["consultations", consultationId],
-    queryFn: () => fetcher<Consultation>(`/consultations/${consultationId}`),
     enabled: !!consultationId,
-    staleTime: 0, // we mutate this often during the flow
+    staleTime: 0,
   });
 }
 
@@ -560,10 +676,16 @@ export type ConsultationPatch = {
 };
 
 export function useUpdateConsultation(consultationId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Consultation, ApiError, ConsultationPatch>({
-    mutationFn: (body) => fetcher(`/consultations/${consultationId}`, { method: "PATCH", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.patchConsultationConsultationsCidPatch({
+        client: generatedApiClient,
+        path: { cid: consultationId },
+        body,
+      });
+      return data as Consultation;
+    },
     onSuccess: (data) => {
       qc.setQueryData(["consultations", consultationId], data);
       qc.invalidateQueries({ queryKey: ["appointments", data.appointmentId] });
@@ -575,16 +697,20 @@ export function useUpdateConsultation(consultationId: number) {
 export type SubmitConsultationResponse = TSubmitConsultationResponse;
 
 export function useSubmitConsultation(consultationId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<SubmitConsultationResponse, ApiError, SubmitConsultationRequest>({
-    mutationFn: (body) =>
-      fetcher(`/consultations/${consultationId}/submit`, { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.submitConsultationConsultationsCidSubmitPost({
+        client: generatedApiClient,
+        path: { cid: consultationId },
+        body,
+      });
+      return data as SubmitConsultationResponse;
+    },
     onSuccess: (res) => {
       qc.setQueryData(["consultations", consultationId], res.consultation);
       qc.invalidateQueries({ queryKey: ["appointments", res.appointment.id] });
       qc.invalidateQueries({ queryKey: ["appointments", "list"] });
-      // weeks branch creates a queue entry; appointment branch creates one too.
       if (res.followUpQueueEntry) qc.invalidateQueries({ queryKey: ["queue"] });
       if (res.followUpAppointment) {
         qc.invalidateQueries({ queryKey: ["appointments", res.followUpAppointment.id] });
@@ -599,10 +725,9 @@ export function useSubmitConsultation(consultationId: number) {
 // Only enabled for doctor sessions (the endpoint is doctor-only).
 export function useCurrentDoctor() {
   const { session } = useAuth();
-  const fetcher = useAuthedApi();
-  const query = useQuery({
+  const generated = ApiQueries.getMeDoctorsMeGetQueryOptions({}, { client: generatedApiClient });
+  const query = useGeneratedQuery<Doctor>(generated, {
     queryKey: ["doctors", "me"],
-    queryFn: () => fetcher<Doctor>("/doctors/me"),
     enabled: session?.role === "doctor",
   });
   return {
@@ -637,10 +762,15 @@ export type DoctorSelfUpdateRequest = {
 // Doctor self-service profile edit (PATCH /doctors/me). Invalidates the
 // cached "me" profile (and the doctor list, which the admin views share).
 export function useUpdateMyProfile() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Doctor, ApiError, DoctorSelfUpdateRequest>({
-    mutationFn: (body) => fetcher("/doctors/me", { method: "PATCH", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.updateMeDoctorsMePatch({
+        client: generatedApiClient,
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["doctors"] }),
   });
 }
@@ -651,14 +781,12 @@ export function useDoctorAvailability(
   range: { from?: string; to?: string },
   opts?: { enabled?: boolean },
 ) {
-  const fetcher = useAuthedApi();
-  const qs = new URLSearchParams();
-  if (range.from) qs.set("from", range.from);
-  if (range.to) qs.set("to", range.to);
-  const q = qs.toString();
-  return useQuery({
+  const generated = ApiQueries.listDoctorAvailabilityDoctorsDoctorIdAvailabilityGetQueryOptions(
+    { path: { doctor_id: doctorId ?? 0 }, query: range },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<Availability[]>(generated, {
     queryKey: ["availability", "doctor", doctorId, range],
-    queryFn: () => fetcher<Availability[]>(`/doctors/${doctorId}/availability${q ? `?${q}` : ""}`),
     enabled: !!doctorId && (opts?.enabled ?? true),
   });
 }
@@ -666,50 +794,69 @@ export function useDoctorAvailability(
 // Cross-doctor list — for HW booking calendars / multi-doctor planners.
 // Doctors get scoped to their own id server-side; admin/HW see everyone.
 export function useAvailabilityList(params: { from?: string; to?: string; doctorId?: number }) {
-  const fetcher = useAuthedApi();
-  const qs = new URLSearchParams();
-  if (params.from) qs.set("from", params.from);
-  if (params.to) qs.set("to", params.to);
-  if (params.doctorId) qs.set("doctorId", String(params.doctorId));
-  return useQuery({
+  const generated = ApiQueries.listAvailabilityAvailabilityGetQueryOptions(
+    { query: params },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<Availability[]>(generated, {
     queryKey: ["availability", "list", params],
-    queryFn: () => fetcher<Availability[]>(`/availability?${qs.toString()}`),
   });
 }
 
 export function useCreateAvailability(doctorId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Availability, ApiError, AvailabilityCreateRequest>({
-    mutationFn: (body) => fetcher(`/doctors/${doctorId}/availability`, { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.createAvailabilityDoctorsDoctorIdAvailabilityPost({
+        client: generatedApiClient,
+        path: { doctor_id: doctorId },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
   });
 }
 
 export function useBulkCreateAvailability(doctorId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Availability[], ApiError, AvailabilityBulkCreateRequest>({
-    mutationFn: (body) =>
-      fetcher(`/doctors/${doctorId}/availability/bulk`, { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPost({
+        client: generatedApiClient,
+        path: { doctor_id: doctorId },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
   });
 }
 
 export function useUpdateAvailability() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Availability, ApiError, { id: number; body: AvailabilityUpdateRequest }>({
-    mutationFn: ({ id, body }) => fetcher(`/availability/${id}`, { method: "PATCH", body }),
+    mutationFn: async ({ id, body }) => {
+      const { data } = await ApiClients.updateAvailabilityAvailabilityAidPatch({
+        client: generatedApiClient,
+        path: { aid: id },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
   });
 }
 
 export function useDeleteAvailability() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, number>({
-    mutationFn: (id) => fetcher(`/availability/${id}`, { method: "DELETE" }),
+    mutationFn: async (id) => {
+      await ApiClients.deleteAvailabilityAvailabilityAidDelete({
+        client: generatedApiClient,
+        path: { aid: id },
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
   });
 }
@@ -717,12 +864,14 @@ export function useDeleteAvailability() {
 // Atomic "wipe a doctor's windows in a date range" — used by the week-grid
 // save flow to replace a whole week's windows in one call.
 export function useDeleteAvailabilityRange(doctorId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, { from: string; to: string }>({
-    mutationFn: ({ from, to }) => {
-      const qs = new URLSearchParams({ from, to }).toString();
-      return fetcher(`/doctors/${doctorId}/availability?${qs}`, { method: "DELETE" });
+    mutationFn: async (query) => {
+      await ApiClients.deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDelete({
+        client: generatedApiClient,
+        path: { doctor_id: doctorId },
+        query,
+      });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
   });
@@ -738,54 +887,66 @@ export function useQueueList(params: {
   from?: string;
   to?: string;
 }) {
-  const fetcher = useAuthedApi();
-  const qs = new URLSearchParams();
-  if (params.status) qs.set("status", params.status);
-  if (params.source) qs.set("source", params.source);
-  if (params.priority) qs.set("priority", params.priority);
-  if (params.preferredDoctorId) qs.set("preferredDoctorId", String(params.preferredDoctorId));
-  if (params.patientId) qs.set("patientId", String(params.patientId));
-  if (params.from) qs.set("from", params.from);
-  if (params.to) qs.set("to", params.to);
-  const q = qs.toString();
-  return useQuery({
+  const generated = ApiQueries.listQueueQueueGetQueryOptions(
+    { query: params },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<QueueEntry[]>(generated, {
     queryKey: ["queue", "list", params],
-    queryFn: () => fetcher<QueueEntry[]>(`/queue${q ? `?${q}` : ""}`),
   });
 }
 
 export function useQueueEntry(id: number | null) {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.getQueueEntryQueueQidGetQueryOptions(
+    { path: { qid: id ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<QueueEntry>(generated, {
     queryKey: ["queue", id],
-    queryFn: () => fetcher<QueueEntry>(`/queue/${id}`),
     enabled: !!id,
   });
 }
 
 export function useCreateQueueEntry() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<QueueEntry, ApiError, QueueEntryCreateRequest>({
-    mutationFn: (body) => fetcher("/queue", { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.createQueueEntryQueuePost({
+        client: generatedApiClient,
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["queue"] }),
   });
 }
 
 export function useUpdateQueueEntry(id: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<QueueEntry, ApiError, QueueEntryUpdateRequest>({
-    mutationFn: (body) => fetcher(`/queue/${id}`, { method: "PATCH", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.updateQueueEntryQueueQidPatch({
+        client: generatedApiClient,
+        path: { qid: id },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["queue"] }),
   });
 }
 
 export function useBookQueueEntry(id: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<QueueBookResponse, ApiError, QueueBookRequest>({
-    mutationFn: (body) => fetcher(`/queue/${id}/book`, { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.bookQueueEntryQueueQidBookPost({
+        client: generatedApiClient,
+        path: { qid: id },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["queue"] });
       qc.invalidateQueries({ queryKey: ["appointments", "list"] });
@@ -794,10 +955,16 @@ export function useBookQueueEntry(id: number) {
 }
 
 export function useCancelQueueEntry(id: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<QueueEntry, ApiError, QueueCancelRequest>({
-    mutationFn: (body) => fetcher(`/queue/${id}/cancel`, { method: "POST", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.cancelQueueEntryQueueQidCancelPost({
+        client: generatedApiClient,
+        path: { qid: id },
+        body,
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["queue"] }),
   });
 }
@@ -808,12 +975,14 @@ export function usePrescriptionPdf(
   appointmentId: number | null,
   opts?: UseQueryOptions<Blob, ApiError>,
 ) {
-  const fetcher = useAuthedApi();
-  return useQuery<Blob, ApiError>({
+  const generated = ApiQueries.getSummaryPdfAppointmentsApptIdSummaryPdfGetQueryOptions(
+    { path: { appt_id: appointmentId ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<Blob>(generated, {
     queryKey: ["appointments", appointmentId, "summary.pdf"],
-    queryFn: () => fetcher<Blob>(`/appointments/${appointmentId}/summary.pdf`),
     enabled: !!appointmentId,
-    staleTime: Infinity, // PDF won't change after completion
+    staleTime: Infinity,
     ...opts,
   });
 }
@@ -821,10 +990,12 @@ export function usePrescriptionPdf(
 // ── Attachments (HW photos for an appointment) ───────────────────────
 
 export function useAttachments(appointmentId: number | null) {
-  const fetcher = useAuthedApi();
-  return useQuery<AttachmentMeta[], ApiError>({
+  const generated = ApiQueries.listAttachmentsAppointmentsApptIdAttachmentsGetQueryOptions(
+    { path: { appt_id: appointmentId ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<AttachmentMeta[]>(generated, {
     queryKey: ["appointments", appointmentId, "attachments"],
-    queryFn: () => fetcher<AttachmentMeta[]>(`/appointments/${appointmentId}/attachments`),
     enabled: !!appointmentId,
     staleTime: 30_000,
   });
@@ -832,50 +1003,14 @@ export function useAttachments(appointmentId: number | null) {
 
 export function useUploadAttachment(appointmentId: number) {
   const qc = useQueryClient();
-  // Multipart can't go through the standard `api()` JSON wrapper — we hand-
-  // roll the fetch so the browser sets the multipart boundary header.
-  // Cookies ride along automatically via credentials: "include"; the CSRF
-  // echo is added manually because we bypass api().
   return useMutation<AttachmentMeta, ApiError, { file: File; caption?: string }>({
     mutationFn: async ({ file, caption }) => {
-      const form = new FormData();
-      form.append("file", file);
-      if (caption) form.append("caption", caption);
-      const csrf = readCookie("csrf_token");
-      const headers: Record<string, string> = {};
-      if (csrf) headers[CSRF_HEADER_NAME] = csrf;
-      let res: Response;
-      try {
-        res = await fetch(`${API_URL}/appointments/${appointmentId}/attachments`, {
-          method: "POST",
-          credentials: "include",
-          headers,
-          body: form,
-        });
-      } catch {
-        // Same normalization as api(): a rejected fetch must surface as the
-        // uniform error contract, not a raw TypeError("Failed to fetch").
-        throw new ApiError(0, "network_error");
-      }
-      if (!res.ok) {
-        let code = "request_failed";
-        let extra: Record<string, unknown> | undefined;
-        let requestId = res.headers.get("X-Request-ID") ?? undefined;
-        try {
-          const body = await res.json();
-          const inner = body?.detail ?? body;
-          if (inner && typeof inner === "object" && "error" in inner) {
-            code = String((inner as { error: string }).error);
-            const { error: _omit, requestId: bodyRid, ...rest } = inner as Record<string, unknown>;
-            extra = rest;
-            if (!requestId && typeof bodyRid === "string") requestId = bodyRid;
-          }
-        } catch {
-          /* leave defaults */
-        }
-        throw new ApiError(res.status, code, extra, requestId);
-      }
-      return (await res.json()) as AttachmentMeta;
+      const { data } = await ApiClients.uploadAttachmentAppointmentsApptIdAttachmentsPost({
+        client: generatedApiClient,
+        path: { appt_id: appointmentId },
+        body: { file, caption },
+      });
+      return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments", appointmentId, "attachments"] });
@@ -885,11 +1020,14 @@ export function useUploadAttachment(appointmentId: number) {
 }
 
 export function useDeleteAttachment(appointmentId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, number>({
-    mutationFn: (attachmentId) =>
-      fetcher(`/appointments/${appointmentId}/attachments/${attachmentId}`, { method: "DELETE" }),
+    mutationFn: async (attachmentId) => {
+      await ApiClients.deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDelete({
+        client: generatedApiClient,
+        path: { appt_id: appointmentId, attachment_id: attachmentId },
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments", appointmentId, "attachments"] });
       qc.invalidateQueries({ queryKey: ["appointments", appointmentId] });
@@ -898,14 +1036,17 @@ export function useDeleteAttachment(appointmentId: number) {
 }
 
 export function useUpdateAttachment(appointmentId: number) {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<AttachmentMeta, ApiError, { id: number; caption: string | null }>({
-    mutationFn: ({ id, caption }) =>
-      fetcher(`/appointments/${appointmentId}/attachments/${id}`, {
-        method: "PATCH",
-        body: { caption },
-      }),
+    mutationFn: async ({ id, caption }) => {
+      const { data } =
+        await ApiClients.updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatch({
+          client: generatedApiClient,
+          path: { appt_id: appointmentId, attachment_id: id },
+          body: { caption },
+        });
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments", appointmentId, "attachments"] });
       qc.invalidateQueries({ queryKey: ["appointments", appointmentId] });
@@ -938,50 +1079,30 @@ export function useAttachmentImage(
   useEffect(() => {
     let cancelled = false;
     let created: string | null = null;
-    (async () => {
+    void (async () => {
       try {
-        // GET, so no CSRF echo needed; cookies ride along.
-        let res: Response;
-        try {
-          res = await fetch(
-            `${API_URL}/appointments/${appointmentId}/attachments/${attachmentId}`,
-            { credentials: "include" },
-          );
-        } catch {
-          throw new ApiError(0, "network_error");
-        }
-        if (!res.ok) {
-          const rid = res.headers.get("X-Request-ID") ?? undefined;
-          // Prefer the body's stable code; map the status when the body
-          // isn't the uniform error envelope (e.g. a proxy error page).
-          let code: string;
-          if (res.status === 404) code = "attachment_not_found";
-          else if (res.status === 403) code = "forbidden";
-          else code = "request_failed";
-          try {
-            const body = (await res.clone().json()) as { detail?: { error?: string } };
-            code = body?.detail?.error ?? code;
-          } catch {
-            /* keep the status-mapped code */
-          }
-          throw new ApiError(res.status, code, undefined, rid);
-        }
-        const blob = await res.blob();
+        const { data } =
+          await ApiClients.streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGet({
+            client: generatedApiClient,
+            path: { appt_id: appointmentId, attachment_id: attachmentId },
+          });
         if (cancelled) return;
-        created = URL.createObjectURL(blob);
+        created = URL.createObjectURL(data);
         setUrl(created);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof ApiError ? e : new ApiError(0, "network_error"));
+        setError(null);
+      } catch (caught) {
+        if (!cancelled) {
+          setError(caught instanceof ApiError ? caught : new ApiError(0, "network_error"));
+        }
       }
     })();
     return () => {
       cancelled = true;
       if (created) URL.revokeObjectURL(created);
     };
-    // Refetch when the user changes (login/logout) or retry() fires.
   }, [appointmentId, attachmentId, session, attempt]);
 
-  return { url, error, retry: () => setAttempt((n) => n + 1) };
+  return { url, error, retry: () => setAttempt((value) => value + 1) };
 }
 
 // ── First-run setup wizard (public; gated by SetupRequiredMiddleware) ─
@@ -1037,19 +1158,25 @@ export function useInitializeSystem() {
 // ── Sys-admin ─────────────────────────────────────────────────────────
 
 export function useSystemConfig() {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.systemConfigSysadminSystemConfigGetQueryOptions(
+    {},
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<SystemConfig>(generated, {
     queryKey: ["sysadmin", "system-config"],
-    queryFn: () => fetcher<SystemConfig>("/sysadmin/system-config"),
   });
 }
 
 export function useUpdateSystemConfig() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<SystemConfig, ApiError, SystemConfigUpdateRequest>({
-    mutationFn: (body) =>
-      fetcher<SystemConfig>("/sysadmin/system-config", { method: "PATCH", body }),
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.updateSystemConfigSysadminSystemConfigPatch({
+        client: generatedApiClient,
+        body,
+      });
+      return data;
+    },
     onSuccess: (data) => {
       qc.setQueryData(["sysadmin", "system-config"], data);
     },
@@ -1059,10 +1186,9 @@ export function useUpdateSystemConfig() {
 // The signed-in ops account + its editable profile. Powers the System
 // page's self-account section (the sys-admin isn't on the roster below).
 export function useSysadminMe() {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.meSysadminMeGetQueryOptions({}, { client: generatedApiClient });
+  return useGeneratedQuery<SysadminMe>(generated, {
     queryKey: ["sysadmin", "me"],
-    queryFn: () => fetcher<SysadminMe>("/sysadmin/me"),
   });
 }
 
@@ -1070,37 +1196,45 @@ export function useSysadminMe() {
 // healthworker) get full controls; doctors are read-only (managed via the
 // shared doctor tools).
 export function useAccountRoster() {
-  const fetcher = useAuthedApi();
-  return useQuery({
+  const generated = ApiQueries.listAccountsAccountsGetQueryOptions(
+    {},
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<AccountRosterEntry[]>(generated, {
     queryKey: ["sysadmin", "accounts"],
-    queryFn: () => fetcher<AccountRosterEntry[]>("/accounts"),
   });
 }
 
 export function useCreateOperatingAccount() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: CreateOperatingAccountRequest) =>
-      fetcher<CreateOperatingAccountResponse>("/accounts", {
-        method: "POST",
+  return useMutation<CreateOperatingAccountResponse, ApiError, CreateOperatingAccountRequest>({
+    mutationFn: async (body) => {
+      const { data } = await ApiClients.createAccountAccountsPost({
+        client: generatedApiClient,
         body,
-      }),
+      });
+      return data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
 
 // Edit an operating account's ops-managed profile (display name, contact).
 export function useUpdateAccount() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<
     AccountRosterEntry,
     ApiError,
     { username: string; body: AccountUpdateRequest }
   >({
-    mutationFn: ({ username, body }) =>
-      fetcher(`/accounts/${encodeURIComponent(username)}`, { method: "PATCH", body }),
+    mutationFn: async ({ username, body }) => {
+      const { data } = await ApiClients.updateAccountAccountsUsernamePatch({
+        client: generatedApiClient,
+        path: { username },
+        body,
+      });
+      return data as AccountRosterEntry;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
@@ -1109,34 +1243,43 @@ export function useUpdateAccount() {
 // owner is told the new secret out-of-band (operating accounts carry no
 // email). Returns void (204).
 export function useResetAccountPassword() {
-  const fetcher = useAuthedApi();
   return useMutation<void, ApiError, { username: string; password: string }>({
-    mutationFn: ({ username, password }) =>
-      fetcher(`/accounts/${encodeURIComponent(username)}/reset-password`, {
-        method: "POST",
+    mutationFn: async ({ username, password }) => {
+      await ApiClients.resetPasswordAccountsUsernameResetPasswordPost({
+        client: generatedApiClient,
+        path: { username },
         body: { password } satisfies ResetAccountPasswordRequest,
-      }),
+      });
+    },
   });
 }
 
 // Soft-disable / re-enable. Disable blocks login while preserving every
 // record the account created; both are idempotent server-side.
 export function useDisableAccount() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<AccountRosterEntry, ApiError, string>({
-    mutationFn: (username) =>
-      fetcher(`/accounts/${encodeURIComponent(username)}/disable`, { method: "POST" }),
+    mutationFn: async (username) => {
+      const { data } = await ApiClients.disableAccountAccountsUsernameDisablePost({
+        client: generatedApiClient,
+        path: { username },
+      });
+      return data as AccountRosterEntry;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
 
 export function useEnableAccount() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<AccountRosterEntry, ApiError, string>({
-    mutationFn: (username) =>
-      fetcher(`/accounts/${encodeURIComponent(username)}/enable`, { method: "POST" }),
+    mutationFn: async (username) => {
+      const { data } = await ApiClients.enableAccountAccountsUsernameEnablePost({
+        client: generatedApiClient,
+        path: { username },
+      });
+      return data as AccountRosterEntry;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
@@ -1144,11 +1287,14 @@ export function useEnableAccount() {
 // Hard-delete an operating account. Fails with `account_in_use` (409) if
 // the account is FK-referenced by data it created — disable it instead.
 export function useDeleteAccount() {
-  const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, string>({
-    mutationFn: (username) =>
-      fetcher(`/accounts/${encodeURIComponent(username)}`, { method: "DELETE" }),
+    mutationFn: async (username) => {
+      await ApiClients.deleteAccountAccountsUsernameDelete({
+        client: generatedApiClient,
+        path: { username },
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
   });
 }
@@ -1158,10 +1304,15 @@ export function useDeleteAccount() {
 // Mint a capture session. The response carries the raw token (shown once,
 // inside the QR) so the desktop can build the scannable link.
 export function useCreateCaptureSession() {
-  const fetcher = useAuthedApi();
   return useMutation<CaptureSession, ApiError, { purpose: CapturePurpose; appointmentId?: number }>(
     {
-      mutationFn: (body) => fetcher<CaptureSession>("/capture/sessions", { method: "POST", body }),
+      mutationFn: async (body) => {
+        const { data } = await ApiClients.createCaptureSessionCaptureSessionsPost({
+          client: generatedApiClient,
+          body,
+        });
+        return data;
+      },
     },
   );
 }
@@ -1173,13 +1324,14 @@ export function useCaptureSessionStatus(
   sessionId: number | null,
   { enabled = true, intervalMs = 2500 }: { enabled?: boolean; intervalMs?: number } = {},
 ) {
-  const fetcher = useAuthedApi();
-  return useQuery<CaptureSessionStatus, ApiError>({
+  const generated = ApiQueries.captureSessionStatusCaptureSessionsSessionIdGetQueryOptions(
+    { path: { session_id: sessionId ?? 0 } },
+    { client: generatedApiClient },
+  );
+  return useGeneratedQuery<CaptureSessionStatus>(generated, {
     queryKey: ["capture", "session", sessionId],
-    queryFn: () => fetcher<CaptureSessionStatus>(`/capture/sessions/${sessionId}`),
     enabled: enabled && sessionId != null,
     refetchInterval: enabled ? intervalMs : false,
-    // Status is inherently live — never serve a stale cached value.
     staleTime: 0,
     gcTime: 0,
   });

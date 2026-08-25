@@ -13,9 +13,11 @@ Surface this to ops before exposing /setup to the public internet.
 import hashlib
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Annotated, Literal
 
 import jwt
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Response, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -42,6 +44,11 @@ SETUP_JWT_TTL_MIN = 15
 SETUP_JWT_SUBJECT = "setup"
 SETUP_JWT_ROLE = "setup"
 SYSADMIN_ROLE = "sys-admin"
+_setup_bearer = HTTPBearer(
+    scheme_name="SetupBearer",
+    description="Short-lived bearer token returned by POST /setup/verify-token.",
+    auto_error=False,
+)
 
 
 # ── helpers ─────────────────────────────────────────────────────────
@@ -60,7 +67,12 @@ def _mint_setup_session() -> tuple[str, datetime]:
     return token, expires
 
 
-def _require_setup_session(request: Request) -> None:
+def _require_setup_session(
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Security(_setup_bearer),
+    ],
+) -> None:
     """Bearer-token check for the setup-session JWT.
 
     The token comes back from POST /setup/verify-token in the response
@@ -70,10 +82,9 @@ def _require_setup_session(request: Request) -> None:
     window that bit us under page-refresh + multi-tab churn. The post-init
     /auth/* flow keeps cookie-based auth + double-submit CSRF unchanged.
     """
-    header = request.headers.get("Authorization", "")
-    if not header.startswith("Bearer "):
+    if credentials is None or credentials.scheme.lower() != "bearer":
         raise unauthorized("setup_session_invalid")
-    token = header[len("Bearer "):].strip()
+    token = credentials.credentials.strip()
     if not token:
         raise unauthorized("setup_session_invalid")
     try:
@@ -123,7 +134,7 @@ class InitializeIn(BaseModel):
 class InitializeOut(BaseModel):
     ok: bool
     username: str
-    role: str  # always "sys-admin" today; explicit so the client doesn't infer it
+    role: Literal["sys-admin"]
     expiresAt: datetime
 
 

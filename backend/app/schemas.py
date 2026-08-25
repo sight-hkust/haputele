@@ -7,6 +7,35 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, mo
 from .services.credentials import NewPassword, NewUsername
 
 
+class ApiErrorDetail(BaseModel):
+    """Stable minimum error payload; domain-specific fields remain allowed."""
+
+    model_config = ConfigDict(extra="allow")
+
+    error: str
+    requestId: str
+
+
+class ApiErrorResponse(BaseModel):
+    detail: ApiErrorDetail
+
+
+class HealthDependencyOut(BaseModel):
+    status: Literal["ok", "error", "not_configured"]
+    error: str | None = None
+    latency_ms: float | None = None
+
+
+class HealthOut(BaseModel):
+    status: Literal["ok", "degraded"]
+    uptime: float
+    version: str
+    build_date: str
+    hostname: str
+    commit: str
+    dependencies: dict[str, HealthDependencyOut] | None = None
+
+
 # ── Auth ──────────────────────────────────────────────────────────────
 
 class LoginIn(BaseModel):
@@ -26,7 +55,7 @@ class LoginIn(BaseModel):
 # "your session ends at …" hint and trigger a re-auth nudge.
 class LoginOut(BaseModel):
     username: str
-    role: str
+    role: Literal["admin", "doctor", "healthworker", "sys-admin"]
     expiresAt: datetime
 
 
@@ -35,7 +64,7 @@ class LoginOut(BaseModel):
 # longer keep in localStorage.
 class MeOut(BaseModel):
     username: str
-    role: str
+    role: Literal["admin", "doctor", "healthworker", "sys-admin"]
 
 
 # ── Doctors ───────────────────────────────────────────────────────────
@@ -146,7 +175,7 @@ class DoctorInviteOut(BaseModel):
     familyName: Optional[str] = Field(default=None, validation_alias="family_name")
     createdAt: datetime = Field(validation_alias="created_at")
     expiresAt: datetime = Field(validation_alias="expires_at")
-    status: str = "invited"
+    status: Literal["invited", "invite_expired"] = "invited"
 
 
 class DoctorRejectIn(BaseModel):
@@ -229,7 +258,7 @@ class DoctorOut(BaseModel):
     #                         false; rejected_at + rejected_reason are
     #                         populated on the Doctor row.
     #   "active"            → approved + onboarded. Normal state.
-    onboardingStatus: str = "active"
+    onboardingStatus: Literal["awaiting_setup", "awaiting_approval", "rejected", "active"] = "active"
     # Lifecycle audit, surfaced so the admin queue can show "submitted N
     # ago", who acted, and link reapplications back to the rejected
     # attempt they supersede. submittedAt is non-null (created_at is NOT
@@ -298,7 +327,7 @@ class ConsentOut(BaseModel):
 
     id: int = Field(validation_alias="consent_id")
     patientId: int = Field(validation_alias="patient_id")
-    scope: str
+    scope: Literal["master", "session"]
     version: Optional[str]
     agreed: bool
     appointmentId: Optional[int] = Field(default=None, validation_alias="appointment_id")
@@ -557,7 +586,15 @@ class AppointmentOut(BaseModel):
     patientId: int = Field(validation_alias="patient_id")
     doctorId: int = Field(validation_alias="doctor_id")
     scheduledAt: datetime = Field(validation_alias="scheduled_at")
-    status: str
+    status: Literal[
+        "scheduled",
+        "consent_pending",
+        "data_collection",
+        "in_progress",
+        "awaiting_notes",
+        "completed",
+        "cancelled",
+    ]
     cancellationReason: Optional[str] = Field(default=None, validation_alias="cancellation_reason")
     createdAt: datetime = Field(validation_alias="created_at")
 
@@ -753,7 +790,7 @@ class ConsultationSubmitIn(BaseModel):
 class ConsultationOut(BaseModel):
     id: int
     appointmentId: int
-    status: str
+    status: Literal["draft", "completed"]
     notes: NotesPatch
     diagnoses: list[DiagnosisEntry] = Field(default_factory=list)
     medications: list[MedicationEntry] = Field(default_factory=list)
@@ -850,11 +887,12 @@ class AppointmentDetailOut(BaseModel):
 QueueSource = Literal["screening", "walk_in", "follow_up"]
 QueueStatus = Literal["pending", "booked", "cancelled"]
 QueuePriority = Literal["urgent", "routine"]
+QueueCreateSource = Literal["screening", "walk_in"]
 
 
 class QueueEntryCreate(BaseModel):
     patientId: int
-    source: QueueSource  # 'follow_up' is server-only — manual create rejects it
+    source: QueueCreateSource
     priority: QueuePriority = "routine"
     preferredDoctorId: Optional[int] = None
     targetDate: Optional[date] = None
@@ -887,9 +925,9 @@ class QueueEntryOut(BaseModel):
 
     id: int = Field(validation_alias="queue_id")
     patientId: int = Field(validation_alias="patient_id")
-    source: str
-    status: str
-    priority: str
+    source: QueueSource
+    status: QueueStatus
+    priority: QueuePriority
     preferredDoctorId: Optional[int] = Field(default=None, validation_alias="preferred_doctor_id")
     targetDate: Optional[date] = Field(default=None, validation_alias="target_date")
     notes: Optional[str] = None
@@ -920,7 +958,7 @@ class CaptureSessionOut(BaseModel):
     here so the desktop can build the QR; never re-fetchable afterwards."""
     id: int
     token: str
-    purpose: str
+    purpose: Literal["appointment_attachment", "rubber_stamp"]
     expiresAt: datetime = Field(validation_alias="expires_at")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
@@ -932,7 +970,7 @@ class CaptureSessionStatusOut(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int
-    purpose: str
+    purpose: Literal["appointment_attachment", "rubber_stamp"]
     expiresAt: datetime = Field(validation_alias="expires_at")
     closed: bool
     uploadCount: int = Field(validation_alias="upload_count")
@@ -943,5 +981,155 @@ class CapturePeekOut(BaseModel):
     """Phone → server peek: just enough for the capture page to render the
     right UI. No appointment/patient detail — the scanner is unauthenticated
     beyond holding the token, so we leak nothing identifying."""
-    purpose: str
+    purpose: Literal["appointment_attachment", "rubber_stamp"]
     expiresAt: datetime
+
+
+# ── Composite endpoint responses ─────────────────────────────────────
+# Named response models for endpoints that previously declared
+# `response_model=dict` (or a bare `-> dict` return). The OpenAPI spec —
+# and the frontend codegen it feeds — needs declared shapes; a bare dict
+# comes out as an untyped object on the TS side. Wire output is unchanged:
+# these only declare what the handlers already return.
+# Multi-entity wrappers take *Response; single-concept payloads keep the *Out suffix.
+
+
+class PatientCreateResponse(BaseModel):
+    """POST /patients — the new patient plus its signed master consent."""
+
+    patient: PatientOut
+    masterConsent: ConsentOut
+
+
+class PatientListResponse(BaseModel):
+    """GET /patients — one search page."""
+
+    patients: list[PatientOut]
+    page: int
+
+
+class PatientDetailResponse(BaseModel):
+    """GET /patients/{id} — profile is null until the first intake save."""
+
+    patient: PatientOut
+    profile: ProfileOut | None
+
+
+class MasterConsentResponse(BaseModel):
+    """POST /patients/{id}/consents (and .../revoke)."""
+
+    masterConsent: ConsentOut
+
+
+class SessionConsentResponse(BaseModel):
+    """POST /appointments/{id}/consent."""
+
+    consent: ConsentOut
+    appointment: AppointmentOut
+
+
+class PreconsultGetResponse(BaseModel):
+    """GET /appointments/{id}/preconsult — `editable` mirrors the backend
+    state gate (consent_pending / data_collection)."""
+
+    preconsult: PreconsultOut | None
+    appointment: AppointmentOut
+    editable: bool
+
+
+class PreconsultUpsertResponse(BaseModel):
+    """PUT /appointments/{id}/preconsult."""
+
+    preconsult: PreconsultOut
+    appointment: AppointmentOut
+
+
+class MeetingTokenResponse(BaseModel):
+    """LiveKit join credentials, minted per role."""
+
+    room: str
+    token: str
+    serverUrl: str
+
+
+class StartMeetingResponse(MeetingTokenResponse):
+    """POST /appointments/{id}/start-meeting — token payload plus the
+    appointment flipped to in_progress."""
+
+    appointment: AppointmentOut
+
+
+class ConsultationDraftResponse(BaseModel):
+    """POST /appointments/{id}/consultation/draft."""
+
+    consultationId: int
+    draft: ConsultationOut
+
+
+class SubmitConsultationResponse(BaseModel):
+    """POST /consultations/{id}/submit without a follow-up."""
+
+    consultation: ConsultationOut
+    appointment: AppointmentOut
+
+
+class SubmitConsultationWithAppointmentResponse(SubmitConsultationResponse):
+    followUpAppointment: AppointmentOut
+
+
+class SubmitConsultationWithQueueResponse(SubmitConsultationResponse):
+    followUpQueueEntry: QueueEntryOut
+
+
+class AppointmentCancelResponse(BaseModel):
+    """POST /appointments/{id}/cancel without re-queueing."""
+
+    appointment: AppointmentOut
+
+
+class AppointmentCancelRequeueResponse(AppointmentCancelResponse):
+    queueEntry: QueueEntryOut
+
+
+class QueueBookResponse(BaseModel):
+    """POST /queue/{id}/book."""
+
+    queueEntry: QueueEntryOut
+    appointment: AppointmentOut
+
+
+class CaptureUploadOut(BaseModel):
+    """POST /capture/{token} — upload acknowledgement from the phone relay."""
+
+    ok: bool
+    purpose: Literal["appointment_attachment", "rubber_stamp"]
+
+
+class DoctorInviteCreateOut(BaseModel):
+    """POST /doctors/invites and POST /doctors/{id}/reinvite-reapply."""
+
+    inviteId: int
+    email: str
+
+
+class SysadminMeOut(BaseModel):
+    """GET /sysadmin/me."""
+
+    username: str
+    role: Literal["sys-admin"]
+    fullName: str | None = None
+    contact: str | None = None
+
+
+class SystemConfigOut(BaseModel):
+    """GET/PATCH /sysadmin/system-config."""
+
+    # Keys are always emitted (possibly null); PATCH responses carry the full row.
+    initializedAt: datetime | None
+    instituteName: str | None
+    instituteAddressLines: list[str] | None
+    instituteContactPhone: str | None
+    instituteContactEmail: str | None
+    appTimezone: str | None
+    exportTimezone: str | None
+    masterConsentVersion: str | None

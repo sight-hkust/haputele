@@ -11,11 +11,15 @@ from ..models import Appointment, Consultation, Doctor, Patient, QueueEntry
 from ..routers.appointments import _reject_if_past, _slot_taken
 from ..schemas import (
     AppointmentOut,
+    ConsultationDraftResponse,
     ConsultationOut,
     ConsultationPatch,
     ConsultationSubmitIn,
     FollowUpAppointment,
     FollowUpWeeks,
+    SubmitConsultationResponse,
+    SubmitConsultationWithAppointmentResponse,
+    SubmitConsultationWithQueueResponse,
 )
 from ..services.signature import decode_signature
 from ..services.storage import get_bytes, object_key, put_bytes
@@ -46,7 +50,7 @@ def _own_consultation(db: Session, cid: int, user: CurrentUser) -> tuple[Consult
 appts_router = APIRouter(prefix="/appointments", tags=["consultations"])
 
 
-@appts_router.post("/{appt_id}/consultation/draft", response_model=dict,
+@appts_router.post("/{appt_id}/consultation/draft", response_model=ConsultationDraftResponse,
                    dependencies=[Depends(require_role("doctor"))])
 def create_or_get_draft(appt_id: int, db: Session = Depends(db_dep),
                         user: CurrentUser = Depends(current_user)):
@@ -119,8 +123,15 @@ def patch_consultation(cid: int, payload: ConsultationPatch, db: Session = Depen
     return ConsultationOut.from_row(c)
 
 
-@cons_router.post("/{cid}/submit", response_model=dict,
-                  dependencies=[Depends(require_role("doctor"))])
+@cons_router.post(
+    "/{cid}/submit",
+    response_model=(
+        SubmitConsultationWithAppointmentResponse
+        | SubmitConsultationWithQueueResponse
+        | SubmitConsultationResponse
+    ),
+    dependencies=[Depends(require_role("doctor"))],
+)
 def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = Depends(db_dep),
                         user: CurrentUser = Depends(current_user)):
     c, appt = _own_consultation(db, cid, user)

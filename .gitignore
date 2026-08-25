@@ -61,3 +61,4 @@ backend/.test-env.sh
 
 # Git worktrees
 .worktrees/
+openapi.json

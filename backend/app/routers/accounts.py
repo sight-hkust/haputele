@@ -90,7 +90,7 @@ def _clean(value: str | None) -> str | None:
 
 class AccountRow(BaseModel):
     username: str
-    role: str
+    role: Literal["sys-admin", "admin", "healthworker", "doctor"]
     # Ops-managed profile (operating accounts only); None for doctors.
     fullName: str | None = None
     contact: str | None = None
@@ -187,7 +187,7 @@ class AccountCreateIn(BaseModel):
 
 class AccountOut(BaseModel):
     username: str
-    role: str
+    role: Literal["admin", "healthworker"]
 
 
 @router.post("", response_model=AccountOut, status_code=status.HTTP_201_CREATED)

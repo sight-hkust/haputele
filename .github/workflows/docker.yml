@@ -37,6 +37,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      api-types: ${{ steps.filter.outputs.api-types }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v4
@@ -54,6 +55,13 @@ jobs:
               - 'frontend/src/lib/credentials.ts'
             frontend:
               - 'frontend/**'
+            api-types:
+              - 'backend/**'
+              - 'frontend/kubb.config.ts'
+              - 'frontend/package.json'
+              - 'frontend/package-lock.json'
+              - 'frontend/src/gen/**'
+              - 'frontend/src/types/**'
 
   # Backend test gate: pytest against a real Postgres + S3 store.
   #   - Postgres: the suite's conftest creates the test DB, runs Alembic
@@ -134,6 +142,89 @@ jobs:
         # that orphans tests/ can't slip through as a green build.
         run: pytest tests/ -v
 
+  # OpenAPI drift gate: regenerates the committed Kubb API layer from the
+  # backend spec through the same npm script developers run locally
+  # (`npm run generate:api`, which exports the spec from the app first).
+  #
+  #   - PRs / tags / dispatch off main: any diff FAILS the run, so stale
+  #     generated code can never merge silently.
+  #   - Push to main (or dispatch on main): failing is pointless — the bad
+  #     commit is already merged — so the job opens/updates an automated
+  #     "regenerate API client" PR instead. A human merges it, which both
+  #     keeps the review trail and properly re-triggers image builds (a raw
+  #     GITHUB_TOKEN push would not re-trigger workflows).
+  api-types-drift:
+    needs: changes
+    if: >-
+      github.ref_type == 'tag' ||
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.api-types == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Install backend dependencies
+        # generate:api imports the FastAPI app to dump the spec, so the
+        # backend venv is required even in this frontend-facing job.
+        run: pip install -r backend/requirements-dev.txt
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        # --legacy-peer-deps matches the frontend Dockerfile: @fullcalendar
+        # has a known intra-package peer conflict that strict npm ci rejects.
+        run: npm ci --legacy-peer-deps
+        working-directory: frontend
+      - name: Regenerate Kubb API layer
+        run: npm run generate:api
+        working-directory: frontend
+      - name: Detect drift
+        id: drift
+        run: |
+          if [ -n "$(git status --porcelain -- frontend/src/gen)" ]; then
+            echo "drift=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Open regeneration PR
+        if: >-
+          steps.drift.outputs.drift == 'true' &&
+          github.ref == 'refs/heads/main' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/regen-api-client
+          delete-branch: true
+          title: "chore(frontend): regenerate API client from backend spec"
+          commit-message: "chore(frontend): regenerate API client from backend spec"
+          labels: automated
+          body: |
+            Automated follow-up to ${{ github.sha }}: `npm run generate:api`
+            produced diffs against the committed `frontend/src/gen`. The
+            drift gate self-heals on main by opening this PR instead of
+            failing. Merge to land the regenerated client; merging also
+            re-runs the Docker image builds.
+
+            Expected content: mechanical generator output under
+            `frontend/src/gen` only. Anything else means the generator or
+            its config changed unintentionally.
+      - name: Fail on unhandled drift
+        if: >-
+          steps.drift.outputs.drift == 'true' &&
+          !(github.ref == 'refs/heads/main' &&
+            (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
+        run: |
+          echo "::error::frontend/src/gen is stale. Run 'cd frontend && npm run generate:api' and commit the result."
+          exit 1
+
   # Frontend check gate: lint + type-check. There is no unit-test runner yet
   # (no jest/vitest); these are the cheapest meaningful gates the repo already
   # supports. `next build` compile validation still happens in the build job.
@@ -165,7 +256,7 @@ jobs:
         run: npm run typecheck
 
   build:
-    needs: [changes, backend-test, frontend-checks]
+    needs: [changes, backend-test, frontend-checks, api-types-drift]
     # Gate the image build/push on the test jobs. `!cancelled() && !failure()`
     # lets build run when a test job was SKIPPED (e.g. a frontend-only PR skips
     # backend-test) while still blocking it when a test job actually FAILED —

@@ -79,6 +79,20 @@ def test_cancel_archives_the_row(hw_client, patient_id, seeded_doctor):
     assert appt_id in ids
 
 
+def test_cancel_without_requeue_preserves_nested_nulls(
+    hw_client, patient_id, seeded_doctor
+):
+    created = _create_appointment(
+        hw_client, patient_id, seeded_doctor.doctor_id, _future_slot()
+    )
+    response = _cancel(hw_client, created.json()["id"])
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert "queueEntry" not in body
+    assert "cancellationReason" in body["appointment"]
+    assert body["appointment"]["cancellationReason"] is None
+
+
 def test_second_cancel_is_rejected(hw_client, patient_id, seeded_doctor):
     created = _create_appointment(
         hw_client, patient_id, seeded_doctor.doctor_id, _future_slot()
