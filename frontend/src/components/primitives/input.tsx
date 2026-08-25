@@ -1,4 +1,5 @@
-import { forwardRef, type InputHTMLAttributes, type LabelHTMLAttributes } from "react";
+import { forwardRef, useState, type InputHTMLAttributes, type LabelHTMLAttributes } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement>;
@@ -11,28 +12,59 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement>;
 const BLOCKED_NUMBER_KEYS = new Set(["e", "E", "+", "-"]);
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type = "text", onKeyDown, autoComplete = "off", ...props }, ref) => (
-    <input
-      ref={ref}
-      type={type}
-      autoComplete={autoComplete}
-      onKeyDown={(event) => {
-        if (type === "number" && BLOCKED_NUMBER_KEYS.has(event.key)) {
-          event.preventDefault();
-        }
-        onKeyDown?.(event);
-      }}
-      className={cn(
-        "flex h-12 w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-2 text-sm",
-        "text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60",
-        "transition-all duration-200",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:border-transparent",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    />
-  ),
+  ({ className, type = "text", onKeyDown, autoComplete = "off", ...props }, ref) => {
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const isPassword = type === "password";
+    const input = (
+      <input
+        ref={ref}
+        type={isPassword && passwordVisible ? "text" : type}
+        autoComplete={autoComplete}
+        onKeyDown={(event) => {
+          if (type === "number" && BLOCKED_NUMBER_KEYS.has(event.key)) {
+            event.preventDefault();
+          }
+          onKeyDown?.(event);
+        }}
+        className={cn(
+          "flex h-12 w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-2 text-sm",
+          "text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60",
+          "transition-all duration-200",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:border-transparent",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          isPassword && "pr-12",
+          className,
+        )}
+        {...props}
+      />
+    );
+
+    if (!isPassword) return input;
+
+    return (
+      <div className="relative w-full">
+        {input}
+        <button
+          type="button"
+          aria-label={passwordVisible ? "Hide password" : "Show password"}
+          aria-pressed={passwordVisible}
+          aria-controls={props.id}
+          disabled={props.disabled}
+          onClick={() => setPasswordVisible((visible) => !visible)}
+          className={cn(
+            "absolute right-1 top-1 flex h-10 w-10 items-center justify-center rounded-lg text-[var(--muted-foreground)]",
+            "transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+          )}
+        >
+          {passwordVisible
+            ? <EyeOff className="h-4 w-4" aria-hidden="true" />
+            : <Eye className="h-4 w-4" aria-hidden="true" />}
+        </button>
+      </div>
+    );
+  },
 );
 Input.displayName = "Input";
 
