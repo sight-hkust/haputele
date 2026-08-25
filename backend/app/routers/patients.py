@@ -14,8 +14,12 @@ from ..schemas import (
     AppointmentOut,
     ConsentOut,
     HistoryConsultationItem,
+    MasterConsentResponse,
     PatientCreate,
+    PatientCreateResponse,
+    PatientDetailResponse,
     PatientHistoryOut,
+    PatientListResponse,
     PatientOut,
     PatientUpdate,
     ProfileIn,
@@ -43,7 +47,7 @@ def _live_patient(db: Session, pid: int) -> Patient:
     return p
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED,
+@router.post("", response_model=PatientCreateResponse, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(_hw_only())])
 def create_patient(payload: PatientCreate, db: Session = Depends(db_dep)):
     if not payload.masterConsent.agreed:
@@ -101,7 +105,7 @@ def create_patient(payload: PatientCreate, db: Session = Depends(db_dep)):
     }
 
 
-@router.get("", response_model=dict, dependencies=[Depends(_hw_or_doctor())])
+@router.get("", response_model=PatientListResponse, dependencies=[Depends(_hw_or_doctor())])
 def list_patients(
     search: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
@@ -126,7 +130,7 @@ def list_patients(
     }
 
 
-@router.get("/{patient_id}", response_model=dict,
+@router.get("/{patient_id}", response_model=PatientDetailResponse,
             dependencies=[Depends(_hw_or_doctor())])
 def get_patient(patient_id: int, db: Session = Depends(db_dep)):
     p = _live_patient(db, patient_id)
@@ -241,7 +245,7 @@ def patient_consultations(patient_id: int, db: Session = Depends(db_dep)) -> lis
 
 # ── Master consent (re-consent / revoke) ─────────────────────────────
 
-@router.post("/{patient_id}/consents", response_model=dict, status_code=status.HTTP_201_CREATED,
+@router.post("/{patient_id}/consents", response_model=MasterConsentResponse, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(_hw_only())])
 def re_consent(patient_id: int, payload: ReConsentIn, db: Session = Depends(db_dep)):
     p = _live_patient(db, patient_id)
@@ -267,7 +271,7 @@ def re_consent(patient_id: int, payload: ReConsentIn, db: Session = Depends(db_d
     return {"masterConsent": ConsentOut.model_validate(consent).model_dump()}
 
 
-@router.post("/{patient_id}/consents/revoke", response_model=dict,
+@router.post("/{patient_id}/consents/revoke", response_model=MasterConsentResponse,
              dependencies=[Depends(_hw_only())])
 def revoke_consent(patient_id: int, payload: RevokeConsentIn, db: Session = Depends(db_dep)):
     p = _live_patient(db, patient_id)
