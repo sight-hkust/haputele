@@ -22,7 +22,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "performance": { "noImgElement": "off" },
       "correctness": { "useExhaustiveDependencies": "warn" },
       "suspicious": { "noArrayIndexKey": "warn", "noUnknownAtRules": "off" },
