@@ -1,8 +1,8 @@
-"""OpenAPI contract tests — the spec feeds `npm run generate:api` (frontend
-codegen). A JSON endpoint whose response schema is an untyped dict comes out
-as Record<string, unknown> on the TS side, silently erasing the contract.
-These tests fail on every such endpoint so new ones can't ship untyped;
-intentional exceptions are allowlisted with a reason.
+"""OpenAPI contract tests for the Kubb-generated frontend API layer.
+
+Every JSON response must expose a typed schema, binary routes must advertise
+their real media types, and authentication/error metadata must remain available
+to generated clients.
 """
 from typing import Iterator
 
@@ -19,25 +19,6 @@ def _json_schemas(spec: dict) -> Iterator[tuple[str, str, int, dict]]:
                     yield path, method, int(status), content["application/json"].get("schema", {})
 
 
-# (path, method, status) of endpoints that return JSON-shaped spec entries
-# but carry no JSON contract. /health declares no response_model, so the
-# spec shows a bare {type: object}; the rest return raw bytes (image/pdf/
-# xlsx/zip) or webhook acks — FastAPI still documents them with an empty
-# application/json schema because their handlers are annotated -> Response.
-_ALLOWLIST = {
-    ("/health", "get", 200),
-    # Binary streams — raw bytes, no JSON contract to encode.
-    ("/doctors/me/signature", "get", 200),
-    ("/doctors/me/stamp", "get", 200),
-    ("/appointments/{appt_id}/attachments/{attachment_id}", "get", 200),
-    ("/capture/sessions/{session_id}/relay", "get", 200),
-    ("/appointments/{appt_id}/summary.pdf", "get", 200),
-    ("/exports/medications.xlsx", "get", 200),
-    ("/exports/prescriptions.zip", "get", 200),
-    # Third-party webhook acks — callers read status codes, not bodies.
-    ("/livekit/webhook", "post", 200),
-    ("/resend/webhook", "post", 200),
-}
 
 # The endpoints this change types, so the test documents the contract surface
 # even after everything passes. Path params use the routers' declared names.
@@ -53,8 +34,15 @@ _WRAPPED = {
     ("/appointments/{appt_id}/start-meeting", "post", 200): "StartMeetingResponse",
     ("/appointments/{appt_id}/meeting-token", "post", 200): "MeetingTokenResponse",
     ("/appointments/{appt_id}/consultation/draft", "post", 200): "ConsultationDraftResponse",
-    ("/consultations/{cid}/submit", "post", 200): "SubmitConsultationResponse",
-    ("/appointments/{appt_id}/cancel", "post", 200): "AppointmentCancelResponse",
+    ("/consultations/{cid}/submit", "post", 200): (
+        "SubmitConsultationResponse",
+        "SubmitConsultationWithAppointmentResponse",
+        "SubmitConsultationWithQueueResponse",
+    ),
+    ("/appointments/{appt_id}/cancel", "post", 200): (
+        "AppointmentCancelResponse",
+        "AppointmentCancelRequeueResponse",
+    ),
     ("/queue/{qid}/book", "post", 200): "QueueBookResponse",
     ("/capture/{token}", "post", 201): "CaptureUploadOut",
     ("/doctors/invites", "post", 201): "DoctorInviteCreateOut",
@@ -66,26 +54,23 @@ _WRAPPED = {
 
 
 def _is_typed(schema: object) -> bool:
-    """True when openapi-typescript can derive a real TS type from this schema.
-
-    Bare objects map to Record<string, unknown> and itemless arrays to
-    unknown[] — both erase the contract, so both count as untyped.
-    """
+    """True when Kubb can derive a meaningful type from this schema."""
     if not isinstance(schema, dict) or not schema:
         return False
-    if schema.get("$ref") or schema.get("anyOf") or schema.get("oneOf") or schema.get("allOf"):
+    if schema.get("$ref"):
         return True
+    for key in ("anyOf", "oneOf", "allOf"):
+        branches = schema.get(key)
+        if branches is not None:
+            return bool(branches) and all(_is_typed(branch) for branch in branches)
     if schema.get("properties"):
         return True
     if "items" in schema:
         return _is_typed(schema["items"])
     t = schema.get("type")
-    # OpenAPI 3.1 can render nullable scalars as a type LIST, e.g.
-    # {"type": ["string", "null"]}. Typed only if every member is a scalar;
-    # any object/array member means the contract is eroded.
     if isinstance(t, list):
         return bool(t) and all(x in ("string", "integer", "number", "boolean", "null") for x in t)
-    if t == "array" or t == "object":
+    if t in ("array", "object"):
         return False
     return t in ("string", "integer", "number", "boolean", "null")
 
@@ -95,8 +80,6 @@ def test_no_untyped_json_responses(client):
     spec = client.get("/openapi.json").json()
     untyped = []
     for path, method, status, schema in _json_schemas(spec):
-        if (path, method, status) in _ALLOWLIST:
-            continue
         if not _is_typed(schema):
             untyped.append(f"{method.upper()} {path} [{status}] -> {schema!r}")
     assert not untyped, (
@@ -105,13 +88,83 @@ def test_no_untyped_json_responses(client):
     )
 
 
+def _refs(schema: dict) -> set[str]:
+    if "$ref" in schema:
+        return {schema["$ref"].rsplit("/", 1)[-1]}
+    refs: set[str] = set()
+    for key in ("anyOf", "oneOf", "allOf"):
+        for branch in schema.get(key, []):
+            refs.update(_refs(branch))
+    return refs
+
+
 def test_composite_responses_have_named_models(client):
-    """The 20 composite responses reference the declared wrapper models."""
+    """Composite responses reference their declared wrapper model variants."""
     spec = client.get("/openapi.json").json()
     by_key = {(p, m, s): schema for p, m, s, schema in _json_schemas(spec)}
-    for (path, method, status), name in _WRAPPED.items():
+    for (path, method, status), expected in _WRAPPED.items():
         schema = by_key.get((path, method, status))
         assert schema is not None, f"{method.upper()} {path} [{status}] has no JSON schema"
-        assert schema.get("$ref") == f"#/components/schemas/{name}", (
-            f"{method.upper()} {path} [{status}] expected $ref {name}, got {schema!r}"
+        expected_refs = {expected} if isinstance(expected, str) else set(expected)
+        assert _refs(schema) == expected_refs, (
+            f"{method.upper()} {path} [{status}] expected {expected_refs}, got {schema!r}"
         )
+
+
+def test_binary_and_empty_responses_use_real_media_types(client):
+    spec = client.get("/openapi.json").json()
+    expected = {
+        ("/doctors/me/signature", "get"): {"image/png"},
+        ("/doctors/me/stamp", "get"): {"image/png", "image/jpeg"},
+        ("/appointments/{appt_id}/attachments/{attachment_id}", "get"): {
+            "image/jpeg", "image/png", "image/webp",
+        },
+        ("/capture/sessions/{session_id}/relay", "get"): {
+            "image/jpeg", "image/png", "image/webp",
+        },
+        ("/appointments/{appt_id}/summary.pdf", "get"): {"application/pdf"},
+        ("/exports/medications.xlsx", "get"): {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        },
+        ("/exports/prescriptions.zip", "get"): {"application/zip"},
+    }
+    for (path, method), media_types in expected.items():
+        content = spec["paths"][path][method]["responses"]["200"]["content"]
+        assert set(content) == media_types
+        assert all(schema["schema"].get("format") == "binary" for schema in content.values())
+
+    for path in ("/livekit/webhook", "/resend/webhook"):
+        response = spec["paths"][path]["post"]["responses"]["204"]
+        assert "content" not in response
+
+
+def test_security_and_error_contracts_are_generated(client):
+    spec = client.get("/openapi.json").json()
+    schemes = spec["components"]["securitySchemes"]
+    assert schemes["SessionCookie"]["type"] == "apiKey"
+    assert schemes["SessionCookie"]["in"] == "cookie"
+    assert schemes["SessionCookie"]["name"] == "session"
+    assert schemes["SetupBearer"]["type"] == "http"
+    assert schemes["SetupBearer"]["scheme"] == "bearer"
+    assert {"SessionCookie": []} in spec["paths"]["/patients"]["get"]["security"]
+    assert {"SetupBearer": []} in spec["paths"]["/setup/initialize"]["post"]["security"]
+
+    responses = spec["paths"]["/patients"]["get"]["responses"]
+    for status in ("401", "403", "404", "409", "422", "500"):
+        schema = responses[status]["content"]["application/json"]["schema"]
+        assert schema["$ref"] == "#/components/schemas/ApiErrorResponse"
+
+
+def test_generated_input_defaults_and_domain_literals(client):
+    schemas = client.get("/openapi.json").json()["components"]["schemas"]
+    queue_create = schemas["QueueEntryCreate"]
+    assert set(queue_create["properties"]["source"]["enum"]) == {"screening", "walk_in"}
+    assert "priority" not in queue_create["required"]
+    assert "force" not in queue_create["required"]
+    assert set(schemas["DoctorOut"]["properties"]["onboardingStatus"]["enum"]) == {
+        "awaiting_setup", "awaiting_approval", "rejected", "active",
+    }
+    assert set(schemas["ConsentOut"]["properties"]["scope"]["enum"]) == {"master", "session"}
+    assert set(schemas["CaptureSessionOut"]["properties"]["purpose"]["enum"]) == {
+        "appointment_attachment", "rubber_stamp",
+    }

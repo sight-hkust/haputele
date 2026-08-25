@@ -129,7 +129,19 @@ def list_attachments(
     return [AttachmentMetaOut.model_validate(r) for r in rows]
 
 
-@router.get("/{appt_id}/attachments/{attachment_id}")
+@router.get(
+    "/{appt_id}/attachments/{attachment_id}",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "image/jpeg": {"schema": {"type": "string", "format": "binary"}},
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+                "image/webp": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
+)
 def stream_attachment(
     appt_id: int,
     attachment_id: int,

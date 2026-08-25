@@ -38,7 +38,7 @@ _logger = logging.getLogger("haputele.resend_webhook")
 router = APIRouter(prefix="/resend", tags=["resend"])
 
 
-@router.post("/webhook")
+@router.post("/webhook", status_code=204, response_class=Response)
 async def resend_webhook(
     request: Request,
     svix_id: str | None = Header(default=None, alias="svix-id"),

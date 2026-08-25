@@ -706,7 +706,17 @@ def update_me(
     return _self_out(db, doctor)
 
 
-@router.get("/me/signature")
+@router.get(
+    "/me/signature",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
+)
 def get_my_signature(
     db: Session = Depends(db_dep),
     user: CurrentUser = Depends(require_role("doctor")),
@@ -718,7 +728,18 @@ def get_my_signature(
     return Response(content=get_bytes(doctor.default_signature_key), media_type="image/png")
 
 
-@router.get("/me/stamp")
+@router.get(
+    "/me/stamp",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+                "image/jpeg": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
+)
 def get_my_stamp(
     db: Session = Depends(db_dep),
     user: CurrentUser = Depends(require_role("doctor")),

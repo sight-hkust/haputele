@@ -51,7 +51,7 @@ def _appointment_id_from_room(room_name: str) -> int | None:
         return None
 
 
-@router.post("/webhook")
+@router.post("/webhook", status_code=204, response_class=Response)
 async def livekit_webhook(
     request: Request,
     authorization: str | None = Header(default=None),

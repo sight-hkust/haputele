@@ -124,7 +124,19 @@ def capture_session_status(
     )
 
 
-@router.get("/sessions/{session_id}/relay")
+@router.get(
+    "/sessions/{session_id}/relay",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "image/jpeg": {"schema": {"type": "string", "format": "binary"}},
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+                "image/webp": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
+)
 def pull_capture_relay(
     session_id: int,
     db: Session = Depends(db_dep),

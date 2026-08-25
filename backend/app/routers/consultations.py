@@ -18,6 +18,8 @@ from ..schemas import (
     FollowUpAppointment,
     FollowUpWeeks,
     SubmitConsultationResponse,
+    SubmitConsultationWithAppointmentResponse,
+    SubmitConsultationWithQueueResponse,
 )
 from ..services.signature import decode_signature
 from ..services.storage import get_bytes, object_key, put_bytes
@@ -121,8 +123,15 @@ def patch_consultation(cid: int, payload: ConsultationPatch, db: Session = Depen
     return ConsultationOut.from_row(c)
 
 
-@cons_router.post("/{cid}/submit", response_model=SubmitConsultationResponse, response_model_exclude_none=True,
-                  dependencies=[Depends(require_role("doctor"))])
+@cons_router.post(
+    "/{cid}/submit",
+    response_model=(
+        SubmitConsultationWithAppointmentResponse
+        | SubmitConsultationWithQueueResponse
+        | SubmitConsultationResponse
+    ),
+    dependencies=[Depends(require_role("doctor"))],
+)
 def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = Depends(db_dep),
                         user: CurrentUser = Depends(current_user)):
     c, appt = _own_consultation(db, cid, user)

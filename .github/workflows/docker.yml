@@ -57,6 +57,10 @@ jobs:
               - 'frontend/**'
             api-types:
               - 'backend/**'
+              - 'frontend/kubb.config.ts'
+              - 'frontend/package.json'
+              - 'frontend/package-lock.json'
+              - 'frontend/src/gen/**'
               - 'frontend/src/types/**'
 
   # Backend test gate: pytest against a real Postgres + S3 store.
@@ -138,10 +142,9 @@ jobs:
         # that orphans tests/ can't slip through as a green build.
         run: pytest tests/ -v
 
-  # OpenAPI drift gate: regenerates frontend/src/types/generated.ts from the
-  # backend spec and fails on any diff. A backend PR that changes a schema
-  # without regenerating the frontend types is red here instead of shipping
-  # a runtime type mismatch. Mirrors the existing credential-parity test.
+  # OpenAPI drift gate: regenerates the committed Kubb API layer from the
+  # backend spec and fails on any diff. Backend schema changes and generator
+  # dependency/config changes all pass through the same npm script used locally.
   api-types-drift:
     needs: changes
     if: >-
@@ -159,7 +162,7 @@ jobs:
       - name: Install backend dependencies
         run: pip install -r backend/requirements-dev.txt
       - name: Export OpenAPI spec
-        run: python backend/app/scripts/export_openapi.py openapi.json
+        run: python backend/app/scripts/export_openapi.py frontend/openapi.json
       - uses: actions/setup-node@v5
         with:
           node-version: "24"
@@ -168,11 +171,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --legacy-peer-deps
         working-directory: frontend
-      - name: Regenerate API types
-        run: npx openapi-typescript ../openapi.json -o src/types/generated.ts
+      - name: Regenerate Kubb API layer
+        run: npm run generate:api
         working-directory: frontend
       - name: Fail on drift
-        run: git diff --exit-code -- frontend/src/types/generated.ts
+        run: git diff --exit-code -- frontend/src/gen
 
   # Frontend check gate: lint + type-check. There is no unit-test runner yet
   # (no jest/vitest); these are the cheapest meaningful gates the repo already
@@ -205,7 +208,7 @@ jobs:
         run: npm run typecheck
 
   build:
-    needs: [changes, backend-test, frontend-checks]
+    needs: [changes, backend-test, frontend-checks, api-types-drift]
     # Gate the image build/push on the test jobs. `!cancelled() && !failure()`
     # lets build run when a test job was SKIPPED (e.g. a frontend-only PR skips
     # backend-test) while still blocking it when a test job actually FAILED —
