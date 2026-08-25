@@ -217,6 +217,12 @@ def create_app() -> FastAPI:
     @app.get(
         "/health",
         tags=["meta"],
+        # exclude_unset keeps the wire honest: the plain probe must not
+        # grow a `dependencies` key, and a not_configured dependency must
+        # not grow `latency_ms` (nothing was probed — see
+        # services/health_probe.py). Without it FastAPI injects the
+        # HealthOut field defaults into every response.
+        response_model_exclude_unset=True,
         response_model=HealthOut,
         responses={503: {"model": HealthOut, "description": "Dependency degraded"}},
     )
