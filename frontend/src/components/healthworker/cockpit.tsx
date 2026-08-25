@@ -9,6 +9,7 @@ import {
   HeartPulse,
   PhoneOff,
   PlayCircle,
+  RotateCw,
   ShieldCheck,
   XCircle,
 } from "lucide-react";
@@ -25,9 +26,9 @@ import {
   MASTER_CONSENT_BODY,
   SESSION_CONSENT_BODY,
 } from "@/components/healthworker/master-consent-text";
-import { VitalsForm } from "@/components/healthworker/vitals-form";
 import { MeetingModal } from "@/components/meeting/meeting-modal";
-import type { ApiError } from "@/lib/api";
+import { VitalsForm } from "@/components/healthworker/vitals-form";
+import { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { parseVitalsValidationError } from "@/lib/vitals";
 import {
@@ -554,33 +555,56 @@ function MeetingStep({ appointmentId, status }: { appointmentId: number; status:
 function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   // Hand-rolled fetch so we can manage the object URL lifecycle (revoke
   // on unmount) — usePrescriptionPdf would keep the blob in the cache.
-  // GET, so the session cookie alone authorises this; no CSRF echo.
   useEffect(() => {
     let revoked = false;
     let createdUrl: string | null = null;
     (async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "/api"}/appointments/${appointmentId}/summary.pdf`,
-          { credentials: "include" },
-        );
-        if (!res.ok) throw new Error(`pdf_${res.status}`);
+        let res: Response;
+        try {
+          res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "/api"}/appointments/${appointmentId}/summary.pdf`,
+            { credentials: "include" },
+          );
+        } catch {
+          throw new ApiError(0, "network_error");
+        }
+        if (!res.ok) {
+          // Parse the uniform error envelope so curated copy (e.g.
+          // consultation_not_ready) reaches the user instead of a generic
+          // "couldn't load" over a status number it threw away.
+          let code = "request_failed";
+          try {
+            const body = (await res.clone().json()) as { detail?: { error?: string } };
+            code = body?.detail?.error ?? code;
+          } catch {
+            /* keep default */
+          }
+          throw new ApiError(res.status, code, undefined, res.headers.get("X-Request-ID") ?? undefined);
+        }
         const blob = await res.blob();
         if (revoked) return;
         createdUrl = URL.createObjectURL(blob);
         setUrl(createdUrl);
-      } catch {
-        if (!revoked) setError("Could not load the prescription PDF.");
+      } catch (e) {
+        if (!revoked) {
+          setError(
+            e instanceof ApiError
+              ? explainError(e.error, "Could not load the prescription PDF.")
+              : "Couldn't reach the server. Check your connection and try again.",
+          );
+        }
       }
     })();
     return () => {
       revoked = true;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [appointmentId]);
+  }, [appointmentId, attempt]);
 
   return (
     <Card variant="elevated" className="overflow-hidden">
@@ -621,7 +645,13 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
       </div>
       <div className="bg-[var(--muted)]/30">
         {error ? (
-          <div className="p-8 text-center text-sm text-rose-600">{error}</div>
+          <div className="flex flex-col items-center justify-center gap-3 p-8 text-center text-sm text-rose-600">
+            <span>{error}</span>
+            <Button variant="secondary" size="sm" onClick={() => setAttempt((n) => n + 1)}>
+              <RotateCw className="h-3.5 w-3.5" />
+              Try again
+            </Button>
+          </div>
         ) : url ? (
           <iframe
             src={url}

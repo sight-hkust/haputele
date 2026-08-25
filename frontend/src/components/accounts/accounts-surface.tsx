@@ -21,7 +21,7 @@ import { InvitePanel } from "@/components/doctors/new-doctor-surface";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
@@ -94,7 +94,7 @@ export function AccountsSurface({
   emptyDescription,
   manualDoctorHref,
 }: AccountsSurfaceProps) {
-  const { data, error, isLoading } = useAccountRoster();
+  const { data, error, isLoading, refetch } = useAccountRoster();
   const [createOpen, setCreateOpen] = useState(false);
   // The drawer tracks a username, not a row snapshot, so it always reflects
   // fresh roster data after an edit/disable (and auto-closes on delete).
@@ -180,7 +180,7 @@ export function AccountsSurface({
         </Button>
       </div>
 
-      {error ? <ErrorBanner>{explainError(error.error)}</ErrorBanner> : null}
+      {error ? <ApiErrorBanner error={error} onRetry={() => refetch()} /> : null}
 
       <div className="flex flex-wrap gap-3">
         <StatChip label="Total" value={stats.total} />

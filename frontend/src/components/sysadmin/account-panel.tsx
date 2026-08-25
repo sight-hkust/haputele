@@ -17,7 +17,7 @@ import {
 import { DoctorForm } from "@/components/admin/doctor-form";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Modal } from "@/components/primitives/modal";
 import {
@@ -230,7 +230,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
   const refreshRoster = () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] });
 
   if (doctor.error) {
-    return <ErrorBanner>{explainError(doctor.error.error)}</ErrorBanner>;
+    return <ApiErrorBanner error={doctor.error} onRetry={() => doctor.refetch()} />;
   }
   if (!doctor.data) {
     return <p className="text-sm text-[var(--muted-foreground)]">Loading…</p>;

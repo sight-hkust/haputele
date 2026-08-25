@@ -3,13 +3,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import {
   PasswordSection,
   ProfileSection,
   StatusHeader,
 } from "@/components/sysadmin/account-sections";
-import { explainError } from "@/lib/error-codes";
 import { useSysadminMe } from "@/lib/use-api";
 
 // The signed-in ops account managing itself: edit profile + change password.
@@ -20,7 +19,7 @@ export function SelfAccountSettings() {
   const me = useSysadminMe();
 
   if (me.error) {
-    return <ErrorBanner>{explainError(me.error.error)}</ErrorBanner>;
+    return <ApiErrorBanner error={me.error} onRetry={() => me.refetch()} />;
   }
   if (!me.data) {
     return <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>;

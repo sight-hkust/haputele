@@ -9,7 +9,7 @@ import { VisitHistoryPanel } from "@/components/doctor/visit-history";
 import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import { StatusBadge } from "@/components/primitives/status-badge";
 import { explainError } from "@/lib/error-codes";
@@ -29,7 +29,7 @@ export default function DoctorAppointmentDetail() {
     throwNotFoundIf404(apt.error);
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <ErrorBanner>{explainError(apt.error.error)}</ErrorBanner>
+        <ApiErrorBanner error={apt.error} onRetry={() => apt.refetch()} />
       </div>
     );
   }

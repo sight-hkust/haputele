@@ -305,7 +305,7 @@ function AttachmentThumb({
   appointmentId: number;
   readonly: boolean;
 }) {
-  const { url, error } = useAttachmentImage(appointmentId, attachment.id);
+  const { url, error, retry } = useAttachmentImage(appointmentId, attachment.id);
   const remove = useDeleteAttachment(appointmentId);
   const [confirming, setConfirming] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -336,8 +336,15 @@ function AttachmentThumb({
             />
           </>
         ) : error ? (
-          <div className="flex h-full w-full items-center justify-center p-4 text-center text-xs text-rose-600">
-            Couldn&rsquo;t load image.
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-xs text-rose-600">
+            <span>{explainError(error.error)}</span>
+            <button
+              type="button"
+              onClick={retry}
+              className="font-medium underline underline-offset-2 hover:text-rose-700"
+            >
+              Try again
+            </button>
           </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted-foreground)]">

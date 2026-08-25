@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 
-import { API_URL, api, readCookie, type ApiError } from "@/lib/api";
+import { API_URL, ApiError, api, readCookie } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
 const CSRF_HEADER_NAME = "X-CSRF-Token";
@@ -843,12 +843,19 @@ export function useUploadAttachment(appointmentId: number) {
       const csrf = readCookie("csrf_token");
       const headers: Record<string, string> = {};
       if (csrf) headers[CSRF_HEADER_NAME] = csrf;
-      const res = await fetch(`${API_URL}/appointments/${appointmentId}/attachments`, {
-        method: "POST",
-        credentials: "include",
-        headers,
-        body: form,
-      });
+      let res: Response;
+      try {
+        res = await fetch(`${API_URL}/appointments/${appointmentId}/attachments`, {
+          method: "POST",
+          credentials: "include",
+          headers,
+          body: form,
+        });
+      } catch {
+        // Same normalization as api(): a rejected fetch must surface as the
+        // uniform error contract, not a raw TypeError("Failed to fetch").
+        throw new ApiError(0, "network_error");
+      }
       if (!res.ok) {
         let code = "request_failed";
         let extra: Record<string, unknown> | undefined;
@@ -865,7 +872,6 @@ export function useUploadAttachment(appointmentId: number) {
         } catch {
           /* leave defaults */
         }
-        const { ApiError } = await import("@/lib/api");
         throw new ApiError(res.status, code, extra, requestId);
       }
       return (await res.json()) as AttachmentMeta;
@@ -909,16 +915,23 @@ export function useUpdateAttachment(appointmentId: number) {
 // Fetches the raw bytes for an attachment with the auth header attached
 // and returns a blob: URL that an <img> can render. Cleans up on unmount.
 // Mirrors the trick used by PrescriptionViewer for the PDF.
+//
+// Errors come back as catalog-real codes (the body's code when present, a
+// status fallback otherwise) so thumbnails can render explainError() copy —
+// not a hardcoded "Load failed" — and `retry` re-runs the fetch without
+// remounting the surrounding panel.
 export function useAttachmentImage(
   appointmentId: number,
   attachmentId: number,
 ): {
   url: string | null;
   error: ApiError | null;
+  retry: () => void;
 } {
   const { session } = useAuth();
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -926,31 +939,47 @@ export function useAttachmentImage(
     (async () => {
       try {
         // GET, so no CSRF echo needed; cookies ride along.
-        const res = await fetch(
-          `${API_URL}/appointments/${appointmentId}/attachments/${attachmentId}`,
-          { credentials: "include" },
-        );
+        let res: Response;
+        try {
+          res = await fetch(
+            `${API_URL}/appointments/${appointmentId}/attachments/${attachmentId}`,
+            { credentials: "include" },
+          );
+        } catch {
+          throw new ApiError(0, "network_error");
+        }
         if (!res.ok) {
-          const { ApiError } = await import("@/lib/api");
           const rid = res.headers.get("X-Request-ID") ?? undefined;
-          throw new ApiError(res.status, `attachment_${res.status}`, undefined, rid);
+          // Prefer the body's stable code; map the status when the body
+          // isn't the uniform error envelope (e.g. a proxy error page).
+          let code: string;
+          if (res.status === 404) code = "attachment_not_found";
+          else if (res.status === 403) code = "forbidden";
+          else code = "request_failed";
+          try {
+            const body = (await res.clone().json()) as { detail?: { error?: string } };
+            code = body?.detail?.error ?? code;
+          } catch {
+            /* keep the status-mapped code */
+          }
+          throw new ApiError(res.status, code, undefined, rid);
         }
         const blob = await res.blob();
         if (cancelled) return;
         created = URL.createObjectURL(blob);
         setUrl(created);
       } catch (e) {
-        if (!cancelled) setError(e as ApiError);
+        if (!cancelled) setError(e instanceof ApiError ? e : new ApiError(0, "network_error"));
       }
     })();
     return () => {
       cancelled = true;
       if (created) URL.revokeObjectURL(created);
     };
-    // Refetch when the user changes (login/logout).
-  }, [appointmentId, attachmentId, session]);
+    // Refetch when the user changes (login/logout) or retry() fires.
+  }, [appointmentId, attachmentId, session, attempt]);
 
-  return { url, error };
+  return { url, error, retry: () => setAttempt((n) => n + 1) };
 }
 
 // ── First-run setup wizard (public; gated by SetupRequiredMiddleware) ─

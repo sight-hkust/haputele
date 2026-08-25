@@ -14,7 +14,7 @@ import type { ApiError } from "@/lib/api";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import {
   useAppointmentList,
@@ -116,7 +116,7 @@ function Workspace() {
         {/* Calendar (main) */}
         <div className="min-w-0">
           {apptList.error ? (
-            <ErrorBanner>{explainError(apptList.error.error)}</ErrorBanner>
+            <ApiErrorBanner error={apptList.error} onRetry={() => apptList.refetch()} />
           ) : apptList.isLoading ? (
             <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
           ) : (
@@ -215,7 +215,7 @@ function QueueCard({
           />
         </SubFrame>
       ) : error ? (
-        <ErrorBanner>{explainError(error.error, error.message)}</ErrorBanner>
+        <ApiErrorBanner error={error} onRetry={refetch} />
       ) : loading ? (
         <div className="flex items-center gap-2 py-4 text-xs text-[var(--muted-foreground)]">
           <Loader2 className="h-3 w-3 animate-spin" /> Loading…

@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { WeekGrid, type CellKey } from "@/components/doctor/week-grid";
@@ -34,7 +34,8 @@ import {
 import { explainError } from "@/lib/error-codes";
 
 export default function DoctorAvailabilityPage() {
-  const { doctor, isLoading: doctorLoading, error: doctorError } = useCurrentDoctor();
+  const { doctor, isLoading: doctorLoading, error: doctorError, refetch: refetchDoctor } =
+    useCurrentDoctor();
 
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeekLocal(new Date()));
   const range = useMemo(() => weekRangeUtc(weekStart), [weekStart]);
@@ -99,9 +100,11 @@ export default function DoctorAvailabilityPage() {
   if (doctorError || !doctor) {
     return (
       <div className="px-6 py-12">
-        <ErrorBanner>
-          {doctorError ? explainError(doctorError.error) : "Doctor profile not found."}
-        </ErrorBanner>
+        {doctorError ? (
+          <ApiErrorBanner error={doctorError} onRetry={refetchDoctor} />
+        ) : (
+          <ErrorBanner>Doctor profile not found.</ErrorBanner>
+        )}
       </div>
     );
   }
@@ -165,11 +168,10 @@ export default function DoctorAvailabilityPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {(list.error || saveError) && (
-            <div className="mb-4">
-              <ErrorBanner>
-                {saveError ?? (list.error && explainError(list.error.error, list.error.message))}
-              </ErrorBanner>
+          {(saveError || list.error) && (
+            <div className="mb-4 flex flex-col gap-3">
+              {saveError && <ErrorBanner>{saveError}</ErrorBanner>}
+              <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
             </div>
           )}
           <p className="mb-2 flex items-center gap-2 text-xs text-[var(--muted-foreground)]">

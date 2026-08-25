@@ -97,7 +97,18 @@ export async function api<T = unknown>(path: string, options: ApiOptions = {}): 
     body: body === undefined ? undefined : typeof body === "string" ? body : JSON.stringify(body),
   };
 
-  const res = await fetch(`${API_URL}${path}`, init);
+  // A rejected fetch (server unreachable, DNS failure, cable pulled) throws a
+  // TypeError("Failed to fetch") whose .message is a raw browser string.
+  // Normalize it to ApiError(0, "network_error") so every consumer sees the
+  // uniform error contract and explainError() renders curated copy instead of
+  // leaking "Failed to fetch" into a banner. status 0 marks "never got a
+  // response"; the react-query retry policy treats it as transient.
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, init);
+  } catch {
+    throw new ApiError(0, "network_error");
+  }
 
   // 401 outside of /auth/login → session is gone; bounce to /login so the
   // user can reauth. /auth/me and /auth/logout opt out via skipAuthRedirect

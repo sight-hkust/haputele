@@ -5,10 +5,9 @@ import { useParams } from "next/navigation";
 import { AppointmentCockpit, CockpitHeader } from "@/components/healthworker/cockpit";
 import { BackLink } from "@/components/primitives/back-link";
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import { useAppointment, useDoctorList } from "@/lib/use-api";
-import { explainError } from "@/lib/error-codes";
 import { doctorName } from "@/lib/format";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
@@ -25,7 +24,7 @@ export default function AppointmentDetailPage() {
     throwNotFoundIf404(apt.error);
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <ErrorBanner>{explainError(apt.error.error)}</ErrorBanner>
+        <ApiErrorBanner error={apt.error} onRetry={() => apt.refetch()} />
       </div>
     );
   }

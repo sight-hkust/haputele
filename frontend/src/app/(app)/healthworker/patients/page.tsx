@@ -8,11 +8,10 @@ import { ChevronLeft, ChevronRight, Search, UserPlus, Users } from "lucide-react
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { Input } from "@/components/primitives/input";
 import { PageHeader } from "@/components/primitives/page-header";
 import { usePatientList } from "@/lib/use-api";
-import { explainError } from "@/lib/error-codes";
 import { fmtRelative, fullName } from "@/lib/format";
 
 export default function PatientListPage() {
@@ -62,7 +61,7 @@ export default function PatientListPage() {
       </div>
 
       {list.error ? (
-        <ErrorBanner>{explainError(list.error.error)}</ErrorBanner>
+        <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
       ) : list.isLoading ? (
         <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
       ) : patients.length === 0 ? (

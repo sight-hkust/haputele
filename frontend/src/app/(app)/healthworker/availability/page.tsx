@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { Select } from "@/components/primitives/select";
@@ -111,7 +111,7 @@ export default function HealthworkerAvailabilityPage() {
   if (doctors.error) {
     return (
       <div className="px-6 py-12">
-        <ErrorBanner>{explainError(doctors.error.error, doctors.error.message)}</ErrorBanner>
+        <ApiErrorBanner error={doctors.error} onRetry={() => doctors.refetch()} />
       </div>
     );
   }
@@ -197,11 +197,10 @@ export default function HealthworkerAvailabilityPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {(list.error || saveError) && (
-            <div className="mb-4">
-              <ErrorBanner>
-                {saveError ?? (list.error && explainError(list.error.error, list.error.message))}
-              </ErrorBanner>
+          {(saveError || list.error) && (
+            <div className="mb-4 flex flex-col gap-3">
+              {saveError && <ErrorBanner>{saveError}</ErrorBanner>}
+              <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
             </div>
           )}
           {selectedDoctor && (
