@@ -21,6 +21,7 @@ from ..models import (
 )
 from ..schemas import (
     AppointmentCancelIn,
+    AppointmentCancelResponse,
     AppointmentCreate,
     AppointmentDetailOut,
     AppointmentOut,
@@ -244,7 +245,7 @@ def update_appointment(appt_id: int, payload: AppointmentUpdate, db: Session = D
     return AppointmentOut.model_validate(appt)
 
 
-@router.post("/{appt_id}/cancel", response_model=dict,
+@router.post("/{appt_id}/cancel", response_model=AppointmentCancelResponse, response_model_exclude_none=True,
              dependencies=[Depends(require_role("healthworker"))])
 def cancel_appointment(appt_id: int, payload: AppointmentCancelIn,
                        db: Session = Depends(db_dep),
