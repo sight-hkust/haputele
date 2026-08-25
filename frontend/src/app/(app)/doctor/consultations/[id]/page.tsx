@@ -7,9 +7,8 @@ import { PatientSummary } from "@/components/doctor/patient-summary";
 import { DoctorCallPanel } from "@/components/meeting/doctor-call-panel";
 import { BackLink } from "@/components/primitives/back-link";
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { useAppointment, useConsultation } from "@/lib/use-api";
-import { explainError } from "@/lib/error-codes";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function ConsultationPage() {
@@ -27,7 +26,7 @@ export default function ConsultationPage() {
     throwNotFoundIf404(consult.error);
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <ErrorBanner>{explainError(consult.error.error)}</ErrorBanner>
+        <ApiErrorBanner error={consult.error} onRetry={() => consult.refetch()} />
       </div>
     );
   }
@@ -37,7 +36,7 @@ export default function ConsultationPage() {
     throwNotFoundIf404(apt.error);
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <ErrorBanner>{explainError(apt.error.error)}</ErrorBanner>
+        <ApiErrorBanner error={apt.error} onRetry={() => apt.refetch()} />
       </div>
     );
   }

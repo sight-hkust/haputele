@@ -7,7 +7,7 @@ import { Inbox, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { Select } from "@/components/primitives/select";
@@ -15,7 +15,6 @@ import { CancelQueueEntryForm } from "@/components/healthworker/cancel-queue-ent
 import { QueueEntryForm } from "@/components/healthworker/queue-entry-form";
 import { QueueRow } from "@/components/healthworker/queue-row";
 import { useQueueList } from "@/lib/use-api";
-import { explainError } from "@/lib/error-codes";
 import type { QueueEntry, QueuePriority, QueueSource, QueueStatus } from "@/types/api";
 
 // Full-detail queue page — filters across status / source / priority + per-entry
@@ -93,7 +92,7 @@ export default function QueuePage() {
       </div>
 
       {list.error ? (
-        <ErrorBanner>{explainError(list.error.error, list.error.message)}</ErrorBanner>
+        <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
       ) : list.isLoading ? (
         <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
           <Loader2 className="mx-auto mb-2 h-4 w-4 animate-spin" />

@@ -69,7 +69,7 @@ export function QrCaptureModal({
     }).catch(() => {});
   };
 
-  // Mint a session whenever the modal opens; tear it down on close/unmount.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed to `open` by design — purpose/appointmentId are fixed for the modal's lifetime, and adding inline closures (closeSession/mutateAsync) would re-mint a session every render.
   useEffect(() => {
     if (!open) return;
     let active = true;
@@ -108,6 +108,7 @@ export function QrCaptureModal({
 
   // React to the polled status: refresh the grid for attachments, or pull
   // the parked photo for the stamp relay.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deliberately keyed to the three polled fields — re-running on identity changes of inline closures would re-fire grid invalidations per poll tick.
   useEffect(() => {
     const data = status.data;
     if (!data || data.closed) return;

@@ -42,7 +42,7 @@ type PageState =
 export default function DoctorOnboardingPage() {
   const params = useParams<{ token: string }>();
   const token = Array.isArray(params.token) ? params.token[0] : params.token;
-  const router = useRouter();
+  const _router = useRouter();
 
   const [state, setState] = useState<PageState>({ mode: "loading" });
 

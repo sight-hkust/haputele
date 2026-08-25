@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-
+import { Button } from "@/components/primitives/button";
 import { AppVersion } from "@/components/shell/app-version";
 import { Topbar } from "@/components/shell/topbar";
 import { ROLE_HOMES, SEGMENT_TO_ROLE, useAuth } from "@/lib/auth";
@@ -13,7 +13,7 @@ import { ROLE_HOMES, SEGMENT_TO_ROLE, useAuth } from "@/lib/auth";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? "/";
-  const { session, loading } = useAuth();
+  const { session, loading, bootstrapFailed, retryBootstrap } = useAuth();
 
   // The first path segment names the role section. If it's a section that
   // isn't this user's, they're on a page they don't belong on. Computed during
@@ -26,7 +26,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     SEGMENT_TO_ROLE[segment] !== session.role;
 
   useEffect(() => {
-    if (loading) return;
+    // A failed bootstrap means we *don't know* the session state — hold the
+    // page (retry screen below) rather than redirect to /login and tell a
+    // signed-in user, wrongly, that their session is gone.
+    if (loading || bootstrapFailed) return;
     if (!session) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
       return;
@@ -34,8 +37,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (roleMismatch) {
       router.replace(ROLE_HOMES[session.role]);
     }
-  }, [session, loading, router, pathname, roleMismatch]);
+  }, [session, loading, bootstrapFailed, router, pathname, roleMismatch]);
 
+  // Session-state unknown — bootstrap probe failed. Show the retry screen
+  // (above) instead of treating the user as signed out.
+  if (bootstrapFailed && !session) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
+        <div role="alert" className="flex flex-col gap-2">
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            Connection problem
+          </span>
+          <h1 className="font-display text-4xl tracking-[-0.02em]">
+            Couldn&apos;t reach the server
+          </h1>
+          <p className="max-w-md text-[var(--muted-foreground)]">
+            This page couldn&apos;t verify your session because the server didn&apos;t respond. Your
+            session is unaffected — check your connection and try again.
+          </p>
+        </div>
+        <Button onClick={retryBootstrap}>Try again</Button>
+      </main>
+    );
+  }
   // Gate rendering until we know the user belongs on this exact path. Without
   // the `roleMismatch` check the wrong-role page renders for one frame before
   // the effect above redirects — the "doctor's page flashes when a health

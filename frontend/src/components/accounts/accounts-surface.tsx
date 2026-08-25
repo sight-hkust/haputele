@@ -21,7 +21,7 @@ import { InvitePanel } from "@/components/doctors/new-doctor-surface";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
@@ -94,7 +94,7 @@ export function AccountsSurface({
   emptyDescription,
   manualDoctorHref,
 }: AccountsSurfaceProps) {
-  const { data, error, isLoading } = useAccountRoster();
+  const { data, error, isLoading, refetch } = useAccountRoster();
   const [createOpen, setCreateOpen] = useState(false);
   // The drawer tracks a username, not a row snapshot, so it always reflects
   // fresh roster data after an edit/disable (and auto-closes on delete).
@@ -180,7 +180,7 @@ export function AccountsSurface({
         </Button>
       </div>
 
-      {error ? <ErrorBanner>{explainError(error.error)}</ErrorBanner> : null}
+      {error ? <ApiErrorBanner error={error} onRetry={() => refetch()} /> : null}
 
       <div className="flex flex-wrap gap-3">
         <StatChip label="Total" value={stats.total} />
@@ -443,12 +443,18 @@ function AccountRow({
   const Icon = isDoctor ? Stethoscope : account.role === "sys-admin" ? ShieldCheck : UserCog;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: table row acting as a button — HTML forbids <button> inside <tr>; role/tabIndex/aria-pressed + key handler replicate it.
     <tr
       onClick={onOpen}
       tabIndex={0}
       role="button"
       aria-pressed={selected}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
       className={cn(
         "cursor-pointer border-b border-[var(--border)] outline-none transition-colors last:border-0 hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/40",
         selected && "bg-[var(--accent)]/5 hover:bg-[var(--accent)]/5",

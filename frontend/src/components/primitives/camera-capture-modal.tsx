@@ -135,7 +135,7 @@ export function CameraCaptureModal({
 
   const capture = () => {
     const video = videoRef.current;
-    if (!video || !video.videoWidth || !video.videoHeight) return;
+    if (!video?.videoWidth || !video.videoHeight) return;
     const { videoWidth: vw, videoHeight: vh } = video;
     const scale = Math.min(1, maxDimension / Math.max(vw, vh));
     const cw = Math.round(vw * scale);
@@ -203,7 +203,7 @@ export function CameraCaptureModal({
                   ref={videoRef}
                   playsInline
                   muted
-                  className={"h-full w-full object-contain " + (shot ? "hidden" : "block")}
+                  className={`h-full w-full object-contain ${shot ? "hidden" : "block"}`}
                 />
                 {shot && (
                   <img src={shot} alt="Captured frame" className="h-full w-full object-contain" />

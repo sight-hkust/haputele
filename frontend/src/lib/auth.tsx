@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
-import { api } from "./api";
+import { ApiError, api } from "./api";
 
 export type Role = "admin" | "doctor" | "healthworker" | "sys-admin";
 
@@ -18,15 +18,22 @@ export type Session = {
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
+  // True when the bootstrap itself failed (backend unreachable / erroring).
+  // Distinct from "no session": a signed-in user on a flaky network must not
+  // be bounced to /login as though their session had expired. Guards render
+  // a retry screen instead; retryBootstrap re-runs the probe.
+  bootstrapFailed: boolean;
+  retryBootstrap: () => void;
   login: (s: Session) => void;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bootstrapFailed, setBootstrapFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   // Rehydrate from the cookie on mount. /auth/me returns 200 when the
   // session cookie is still valid; the api() wrapper turns a 401 into a
@@ -41,6 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // check /setup/status first — the only endpoint guaranteed reachable
   // in every state — and skip /auth/me when we already know there can't
   // be a session.
+  //
+  // A 401/409 from /auth/me means "genuinely signed out / not set up" —
+  // stay anonymous. Anything else (rejected fetch, 5xx) means the backend
+  // state is *unknown*: flag bootstrapFailed so guards show a retry screen
+  // instead of mistaking a valid session for a lapsed one.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is the retryBootstrap trigger — bumping it re-probes without being read in the body.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -55,10 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           skipAuthRedirect: true,
         });
         if (!cancelled) setSession({ username: me.username, role: me.role });
-      } catch {
-        // Network/status read failed, or /auth/me said we're not signed
-        // in. Stay anonymous either way — page-level guards will redirect
-        // to /login if they need a session.
+      } catch (err) {
+        // 401 = signed out; 409 setup_required = pre-init. Both are known
+        // anonymous states. Everything else is "couldn't tell".
+        const knownAnonymous =
+          err instanceof ApiError && (err.status === 401 || err.status === 409);
+        if (!cancelled && !knownAnonymous) setBootstrapFailed(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -66,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
   const login = useCallback((s: Session) => {
     // Called by the login form after a 200 from /auth/login. The cookies
@@ -90,7 +105,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ session, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        loading,
+        bootstrapFailed,
+        retryBootstrap: () => {
+          setBootstrapFailed(false);
+          setLoading(true);
+          setAttempt((n) => n + 1);
+        },
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

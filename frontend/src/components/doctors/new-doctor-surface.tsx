@@ -215,9 +215,13 @@ function ManualPanel({
       submitLabel="Create doctor"
       onCancel={onCancel}
       onSubmit={(payload) => {
+        // Both fields are required on create and gated by DoctorForm's
+        // submit validation; the guard satisfies the checker for the
+        // shared optional-typed payload without asserting.
+        if (!payload.username || !payload.rubberStampImage) return;
         create.mutate(
           {
-            username: payload.username!,
+            username: payload.username,
             password: payload.password,
             givenName: payload.givenName,
             familyName: payload.familyName,
@@ -228,7 +232,7 @@ function ManualPanel({
             practitionerAddress: payload.practitionerAddress,
             instituteName: payload.instituteName,
             instituteContact: payload.instituteContact,
-            rubberStampImage: payload.rubberStampImage!,
+            rubberStampImage: payload.rubberStampImage,
             defaultSignatureImage: payload.defaultSignatureImage,
           },
           { onSuccess: (doc) => onCreated(doc.id) },

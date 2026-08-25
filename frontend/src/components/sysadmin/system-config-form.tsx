@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
-import { Input, Label } from "@/components/primitives/input";
+import { Input } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { explainError } from "@/lib/error-codes";
 import { useUpdateSystemConfig } from "@/lib/use-api";

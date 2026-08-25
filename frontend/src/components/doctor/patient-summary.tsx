@@ -5,8 +5,9 @@ import { Activity, Camera, ClipboardList, HeartPulse, MessageSquare, Pill } from
 
 import { Card } from "@/components/primitives/card";
 import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
-import { fmtAge, fmtDate } from "@/lib/format";
+import { explainError } from "@/lib/error-codes";
 import { diseaseLabel } from "@/lib/medical-codes";
+import { fmtAge, fmtDate } from "@/lib/format";
 import { useAttachmentImage } from "@/lib/use-api";
 import type { AttachmentMeta, Patient, Preconsult, Profile } from "@/types/api";
 
@@ -149,7 +150,7 @@ function DoctorAttachmentThumb({
   attachment: AttachmentMeta;
   appointmentId: number;
 }) {
-  const { url, error } = useAttachmentImage(appointmentId, attachment.id);
+  const { url, error, retry } = useAttachmentImage(appointmentId, attachment.id);
   const [preview, setPreview] = useState(false);
   return (
     <div className="aspect-square overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--muted)]/40">
@@ -176,8 +177,15 @@ function DoctorAttachmentThumb({
           />
         </>
       ) : error ? (
-        <div className="flex h-full w-full items-center justify-center p-2 text-center text-[10px] text-rose-600">
-          Load failed
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-[10px] text-rose-600">
+          <span>{explainError(error.error)}</span>
+          <button
+            type="button"
+            onClick={retry}
+            className="font-medium underline underline-offset-2 hover:text-rose-700"
+          >
+            Try again
+          </button>
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-[10px] text-[var(--muted-foreground)]">

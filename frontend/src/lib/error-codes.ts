@@ -115,6 +115,7 @@ const MESSAGES: Record<string, string> = {
     "Only admin and healthworker accounts can be managed here. Doctors are managed from the admin console.",
   account_in_use:
     "This account has records attached to it and can't be deleted. Disable it instead to block sign-in while keeping its history.",
+  network_error: "Couldn't reach the server. Check your connection and try again.",
   request_failed: "Something went wrong. Try again.",
   // Generic server-side errors — shown when the backend doesn't return a
   // recognisable domain code (e.g. unhandled exception or schema mismatch).
@@ -126,4 +127,14 @@ const MESSAGES: Record<string, string> = {
 
 export function explainError(code: string, fallback?: string): string {
   return MESSAGES[code] ?? fallback ?? "Something went wrong. Try again.";
+}
+
+/**
+ * True when the code has curated copy above. Used by error banners to decide
+ * whether showing a support reference (requestId) adds anything — a message
+ * like "That time has already passed" explains itself; "Something went wrong"
+ * does not, and the reference lets ops find the exact server log entry.
+ */
+export function isKnownErrorCode(code: string): boolean {
+  return code in MESSAGES;
 }

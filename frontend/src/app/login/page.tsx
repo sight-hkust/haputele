@@ -40,7 +40,10 @@ function LoginScreen() {
   const { session, login, loading } = useAuth();
   const setupStatus = useSetupStatus();
   const uninitialized = setupStatus.data?.initialized === false;
-  const setupLoaded = setupStatus.data !== undefined;
+  // A failed status probe (backend unreachable / erroring) must not hold the
+  // "Loading…" gate forever — show the form; a submit against a dead backend
+  // lands in the existing "Couldn't reach the server" branch.
+  const setupLoaded = setupStatus.data !== undefined || setupStatus.isError;
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

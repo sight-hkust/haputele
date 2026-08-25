@@ -17,11 +17,10 @@ import {
 import { DoctorForm } from "@/components/admin/doctor-form";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Modal } from "@/components/primitives/modal";
 import {
-  Field,
   PasswordSection,
   ProfileSection,
   Section,
@@ -116,6 +115,7 @@ function ManageableBody({
   const disable = useDisableAccount();
   const enable = useEnableAccount();
   const del = useDeleteAccount();
+  const statusError = disable.error ?? enable.error;
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isDisabled = account.disabledAt !== null;
@@ -158,9 +158,7 @@ function ManageableBody({
             Disable sign-in
           </Button>
         )}
-        {disable.error || enable.error ? (
-          <ErrorBanner>{explainError((disable.error ?? enable.error)!.error)}</ErrorBanner>
-        ) : null}
+        {statusError ? <ErrorBanner>{explainError(statusError.error)}</ErrorBanner> : null}
       </Section>
 
       <PasswordSection username={account.username} />
@@ -230,7 +228,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
   const refreshRoster = () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] });
 
   if (doctor.error) {
-    return <ErrorBanner>{explainError(doctor.error.error)}</ErrorBanner>;
+    return <ApiErrorBanner error={doctor.error} onRetry={() => doctor.refetch()} />;
   }
   if (!doctor.data) {
     return <p className="text-sm text-[var(--muted-foreground)]">Loading…</p>;
