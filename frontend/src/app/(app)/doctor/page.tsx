@@ -4,10 +4,9 @@ import { useMemo } from "react";
 
 import { AppointmentCalendar } from "@/components/healthworker/appointment-calendar";
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import { useAppointmentList, useCurrentDoctor } from "@/lib/use-api";
-import { explainError } from "@/lib/error-codes";
 
 const RANGE_DAYS = 60;
 
@@ -38,7 +37,7 @@ export default function DoctorCalendar() {
       <Legend />
 
       {list.error ? (
-        <ErrorBanner>{explainError(list.error.error)}</ErrorBanner>
+        <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
       ) : list.isLoading ? (
         <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
       ) : (

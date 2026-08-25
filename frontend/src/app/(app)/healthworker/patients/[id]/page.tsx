@@ -8,7 +8,7 @@ import { CalendarPlus, ClipboardList, History, Pencil, Trash2 } from "lucide-rea
 import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
 import { StatusBadge } from "@/components/primitives/status-badge";
@@ -42,7 +42,13 @@ export default function PatientDetailPage() {
     throwNotFoundIf404(patientQ.error);
     return (
       <div className="mx-auto max-w-7xl px-6 py-12">
-        <ErrorBanner>{explainError(patientQ.error?.error ?? "patient_not_found")}</ErrorBanner>
+        <ApiErrorBanner
+          error={patientQ.error}
+          onRetry={() => {
+            patientQ.refetch();
+            historyQ.refetch();
+          }}
+        />
       </div>
     );
   }

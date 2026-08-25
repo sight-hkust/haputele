@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ProfileForm } from "@/components/healthworker/profile-form";
 import { BackLink } from "@/components/primitives/back-link";
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import { explainError } from "@/lib/error-codes";
 import { fullName } from "@/lib/format";
@@ -24,7 +24,7 @@ export default function PatientProfilePage() {
     throwNotFoundIf404(patientQ.error);
     return (
       <div className="mx-auto max-w-4xl px-6 py-12">
-        <ErrorBanner>{explainError(patientQ.error.error)}</ErrorBanner>
+        <ApiErrorBanner error={patientQ.error} onRetry={() => patientQ.refetch()} />
       </div>
     );
   }

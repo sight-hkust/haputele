@@ -3,16 +3,15 @@
 import { Building2, UserCog } from "lucide-react";
 
 import { Card } from "@/components/primitives/card";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import { SelfAccountSettings } from "@/components/sysadmin/self-account-form";
 import { SystemConfigForm } from "@/components/sysadmin/system-config-form";
-import { explainError } from "@/lib/error-codes";
 import { fmtDateTime } from "@/lib/format";
 import { useSystemConfig } from "@/lib/use-api";
 
 export default function SysAdminHome() {
-  const { data, error, isLoading } = useSystemConfig();
+  const { data, error, isLoading, refetch } = useSystemConfig();
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
@@ -38,7 +37,7 @@ export default function SysAdminHome() {
         </div>
 
         {error ? (
-          <ErrorBanner>{explainError(error.error)}</ErrorBanner>
+          <ApiErrorBanner error={error} onRetry={() => refetch()} />
         ) : isLoading || !data ? (
           <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
         ) : (

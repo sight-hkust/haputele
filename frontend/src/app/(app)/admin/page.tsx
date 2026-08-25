@@ -19,7 +19,7 @@ import {
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
@@ -85,7 +85,6 @@ export default function AdminDoctors() {
     }
   };
 
-  const loadErr = list.error ?? (showInvites ? invitesQuery.error : null);
   const loading = list.isLoading || (showInvites && invitesQuery.isLoading);
   const isEmpty = invites.length === 0 && doctors.length === 0;
 
@@ -141,8 +140,14 @@ export default function AdminDoctors() {
         })}
       </div>
 
-      {loadErr ? (
-        <ErrorBanner>{explainError(loadErr.error)}</ErrorBanner>
+      {list.error || (showInvites && invitesQuery.error) ? (
+        <div className="flex flex-col gap-3">
+          <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
+          <ApiErrorBanner
+            error={showInvites ? invitesQuery.error : undefined}
+            onRetry={() => invitesQuery.refetch()}
+          />
+        </div>
       ) : loading ? (
         <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
       ) : isEmpty ? (

@@ -61,7 +61,7 @@ export function DoctorSlotPicker({
   const [weeksAhead, setWeeksAhead] = useState<number>(() => {
     if (value) {
       try {
-        const valueLocal = fromZonedTime(value.replace("T", " ") + ":00", APP_TIMEZONE);
+        const valueLocal = fromZonedTime(`${value.replace("T", " ")}:00`, APP_TIMEZONE);
         const valueWeekStart = startOfWeekLocal(valueLocal);
         const todayWeekStart = startOfWeekLocal(new Date());
         const diffWeeks = Math.round(
@@ -164,7 +164,7 @@ export function DoctorSlotPicker({
   const valueAsMs = useMemo(() => {
     if (!value) return null;
     try {
-      return fromZonedTime(value.replace("T", " ") + ":00", APP_TIMEZONE).getTime();
+      return fromZonedTime(`${value.replace("T", " ")}:00`, APP_TIMEZONE).getTime();
     } catch {
       return null;
     }

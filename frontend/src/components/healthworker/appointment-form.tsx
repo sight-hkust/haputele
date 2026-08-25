@@ -105,6 +105,7 @@ export function AppointmentForm({
   const prefillQ = usePatient(!hidePatientPicker && defaultPatientId ? defaultPatientId : null, {
     enabled: !hidePatientPicker && !!defaultPatientId && !picked,
   });
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deliberately keyed to prefillQ.data alone — see block comment above: reacting to `picked`/onPatientChange identity changes would silently re-hydrate a chip the user just cleared.
   useEffect(() => {
     if (!picked && prefillQ.data) {
       setPicked(prefillQ.data.patient);

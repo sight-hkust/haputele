@@ -33,18 +33,25 @@ export const SignatureCanvas = forwardRef<
   // a `signed` flag from a previous mount (e.g. Review → Back → Review, which
   // remounts this component and discards the ink) can't go stale and leave
   // the submit button enabled with nothing to submit.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only by design; re-firing on a fresh onChange closure would report "blank" after signing.
   useEffect(() => {
     onChange?.(false);
   }, []);
 
   // Set up the canvas at the device pixel ratio so strokes stay crisp on retina.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: height resizes the element box this body measures via getBoundingClientRect; dep forces re-rasterize.
   useEffect(() => {
-    const canvas = canvasRef.current!;
+    // The canvas element is rendered unconditionally below, so it exists by
+    // the time this layout-affecting effect runs; guards keep the type
+    // checker honest without changing behavior.
+    const canvas = canvasRef.current;
+    if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
     ctx.scale(dpr, dpr);
     ctx.strokeStyle = "#0f172a";
     ctx.lineWidth = 2;
@@ -53,26 +60,32 @@ export const SignatureCanvas = forwardRef<
   }, [height]);
 
   useImperativeHandle(ref, () => ({
-    toDataURL: () => (hasInk ? canvasRef.current!.toDataURL("image/png") : null),
+    toDataURL: () => {
+      if (!hasInk) return null;
+      return canvasRef.current?.toDataURL("image/png") ?? null;
+    },
     clear: () => {
-      const canvas = canvasRef.current!;
-      const ctx = canvas.getContext("2d")!;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
       setHasInk(false);
       onChange?.(false);
     },
   }));
-
   const pos = (e: PointerEvent<HTMLCanvasElement>) => {
-    const rect = canvasRef.current!.getBoundingClientRect();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
   const onPointerDown = (e: PointerEvent<HTMLCanvasElement>) => {
     e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
     drawingRef.current = true;
-    canvasRef.current!.setPointerCapture(e.pointerId);
-    const ctx = canvasRef.current!.getContext("2d")!;
+    canvas.setPointerCapture(e.pointerId);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
     const { x, y } = pos(e);
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -80,7 +93,8 @@ export const SignatureCanvas = forwardRef<
 
   const onPointerMove = (e: PointerEvent<HTMLCanvasElement>) => {
     if (!drawingRef.current) return;
-    const ctx = canvasRef.current!.getContext("2d")!;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
     const { x, y } = pos(e);
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -89,7 +103,6 @@ export const SignatureCanvas = forwardRef<
       onChange?.(true);
     }
   };
-
   const onPointerUp = () => {
     drawingRef.current = false;
   };
@@ -126,9 +139,9 @@ export const SignatureCanvas = forwardRef<
           size="sm"
           variant="ghost"
           onClick={() => {
-            const canvas = canvasRef.current!;
-            const ctx = canvas.getContext("2d")!;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
             setHasInk(false);
             onChange?.(false);
           }}

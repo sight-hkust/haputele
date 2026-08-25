@@ -8,7 +8,8 @@ import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { PageHeader } from "@/components/primitives/page-header";
-import { API_URL } from "@/lib/api";
+import { API_URL, ApiError } from "@/lib/api";
+import { explainError } from "@/lib/error-codes";
 import { useAuth } from "@/lib/auth";
 import { EXPORT_TIMEZONE, appDayWindow, appToday } from "@/lib/format";
 
@@ -33,7 +34,17 @@ export default function ExportsPage() {
         credentials: "include",
       });
       if (!res.ok) {
-        throw new Error(`Download failed (${res.status}).`);
+        // Parse the uniform error envelope — a 422 range_too_wide deserves
+        // its curated copy, not "Download failed (422)". Same shape api()
+        // unwraps; hand-rolled here because the response is a blob stream.
+        let code = "request_failed";
+        try {
+          const body = (await res.clone().json()) as { detail?: { error?: string } };
+          code = body?.detail?.error ?? code;
+        } catch {
+          /* keep default */
+        }
+        throw new ApiError(res.status, code);
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -45,9 +56,14 @@ export default function ExportsPage() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Download failed.");
+      // ApiError → curated copy (with the status as fallback context for
+      // unknown codes); a rejected fetch means offline, not "Download failed".
+      setError(
+        e instanceof ApiError
+          ? explainError(e.error, `Download failed (${e.status}).`)
+          : "Couldn't reach the server. Check your connection and try again.",
+      );
     } finally {
       setDownloading(null);
     }

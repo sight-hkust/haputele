@@ -96,8 +96,8 @@ export const SignaturePad = forwardRef<SignaturePadHandle, Props>(function Signa
   }, [height, onChange, resetCanvas]);
 
   const pointerXY = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 

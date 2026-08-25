@@ -64,9 +64,12 @@ export function windowsToCells(windows: Window[], weekStartLocal: Date): Set<Cel
 export function cellsToWindows(cells: Set<CellKey>, weekStartLocal: Date): Window[] {
   const byDay = new Map<number, number[]>();
   for (const k of cells) {
-    const [d, s] = k.split("-").map(Number);
-    if (!byDay.has(d)) byDay.set(d, []);
-    byDay.get(d)!.push(s);
+    // set-or-push without a non-null assertion; keys are internally
+    // generated `${day}-${slot}` pairs.
+    const [day, s] = k.split("-").map(Number);
+    const slots = byDay.get(day);
+    if (slots) slots.push(s);
+    else byDay.set(day, [s]);
   }
   const out: Window[] = [];
   for (const [dayIndex, slots] of byDay) {

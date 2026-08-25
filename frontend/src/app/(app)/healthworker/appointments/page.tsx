@@ -14,7 +14,7 @@ import type { ApiError } from "@/lib/api";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import {
   useAppointmentList,
@@ -92,6 +92,7 @@ function Workspace() {
   // user-driven mode changes afterwards aren't overwritten.
   const queueEntryQ = useQueueEntry(bookFromQueueParam ? Number(bookFromQueueParam) : null);
   const [consumedQueueParam, setConsumedQueueParam] = useState(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: guarded one-shot deep-link consumer — focusBookingCard/router identities change per render and the consumedQueueParam flag makes refires no-ops.
   useEffect(() => {
     if (!consumedQueueParam && queueEntryQ.data) {
       focusBookingCard(queueEntryQ.data);
@@ -116,7 +117,7 @@ function Workspace() {
         {/* Calendar (main) */}
         <div className="min-w-0">
           {apptList.error ? (
-            <ErrorBanner>{explainError(apptList.error.error)}</ErrorBanner>
+            <ApiErrorBanner error={apptList.error} onRetry={() => apptList.refetch()} />
           ) : apptList.isLoading ? (
             <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
           ) : (
@@ -215,7 +216,7 @@ function QueueCard({
           />
         </SubFrame>
       ) : error ? (
-        <ErrorBanner>{explainError(error.error, error.message)}</ErrorBanner>
+        <ApiErrorBanner error={error} onRetry={refetch} />
       ) : loading ? (
         <div className="flex items-center gap-2 py-4 text-xs text-[var(--muted-foreground)]">
           <Loader2 className="h-3 w-3 animate-spin" /> Loading…
@@ -291,9 +292,8 @@ function BookingCard({
   // in fresh mode where the HW is choosing a patient. In from-queue mode we
   // don't show it (the queue entry is already the context).
   const [activePatientId, setActivePatientId] = useState<number | undefined>(initialPatientId);
-
-  const error =
-    create.error || book.error ? explainError((create.error || book.error)!.error) : null;
+  const submitError = create.error ?? book.error;
+  const error = submitError ? explainError(submitError.error) : null;
   const submitting = create.isPending || book.isPending;
 
   const handleSubmit = (v: { patientId: number; doctorId: number; scheduledAt: string }) => {

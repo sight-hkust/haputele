@@ -125,7 +125,7 @@ function ReviewBlock({ title, children }: { title: string; children: React.React
 }
 
 function ReviewKv({ k, v }: { k: string; v?: string | null }) {
-  if (!v || !v.trim()) return null;
+  if (!v?.trim()) return null;
   return (
     <div className="mb-2 last:mb-0">
       <span className="font-mono text-xs uppercase tracking-[0.12em] text-white/50">{k}</span>

@@ -7,6 +7,12 @@ import { useCallback, useRef, useState, type DragEvent } from "react";
 // `onFiles`. Single-file targets get just the first file (multiple: false,
 // the default); multi-file targets get them all. Pointer/keyboard upload paths
 // are untouched — this only adds drag-and-drop on top.
+// True when a drag carries files (vs. e.g. text/uri-list). Pure per-event
+// check — hoisted so the drag callbacks keep tight dep lists.
+function hasFiles(e: DragEvent) {
+  return Array.from(e.dataTransfer?.types ?? []).includes("Files");
+}
+
 export function useFileDrop(
   onFiles: (files: File[]) => void,
   opts?: { multiple?: boolean; disabled?: boolean },
@@ -17,8 +23,6 @@ export function useFileDrop(
   // dragenter/dragleave fire for every child element the cursor crosses; a
   // depth counter keeps the highlight steady until the pointer truly leaves.
   const depth = useRef(0);
-
-  const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files");
 
   const onDragEnter = useCallback(
     (e: DragEvent) => {
