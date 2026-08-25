@@ -29,7 +29,10 @@ const baseSchema = z.object({
       const dob = parseDob(value);
       return !dob || dob <= appToday();
     }, "Date of birth cannot be in the future"),
-  language: z.enum(["en", "ta", "si"]).optional().or(z.literal("") as z.ZodType<"">),
+  language: z
+    .enum(["en", "ta", "si"])
+    .optional()
+    .or(z.literal("") as z.ZodType<"">),
   screeningRef: z.string().optional(),
   nationalId: z
     .string()
@@ -139,7 +142,11 @@ export function PatientForm({
                 invalid={Boolean(errors.dob)}
                 onChange={field.onChange}
                 onPickerChange={(value) =>
-                  setValue("dob", value, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+                  setValue("dob", value, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: true,
+                  })
                 }
                 onBlur={() => {
                   const dob = parseDob(field.value);
@@ -257,7 +264,11 @@ function Field({
     <div className="flex flex-col gap-2">
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
-      {error && <p id={`${htmlFor}-error`} className="text-xs text-rose-600">{error}</p>}
+      {error && (
+        <p id={`${htmlFor}-error`} className="text-xs text-rose-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -9,9 +9,10 @@ export function maskDobInput(raw: string, previous = ""): string {
 
   if (!cleaned.includes("/")) {
     const digits = cleaned.slice(0, 8);
-    return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)]
-      .filter(Boolean)
-      .join("/") + (!deleting && (digits.length === 2 || digits.length === 4) ? "/" : "");
+    return (
+      [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean).join("/") +
+      (!deleting && (digits.length === 2 || digits.length === 4) ? "/" : "")
+    );
   }
 
   const [day = "", month = "", year = ""] = cleaned.split("/", 3);
@@ -24,7 +25,10 @@ export function maskDobInput(raw: string, previous = ""): string {
 export function parseDob(value: string | undefined): string | null {
   if (!value?.trim()) return null;
 
-  const parts = value.trim().replace(/[-.\s]+/g, "/").split("/");
+  const parts = value
+    .trim()
+    .replace(/[-.\s]+/g, "/")
+    .split("/");
   if (parts.length !== 3 || !parts.every((part) => /^\d+$/.test(part))) return null;
 
   const [day, month, year] = parts.map(Number);

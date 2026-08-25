@@ -68,6 +68,7 @@ export function DatePicker({
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Reset and wire listeners only when the popup opens; `today` is recreated each render and `selected` updates through this component.
   useEffect(() => {
     if (!open) return;
     setVisibleMonth(startOfMonth(selected ?? today));
@@ -92,7 +93,7 @@ export function DatePicker({
       document.removeEventListener("pointerdown", closeOnOutsideClick);
       document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const days = useMemo(() => {
     const first = startOfWeek(startOfMonth(visibleMonth), { weekStartsOn: WEEK_STARTS_ON });
@@ -105,14 +106,13 @@ export function DatePicker({
   const selectedWeekStart = selected
     ? startOfWeek(selected, { weekStartsOn: WEEK_STARTS_ON })
     : null;
-  const selectedWeekEnd = selected
-    ? endOfWeek(selected, { weekStartsOn: WEEK_STARTS_ON })
-    : null;
-  const focusDay = selected && days.some((day) => isSameDay(day, selected))
-    ? selected
-    : days.some((day) => isSameDay(day, today))
-      ? today
-      : startOfMonth(visibleMonth);
+  const selectedWeekEnd = selected ? endOfWeek(selected, { weekStartsOn: WEEK_STARTS_ON }) : null;
+  const focusDay =
+    selected && days.some((day) => isSameDay(day, selected))
+      ? selected
+      : days.some((day) => isSameDay(day, today))
+        ? today
+        : startOfMonth(visibleMonth);
   const displayValue = selected
     ? mode === "week"
       ? formatWeekRange(value)
@@ -136,15 +136,23 @@ export function DatePicker({
 
   const moveWithKeyboard = (event: ReactKeyboardEvent<HTMLButtonElement>, day: Date) => {
     const target =
-      event.key === "ArrowLeft" ? addDays(day, -1)
-      : event.key === "ArrowRight" ? addDays(day, 1)
-      : event.key === "ArrowUp" ? addDays(day, -7)
-      : event.key === "ArrowDown" ? addDays(day, 7)
-      : event.key === "Home" ? startOfWeek(day, { weekStartsOn: WEEK_STARTS_ON })
-      : event.key === "End" ? endOfWeek(day, { weekStartsOn: WEEK_STARTS_ON })
-      : event.key === "PageUp" ? addMonths(day, -1)
-      : event.key === "PageDown" ? addMonths(day, 1)
-      : null;
+      event.key === "ArrowLeft"
+        ? addDays(day, -1)
+        : event.key === "ArrowRight"
+          ? addDays(day, 1)
+          : event.key === "ArrowUp"
+            ? addDays(day, -7)
+            : event.key === "ArrowDown"
+              ? addDays(day, 7)
+              : event.key === "Home"
+                ? startOfWeek(day, { weekStartsOn: WEEK_STARTS_ON })
+                : event.key === "End"
+                  ? endOfWeek(day, { weekStartsOn: WEEK_STARTS_ON })
+                  : event.key === "PageUp"
+                    ? addMonths(day, -1)
+                    : event.key === "PageDown"
+                      ? addMonths(day, 1)
+                      : null;
     if (!target) return;
     event.preventDefault();
     focusDate(target);
@@ -182,7 +190,10 @@ export function DatePicker({
           )}
         >
           <span>{displayValue}</span>
-          <CalendarDays className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" aria-hidden="true" />
+          <CalendarDays
+            className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]"
+            aria-hidden="true"
+          />
         </button>
       )}
 
@@ -230,7 +241,9 @@ export function DatePicker({
               className="h-9 rounded-lg border border-transparent bg-transparent px-2 font-mono text-sm tabular-nums focus-visible:border-[var(--accent)] focus-visible:outline-none"
             >
               {years.map((year) => (
-                <option key={year} value={year}>{year}</option>
+                <option key={year} value={year}>
+                  {year}
+                </option>
               ))}
             </select>
             <Button
@@ -245,8 +258,10 @@ export function DatePicker({
           </div>
 
           <div role="grid" aria-label={format(visibleMonth, "MMMM yyyy")}>
+            {/* biome-ignore lint/a11y/useFocusableInteractive: Focus belongs on the interactive day cells, not the structural header row. */}
             <div role="row" className="mb-1 grid grid-cols-7">
               {WEEKDAYS.map((day) => (
+                // biome-ignore lint/a11y/useFocusableInteractive: Column headers label the focusable day cells and are not interactive.
                 <span
                   key={day}
                   role="columnheader"
@@ -296,8 +311,12 @@ export function DatePicker({
                       weekStart && "rounded-l-lg",
                       weekEnd && "rounded-r-lg",
                       mode === "date" && isSelected && "rounded-lg bg-[var(--accent)] text-white",
-                      mode === "week" && isSelected && "z-10 rounded-lg ring-2 ring-inset ring-[var(--accent)]",
-                      isToday && !isSelected && "font-semibold underline decoration-[var(--accent)] decoration-2 underline-offset-4",
+                      mode === "week" &&
+                        isSelected &&
+                        "z-10 rounded-lg ring-2 ring-inset ring-[var(--accent)]",
+                      isToday &&
+                        !isSelected &&
+                        "font-semibold underline decoration-[var(--accent)] decoration-2 underline-offset-4",
                     )}
                   >
                     {format(day, "d")}
