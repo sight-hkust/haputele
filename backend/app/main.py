@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,6 +33,7 @@ from .routers import (
     summary,
     sysadmin,
 )
+from .services.health_probe import STATUS_ERROR, run_full_probe
 from .services.storage import ensure_bucket
 from .services.system_config import load_system_config
 from .version import BUILD_DATE, COMMIT, VERSION, hostname, uptime_seconds
@@ -199,8 +200,18 @@ def create_app() -> FastAPI:
     app.include_router(doctor_onboarding.router)
 
     @app.get("/health", tags=["meta"])
-    def health() -> dict:
-        return {
+    def health(response: Response, full: bool = False) -> dict:
+        """Liveness probe — process identity only, no dependency is touched,
+        so it stays green while Postgres/S3 are down (that is what restart
+        policies and load balancers should watch).
+
+        `?full=true` switches to a readiness probe: db / s3 / livekit are
+        actively checked (concurrently, ~2s cap each) and the response
+        carries a `dependencies` block. Any configured dependency failing →
+        status "degraded" + 503, so the endpoint can back a real
+        healthcheck. See services/health_probe.py.
+        """
+        body = {
             "status": "ok",
             "uptime": round(uptime_seconds(), 3),
             "version": VERSION,
@@ -208,6 +219,13 @@ def create_app() -> FastAPI:
             "hostname": hostname(),
             "commit": COMMIT,
         }
+        if full:
+            body.update(run_full_probe())
+            failing = any(d["status"] == STATUS_ERROR for d in body["dependencies"].values())
+            if failing:
+                body["status"] = "degraded"
+                response.status_code = 503
+        return body
 
     return app
 

@@ -24,6 +24,8 @@ Once the containers are up:
 
 `GET /health` is a pure liveness probe (no DB/S3 dependency) returning `{"status": "ok", "uptime": <seconds>, "version": <git ref>, "buildDate": <UTC ISO-8601 build timestamp>, "hostname": <container hostname>, "commit": <git sha>}`. `version` / `buildDate` / `commit` are baked into the image at build time (CI passes the git ref, sha, and build timestamp; local builds fall back to `dev` / `unknown` markers).
 
+`?full=true` switches `/health` to a readiness probe: Postgres (`SELECT 1`), the object store (`head_bucket`), and LiveKit (TCP reachability of `LIVEKIT_URL`; empty URL → `not_configured`, which is not a failure) are checked concurrently. Every check is hard-bounded at ~2s and the whole probe is capped at 3s — a hung check is abandoned and reported as `timed out`, so the response can never stall. The response gains a `dependencies` block where each probed entry carries its measured `latencyMs`; error entries carry the exception class name only (internal endpoints stay out of the unauthenticated body; full detail goes to the api logs). Any failing configured dependency → `status: "degraded"` + `503`. Results are single-flight and cached for ~2s, so hammering the probe does not multiply connections to the backing services.
+
 ### First-run setup
 
 Until `/setup/initialize` succeeds, the API is **uninitialized**: every non-`/health`, non-`/setup/*`, non-`/docs|/redoc|/openapi.json` route returns `409 setup_required`. On a fresh `docker compose up` (empty volumes), the api container prints a banner to stdout with a one-time setup token, and also writes it to `/data/setup-token` inside the container:
