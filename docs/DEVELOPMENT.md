@@ -68,3 +68,16 @@ All code changes must go through a Pull Request before merging into `main`.
    * PRs require at least one approved code review from a teammate.
    * Ensure all CI workflows/tests pass successfully.
    * Use **Squash and Merge** when merging to keep the `main` branch history clean.
+
+---
+
+## 5. Release Versioning
+
+Release tags use the hybrid CalVer/SemVer format `vYYMM.MINOR.PATCH`:
+
+* `YYMM` identifies the release year and month.
+* `MINOR` increments for feature releases within that month.
+* `PATCH` increments for fixes to that minor release.
+* `MINOR` and `PATCH` reset to `0` when `YYMM` changes.
+
+For example, `v2608.0.0` is the first August 2026 release, `v2608.1.0` is a later feature release that month, and `v2608.1.1` is its first patch.

@@ -207,10 +207,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.image }}
-          # latest=false: don't let semver tags auto-claim `latest`. We pin `latest`
+          # latest=false: don't let release tags auto-claim `latest`. We pin `latest`
           # to main's tip via the raw rule below, so it stays a dev convenience and
           # never silently becomes "the last release built". Production never uses
-          # `latest` — it pins an immutable :<semver> or :sha-<commit> (terraform.tfvars).
+          # `latest` — it pins an immutable :<YYMM.MINOR.PATCH> or :sha-<commit> (terraform.tfvars).
           flavor: |
             latest=false
           tags: |
