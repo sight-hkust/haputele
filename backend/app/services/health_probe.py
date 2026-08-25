@@ -37,7 +37,7 @@ assert the literal wire strings, which pins the contract.
 Error bodies carry the exception class name only — boto3/psycopg2 message
 text embeds internal endpoints (S3 URL + bucket, db host:port) and this
 endpoint is unauthenticated. The full message goes to the log instead.
-latencyMs is wall clock around the whole check (client construction
+latency_ms is wall clock around the whole check (client construction
 included for db/s3) — probe cost, a close proxy for service response
 time. not_configured carries no latency because nothing was probed.
 
@@ -135,7 +135,7 @@ def _check_livekit() -> dict:
 
 
 def _timed(fn):
-    """Wrap a check so its result carries `latencyMs` (wall clock around the
+    """Wrap a check so its result carries `latency_ms` (wall clock around the
     call, milliseconds, 1 decimal). Also the last line of defence: a check
     that escapes its own try/except still yields an error body instead of
     blowing up the future."""
@@ -147,7 +147,7 @@ def _timed(fn):
         except Exception as exc:  # noqa: BLE001
             result = _err(exc)
         if result.get("status") != STATUS_NOT_CONFIGURED:
-            result["latencyMs"] = round((time.perf_counter() - start) * 1000, 1)
+            result["latency_ms"] = round((time.perf_counter() - start) * 1000, 1)
         return result
 
     return wrapped
@@ -177,7 +177,7 @@ def _run_checks() -> dict:
                 deps[name] = fut.result(timeout=GATHER_TIMEOUT_S)
             except (TimeoutError, FutureTimeoutError):  # same class on 3.11+
                 elapsed = round((time.perf_counter() - started) * 1000, 1)
-                deps[name] = {"status": STATUS_ERROR, "error": "timed out", "latencyMs": elapsed}
+                deps[name] = {"status": STATUS_ERROR, "error": "timed out", "latency_ms": elapsed}
     finally:
         pool.shutdown(wait=False, cancel_futures=True)
     return {"dependencies": deps}

@@ -215,7 +215,7 @@ def create_app() -> FastAPI:
             "status": "ok",
             "uptime": round(uptime_seconds(), 3),
             "version": VERSION,
-            "buildDate": BUILD_DATE,
+            "build_date": BUILD_DATE,
             "hostname": hostname(),
             "commit": COMMIT,
         }

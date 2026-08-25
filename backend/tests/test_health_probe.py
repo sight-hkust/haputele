@@ -2,7 +2,7 @@
 
 Plain /health stays a pure liveness probe (no dependency touched). The full
 variant actively checks the three backing services and reports each one's
-wall-clock `latencyMs`. Tests assert the literal wire strings ("ok",
+wall-clock `latency_ms`. Tests assert the literal wire strings ("ok",
 "error", "not_configured", "degraded") on purpose: the module uses
 STATUS_* constants internally, and the literals here pin the contract so a
 renamed constant can't silently change the API.
@@ -66,11 +66,11 @@ def test_full_probe_ok_when_dependencies_up(client):
     # No LIVEKIT_URL in the test env → skipped, not failed — and unprobed,
     # so no latency is reported for it.
     assert deps["livekit"]["status"] == "not_configured"
-    assert "latencyMs" not in deps["livekit"]
+    assert "latency_ms" not in deps["livekit"]
     # Probed dependencies carry a non-negative latency.
     for name in ("db", "s3"):
-        assert isinstance(deps[name]["latencyMs"], (int, float))
-        assert deps[name]["latencyMs"] >= 0
+        assert isinstance(deps[name]["latency_ms"], (int, float))
+        assert deps[name]["latency_ms"] >= 0
 
 
 def test_full_probe_503_when_a_dependency_fails(client, monkeypatch):
@@ -84,7 +84,7 @@ def test_full_probe_503_when_a_dependency_fails(client, monkeypatch):
     assert body["dependencies"]["db"]["status"] == "error"
     assert body["dependencies"]["db"]["error"] == "injected"
     # Failure still carries latency (time-to-failure is diagnostic).
-    assert body["dependencies"]["db"]["latencyMs"] >= 0
+    assert body["dependencies"]["db"]["latency_ms"] >= 0
     # Non-failing dependencies are still reported individually.
     assert body["dependencies"]["s3"]["status"] == "ok"
     assert body["dependencies"]["livekit"]["status"] == "not_configured"
@@ -112,7 +112,7 @@ def test_latency_is_measured_per_check(client, monkeypatch):
     monkeypatch.setattr(health_probe, "_check_db", _sleep_check(0.05))
     r = client.get("/health?full=true")
     assert r.status_code == 200
-    assert r.json()["dependencies"]["db"]["latencyMs"] >= 50
+    assert r.json()["dependencies"]["db"]["latency_ms"] >= 50
 
 
 def test_gather_cap_abandons_hung_checks(monkeypatch):
