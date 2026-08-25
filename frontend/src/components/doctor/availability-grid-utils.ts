@@ -2,13 +2,7 @@ import { addDays, addMinutes, format, parseISO } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 import { APP_TIMEZONE } from "@/lib/format";
-import {
-  cellKey,
-  type CellKey,
-  SLOT_MINUTES,
-  SLOT_MIN_HOUR,
-  SLOTS_PER_DAY,
-} from "./week-grid";
+import { cellKey, type CellKey, SLOT_MINUTES, SLOT_MIN_HOUR, SLOTS_PER_DAY } from "./week-grid";
 
 // ── Window / cell conversions ────────────────────────────────────────
 //

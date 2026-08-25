@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { Loader2, PenLine, Save } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/primitives/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { PageHeader } from "@/components/primitives/page-header";
@@ -108,12 +114,17 @@ export default function DoctorProfilePage() {
   }
 
   if (error || !doctor) {
-    return <ErrorBanner>{explainError((error as { error?: string })?.error ?? "", "Couldn't load your profile.")}</ErrorBanner>;
+    return (
+      <ErrorBanner>
+        {explainError((error as { error?: string })?.error ?? "", "Couldn't load your profile.")}
+      </ErrorBanner>
+    );
   }
 
   // The saved signature shows once it exists server-side and isn't being
   // cleared/replaced this session.
-  const showSavedSignature = hasDefaultSignature && !clearSignature && !replacingSignature && !signature;
+  const showSavedSignature =
+    hasDefaultSignature && !clearSignature && !replacingSignature && !signature;
 
   return (
     <div className="flex flex-col gap-8">
@@ -123,14 +134,20 @@ export default function DoctorProfilePage() {
         subtitle="Update your practice details, rubber stamp, and saved e-signature."
         action={
           <Button onClick={onSave} disabled={update.isPending}>
-            {update.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {update.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
             {update.isPending ? "Saving…" : "Save changes"}
           </Button>
         }
       />
 
       {update.isError && (
-        <ErrorBanner>{explainError(update.error?.error ?? "", "Couldn't save your changes.")}</ErrorBanner>
+        <ErrorBanner>
+          {explainError(update.error?.error ?? "", "Couldn't save your changes.")}
+        </ErrorBanner>
       )}
       {saved && (
         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700">
@@ -142,7 +159,9 @@ export default function DoctorProfilePage() {
       <Card>
         <CardHeader>
           <CardTitle>Identity</CardTitle>
-          <CardDescription>Managed by your administrator. Contact them to change these.</CardDescription>
+          <CardDescription>
+            Managed by your administrator. Contact them to change these.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <ReadOnly label="Name" value={`${doctor.givenName} ${doctor.familyName}`} />
@@ -160,14 +179,22 @@ export default function DoctorProfilePage() {
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <FieldText label="Contact number" value={text.contact} onChange={setField("contact")} />
-          <FieldText label="Institute name" value={text.instituteName} onChange={setField("instituteName")} />
+          <FieldText
+            label="Institute name"
+            value={text.instituteName}
+            onChange={setField("instituteName")}
+          />
           <FieldText
             label="Institute contact"
             value={text.instituteContact}
             onChange={setField("instituteContact")}
             placeholder="Optional"
           />
-          <FieldArea label="Qualifications" value={text.qualifications} onChange={setField("qualifications")} />
+          <FieldArea
+            label="Qualifications"
+            value={text.qualifications}
+            onChange={setField("qualifications")}
+          />
           <FieldArea
             label="Practitioner address"
             value={text.practitionerAddress}
@@ -200,15 +227,14 @@ export default function DoctorProfilePage() {
         <CardHeader>
           <CardTitle>Default e-signature</CardTitle>
           <CardDescription>
-            When set, it&rsquo;s applied automatically on every consultation — no need to sign each time. You can still
-            draw a one-off signature per consultation.
+            When set, it&rsquo;s applied automatically on every consultation — no need to sign each
+            time. You can still draw a one-off signature per consultation.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {showSavedSignature ? (
             <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
               <div className="flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-white">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`${MY_SIGNATURE_URL}?v=${sigVersion}`}
                   alt="Your saved e-signature"
@@ -216,11 +242,20 @@ export default function DoctorProfilePage() {
                 />
               </div>
               <div className="flex-1">
-                <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">Applied automatically when you finalise a consultation.</p>
+                <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
+                  Signature on file
+                </div>
+                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                  Applied automatically when you finalise a consultation.
+                </p>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Button type="button" variant="secondary" size="sm" onClick={() => setReplacingSignature(true)}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setReplacingSignature(true)}
+                >
                   <PenLine className="h-3.5 w-3.5" />
                   Replace
                 </Button>
@@ -240,8 +275,15 @@ export default function DoctorProfilePage() {
             </div>
           ) : clearSignature ? (
             <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 p-4 text-sm">
-              <span className="text-[var(--muted-foreground)]">Saved signature will be removed when you save.</span>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setClearSignature(false)}>
+              <span className="text-[var(--muted-foreground)]">
+                Saved signature will be removed when you save.
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setClearSignature(false)}
+              >
                 Undo
               </Button>
             </div>
@@ -265,7 +307,9 @@ function ReadOnly({ label, value, mono }: { label: string; value: string; mono?:
   return (
     <div className="flex flex-col gap-2">
       <Label>{label}</Label>
-      <div className={`rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm ${mono ? "font-mono" : ""}`}>
+      <div
+        className={`rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm ${mono ? "font-mono" : ""}`}
+      >
         {value}
       </div>
     </div>

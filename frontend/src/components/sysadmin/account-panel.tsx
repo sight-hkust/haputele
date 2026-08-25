@@ -77,7 +77,13 @@ export function AccountPanel({
               {ROLE_LABEL[account.role]} account
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close panel" className="-mr-2 -mt-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Close panel"
+            className="-mr-2 -mt-1 shrink-0"
+          >
             <X className="h-4 w-4" />
           </Button>
         </header>
@@ -120,7 +126,9 @@ function ManageableBody({
       <StatusHeader
         active={!isDisabled}
         label={isDisabled ? "Disabled" : "Active"}
-        sub={isDisabled && account.disabledAt ? `since ${fmtDateTime(account.disabledAt)}` : undefined}
+        sub={
+          isDisabled && account.disabledAt ? `since ${fmtDateTime(account.disabledAt)}` : undefined
+        }
       />
 
       <ProfileSection account={account} />
@@ -132,17 +140,25 @@ function ManageableBody({
             : "This account can sign in. Disable it to block access without losing its history."}
         </p>
         {isDisabled ? (
-          <Button variant="secondary" disabled={statusBusy} onClick={() => enable.mutate(account.username)}>
+          <Button
+            variant="secondary"
+            disabled={statusBusy}
+            onClick={() => enable.mutate(account.username)}
+          >
             <ShieldCheck className="h-4 w-4" />
             Enable sign-in
           </Button>
         ) : (
-          <Button variant="secondary" disabled={statusBusy} onClick={() => disable.mutate(account.username)}>
+          <Button
+            variant="secondary"
+            disabled={statusBusy}
+            onClick={() => disable.mutate(account.username)}
+          >
             <ShieldOff className="h-4 w-4" />
             Disable sign-in
           </Button>
         )}
-        {(disable.error || enable.error) ? (
+        {disable.error || enable.error ? (
           <ErrorBanner>{explainError((disable.error ?? enable.error)!.error)}</ErrorBanner>
         ) : null}
       </Section>
@@ -151,7 +167,8 @@ function ManageableBody({
 
       <Section title="Danger zone" tone="danger">
         <p className="text-sm text-[var(--muted-foreground)]">
-          Permanently delete this account. Blocked if it has created any records — disable it instead.
+          Permanently delete this account. Blocked if it has created any records — disable it
+          instead.
         </p>
         <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
           <Trash2 className="h-4 w-4" />
@@ -230,7 +247,11 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <StatusHeader active={d.active} label={d.active ? "Active" : "Inactive"} sub={doctorName(d)} />
+      <StatusHeader
+        active={d.active}
+        label={d.active ? "Active" : "Inactive"}
+        sub={doctorName(d)}
+      />
 
       {d.onboardingStatus === "awaiting_approval" && (
         <Card className="border-sky-200 bg-sky-50/50 p-4">
@@ -241,10 +262,16 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-sky-900">Awaiting your approval</p>
               <p className="mt-1 text-sm text-sky-800">
-                This doctor submitted their profile. Review the fields below, then approve to let them log in.
+                This doctor submitted their profile. Review the fields below, then approve to let
+                them log in.
               </p>
               <div className="mt-3 flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setRejectOpen(true)} disabled={approve.isPending || reject.isPending}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setRejectOpen(true)}
+                  disabled={approve.isPending || reject.isPending}
+                >
                   <ShieldX className="h-4 w-4" />
                   Reject
                 </Button>
@@ -258,7 +285,9 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
                   {approve.isPending ? "Approving…" : "Approve"}
                 </Button>
               </div>
-              {approve.error && <ErrorBanner className="mt-3">{explainError(approve.error.error)}</ErrorBanner>}
+              {approve.error && (
+                <ErrorBanner className="mt-3">{explainError(approve.error.error)}</ErrorBanner>
+              )}
             </div>
           </div>
         </Card>
@@ -289,7 +318,8 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-amber-900">Awaiting onboarding</p>
               <p className="mt-1 text-sm text-amber-800">
-                This doctor hasn&apos;t set their password yet. The most recent invite link is still active.
+                This doctor hasn&apos;t set their password yet. The most recent invite link is still
+                active.
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <Button
@@ -315,7 +345,9 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
                   </span>
                 )}
               </div>
-              {reissue.error && <ErrorBanner className="mt-3">{explainError(reissue.error.error)}</ErrorBanner>}
+              {reissue.error && (
+                <ErrorBanner className="mt-3">{explainError(reissue.error.error)}</ErrorBanner>
+              )}
             </div>
           </div>
         </Card>
@@ -374,7 +406,9 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
         title="Reject this submission?"
         description="The doctor won't be able to log in. They'll see the reason you enter below if they try."
       >
-        {reject.error && <ErrorBanner className="mb-3">{explainError(reject.error.error)}</ErrorBanner>}
+        {reject.error && (
+          <ErrorBanner className="mb-3">{explainError(reject.error.error)}</ErrorBanner>
+        )}
         <div className="mb-4 flex flex-col gap-2">
           <Label htmlFor="reject-reason">Reason (shown to the doctor)</Label>
           <Input
@@ -385,7 +419,11 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
           />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => setRejectOpen(false)} disabled={reject.isPending}>
+          <Button
+            variant="secondary"
+            onClick={() => setRejectOpen(false)}
+            disabled={reject.isPending}
+          >
             Cancel
           </Button>
           <Button
@@ -415,9 +453,15 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
         title="Deactivate this doctor?"
         description="The doctor stays in the database — past appointments and consultations are preserved — but they won't appear in healthworker booking. Reactivate any time."
       >
-        {deactivate.error && <ErrorBanner className="mb-3">{explainError(deactivate.error.error)}</ErrorBanner>}
+        {deactivate.error && (
+          <ErrorBanner className="mb-3">{explainError(deactivate.error.error)}</ErrorBanner>
+        )}
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => setConfirmOpen(false)} disabled={deactivate.isPending}>
+          <Button
+            variant="secondary"
+            onClick={() => setConfirmOpen(false)}
+            disabled={deactivate.isPending}
+          >
             Keep active
           </Button>
           <Button

@@ -84,7 +84,10 @@ export function NewDoctorSurface({
         {mode === "invite" ? (
           <InvitePanel onDone={() => router.push(returnHref)} />
         ) : (
-          <ManualPanel onCancel={() => router.push(returnHref)} onCreated={(id) => router.push(createdHref(id))} />
+          <ManualPanel
+            onCancel={() => router.push(returnHref)}
+            onCreated={(id) => router.push(createdHref(id))}
+          />
         )}
       </Card>
     </div>
@@ -133,16 +136,13 @@ export function InvitePanel({
         <div className="flex flex-col gap-1">
           <h2 className="font-display text-2xl tracking-[-0.01em]">Invite a doctor by email</h2>
           <p className="text-sm text-[var(--muted-foreground)]">
-            They&rsquo;ll receive a link to set up their account. Once they submit
-            their profile you&rsquo;ll be able to review and approve from the
-            doctor&rsquo;s page.
+            They&rsquo;ll receive a link to set up their account. Once they submit their profile
+            you&rsquo;ll be able to review and approve from the doctor&rsquo;s page.
           </p>
         </div>
       )}
 
-      {invite.error && (
-        <ErrorBanner>{explainError(invite.error.error)}</ErrorBanner>
-      )}
+      {invite.error && <ErrorBanner>{explainError(invite.error.error)}</ErrorBanner>}
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="invite-email">Doctor&rsquo;s email *</Label>
@@ -166,8 +166,8 @@ export function InvitePanel({
           placeholder="Perera"
         />
         <p className="text-xs text-[var(--muted-foreground)]">
-          Used only to personalise the invite email&rsquo;s greeting. The doctor
-          enters their full name themselves.
+          Used only to personalise the invite email&rsquo;s greeting. The doctor enters their full
+          name themselves.
         </p>
       </div>
 
@@ -268,11 +268,7 @@ function ModeCard({
           : "border-[var(--border)] bg-transparent hover:border-[var(--accent)]/40"
       }`}
     >
-      <div
-        className={`rounded-lg p-2 ${
-          selected ? "bg-[var(--accent)]/15" : "bg-[var(--muted)]"
-        }`}
-      >
+      <div className={`rounded-lg p-2 ${selected ? "bg-[var(--accent)]/15" : "bg-[var(--muted)]"}`}>
         <Icon
           className={`h-5 w-5 ${
             selected ? "text-[var(--accent)]" : "text-[var(--muted-foreground)]"
@@ -288,9 +284,7 @@ function ModeCard({
             </span>
           )}
         </span>
-        <span className="text-xs leading-snug text-[var(--muted-foreground)]">
-          {description}
-        </span>
+        <span className="text-xs leading-snug text-[var(--muted-foreground)]">{description}</span>
       </div>
     </button>
   );

@@ -11,7 +11,13 @@ import type { Profile } from "@/types/api";
 
 // Read-only profile summary used on the patient detail page. Empty profiles
 // get a CTA to create one — that's where the §"intake form" branches in.
-export function ProfileSummary({ profile, editHref }: { profile: Profile | null; editHref: string }) {
+export function ProfileSummary({
+  profile,
+  editHref,
+}: {
+  profile: Profile | null;
+  editHref: string;
+}) {
   if (!profile || isEmpty(profile)) {
     return (
       <Card className="p-8">
@@ -23,7 +29,8 @@ export function ProfileSummary({ profile, editHref }: { profile: Profile | null;
         </div>
         <h3 className="font-display text-xl tracking-[-0.01em]">No intake form yet</h3>
         <p className="mt-1.5 max-w-md text-sm text-[var(--muted-foreground)]">
-          Capture disease history, allergies, surgeries, existing meds, and lifestyle so the doctor has full context during the consultation.
+          Capture disease history, allergies, surgeries, existing meds, and lifestyle so the doctor
+          has full context during the consultation.
         </p>
         <Link href={editHref} className="mt-5 inline-block">
           <Button>

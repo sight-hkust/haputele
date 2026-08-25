@@ -70,6 +70,12 @@ services:
   api:
     build:
       context: ./backend
+      args:
+        # Image provenance surfaced by GET /health. CI bakes in the git ref,
+        # sha, and build timestamp; local builds use the dev markers.
+        BUILD_VERSION: ${BUILD_VERSION:-dev}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-hapu}:${POSTGRES_PASSWORD:-hapu}@db:5432/${POSTGRES_DB:-haputele}

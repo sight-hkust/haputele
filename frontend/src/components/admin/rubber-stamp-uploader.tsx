@@ -71,7 +71,9 @@ export function RubberStampUploader({
   // message rather than a server-side rejection after the whole form submits.
   const acceptEdited = (next: string) => {
     if (dataUrlByteSize(next) > MAX_OUTPUT_BYTES) {
-      setError("Stamp image is over 1 MB after processing — crop tighter or remove the background.");
+      setError(
+        "Stamp image is over 1 MB after processing — crop tighter or remove the background.",
+      );
       return;
     }
     setError(null);
@@ -97,7 +99,9 @@ export function RubberStampUploader({
           {...dropProps}
           className={
             "flex items-center gap-4 rounded-xl border bg-[var(--card)] p-4 transition-colors " +
-            (isDragging ? "border-[var(--accent)] bg-[var(--accent)]/[0.04]" : "border-[var(--border)]")
+            (isDragging
+              ? "border-[var(--accent)] bg-[var(--accent)]/[0.04]"
+              : "border-[var(--border)]")
           }
         >
           <button
@@ -107,8 +111,11 @@ export function RubberStampUploader({
             title="Click to enlarge"
             className="group relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 transition-colors hover:border-[var(--accent)]/40"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt="Rubber stamp preview" className="max-h-full max-w-full object-contain" />
+            <img
+              src={value}
+              alt="Rubber stamp preview"
+              className="max-h-full max-w-full object-contain"
+            />
           </button>
           <div className="flex-1">
             <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
@@ -137,32 +144,17 @@ export function RubberStampUploader({
               <Upload className="h-3.5 w-3.5" />
               Replace
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setCameraOpen(true)}
-            >
+            <Button type="button" variant="secondary" size="sm" onClick={() => setCameraOpen(true)}>
               <Camera className="h-3.5 w-3.5" />
               Take photo
             </Button>
             {enableQrCapture && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setQrOpen(true)}
-              >
+              <Button type="button" variant="secondary" size="sm" onClick={() => setQrOpen(true)}>
                 <Smartphone className="h-3.5 w-3.5" />
                 Use phone
               </Button>
             )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onChange(null)}
-            >
+            <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)}>
               <X className="h-3.5 w-3.5" />
               Clear
             </Button>
@@ -189,27 +181,18 @@ export function RubberStampUploader({
                 {isDragging ? "Drop image to upload" : "Upload rubber stamp"}
               </div>
               <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-                Drag &amp; drop or click · PNG or JPEG · &lt; 1 MB · crop &amp; remove background after upload
+                Drag &amp; drop or click · PNG or JPEG · &lt; 1 MB · crop &amp; remove background
+                after upload
               </div>
             </div>
           </button>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setCameraOpen(true)}
-            >
+            <Button type="button" variant="secondary" size="sm" onClick={() => setCameraOpen(true)}>
               <Camera className="h-3.5 w-3.5" />
               Take a photo instead
             </Button>
             {enableQrCapture && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setQrOpen(true)}
-              >
+              <Button type="button" variant="secondary" size="sm" onClick={() => setQrOpen(true)}>
                 <Smartphone className="h-3.5 w-3.5" />
                 Use phone camera
               </Button>
@@ -234,7 +217,6 @@ export function RubberStampUploader({
         className="max-w-2xl"
       >
         <div className="flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 p-6">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value ?? ""}
             alt="Rubber stamp full size"

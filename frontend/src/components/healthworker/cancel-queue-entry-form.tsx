@@ -29,7 +29,9 @@ export function CancelQueueEntryForm({
         onChange={(e) => setReason(e.target.value)}
         placeholder="Reason (optional) — e.g. patient declined"
       />
-      {cancel.error && <ErrorBanner>{explainError(cancel.error.error, cancel.error.message)}</ErrorBanner>}
+      {cancel.error && (
+        <ErrorBanner>{explainError(cancel.error.error, cancel.error.message)}</ErrorBanner>
+      )}
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose} disabled={cancel.isPending}>
           Back
@@ -41,7 +43,11 @@ export function CancelQueueEntryForm({
           }
           disabled={cancel.isPending}
         >
-          {cancel.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+          {cancel.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <X className="h-4 w-4" />
+          )}
           Cancel entry
         </Button>
       </div>

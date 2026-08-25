@@ -41,10 +41,7 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
           ) : (
             <ul className="flex flex-wrap gap-2">
               {values.diagnoses.map((d, i) => (
-                <li
-                  key={i}
-                  className="rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium"
-                >
+                <li key={i} className="rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium">
                   {d.code === "others" && d.text ? d.text : diagnosisLabel(d.code as never)}
                 </li>
               ))}
@@ -121,9 +118,7 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
 function ReviewBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 font-mono text-xs uppercase tracking-[0.15em] text-white/60">
-        {title}
-      </h3>
+      <h3 className="mb-3 font-mono text-xs uppercase tracking-[0.15em] text-white/60">{title}</h3>
       {children}
     </section>
   );

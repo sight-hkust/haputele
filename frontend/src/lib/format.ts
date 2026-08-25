@@ -111,13 +111,13 @@ export function doctorName(d: { givenName: string; familyName: string }): string
 // health worker the opposite of the truth, so never show the raw value: map it
 // to whatever is actually outstanding.
 const STATUS_LABELS: Record<string, string> = {
-  scheduled:       "Scheduled",
+  scheduled: "Scheduled",
   consent_pending: "Vitals pending",
   data_collection: "Ready to start",
-  in_progress:     "In progress",
-  awaiting_notes:  "Awaiting notes",
-  completed:       "Completed",
-  cancelled:       "Cancelled",
+  in_progress: "In progress",
+  awaiting_notes: "Awaiting notes",
+  completed: "Completed",
+  cancelled: "Cancelled",
 };
 
 export function statusLabel(s: string): string {

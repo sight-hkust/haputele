@@ -31,19 +31,14 @@ function useTimezoneOptions() {
     const groups: Record<string, string[]> = {};
     for (const tz of all) {
       const region = tz.includes("/") ? tz.split("/")[0] : "Other";
-      (groups[region] ??= []).push(tz);
+      if (!groups[region]) groups[region] = [];
+      groups[region].push(tz);
     }
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, []);
 }
 
-function TimezoneSelect({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const groups = useTimezoneOptions();
   return (
     <Select value={value} onChange={(e) => onChange(e.target.value)}>

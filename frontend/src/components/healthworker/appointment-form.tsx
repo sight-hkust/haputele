@@ -86,9 +86,7 @@ export function AppointmentForm({
   const watchedDoctorId = watch("doctorId");
   const watchedScheduledAt = watch("scheduledAt") ?? "";
   const doctorIdNum =
-    typeof watchedDoctorId === "number"
-      ? watchedDoctorId
-      : Number(watchedDoctorId) || 0;
+    typeof watchedDoctorId === "number" ? watchedDoctorId : Number(watchedDoctorId) || 0;
 
   // When the picker is in use (no preselected patient), we track the chosen
   // patient locally for the chip display.
@@ -104,16 +102,14 @@ export function AppointmentForm({
   // PATIENT → undefined → PATIENT when the user clicks "Change" and re-fire
   // the hydrate effect, which would silently re-hydrate the chip the user
   // just cleared. Using `enabled` alone is identity-stable.
-  const prefillQ = usePatient(
-    !hidePatientPicker && defaultPatientId ? defaultPatientId : null,
-    { enabled: !hidePatientPicker && !!defaultPatientId && !picked },
-  );
+  const prefillQ = usePatient(!hidePatientPicker && defaultPatientId ? defaultPatientId : null, {
+    enabled: !hidePatientPicker && !!defaultPatientId && !picked,
+  });
   useEffect(() => {
     if (!picked && prefillQ.data) {
       setPicked(prefillQ.data.patient);
       onPatientChange?.(prefillQ.data.patient.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillQ.data]);
 
   const submit = handleSubmit((v) =>

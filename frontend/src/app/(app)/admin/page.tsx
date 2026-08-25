@@ -51,8 +51,7 @@ const TABS: { key: Tab; label: string }[] = [
 export default function AdminDoctors() {
   const [tab, setTab] = useState<Tab>("all");
   const summary = useDoctorSummary();
-  const filter: DoctorListFilter | undefined =
-    tab === "all" ? undefined : { status: tab };
+  const filter: DoctorListFilter | undefined = tab === "all" ? undefined : { status: tab };
   const list = useDoctorList(filter);
   const invitesQuery = useDoctorInvites();
 
@@ -61,7 +60,7 @@ export default function AdminDoctors() {
   // waiting on the doctor to finish setup". They show on "All" and "Awaiting
   // setup", pinned above the doctor grid.
   const showInvites = tab === "all" || tab === "awaiting_setup";
-  const invites = showInvites ? invitesQuery.data ?? [] : [];
+  const invites = showInvites ? (invitesQuery.data ?? []) : [];
   const doctors = list.data ?? [];
 
   // Reject needs a reason, so it opens a modal targeting one doctor.
@@ -243,7 +242,9 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
       <div className="mt-4 flex items-center gap-2 border-t border-[var(--border)] pt-4">
         {confirmRevoke ? (
           <>
-            <span className="flex-1 text-xs text-[var(--muted-foreground)]">Revoke this invite?</span>
+            <span className="flex-1 text-xs text-[var(--muted-foreground)]">
+              Revoke this invite?
+            </span>
             <Button
               variant="destructive"
               size="sm"

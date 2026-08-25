@@ -10,7 +10,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
 import { Modal } from "@/components/primitives/modal";
 import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
-import { ApiError } from "@/lib/api";
+import type { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { rotateFile } from "@/lib/image-rotate";
 import {
@@ -79,7 +79,9 @@ export function AttachmentsPanel({
 
   const clearStaged = () => {
     setStaged((prev) => {
-      prev.forEach((s) => URL.revokeObjectURL(s.url));
+      prev.forEach((s) => {
+        URL.revokeObjectURL(s.url);
+      });
       return [];
     });
     setSelected(0);
@@ -89,8 +91,10 @@ export function AttachmentsPanel({
   // Object URLs outlive the component otherwise — revoke whatever is still
   // staged if the panel unmounts mid-review.
   useEffect(() => {
-    return () => staged.forEach((s) => URL.revokeObjectURL(s.url));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () =>
+      staged.forEach((s) => {
+        URL.revokeObjectURL(s.url);
+      });
   }, []);
 
   const uploadStaged = async () => {
@@ -109,9 +113,7 @@ export function AttachmentsPanel({
   };
 
   const turnBy = (delta: 90 | -90) =>
-    setStaged((prev) =>
-      prev.map((s, i) => (i === selected ? { ...s, turn: s.turn + delta } : s)),
-    );
+    setStaged((prev) => prev.map((s, i) => (i === selected ? { ...s, turn: s.turn + delta } : s)));
 
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -131,7 +133,9 @@ export function AttachmentsPanel({
       {...dropProps}
       className={
         "p-6 transition-colors " +
-        (isDragging ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--background)]" : "")
+        (isDragging
+          ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--background)]"
+          : "")
       }
     >
       <div className="mb-4 flex items-start gap-3">
@@ -219,7 +223,6 @@ export function AttachmentsPanel({
         <div className="flex flex-col gap-4">
           <div className="flex h-[45vh] items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-3">
             {staged[selected] && (
-              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={staged[selected].url}
                 alt={staged[selected].file.name}
@@ -253,7 +256,6 @@ export function AttachmentsPanel({
                     (i === selected ? "border-[var(--accent)]" : "border-[var(--border)]")
                   }
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={s.url}
                     alt={s.file.name}
@@ -319,7 +321,6 @@ function AttachmentThumb({
               title={attachment.caption || attachment.filename}
               className="block h-full w-full cursor-zoom-in"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={url}
                 alt={attachment.caption || attachment.filename}

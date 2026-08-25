@@ -36,7 +36,9 @@ export function DoctorNav() {
               <Icon
                 className={cn(
                   "h-4 w-4 transition-colors",
-                  active ? "text-[var(--accent)]" : "text-[var(--muted-foreground)] group-hover:text-[var(--accent)]",
+                  active
+                    ? "text-[var(--accent)]"
+                    : "text-[var(--muted-foreground)] group-hover:text-[var(--accent)]",
                 )}
               />
               {label}

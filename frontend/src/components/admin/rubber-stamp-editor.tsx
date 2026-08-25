@@ -120,7 +120,6 @@ export function RubberStampEditor({
               onComplete={(c) => setCompleted(c)}
               keepSelection
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 ref={imgRef}
                 src={displaySrc}
@@ -244,7 +243,7 @@ export function RubberStampEditor({
 
 function formatAngle(deg: number): string {
   // Normalise to (-180, 180] for display so 270° reads as -90° etc.
-  let a = ((deg + 180) % 360 + 360) % 360 - 180;
+  let a = ((((deg + 180) % 360) + 360) % 360) - 180;
   // Avoid `-0.0` slipping into the label.
   if (Object.is(a, -0)) a = 0;
   return a.toFixed(1).replace(/\.0$/, "");

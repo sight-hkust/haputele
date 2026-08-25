@@ -43,11 +43,7 @@ export function PatientSummary({
           {patient.given} {patient.family}
         </h2>
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-          {[
-            patient.gender,
-            age,
-            patient.dob ? `DOB ${fmtDate(patient.dob)}` : null,
-          ]
+          {[patient.gender, age, patient.dob ? `DOB ${fmtDate(patient.dob)}` : null]
             .filter(Boolean)
             .join(" · ")}
         </p>
@@ -87,11 +83,7 @@ export function PatientSummary({
           </div>
           <div className="grid grid-cols-3 gap-2">
             {attachments.map((a) => (
-              <DoctorAttachmentThumb
-                key={a.id}
-                attachment={a}
-                appointmentId={appointmentId}
-              />
+              <DoctorAttachmentThumb key={a.id} attachment={a} appointmentId={appointmentId} />
             ))}
           </div>
         </Card>
@@ -117,10 +109,16 @@ export function PatientSummary({
               }
               unit={preconsult.sysBp ? "mmHg" : undefined}
             />
-            <Vital label="Pulse" value={preconsult.pulse ? `${preconsult.pulse}` : "—"} unit="bpm" />
+            <Vital
+              label="Pulse"
+              value={preconsult.pulse ? `${preconsult.pulse}` : "—"}
+              unit="bpm"
+            />
             <Vital
               label="Temperature"
-              value={preconsult.temperature != null ? Number(preconsult.temperature).toFixed(1) : "—"}
+              value={
+                preconsult.temperature != null ? Number(preconsult.temperature).toFixed(1) : "—"
+              }
               unit={preconsult.temperature != null ? "°C" : undefined}
             />
           </dl>
@@ -163,7 +161,6 @@ function DoctorAttachmentThumb({
             title={attachment.caption || attachment.filename}
             className="block h-full w-full cursor-zoom-in"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={url}
               alt={attachment.caption || attachment.filename}
@@ -224,9 +221,7 @@ function ProfileFacts({ profile }: { profile: Profile }) {
   if (profile.medications.length) {
     sections.push({
       title: "Existing meds",
-      items: profile.medications.map((m) =>
-        [m.drug, m.dosage].filter(Boolean).join(" · "),
-      ),
+      items: profile.medications.map((m) => [m.drug, m.dosage].filter(Boolean).join(" · ")),
     });
   }
   if (profile.surgicalHistory.length) {

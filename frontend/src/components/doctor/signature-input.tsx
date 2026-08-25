@@ -100,8 +100,11 @@ export function SignatureInput({
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
           <div className="flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt="Saved e-signature preview" className="max-h-full max-w-full object-contain" />
+            <img
+              src={value}
+              alt="Saved e-signature preview"
+              className="max-h-full max-w-full object-contain"
+            />
           </div>
           <div className="flex-1">
             <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
@@ -124,15 +127,31 @@ export function SignatureInput({
   return (
     <div className="flex flex-col gap-3">
       <div className="inline-flex w-fit gap-1 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-1">
-        <ToggleButton Icon={Pencil} label="Draw" selected={mode === "draw"} onClick={() => setMode("draw")} />
-        <ToggleButton Icon={Upload} label="Upload" selected={mode === "upload"} onClick={() => setMode("upload")} />
+        <ToggleButton
+          Icon={Pencil}
+          label="Draw"
+          selected={mode === "draw"}
+          onClick={() => setMode("draw")}
+        />
+        <ToggleButton
+          Icon={Upload}
+          label="Upload"
+          selected={mode === "upload"}
+          onClick={() => setMode("upload")}
+        />
       </div>
 
       {mode === "draw" ? (
         <div className="flex flex-col gap-2">
           <SignatureCanvas ref={padRef} onChange={setHasInk} />
           <div className="flex justify-end">
-            <Button type="button" size="sm" variant="secondary" disabled={!hasInk} onClick={captureDrawing}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={!hasInk}
+              onClick={captureDrawing}
+            >
               Use this signature
             </Button>
           </div>
@@ -163,7 +182,13 @@ export function SignatureInput({
         </button>
       )}
 
-      <input ref={inputRef} type="file" accept={ACCEPTED.join(",")} onChange={handleFile} className="sr-only" />
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED.join(",")}
+        onChange={handleFile}
+        className="sr-only"
+      />
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
       <Modal

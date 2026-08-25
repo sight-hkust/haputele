@@ -38,6 +38,7 @@ Input.displayName = "Input";
 
 export const Label = forwardRef<HTMLLabelElement, LabelHTMLAttributes<HTMLLabelElement>>(
   ({ className, ...props }, ref) => (
+    // biome-ignore lint/a11y/noLabelWithoutControl: callers associate the control via htmlFor forwarded in props
     <label
       ref={ref}
       className={cn(

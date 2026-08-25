@@ -10,7 +10,7 @@ import { CancelQueueEntryForm } from "@/components/healthworker/cancel-queue-ent
 import { PatientContext } from "@/components/healthworker/patient-context";
 import { QueueEntryForm } from "@/components/healthworker/queue-entry-form";
 import { QueueRow } from "@/components/healthworker/queue-row";
-import { ApiError } from "@/lib/api";
+import type { ApiError } from "@/lib/api";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
@@ -99,7 +99,6 @@ function Workspace() {
       // Strip the param so a refresh doesn't keep re-entering from-queue mode.
       router.replace("/healthworker/appointments");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queueEntryQ.data, consumedQueueParam]);
 
   return (
@@ -131,9 +130,7 @@ function Workspace() {
             <BookingCard
               mode={bookingMode}
               setMode={setBookingMode}
-              initialPatientId={
-                initialPatientId ? Number(initialPatientId) : undefined
-              }
+              initialPatientId={initialPatientId ? Number(initialPatientId) : undefined}
               onBooked={(id) => router.push(`/healthworker/appointments/${id}`)}
               onBookQueueEntry={focusBookingCard}
               onQueueEntryBooked={() => queueQ.refetch()}
@@ -296,9 +293,7 @@ function BookingCard({
   const [activePatientId, setActivePatientId] = useState<number | undefined>(initialPatientId);
 
   const error =
-    create.error || book.error
-      ? explainError((create.error || book.error)!.error)
-      : null;
+    create.error || book.error ? explainError((create.error || book.error)!.error) : null;
   const submitting = create.isPending || book.isPending;
 
   const handleSubmit = (v: { patientId: number; doctorId: number; scheduledAt: string }) => {
@@ -322,10 +317,9 @@ function BookingCard({
   // Pre-fill values for from-queue mode. AppointmentForm reads these on mount;
   // we use a `key` so switching between fresh ↔ from-queue remounts the form.
   const formKey = mode.kind === "from-queue" ? `q-${mode.entry.id}` : "fresh";
-  const defaultPatientId =
-    mode.kind === "from-queue" ? mode.entry.patientId : initialPatientId;
+  const defaultPatientId = mode.kind === "from-queue" ? mode.entry.patientId : initialPatientId;
   const defaultDoctorId =
-    mode.kind === "from-queue" ? mode.entry.preferredDoctorId ?? undefined : undefined;
+    mode.kind === "from-queue" ? (mode.entry.preferredDoctorId ?? undefined) : undefined;
   const defaultScheduledAt =
     mode.kind === "from-queue" && mode.entry.targetDate
       ? `${mode.entry.targetDate}T09:00`
@@ -373,9 +367,7 @@ function BookingCard({
         submitting={submitting}
         errorMessage={error}
         onSubmit={handleSubmit}
-        onPatientChange={
-          mode.kind === "fresh" ? (id) => setActivePatientId(id) : undefined
-        }
+        onPatientChange={mode.kind === "fresh" ? (id) => setActivePatientId(id) : undefined}
         submitLabel={mode.kind === "from-queue" ? "Book from queue" : "Book appointment"}
       />
 

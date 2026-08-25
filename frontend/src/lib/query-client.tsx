@@ -27,7 +27,8 @@ export function QueryProvider({ children }: { children: ReactNode }) {
             staleTime: 30_000,
             refetchOnWindowFocus: false,
             retry(failureCount, error) {
-              if (error instanceof ApiError && error.status >= 400 && error.status < 500) return false;
+              if (error instanceof ApiError && error.status >= 400 && error.status < 500)
+                return false;
               return failureCount < 1;
             },
           },

@@ -38,7 +38,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v4
         id: filter
         with:
@@ -112,7 +112,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -148,10 +148,10 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
@@ -190,9 +190,19 @@ jobs:
             context: ./frontend
             image: ghcr.io/sight-hkust/haputele-frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: docker/setup-buildx-action@v3
+
+      # Image provenance baked into the backend image and surfaced by
+      # GET /health: version = git ref (v* tag or branch name), commit =
+      # checked-out sha, date = UTC build timestamp.
+      - name: Compute build provenance
+        id: provenance
+        run: |
+          echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "commit=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
 
       # Skip login on PRs from forks (no push, and GITHUB_TOKEN is read-only there).
       - name: Log in to GHCR
@@ -238,3 +248,6 @@ jobs:
             ${{ matrix.name == 'frontend' && 'NEXT_PUBLIC_APP_TIMEZONE=Asia/Colombo' || '' }}
             ${{ matrix.name == 'frontend' && format('NEXT_PUBLIC_APP_VERSION={0}', github.ref_type == 'tag' && github.ref_name || '') || '' }}
             ${{ matrix.name == 'frontend' && format('NEXT_PUBLIC_APP_REVISION={0}', github.sha) || '' }}
+            ${{ matrix.name == 'backend' && format('BUILD_VERSION={0}', steps.provenance.outputs.version) || '' }}
+            ${{ matrix.name == 'backend' && format('BUILD_DATE={0}', steps.provenance.outputs.date) || '' }}
+            ${{ matrix.name == 'backend' && format('BUILD_COMMIT={0}', steps.provenance.outputs.commit) || '' }}
