@@ -95,13 +95,12 @@ export function MeetingRoom({ token, serverUrl, onLeave }: Props) {
             onLeave();
             return;
           }
-          setFatal((prev) =>
-            prev ?? {
-              title: wasConnected.current
-                ? "The call dropped"
-                : "Couldn't connect to the call",
-              detail: reason !== undefined ? DROP_COPY[reason] : undefined,
-            },
+          setFatal(
+            (prev) =>
+              prev ?? {
+                title: wasConnected.current ? "The call dropped" : "Couldn't connect to the call",
+                detail: reason !== undefined ? DROP_COPY[reason] : undefined,
+              },
           );
         }}
         onError={(error) => {

@@ -51,9 +51,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             Couldn&apos;t reach the server
           </h1>
           <p className="max-w-md text-[var(--muted-foreground)]">
-            This page couldn&apos;t verify your session because the server
-            didn&apos;t respond. Your session is unaffected — check your
-            connection and try again.
+            This page couldn&apos;t verify your session because the server didn&apos;t respond. Your
+            session is unaffected — check your connection and try again.
           </p>
         </div>
         <Button onClick={retryBootstrap}>Try again</Button>

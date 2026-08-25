@@ -45,8 +45,8 @@ export default function GlobalError({
             Application error
           </h1>
           <p style={{ margin: 0, maxWidth: 420, color: "#6b7280", fontSize: 14, lineHeight: 1.6 }}>
-            The app failed to start. Your data is safe — reloading usually
-            fixes it. If it keeps happening, contact your administrator.
+            The app failed to start. Your data is safe — reloading usually fixes it. If it keeps
+            happening, contact your administrator.
           </p>
           <p
             style={{

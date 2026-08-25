@@ -14,7 +14,7 @@ import type { ApiError } from "@/lib/api";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
-import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import {
   useAppointmentList,

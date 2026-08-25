@@ -37,9 +37,7 @@ export function ErrorBanner({
       <div className="min-w-0 flex-1 leading-relaxed">
         {children}
         {requestId && (
-          <span className="mt-1 block font-mono text-xs opacity-70">
-            Reference: {requestId}
-          </span>
+          <span className="mt-1 block font-mono text-xs opacity-70">Reference: {requestId}</span>
         )}
       </div>
       {action && <div className="shrink-0 self-center">{action}</div>}
@@ -73,8 +71,7 @@ export function ApiErrorBanner({
 }) {
   if (!error) return null;
   const code = error.error ?? "request_failed";
-  const showReference =
-    !!error.requestId && (!isKnownErrorCode(code) || error.status >= 500);
+  const showReference = !!error.requestId && (!isKnownErrorCode(code) || error.status >= 500);
   return (
     <ErrorBanner
       className={className}

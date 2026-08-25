@@ -34,8 +34,12 @@ import {
 import { explainError } from "@/lib/error-codes";
 
 export default function DoctorAvailabilityPage() {
-  const { doctor, isLoading: doctorLoading, error: doctorError, refetch: refetchDoctor } =
-    useCurrentDoctor();
+  const {
+    doctor,
+    isLoading: doctorLoading,
+    error: doctorError,
+    refetch: refetchDoctor,
+  } = useCurrentDoctor();
 
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeekLocal(new Date()));
   const range = useMemo(() => weekRangeUtc(weekStart), [weekStart]);

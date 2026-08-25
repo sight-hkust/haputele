@@ -45,12 +45,10 @@ export default function RouteError({
         >
           Error
         </span>
-        <h1 className="font-display text-4xl tracking-[-0.02em] sm:text-5xl">
-          Something broke
-        </h1>
+        <h1 className="font-display text-4xl tracking-[-0.02em] sm:text-5xl">Something broke</h1>
         <p className="max-w-md text-[var(--muted-foreground)]">
-          An unexpected error occurred while rendering this page. Your data is
-          safe — try again, or head back and re-open the page.
+          An unexpected error occurred while rendering this page. Your data is safe — try again, or
+          head back and re-open the page.
         </p>
         {/* Ops handle: the message plus the digest Next assigns for prod
             stack matching. Safe to show — it's an internal tool and the

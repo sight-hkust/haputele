@@ -584,7 +584,12 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
           } catch {
             /* keep default */
           }
-          throw new ApiError(res.status, code, undefined, res.headers.get("X-Request-ID") ?? undefined);
+          throw new ApiError(
+            res.status,
+            code,
+            undefined,
+            res.headers.get("X-Request-ID") ?? undefined,
+          );
         }
         const blob = await res.blob();
         if (revoked) return;

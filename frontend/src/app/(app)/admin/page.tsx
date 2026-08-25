@@ -140,7 +140,7 @@ export default function AdminDoctors() {
         })}
       </div>
 
-      {(list.error || (showInvites && invitesQuery.error)) ? (
+      {list.error || (showInvites && invitesQuery.error) ? (
         <div className="flex flex-col gap-3">
           <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
           <ApiErrorBanner
