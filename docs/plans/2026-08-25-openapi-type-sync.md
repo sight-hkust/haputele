@@ -42,12 +42,23 @@
 | `GET /sysadmin/me` | `SysadminMeOut` |
 | `GET /sysadmin/system-config` | `SystemConfigOut` |
 | `PATCH /sysadmin/system-config` | `SystemConfigOut` |
+> **Erratum (executed state supersedes the code below):** during execution the invariant test's
+> detector proved blind to typed arrays (`response_model=list[...]`) and the real spec contains
+> 9 more no-contract JSON entries (binary streams + webhook acks). The committed file
+> `backend/tests/test_openapi_response_models.py` is canonical: it adds an `_is_typed` predicate
+> ($ref/anyOf/oneOf/allOf/properties/typed-items/primitive ⇒ typed; bare object/array ⇒ untyped)
+> and a 10-entry allowlist. Red state = exactly the 20 `_WRAPPED` endpoints.
 
 ### Decisions
 
 1. **Types only, not generated hooks.** `use-api.ts` (44KB of session-gated fetchers, typed `ApiError`, cross-key invalidation) stays hand-written. Kubb/orval hook generation would replace or duplicate it. Only the *types* are generated.
 2. **Alias layer, not consumer rewrite.** `types/api.ts` becomes a ~120-line alias module mapping legacy names (`Patient`) onto generated ones (`components["schemas"]["PatientOut"]`). All consumers unchanged; `tsc` proves parity.
 3. **Wire-identical refactor.** The new `response_model`s only *declare* what the handlers already return. Existing endpoint tests assert exact response JSON — passing unchanged is the proof. Two endpoints conditionally omit keys (`submit_consultation`'s `followUp*`, `cancel_appointment`'s `queueEntry`), so those two decorators also set `response_model_exclude_none=True` — otherwise FastAPI emits explicit `null`s where the wire previously had absent keys. Guard: `tests/test_appointment_cancel_lifecycle.py:163` asserts `"queueEntry" not in r.json()`.
+   > **Note (review finding, accepted):** `response_model_exclude_none=True` recurses into nested
+   > models, so inner Optional fields of the nested `*Out` objects (e.g. `appointment.cancellationReason`
+   > on a completed appt, `consultation.followUpDate`) are also omitted when None instead of sent as
+   > `null`. Accepted intentionally: no frontend consumer strict-compares these against `null` (verified
+   > by grep), all use truthiness/optional chaining.
 4. **Overlays stay hand-written.** `AppointmentStatus`, `LIVE_STATES`, `Role`, queue/code unions: the backend declares these as `str`/`Literal`s the UI needs narrower/differently. They live in the alias file, documented.
 5. **Commit `generated.ts`, don't commit the spec.** CI regenerates from committed backend code, so a checked-in spec would be a second artifact to drift.
 6. **Not in scope:** tightening `status: str` → `Literal` on backend models; typed error envelopes (`ApiError` stays custom); the raw-body `POST /doctor-onboarding/{token}/submit` endpoint (returns `Response` — no JSON content in the spec, frontend treats it opaquely).

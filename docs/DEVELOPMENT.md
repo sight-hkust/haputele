@@ -68,3 +68,28 @@ All code changes must go through a Pull Request before merging into `main`.
    * PRs require at least one approved code review from a teammate.
    * Ensure all CI workflows/tests pass successfully.
    * Use **Squash and Merge** when merging to keep the `main` branch history clean.
+
+---
+
+## 5. API Contract Sync (OpenAPI → TypeScript)
+
+Backend Pydantic models are the single source of truth for the wire contract.
+`frontend/src/types/generated.ts` is generated from the backend's OpenAPI
+spec; `frontend/src/types/api.ts` is a thin alias layer over it (plus a few
+hand-written unions the spec can't express).
+
+**When a backend PR adds or changes an endpoint schema:**
+
+1. Declare every JSON response as a Pydantic model (`response_model=`), never
+   a bare `dict` — `backend/tests/test_openapi_response_models.py` fails CI
+   on any untyped JSON response.
+2. Regenerate the frontend types:
+   ```bash
+   python backend/app/scripts/export_openapi.py frontend/openapi.json
+   cd frontend && npm run generate:api
+   ```
+3. If a schema was renamed, update the alias in `frontend/src/types/api.ts`.
+   The old name must keep pointing at the new schema — call sites stay stable.
+4. Commit `frontend/src/types/generated.ts` in the same PR as the backend
+   change. CI (`api-types-drift` job) regenerates from the committed backend
+   code and fails on any diff.
