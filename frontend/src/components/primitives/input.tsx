@@ -58,9 +58,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             "disabled:cursor-not-allowed disabled:opacity-50",
           )}
         >
-          {passwordVisible
-            ? <EyeOff className="h-4 w-4" aria-hidden="true" />
-            : <Eye className="h-4 w-4" aria-hidden="true" />}
+          {passwordVisible ? (
+            <EyeOff className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Eye className="h-4 w-4" aria-hidden="true" />
+          )}
         </button>
       </div>
     );
