@@ -1,13 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/primitives/button";
+import { DatePicker } from "@/components/primitives/date-picker";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
+import { displayDob, maskDobInput, parseDob } from "@/lib/dob-date";
+import { appToday } from "@/lib/format";
 import type { Lang, Patient, PatientCreateRequest, PatientUpdateRequest } from "@/types/api";
 
 // `nationalId` ∈ {10, 12} is enforced server-side; we mirror the rule client-side
@@ -19,7 +22,13 @@ const baseSchema = z.object({
   // Required: the prescription PDF must carry the patient's age (§1.7) and
   // derives it from dob. Enforced here as well as server-side so a health
   // worker finds out at intake rather than the doctor finding out at signing.
-  dob: z.string().min(1, "Date of birth is required"),
+  dob: z
+    .string()
+    .refine((value) => !value || parseDob(value) !== null, "Enter a valid date in DD/MM/YYYY")
+    .refine((value) => {
+      const dob = parseDob(value);
+      return !dob || dob <= appToday();
+    }, "Date of birth cannot be in the future"),
   language: z
     .enum(["en", "ta", "si"])
     .optional()
@@ -33,6 +42,11 @@ const baseSchema = z.object({
     }),
   contact: z.string().optional(),
   address: z.string().optional(),
+});
+
+const createSchema = baseSchema.refine((value) => value.dob.trim().length > 0, {
+  path: ["dob"],
+  message: "Date of birth is required",
 });
 
 type FormValues = z.infer<typeof baseSchema>;
@@ -66,15 +80,18 @@ export function PatientForm({
 }) {
   const {
     register,
+    control,
+    setValue,
+    trigger,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(baseSchema),
+    resolver: zodResolver(mode === "create" ? createSchema : baseSchema),
     defaultValues: {
       given: initial?.given ?? "",
       family: initial?.family ?? "",
       gender: initial?.gender ?? "",
-      dob: initial?.dob ?? "",
+      dob: displayDob(initial?.dob),
       language: (initial?.language as Lang) ?? "",
       screeningRef: initial?.screeningRef ?? "",
       nationalId: initial?.nationalId ?? "",
@@ -84,22 +101,23 @@ export function PatientForm({
   });
 
   const submit = handleSubmit((v) => {
+    const dob = parseDob(v.dob);
     const payload = {
       given: v.given.trim(),
       family: v.family.trim(),
       gender: v.gender,
-      // Not `strip()`d like the optional fields below: zod guarantees a
-      // non-empty value, and strip's `string | undefined` return would widen
-      // it back out of the now-required `PatientCreateRequest["dob"]`.
-      dob: v.dob,
       language: (strip(v.language as string) as Lang | undefined) ?? undefined,
       screeningRef: strip(v.screeningRef),
       nationalId: strip(v.nationalId),
       contact: strip(v.contact),
       address: strip(v.address),
     };
-    if (mode === "create") onSubmit({ mode: "create", payload });
-    else onSubmit({ mode: "update", payload });
+    if (mode === "create") {
+      if (!dob) return;
+      onSubmit({ mode: "create", payload: { ...payload, dob } });
+    } else {
+      onSubmit({ mode: "update", payload: { ...payload, dob } });
+    }
   });
 
   return (
@@ -114,7 +132,31 @@ export function PatientForm({
           <Input id="family" {...register("family")} />
         </Field>
         <Field label="Date of birth" htmlFor="dob" error={errors.dob?.message}>
-          <Input id="dob" type="date" {...register("dob")} />
+          <Controller
+            name="dob"
+            control={control}
+            render={({ field }) => (
+              <DobInput
+                inputRef={field.ref}
+                value={field.value ?? ""}
+                invalid={Boolean(errors.dob)}
+                onChange={field.onChange}
+                onPickerChange={(value) =>
+                  setValue("dob", value, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: true,
+                  })
+                }
+                onBlur={() => {
+                  const dob = parseDob(field.value);
+                  if (dob) field.onChange(displayDob(dob));
+                  field.onBlur();
+                  void trigger("dob");
+                }}
+              />
+            )}
+          />
         </Field>
         <Field label="Gender" htmlFor="gender" error={errors.gender?.message}>
           <Select id="gender" {...register("gender")}>
@@ -163,6 +205,50 @@ export function PatientForm({
   );
 }
 
+function DobInput({
+  inputRef,
+  value,
+  invalid,
+  onChange,
+  onPickerChange,
+  onBlur,
+}: {
+  inputRef: (instance: HTMLInputElement | null) => void;
+  value: string;
+  invalid: boolean;
+  onChange: (value: string) => void;
+  onPickerChange: (value: string) => void;
+  onBlur: () => void;
+}) {
+  const today = appToday();
+
+  return (
+    <div className="flex items-center gap-3">
+      <Input
+        ref={inputRef}
+        id="dob"
+        name="dob"
+        type="text"
+        inputMode="numeric"
+        placeholder="dd/mm/yyyy"
+        maxLength={10}
+        value={value}
+        aria-invalid={invalid}
+        aria-describedby={invalid ? "dob-error" : undefined}
+        onChange={(event) => onChange(maskDobInput(event.target.value, value))}
+        onBlur={onBlur}
+      />
+      <DatePicker
+        trigger="icon"
+        ariaLabel="Choose date of birth from calendar"
+        max={today}
+        value={parseDob(value) ?? ""}
+        onChange={(date) => onPickerChange(displayDob(date))}
+      />
+    </div>
+  );
+}
+
 function Field({
   label,
   htmlFor,
@@ -178,7 +264,11 @@ function Field({
     <div className="flex flex-col gap-2">
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
-      {error && <p className="text-xs text-rose-600">{error}</p>}
+      {error && (
+        <p id={`${htmlFor}-error`} className="text-xs text-rose-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
