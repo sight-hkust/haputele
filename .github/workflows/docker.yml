@@ -194,6 +194,16 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      # Image provenance baked into the backend image and surfaced by
+      # GET /health: version = git ref (v* tag or branch name), commit =
+      # checked-out sha, date = UTC build timestamp.
+      - name: Compute build provenance
+        id: provenance
+        run: |
+          echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "commit=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
       # Skip login on PRs from forks (no push, and GITHUB_TOKEN is read-only there).
       - name: Log in to GHCR
         if: github.event_name != 'pull_request'
@@ -236,3 +246,6 @@ jobs:
           build-args: |
             ${{ matrix.name == 'frontend' && 'NEXT_PUBLIC_API_URL=' || '' }}
             ${{ matrix.name == 'frontend' && 'NEXT_PUBLIC_APP_TIMEZONE=Asia/Colombo' || '' }}
+            ${{ matrix.name == 'backend' && format('BUILD_VERSION={0}', steps.provenance.outputs.version) || '' }}
+            ${{ matrix.name == 'backend' && format('BUILD_DATE={0}', steps.provenance.outputs.date) || '' }}
+            ${{ matrix.name == 'backend' && format('BUILD_COMMIT={0}', steps.provenance.outputs.commit) || '' }}

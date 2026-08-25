@@ -33,18 +33,48 @@ from ..errors import not_found
 _logger = logging.getLogger("haputele.storage")
 
 
-@lru_cache(maxsize=1)
-def get_s3_client():
-    return boto3.client(
-        "s3",
+def _s3_client_kwargs() -> dict:
+    """The single place S3_* settings become boto3 client wiring. The app
+    client and the health-probe client both build on it, so the probe can
+    never drift from the endpoint / credentials / addressing style the app
+    actually talks to."""
+    return dict(
         endpoint_url=settings.S3_ENDPOINT_URL or None,
         region_name=settings.S3_REGION,
         aws_access_key_id=settings.S3_ACCESS_KEY_ID or None,
         aws_secret_access_key=settings.S3_SECRET_ACCESS_KEY or None,
-        config=Config(
-            signature_version="s3v4",
-            s3={"addressing_style": "path" if settings.S3_FORCE_PATH_STYLE else "auto"},
-            retries={"max_attempts": 3, "mode": "standard"},
+    )
+
+
+def _s3_client_config(**extra) -> Config:
+    return Config(
+        signature_version="s3v4",
+        s3={"addressing_style": "path" if settings.S3_FORCE_PATH_STYLE else "auto"},
+        **extra,
+    )
+
+
+@lru_cache(maxsize=1)
+def get_s3_client():
+    return boto3.client(
+        "s3",
+        **_s3_client_kwargs(),
+        config=_s3_client_config(retries={"max_attempts": 3, "mode": "standard"}),
+    )
+
+
+def get_probe_s3_client(timeout_s: float):
+    """Short-timeout, no-retry client for the health probe
+    (services/health_probe.py). Fresh client per call at probe tempo —
+    deliberately not the cached app client, whose retries would make a
+    degraded store look slower than it is."""
+    return boto3.client(
+        "s3",
+        **_s3_client_kwargs(),
+        config=_s3_client_config(
+            connect_timeout=timeout_s,
+            read_timeout=timeout_s,
+            retries={"max_attempts": 1},
         ),
     )
 

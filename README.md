@@ -22,7 +22,9 @@ Once the containers are up:
 | Setup status | http://localhost:8000/setup/status |
 | Object store (rustfs console) | http://localhost:9001 (login with `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`) |
 
-Boot sequence (`backend/entrypoint.sh`): wait for Postgres → `alembic upgrade head` → `python -m app.scripts.bootstrap_setup_token` (generates/reuses the first-run setup token) → `exec uvicorn`. On startup the API's lifespan also calls `ensure_bucket()` and refuses to come up against a missing/unreachable object store. `api` waits for both `db` and `rustfs` to pass their healthchecks before starting; `frontend` only `depends_on` `api` (no health condition), so it may come up momentarily before the API is serving.
+`GET /health` is a pure liveness probe (no DB/S3 dependency) returning `{"status": "ok", "uptime": <seconds>, "version": <git ref>, "build_date": <UTC ISO-8601 build timestamp>, "hostname": <container hostname>, "commit": <git sha>}`. `version` / `build_date` / `commit` are baked into the image at build time (CI passes the git ref, sha, and build timestamp; local builds fall back to `dev` / `unknown` markers).
+
+`?full=true` switches `/health` to a readiness probe: Postgres (`SELECT 1`), the object store (`head_bucket`), and LiveKit (TCP reachability of `LIVEKIT_URL`; empty URL → `not_configured`, which is not a failure) are checked concurrently. Every check is hard-bounded at ~2s and the whole probe is capped at 3s — a hung check is abandoned and reported as `timed out`, so the response can never stall. The response gains a `dependencies` block where each probed entry carries its measured `latency_ms`; error entries carry the exception class name only (internal endpoints stay out of the unauthenticated body; full detail goes to the api logs). Any failing configured dependency → `status: "degraded"` + `503`. Results are single-flight and cached for ~2s, so hammering the probe does not multiply connections to the backing services.
 
 ### First-run setup
 
