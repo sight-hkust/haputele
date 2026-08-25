@@ -45,7 +45,15 @@ def _bearer(token: str) -> dict[str, str]:
 def test_health_open_when_uninitialized(client):
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok"}
+    body = r.json()
+    assert body["status"] == "ok"
+    # Liveness probe — no DB/S3 dependency, so uptime and identity fields
+    # must be present even before /setup/initialize.
+    assert isinstance(body["uptime"], (int, float)) and body["uptime"] >= 0
+    assert isinstance(body["version"], str)
+    assert isinstance(body["buildDate"], str)
+    assert isinstance(body["hostname"], str) and body["hostname"]
+    assert isinstance(body["commit"], str)
 
 
 def test_status_open_when_uninitialized(client):

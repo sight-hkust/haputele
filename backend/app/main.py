@@ -35,6 +35,7 @@ from .routers import (
 )
 from .services.storage import ensure_bucket
 from .services.system_config import load_system_config
+from .version import BUILD_DATE, COMMIT, VERSION, hostname, uptime_seconds
 
 
 _logger = logging.getLogger("haputele")
@@ -199,7 +200,14 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["meta"])
     def health() -> dict:
-        return {"status": "ok"}
+        return {
+            "status": "ok",
+            "uptime": round(uptime_seconds(), 3),
+            "version": VERSION,
+            "buildDate": BUILD_DATE,
+            "hostname": hostname(),
+            "commit": COMMIT,
+        }
 
     return app
 

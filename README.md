@@ -22,7 +22,7 @@ Once the containers are up:
 | Setup status | http://localhost:8000/setup/status |
 | Object store (rustfs console) | http://localhost:9001 (login with `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`) |
 
-Boot sequence (`backend/entrypoint.sh`): wait for Postgres → `alembic upgrade head` → `python -m app.scripts.bootstrap_setup_token` (generates/reuses the first-run setup token) → `exec uvicorn`. On startup the API's lifespan also calls `ensure_bucket()` and refuses to come up against a missing/unreachable object store. `api` waits for both `db` and `rustfs` to pass their healthchecks before starting; `frontend` only `depends_on` `api` (no health condition), so it may come up momentarily before the API is serving.
+`GET /health` is a pure liveness probe (no DB/S3 dependency) returning `{"status": "ok", "uptime": <seconds>, "version": <git ref>, "buildDate": <UTC ISO-8601 build timestamp>, "hostname": <container hostname>, "commit": <git sha>}`. `version` / `buildDate` / `commit` are baked into the image at build time (CI passes the git ref, sha, and build timestamp; local builds fall back to `dev` / `unknown` markers).
 
 ### First-run setup
 
