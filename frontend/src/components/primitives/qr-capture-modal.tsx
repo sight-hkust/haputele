@@ -47,9 +47,9 @@ export function QrCaptureModal({
   const qc = useQueryClient();
   const create = useCreateCaptureSession();
 
-  const [session, setSession] = useState<
-    { id: number; token: string; expiresAt: string } | null
-  >(null);
+  const [session, setSession] = useState<{ id: number; token: string; expiresAt: string } | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [relayDone, setRelayDone] = useState(false);
 
@@ -98,7 +98,6 @@ export function QrCaptureModal({
       active = false;
       if (createdId != null) closeSession(createdId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const status = useCaptureSessionStatus(session?.id ?? null, {
@@ -149,7 +148,6 @@ export function QrCaptureModal({
         }
       })();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status.data?.uploadCount, status.data?.relayReady, status.data?.closed]);
 
   const regenerate = () => {
@@ -220,9 +218,8 @@ export function QrCaptureModal({
               ) : (
                 <>
                   <p className="text-center text-sm text-[var(--muted-foreground)]">
-                    Scan this with any phone&rsquo;s camera. It opens a page that
-                    takes the photo and sends it here — nothing is saved on the
-                    phone or this computer.
+                    Scan this with any phone&rsquo;s camera. It opens a page that takes the photo
+                    and sends it here — nothing is saved on the phone or this computer.
                   </p>
 
                   <div className="relative rounded-xl border border-[var(--border)] bg-white p-4">
@@ -258,8 +255,7 @@ export function QrCaptureModal({
                     </div>
                   ) : (
                     <p className="text-center text-sm text-[var(--muted-foreground)]">
-                      Waiting for the photo… it&rsquo;ll drop into the editor
-                      automatically.
+                      Waiting for the photo… it&rsquo;ll drop into the editor automatically.
                     </p>
                   )}
                 </>

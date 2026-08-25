@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import {
-  ExternalLink,
-  FileSignature,
-  Stethoscope,
-} from "lucide-react";
+import { ExternalLink, FileSignature, Stethoscope } from "lucide-react";
 
 import { PatientSummary } from "@/components/doctor/patient-summary";
 import { VisitHistoryPanel } from "@/components/doctor/visit-history";
@@ -96,8 +92,8 @@ export default function DoctorAppointmentDetail() {
                   : "Open the consultation while you talk"}
               </h2>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                Three stages — notes, prescription, then review &amp; sign. Drafts persist between stages so
-                you can step away and come back.
+                Three stages — notes, prescription, then review &amp; sign. Drafts persist between
+                stages so you can step away and come back.
               </p>
 
               {draft.error && (
@@ -115,9 +111,7 @@ export default function DoctorAppointmentDetail() {
 
           {isCompleted && consultation && (
             <Card variant="elevated" className="p-8">
-              <h2 className="font-display text-2xl tracking-[-0.01em]">
-                Consultation completed
-              </h2>
+              <h2 className="font-display text-2xl tracking-[-0.01em]">Consultation completed</h2>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
                 Signed and locked. Open the record to review the diagnoses, prescription, and notes.
               </p>
@@ -144,10 +138,7 @@ export default function DoctorAppointmentDetail() {
                 attachments={attachments ?? []}
                 appointmentId={appointment.id}
               />
-              <VisitHistoryPanel
-                patientId={patient.id}
-                excludeAppointmentId={appointment.id}
-              />
+              <VisitHistoryPanel patientId={patient.id} excludeAppointmentId={appointment.id} />
             </>
           ) : (
             <Card className="p-6">

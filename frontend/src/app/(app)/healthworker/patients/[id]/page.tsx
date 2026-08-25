@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  CalendarPlus,
-  ClipboardList,
-  History,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { CalendarPlus, ClipboardList, History, Pencil, Trash2 } from "lucide-react";
 
 import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
@@ -20,12 +14,7 @@ import { PageHeader } from "@/components/primitives/page-header";
 import { StatusBadge } from "@/components/primitives/status-badge";
 import { PatientForm } from "@/components/healthworker/patient-form";
 import { ProfileSummary } from "@/components/healthworker/profile-summary";
-import {
-  useDeletePatient,
-  usePatient,
-  usePatientHistory,
-  useUpdatePatient,
-} from "@/lib/use-api";
+import { useDeletePatient, usePatient, usePatientHistory, useUpdatePatient } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { fmtAge, fmtDate, fmtDateTime, fullName } from "@/lib/format";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
@@ -119,11 +108,7 @@ export default function PatientDetailPage() {
               value={patient.language ? patient.language.toUpperCase() : "—"}
             />
             <Field label="Screening ref" value={patient.screeningRef ?? "—"} mono />
-            <Field
-              className="sm:col-span-2"
-              label="Address"
-              value={patient.address ?? "—"}
-            />
+            <Field className="sm:col-span-2" label="Address" value={patient.address ?? "—"} />
           </dl>
         </Card>
 
@@ -189,9 +174,7 @@ export default function PatientDetailPage() {
         title="Delete this patient?"
         description="The record is soft-deleted — past appointments are preserved, but the patient won't appear in lists or be available for new appointments."
       >
-        {del.error && (
-          <ErrorBanner className="mb-3">{explainError(del.error.error)}</ErrorBanner>
-        )}
+        {del.error && <ErrorBanner className="mb-3">{explainError(del.error.error)}</ErrorBanner>}
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setDeleteOpen(false)} disabled={del.isPending}>
             Keep

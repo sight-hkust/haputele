@@ -25,12 +25,7 @@ export class ApiError extends Error {
   // quote it in a bug report and we can grep the server logs for that id.
   requestId?: string;
 
-  constructor(
-    status: number,
-    error: string,
-    detail?: Record<string, unknown>,
-    requestId?: string,
-  ) {
+  constructor(status: number, error: string, detail?: Record<string, unknown>, requestId?: string) {
     super(error);
     this.status = status;
     this.error = error;

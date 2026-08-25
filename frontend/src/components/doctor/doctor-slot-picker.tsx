@@ -61,15 +61,11 @@ export function DoctorSlotPicker({
   const [weeksAhead, setWeeksAhead] = useState<number>(() => {
     if (value) {
       try {
-        const valueLocal = fromZonedTime(
-          value.replace("T", " ") + ":00",
-          APP_TIMEZONE,
-        );
+        const valueLocal = fromZonedTime(value.replace("T", " ") + ":00", APP_TIMEZONE);
         const valueWeekStart = startOfWeekLocal(valueLocal);
         const todayWeekStart = startOfWeekLocal(new Date());
         const diffWeeks = Math.round(
-          (valueWeekStart.getTime() - todayWeekStart.getTime()) /
-            (7 * 86_400_000),
+          (valueWeekStart.getTime() - todayWeekStart.getTime()) / (7 * 86_400_000),
         );
         return Math.max(0, diffWeeks);
       } catch {
@@ -98,7 +94,10 @@ export function DoctorSlotPicker({
     const startZoned = startOfWeekLocal(new Date());
     const endZoned = addDays(startZoned, HORIZON_WEEKS * 7);
     return {
-      from: fromZonedTime(`${format(startZoned, "yyyy-MM-dd")} 00:00:00`, APP_TIMEZONE).toISOString(),
+      from: fromZonedTime(
+        `${format(startZoned, "yyyy-MM-dd")} 00:00:00`,
+        APP_TIMEZONE,
+      ).toISOString(),
       to: fromZonedTime(`${format(endZoned, "yyyy-MM-dd")} 00:00:00`, APP_TIMEZONE).toISOString(),
     };
   }, []);
@@ -258,12 +257,7 @@ export function DoctorSlotPicker({
           <ChevronRight className="h-4 w-4" />
         </Button>
         {weeksAhead !== 0 && (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setWeeksAhead(0)}
-          >
+          <Button type="button" variant="secondary" size="sm" onClick={() => setWeeksAhead(0)}>
             This week
           </Button>
         )}
@@ -289,9 +283,7 @@ export function DoctorSlotPicker({
                   </span>
                   {slots.length === 0 ? (
                     <span className="text-xs text-[var(--muted-foreground)]">
-                      {declaredDays.has(d.ymd)
-                        ? "No slots remaining"
-                        : "No declared availability"}
+                      {declaredDays.has(d.ymd) ? "No slots remaining" : "No declared availability"}
                     </span>
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
@@ -348,9 +340,7 @@ export function DoctorSlotPicker({
         {valueOutsideDeclared && (
           <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <span>
-              Outside declared availability — that&rsquo;s fine, just confirming.
-            </span>
+            <span>Outside declared availability — that&rsquo;s fine, just confirming.</span>
           </div>
         )}
       </div>

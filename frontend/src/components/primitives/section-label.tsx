@@ -16,10 +16,7 @@ export function SectionLabel({ children, pulse = false, className }: SectionLabe
       )}
     >
       <span
-        className={cn(
-          "h-2 w-2 rounded-full bg-[var(--accent)]",
-          pulse && "animate-pulse-soft",
-        )}
+        className={cn("h-2 w-2 rounded-full bg-[var(--accent)]", pulse && "animate-pulse-soft")}
         aria-hidden
       />
       <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">

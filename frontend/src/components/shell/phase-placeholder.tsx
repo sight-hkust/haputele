@@ -46,8 +46,7 @@ export function PhasePlaceholder({
         variants={fadeInUp}
         className="mt-6 max-w-3xl font-display text-[2.5rem] leading-[1.08] tracking-[-0.02em] sm:text-[3.25rem]"
       >
-        {title}{" "}
-        <span className="gradient-text">{highlight}</span>
+        {title} <span className="gradient-text">{highlight}</span>
       </motion.h1>
 
       <motion.p
@@ -57,18 +56,11 @@ export function PhasePlaceholder({
         {subtitle}
       </motion.p>
 
-      <motion.div
-        variants={fadeInUp}
-        className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-      >
+      <motion.div variants={fadeInUp} className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((f, i) => {
           const { Icon } = f;
           return (
-            <Card
-              key={i}
-              interactive
-              className="group relative overflow-hidden p-6"
-            >
+            <Card key={i} interactive className="group relative overflow-hidden p-6">
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--accent)]/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <div className="relative flex flex-col gap-4">
                 <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] text-white shadow-accent transition-transform duration-300 group-hover:scale-110">

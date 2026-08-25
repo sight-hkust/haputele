@@ -5,7 +5,13 @@ import { addDays, format } from "date-fns";
 import { Copy, Loader2, Save } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/primitives/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { PageHeader } from "@/components/primitives/page-header";
@@ -148,7 +154,11 @@ export default function DoctorAvailabilityPage() {
                 disabled={dirty || cells.size === 0}
               />
               <Button onClick={saveWeek} disabled={saving || !dirty}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 {saving ? "Saving…" : "Save week"}
               </Button>
             </div>
@@ -171,7 +181,8 @@ export default function DoctorAvailabilityPage() {
                   "repeating-linear-gradient(45deg, transparent 0, transparent 4px, rgba(15, 23, 42, 0.22) 4px, rgba(15, 23, 42, 0.22) 7px)",
               }}
             />
-            Hatched cells already have a booked appointment — informational only, you can still paint over them.
+            Hatched cells already have a booked appointment — informational only, you can still
+            paint over them.
           </p>
           <WeekGrid
             weekStart={weekStart}

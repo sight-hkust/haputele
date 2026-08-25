@@ -27,22 +27,23 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
 );
 Select.displayName = "Select";
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  ({ className, rows = 4, autoComplete = "off", ...props }, ref) => (
-    <textarea
-      ref={ref}
-      rows={rows}
-      autoComplete={autoComplete}
-      className={cn(
-        "flex w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm",
-        "text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:border-transparent",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        "transition-all duration-200 resize-y",
-        className,
-      )}
-      {...props}
-    />
-  ),
-);
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  TextareaHTMLAttributes<HTMLTextAreaElement>
+>(({ className, rows = 4, autoComplete = "off", ...props }, ref) => (
+  <textarea
+    ref={ref}
+    rows={rows}
+    autoComplete={autoComplete}
+    className={cn(
+      "flex w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm",
+      "text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:border-transparent",
+      "disabled:cursor-not-allowed disabled:opacity-50",
+      "transition-all duration-200 resize-y",
+      className,
+    )}
+    {...props}
+  />
+));
 Textarea.displayName = "Textarea";

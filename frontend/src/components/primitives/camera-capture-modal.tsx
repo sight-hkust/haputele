@@ -73,7 +73,9 @@ export function CameraCaptureModal({
           audio: false,
         });
         if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
+          stream.getTracks().forEach((t) => {
+            t.stop();
+          });
           return;
         }
         streamRef.current = stream;
@@ -103,7 +105,9 @@ export function CameraCaptureModal({
 
     return () => {
       cancelled = true;
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => {
+        t.stop();
+      });
       streamRef.current = null;
     };
   }, [open, facing]);
@@ -122,7 +126,9 @@ export function CameraCaptureModal({
   useEffect(
     () => () => {
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => {
+        t.stop();
+      });
     },
     [],
   );
@@ -193,18 +199,14 @@ export function CameraCaptureModal({
             <div className="flex flex-1 items-center justify-center overflow-hidden bg-black p-0">
               <div className="relative flex aspect-[4/3] w-full items-center justify-center">
                 {/* Live preview — hidden once a shot is taken. */}
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <video
                   ref={videoRef}
                   playsInline
                   muted
-                  className={
-                    "h-full w-full object-contain " + (shot ? "hidden" : "block")
-                  }
+                  className={"h-full w-full object-contain " + (shot ? "hidden" : "block")}
                 />
                 {shot && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={shot} alt="Captured photo" className="h-full w-full object-contain" />
+                  <img src={shot} alt="Captured frame" className="h-full w-full object-contain" />
                 )}
                 {!ready && !shot && !error && (
                   <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
@@ -235,7 +237,9 @@ export function CameraCaptureModal({
                         type="button"
                         variant="secondary"
                         size="icon"
-                        onClick={() => setFacing((f) => (f === "environment" ? "user" : "environment"))}
+                        onClick={() =>
+                          setFacing((f) => (f === "environment" ? "user" : "environment"))
+                        }
                         aria-label="Switch camera"
                       >
                         <SwitchCamera className="h-4 w-4" />

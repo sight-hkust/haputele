@@ -20,8 +20,8 @@ import { cn } from "@/lib/cn";
 
 export type CellKey = string; // `${dayIndex}-${slotIndex}` — dayIndex 0=Mon
 
-export const SLOT_MIN_HOUR = 7;   // visible day starts here (07:00 local)
-export const SLOT_MAX_HOUR = 20;  // and ends here (20:00, exclusive bound is 19:30 cell)
+export const SLOT_MIN_HOUR = 7; // visible day starts here (07:00 local)
+export const SLOT_MAX_HOUR = 20; // and ends here (20:00, exclusive bound is 19:30 cell)
 export const SLOT_MINUTES = 30;
 export const SLOTS_PER_DAY = (SLOT_MAX_HOUR - SLOT_MIN_HOUR) * (60 / SLOT_MINUTES); // 30
 
@@ -207,9 +207,7 @@ function FragmentRow({
       <div
         className={cn(
           "pr-2 text-right font-mono text-xs tabular-nums",
-          onHourBoundary
-            ? "text-[var(--muted-foreground)]"
-            : "text-[var(--muted-foreground)]/40",
+          onHourBoundary ? "text-[var(--muted-foreground)]" : "text-[var(--muted-foreground)]/40",
         )}
         style={{ height: 22 }}
       >

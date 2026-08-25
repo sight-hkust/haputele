@@ -292,11 +292,7 @@ function RotationPanel({
         variants={fadeInUp}
         className="font-display text-[2.5rem] leading-[1.05] tracking-[-0.02em] sm:text-5xl"
       >
-        Welcome,{" "}
-        <span className="gradient-text">
-          Dr. {peek.familyName ?? ""}
-        </span>
-        .
+        Welcome, <span className="gradient-text">Dr. {peek.familyName ?? ""}</span>.
       </motion.h1>
 
       <motion.p
@@ -306,11 +302,7 @@ function RotationPanel({
         Set a password to finish setting up your account.
       </motion.p>
 
-      <motion.form
-        variants={fadeInUp}
-        onSubmit={onSubmit}
-        className="flex w-full flex-col gap-4"
-      >
+      <motion.form variants={fadeInUp} onSubmit={onSubmit} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">New password</Label>
           <Input
@@ -396,9 +388,7 @@ function NewDoctorPanel({
     setErrorMissing(undefined);
     // Panel-level backstop. DoctorForm already applies the same rules per
     // field; this catches a payload that reached us some other way.
-    const pwErr = !payload.password
-      ? "Choose a password."
-      : newPasswordError(payload.password);
+    const pwErr = !payload.password ? "Choose a password." : newPasswordError(payload.password);
     if (pwErr) {
       setErrorMessage(pwErr);
       return;
@@ -441,9 +431,7 @@ function NewDoctorPanel({
       } else if (err instanceof ApiError) {
         if (err.error === "missing_prescription_fields") {
           setErrorMissing(err.detail?.missing as string[] | undefined);
-          setErrorMessage(
-            "Some §1.7 mandatory fields couldn't be validated server-side.",
-          );
+          setErrorMessage("Some §1.7 mandatory fields couldn't be validated server-side.");
         } else {
           setErrorMessage(explainError(err.error));
         }
@@ -470,16 +458,24 @@ function NewDoctorPanel({
         variants={fadeInUp}
         className="font-display text-[2.5rem] leading-[1.05] tracking-[-0.02em] sm:text-5xl"
       >
-        {peek.familyName ? <>Welcome, <span className="gradient-text">Dr. {peek.familyName}</span>.</> : <>Set up your <span className="gradient-text">HapuTele</span> account.</>}
+        {peek.familyName ? (
+          <>
+            Welcome, <span className="gradient-text">Dr. {peek.familyName}</span>.
+          </>
+        ) : (
+          <>
+            Set up your <span className="gradient-text">HapuTele</span> account.
+          </>
+        )}
       </motion.h1>
 
       <motion.p
         variants={fadeInUp}
         className="max-w-2xl text-base leading-relaxed text-[var(--muted-foreground)]"
       >
-        Fill in your full profile below. Once you submit, an administrator
-        will review your information before activating your account. You
-        won&rsquo;t be able to sign in until that approval comes through.
+        Fill in your full profile below. Once you submit, an administrator will review your
+        information before activating your account. You won&rsquo;t be able to sign in until that
+        approval comes through.
       </motion.p>
 
       {/* Email is fixed by the invite — show read-only for clarity. */}

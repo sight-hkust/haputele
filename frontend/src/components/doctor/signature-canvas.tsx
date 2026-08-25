@@ -35,7 +35,6 @@ export const SignatureCanvas = forwardRef<
   // the submit button enabled with nothing to submit.
   useEffect(() => {
     onChange?.(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Set up the canvas at the device pixel ratio so strokes stay crisp on retina.
@@ -117,7 +116,9 @@ export const SignatureCanvas = forwardRef<
         )}
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className={`font-mono uppercase tracking-[0.12em] ${hasInk ? "text-emerald-600" : "text-[var(--muted-foreground)]"}`}>
+        <span
+          className={`font-mono uppercase tracking-[0.12em] ${hasInk ? "text-emerald-600" : "text-[var(--muted-foreground)]"}`}
+        >
           {hasInk ? "Signed" : "Not signed yet"}
         </span>
         <Button

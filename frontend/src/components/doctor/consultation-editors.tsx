@@ -148,7 +148,11 @@ export function MedicationsEditor({
               <Input id={`m-${i}-t`} {...register(`medications.${i}.tradeName` as const)} />
             </Field>
             <Field label="Dose" htmlFor={`m-${i}-d`}>
-              <Input id={`m-${i}-d`} {...register(`medications.${i}.dose` as const)} placeholder="e.g. 500 mg" />
+              <Input
+                id={`m-${i}-d`}
+                {...register(`medications.${i}.dose` as const)}
+                placeholder="e.g. 500 mg"
+              />
             </Field>
             <Field label="Frequency" htmlFor={`m-${i}-f`}>
               <Input

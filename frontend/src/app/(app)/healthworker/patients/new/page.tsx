@@ -52,11 +52,7 @@ export default function RegisterPatientPage() {
             <p className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-5 text-sm leading-relaxed text-[var(--muted-foreground)]">
               {MASTER_CONSENT_BODY}
             </p>
-            <SignaturePad
-              ref={padRef}
-              onChange={setSignatureEmpty}
-              label="Patient signature"
-            />
+            <SignaturePad ref={padRef} onChange={setSignatureEmpty} label="Patient signature" />
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
               <Button variant="secondary" onClick={() => router.push("/healthworker/patients")}>
                 Patient declined

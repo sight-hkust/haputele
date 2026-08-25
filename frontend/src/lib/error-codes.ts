@@ -5,16 +5,20 @@ import { PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/credentials";
 
 const MESSAGES: Record<string, string> = {
   invalid_credentials: "Incorrect username or password. Try again.",
-  master_consent_required: "This patient has no active master consent — capture a fresh consent before continuing.",
+  master_consent_required:
+    "This patient has no active master consent — capture a fresh consent before continuing.",
   master_consent_not_agreed: "Master consent must be agreed before continuing.",
   session_consent_required: "Patient session consent is required first.",
-  doctor_slot_taken: "That doctor already has another appointment at this time. Pick a different slot.",
+  doctor_slot_taken:
+    "That doctor already has another appointment at this time. Pick a different slot.",
   appointment_in_past: "That time has already passed. Pick a later slot.",
   invalid_state: "This action isn't valid for the current appointment status.",
-  livekit_not_configured: "Video calling isn't configured on this server — contact your administrator. The appointment is unaffected; retry once it's fixed.",
+  livekit_not_configured:
+    "Video calling isn't configured on this server — contact your administrator. The appointment is unaffected; retry once it's fixed.",
   consultation_locked: "This consultation has been signed and locked — no further edits.",
   preconsult_locked: "Preconsult is locked — the meeting has already started.",
-  consultation_not_ready: "The consultation isn't complete yet — the prescription PDF isn't available.",
+  consultation_not_ready:
+    "The consultation isn't complete yet — the prescription PDF isn't available.",
   missing_prescription_fields: "Some §1.7 mandatory prescription fields are missing.",
   national_id_taken: "A patient with that National ID already exists.",
   signature_required: "A signature is required before continuing.",
@@ -55,9 +59,11 @@ const MESSAGES: Record<string, string> = {
   // First-run setup wizard (backend 0006_system_init feature).
   setup_required: "The system hasn't been set up yet. Continue to setup.",
   setup_already_completed: "Setup has already been completed. Sign in instead.",
-  setup_token_invalid: "That setup token isn't valid. Check the api container logs for the current banner.",
+  setup_token_invalid:
+    "That setup token isn't valid. Check the api container logs for the current banner.",
   setup_session_invalid: "Your setup session expired. Restart the wizard with a fresh token.",
-  csrf_failed: "Your setup session got out of sync. Restart the wizard with a fresh token. If it keeps happening, clear localhost cookies in your browser.",
+  csrf_failed:
+    "Your setup session got out of sync. Restart the wizard with a fresh token. If it keeps happening, clear localhost cookies in your browser.",
   setup_token_missing: "No setup token is active. Restart the api container to mint a new one.",
   setup_password_too_short: PASSWORD_TOO_SHORT_MESSAGE,
   setup_password_weak: "That password is on the common-weak list. Pick something less obvious.",
@@ -82,10 +88,8 @@ const MESSAGES: Record<string, string> = {
   missing_password: "Choose a password.",
   email_not_configured:
     "Email isn't set up on the server, so an invite can't be sent. Ask an administrator to either configure the email service or create the account with a manual password.",
-  email_already_used:
-    "An active doctor account or pending invite already uses that email address.",
-  email_mismatch:
-    "The email in the form has to match the one your invite was sent to.",
+  email_already_used: "An active doctor account or pending invite already uses that email address.",
+  email_mismatch: "The email in the form has to match the one your invite was sent to.",
   wrong_invite_mode:
     "This invite link is for a different onboarding flow. Ask your admin to resend it.",
   account_pending_approval:
@@ -96,13 +100,13 @@ const MESSAGES: Record<string, string> = {
     "This doctor's submission was rejected. Use “Invite to reapply” to let them submit again.",
   doctor_already_approved:
     "This doctor is already approved. Use deactivate instead if you want to disable them.",
-  doctor_not_rejected:
-    "This action only applies to rejected doctors.",
-  invalid_status:
-    "Unknown doctor status filter.",
+  doctor_not_rejected: "This action only applies to rejected doctors.",
+  invalid_status: "Unknown doctor status filter.",
   // Sys-admin system config.
-  system_config_not_found: "System configuration is missing — the system may not have been initialized.",
-  invalid_timezone: "That timezone isn't recognized. Use an IANA timezone name like Asia/Colombo or UTC.",
+  system_config_not_found:
+    "System configuration is missing — the system may not have been initialized.",
+  invalid_timezone:
+    "That timezone isn't recognized. Use an IANA timezone name like Asia/Colombo or UTC.",
   // Sys-admin account management.
   account_disabled:
     "This account has been disabled. Contact your system administrator to re-enable it.",
@@ -115,7 +119,8 @@ const MESSAGES: Record<string, string> = {
   // Generic server-side errors — shown when the backend doesn't return a
   // recognisable domain code (e.g. unhandled exception or schema mismatch).
   internal_error: "Something went wrong on the server. Try again in a moment.",
-  validation_failed: "Some entries are out of range or incomplete. Check the highlighted fields and try again.",
+  validation_failed:
+    "Some entries are out of range or incomplete. Check the highlighted fields and try again.",
   forbidden: "You don't have permission to do that.",
 };
 

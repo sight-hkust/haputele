@@ -19,7 +19,8 @@ export function LoginHeroGraphic() {
       <div
         className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 opacity-50"
         style={{
-          backgroundImage: "radial-gradient(circle, rgba(15, 23, 42, 0.18) 1.5px, transparent 1.5px)",
+          backgroundImage:
+            "radial-gradient(circle, rgba(15, 23, 42, 0.18) 1.5px, transparent 1.5px)",
           backgroundSize: "32px 32px",
         }}
       />

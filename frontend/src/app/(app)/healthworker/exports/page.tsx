@@ -41,10 +41,7 @@ export default function ExportsPage() {
       // when the response Content-Disposition header is present.
       const a = document.createElement("a");
       a.href = url;
-      a.download =
-        kind === "xlsx"
-          ? `medication-pickup-${date}.xlsx`
-          : `prescriptions-${date}.zip`;
+      a.download = kind === "xlsx" ? `medication-pickup-${date}.xlsx` : `prescriptions-${date}.zip`;
       document.body.appendChild(a);
       a.click();
       a.remove();

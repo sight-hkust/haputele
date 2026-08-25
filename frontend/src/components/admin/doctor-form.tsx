@@ -175,12 +175,7 @@ export function DoctorForm({
     // to keep" semantics regardless of the toggle (toggle isn't shown).
     // In self-onboarding mode the doctor MUST provide both username
     // and password; in admin-create mode the toggle decides.
-    if (
-      isCreate
-      && !isSelfOnboarding
-      && onboardingMode === "manual"
-      && !v.password
-    ) {
+    if (isCreate && !isSelfOnboarding && onboardingMode === "manual" && !v.password) {
       setPasswordError("Password is required when sharing credentials manually.");
       return;
     }
@@ -288,11 +283,7 @@ export function DoctorForm({
               read by any submit path in self-onboarding mode. */}
           {!isSelfOnboarding && (
             <Field label="Email *" htmlFor="email" error={errors.email?.message}>
-              <Input
-                id="email"
-                type="email"
-                {...register("email")}
-              />
+              <Input id="email" type="email" {...register("email")} />
             </Field>
           )}
           <Field label="Contact number *" htmlFor="contact" error={errors.contact?.message}>
@@ -347,9 +338,9 @@ export function DoctorForm({
                 label={isCreate ? "Password *" : "New password (leave blank to keep)"}
                 htmlFor="password"
                 error={
-                  passwordError
-                  ?? passwordRuleError(watch("password") ?? "")
-                  ?? errors.password?.message
+                  passwordError ??
+                  passwordRuleError(watch("password") ?? "") ??
+                  errors.password?.message
                 }
               >
                 <Input
@@ -380,8 +371,8 @@ export function DoctorForm({
         </div>
         {isCreate && !isSelfOnboarding && onboardingMode === "invite" && (
           <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-            On save, the doctor receives an invite at the email above. The link
-            expires in 72 hours; you can re-send from the doctor&rsquo;s detail page.
+            On save, the doctor receives an invite at the email above. The link expires in 72 hours;
+            you can re-send from the doctor&rsquo;s detail page.
           </p>
         )}
       </Section>
@@ -402,9 +393,17 @@ export function DoctorForm({
             htmlFor="slmcRegistrationNumber"
             error={errors.slmcRegistrationNumber?.message}
           >
-            <Input id="slmcRegistrationNumber" autoComplete="off" {...register("slmcRegistrationNumber")} />
+            <Input
+              id="slmcRegistrationNumber"
+              autoComplete="off"
+              {...register("slmcRegistrationNumber")}
+            />
           </Field>
-          <Field label="Institute name *" htmlFor="instituteName" error={errors.instituteName?.message}>
+          <Field
+            label="Institute name *"
+            htmlFor="instituteName"
+            error={errors.instituteName?.message}
+          >
             <Input id="instituteName" autoComplete="off" {...register("instituteName")} />
           </Field>
           <Field
@@ -412,10 +411,26 @@ export function DoctorForm({
             htmlFor="instituteContact"
             error={errors.instituteContact?.message}
           >
-            <Input id="instituteContact" autoComplete="off" {...register("instituteContact")} placeholder="Optional" />
+            <Input
+              id="instituteContact"
+              autoComplete="off"
+              {...register("instituteContact")}
+              placeholder="Optional"
+            />
           </Field>
-          <Field label="Qualifications *" htmlFor="qualifications" full error={errors.qualifications?.message}>
-            <Textarea id="qualifications" rows={3} autoComplete="off" {...register("qualifications")} placeholder="e.g. MBBS, MD" />
+          <Field
+            label="Qualifications *"
+            htmlFor="qualifications"
+            full
+            error={errors.qualifications?.message}
+          >
+            <Textarea
+              id="qualifications"
+              rows={3}
+              autoComplete="off"
+              {...register("qualifications")}
+              placeholder="e.g. MBBS, MD"
+            />
           </Field>
           <Field
             label="Practitioner address *"
@@ -423,12 +438,23 @@ export function DoctorForm({
             full
             error={errors.practitionerAddress?.message}
           >
-            <Textarea id="practitionerAddress" rows={3} autoComplete="off" {...register("practitionerAddress")} />
+            <Textarea
+              id="practitionerAddress"
+              rows={3}
+              autoComplete="off"
+              {...register("practitionerAddress")}
+            />
           </Field>
         </div>
       </Section>
 
-      <Section Icon={Stamp} title="Rubber stamp" hint={isCreate ? "Required (§1.7)." : "Replace only if you need to update the existing stamp."}>
+      <Section
+        Icon={Stamp}
+        title="Rubber stamp"
+        hint={
+          isCreate ? "Required (§1.7)." : "Replace only if you need to update the existing stamp."
+        }
+      >
         {/* Phone-camera QR needs an authenticated admin to mint a session,
             so it's only offered outside the public self-onboarding form. */}
         <RubberStampUploader
@@ -442,50 +468,80 @@ export function DoctorForm({
       <Section
         Icon={PenLine}
         title="Default e-signature"
-        hint={isCreate
-          ? "Optional. Save a signature once and it's applied automatically on every consultation — no need to sign each time."
-          : "Replaces or removes the doctor's saved e-signature."}
+        hint={
+          isCreate
+            ? "Optional. Save a signature once and it's applied automatically on every consultation — no need to sign each time."
+            : "Replaces or removes the doctor's saved e-signature."
+        }
       >
         {/* Update mode: show "on file" state with replace / clear actions */}
-        {!isCreate && (() => {
-          const hasOnFile = !!initial?.hasDefaultSignature;
-          const showOnFile = hasOnFile && !clearSignature && !replacingSignature && !signature;
-          if (showOnFile) {
-            return (
-              <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-                <div className="flex-1">
-                  <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">Signature on file</div>
-                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">The doctor has a saved default e-signature.</p>
+        {!isCreate &&
+          (() => {
+            const hasOnFile = !!initial?.hasDefaultSignature;
+            const showOnFile = hasOnFile && !clearSignature && !replacingSignature && !signature;
+            if (showOnFile) {
+              return (
+                <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+                  <div className="flex-1">
+                    <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
+                      Signature on file
+                    </div>
+                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                      The doctor has a saved default e-signature.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setReplacingSignature(true)}
+                    className="text-sm text-[var(--accent)] hover:underline"
+                  >
+                    Replace
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setClearSignature(true)}
+                    className="text-sm text-rose-600 hover:underline"
+                  >
+                    Remove
+                  </button>
                 </div>
-                <button type="button" onClick={() => setReplacingSignature(true)}
-                  className="text-sm text-[var(--accent)] hover:underline">Replace</button>
-                <button type="button" onClick={() => setClearSignature(true)}
-                  className="text-sm text-rose-600 hover:underline">Remove</button>
-              </div>
-            );
-          }
-          if (clearSignature) {
+              );
+            }
+            if (clearSignature) {
+              return (
+                <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+                  <div className="flex-1 text-sm text-rose-700">
+                    Signature will be removed on save.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setClearSignature(false)}
+                    className="text-sm text-[var(--accent)] hover:underline"
+                  >
+                    Undo
+                  </button>
+                </div>
+              );
+            }
+            // replacingSignature=true or no prior signature — show the input
             return (
-              <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
-                <div className="flex-1 text-sm text-rose-700">Signature will be removed on save.</div>
-                <button type="button" onClick={() => setClearSignature(false)}
-                  className="text-sm text-[var(--accent)] hover:underline">Undo</button>
+              <div className="flex flex-col gap-2">
+                <SignatureInput value={signature} onChange={setSignature} />
+                {(replacingSignature || !hasOnFile) && signature === null && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReplacingSignature(false);
+                      setSignature(null);
+                    }}
+                    className="self-start text-xs text-[var(--muted-foreground)] hover:underline"
+                  >
+                    {hasOnFile ? "Keep existing" : "Skip"}
+                  </button>
+                )}
               </div>
             );
-          }
-          // replacingSignature=true or no prior signature — show the input
-          return (
-            <div className="flex flex-col gap-2">
-              <SignatureInput value={signature} onChange={setSignature} />
-              {(replacingSignature || !hasOnFile) && signature === null && (
-                <button type="button" onClick={() => { setReplacingSignature(false); setSignature(null); }}
-                  className="self-start text-xs text-[var(--muted-foreground)] hover:underline">
-                  {hasOnFile ? "Keep existing" : "Skip"}
-                </button>
-              )}
-            </div>
-          );
-        })()}
+          })()}
         {/* Create mode: plain optional input */}
         {isCreate && <SignatureInput value={signature} onChange={setSignature} />}
       </Section>
@@ -555,11 +611,7 @@ function ModeCard({
           : "border-[var(--border)] bg-transparent hover:border-[var(--accent)]/40"
       }`}
     >
-      <div
-        className={`rounded-lg p-2 ${
-          selected ? "bg-[var(--accent)]/15" : "bg-[var(--muted)]"
-        }`}
-      >
+      <div className={`rounded-lg p-2 ${selected ? "bg-[var(--accent)]/15" : "bg-[var(--muted)]"}`}>
         <Icon
           className={`h-4 w-4 ${
             selected ? "text-[var(--accent)]" : "text-[var(--muted-foreground)]"
@@ -573,7 +625,6 @@ function ModeCard({
     </button>
   );
 }
-
 
 function Field({
   label,

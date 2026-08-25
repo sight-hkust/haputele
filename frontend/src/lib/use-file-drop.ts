@@ -18,8 +18,7 @@ export function useFileDrop(
   // depth counter keeps the highlight steady until the pointer truly leaves.
   const depth = useRef(0);
 
-  const hasFiles = (e: DragEvent) =>
-    Array.from(e.dataTransfer?.types ?? []).includes("Files");
+  const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files");
 
   const onDragEnter = useCallback(
     (e: DragEvent) => {

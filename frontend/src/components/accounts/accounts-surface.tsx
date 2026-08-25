@@ -118,14 +118,18 @@ export function AccountsSurface({
   const stats = useMemo(() => {
     let active = 0;
     let inactive = 0;
-    for (const a of accounts) (deriveStatus(a).active ? active++ : inactive++);
+    for (const a of accounts) deriveStatus(a).active ? active++ : inactive++;
     return { total: accounts.length, active, inactive };
   }, [accounts]);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = accounts.filter((a) => {
-      if (q && !a.username.toLowerCase().includes(q) && !(a.fullName ?? "").toLowerCase().includes(q))
+      if (
+        q &&
+        !a.username.toLowerCase().includes(q) &&
+        !(a.fullName ?? "").toLowerCase().includes(q)
+      )
         return false;
       if (roleFilter !== "all" && a.role !== roleFilter) return false;
       if (statusFilter !== "all") {
@@ -139,10 +143,13 @@ export function AccountsSurface({
     const cmp = (a: AccountRosterEntry, b: AccountRosterEntry): number => {
       if (sortKey === "username") return a.username.localeCompare(b.username) * dir;
       if (sortKey === "role")
-        return (ROLE_LABEL[a.role].localeCompare(ROLE_LABEL[b.role]) || a.username.localeCompare(b.username)) * dir;
+        return (
+          (ROLE_LABEL[a.role].localeCompare(ROLE_LABEL[b.role]) ||
+            a.username.localeCompare(b.username)) * dir
+        );
       const sa = deriveStatus(a).active ? 0 : 1;
       const sb = deriveStatus(b).active ? 0 : 1;
-      return ((sa - sb) || a.username.localeCompare(b.username)) * dir;
+      return (sa - sb || a.username.localeCompare(b.username)) * dir;
     };
     return [...filtered].sort(cmp);
   }, [accounts, query, roleFilter, statusFilter, sortKey, sortDir]);
@@ -183,115 +190,138 @@ export function AccountsSurface({
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-3">
-      <Card variant="flat" className="flex flex-col">
-        <div className="flex flex-col gap-3 border-b border-[var(--border)] p-4 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by username or name…"
-              className="h-11 pl-10"
-              aria-label="Search accounts"
-            />
-          </div>
-          <div className="flex gap-3">
-            {showRole ? (
-              <Select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value as "all" | AccountRole)}
-                className="h-11 w-full sm:w-44"
-                aria-label="Filter by role"
-              >
-                <option value="all">All roles</option>
-                {rolesPresent.map((r) => (
-                  <option key={r} value={r}>
-                    {ROLE_LABEL[r]}
-                  </option>
-                ))}
-              </Select>
-            ) : null}
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
-              className="h-11 w-full sm:w-40"
-              aria-label="Filter by status"
-            >
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </Select>
-          </div>
-        </div>
-
-        {isLoading || !data ? (
-          <div className="p-10 text-center text-sm text-[var(--muted-foreground)]">Loading…</div>
-        ) : rows.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              Icon={Users}
-              title={filtersActive ? "No accounts match these filters" : emptyTitle}
-              description={
-                filtersActive
-                  ? "Try a different search term or clear the role/status filters."
-                  : emptyDescription
-              }
-              action={
-                filtersActive ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setQuery("");
-                      setRoleFilter("all");
-                      setStatusFilter("all");
-                    }}
-                  >
-                    Clear filters
-                  </Button>
-                ) : (
-                  <Button onClick={() => setCreateOpen(true)}>
-                    <Plus className="h-4 w-4" />
-                    {addButtonLabel}
-                  </Button>
-                )
-              }
-            />
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--border)] text-left">
-                <SortableTh label="Account" sortKey="username" active={sortKey} dir={sortDir} onSort={toggleSort} />
-                {showRole ? (
-                  <SortableTh label="Role" sortKey="role" active={sortKey} dir={sortDir} onSort={toggleSort} />
-                ) : null}
-                <SortableTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onSort={toggleSort} />
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((account) => (
-                <AccountRow
-                  key={account.username}
-                  account={account}
-                  showRole={showRole}
-                  selected={account.username === openUsername}
-                  onOpen={() => setOpenUsername(account.username)}
+          <Card variant="flat" className="flex flex-col">
+            <div className="flex flex-col gap-3 border-b border-[var(--border)] p-4 sm:flex-row sm:items-center">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search by username or name…"
+                  className="h-11 pl-10"
+                  aria-label="Search accounts"
                 />
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Card>
+              </div>
+              <div className="flex gap-3">
+                {showRole ? (
+                  <Select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value as "all" | AccountRole)}
+                    className="h-11 w-full sm:w-44"
+                    aria-label="Filter by role"
+                  >
+                    <option value="all">All roles</option>
+                    {rolesPresent.map((r) => (
+                      <option key={r} value={r}>
+                        {ROLE_LABEL[r]}
+                      </option>
+                    ))}
+                  </Select>
+                ) : null}
+                <Select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
+                  className="h-11 w-full sm:w-40"
+                  aria-label="Filter by status"
+                >
+                  <option value="all">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </Select>
+              </div>
+            </div>
+
+            {isLoading || !data ? (
+              <div className="p-10 text-center text-sm text-[var(--muted-foreground)]">
+                Loading…
+              </div>
+            ) : rows.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  Icon={Users}
+                  title={filtersActive ? "No accounts match these filters" : emptyTitle}
+                  description={
+                    filtersActive
+                      ? "Try a different search term or clear the role/status filters."
+                      : emptyDescription
+                  }
+                  action={
+                    filtersActive ? (
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setQuery("");
+                          setRoleFilter("all");
+                          setStatusFilter("all");
+                        }}
+                      >
+                        Clear filters
+                      </Button>
+                    ) : (
+                      <Button onClick={() => setCreateOpen(true)}>
+                        <Plus className="h-4 w-4" />
+                        {addButtonLabel}
+                      </Button>
+                    )
+                  }
+                />
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--border)] text-left">
+                    <SortableTh
+                      label="Account"
+                      sortKey="username"
+                      active={sortKey}
+                      dir={sortDir}
+                      onSort={toggleSort}
+                    />
+                    {showRole ? (
+                      <SortableTh
+                        label="Role"
+                        sortKey="role"
+                        active={sortKey}
+                        dir={sortDir}
+                        onSort={toggleSort}
+                      />
+                    ) : null}
+                    <SortableTh
+                      label="Status"
+                      sortKey="status"
+                      active={sortKey}
+                      dir={sortDir}
+                      onSort={toggleSort}
+                    />
+                    <th className="px-5 py-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((account) => (
+                    <AccountRow
+                      key={account.username}
+                      account={account}
+                      showRole={showRole}
+                      selected={account.username === openUsername}
+                      onOpen={() => setOpenUsername(account.username)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Card>
 
           {data && rows.length > 0 ? (
             <p className="text-xs text-[var(--muted-foreground)]">
-              Showing {rows.length} of {accounts.length} {accounts.length === 1 ? "account" : "accounts"}.
+              Showing {rows.length} of {accounts.length}{" "}
+              {accounts.length === 1 ? "account" : "accounts"}.
             </p>
           ) : null}
         </div>
 
-        {selected ? <AccountPanel account={selected} onClose={() => setOpenUsername(null)} /> : null}
+        {selected ? (
+          <AccountPanel account={selected} onClose={() => setOpenUsername(null)} />
+        ) : null}
       </div>
 
       <CreateAccountModal
@@ -318,12 +348,18 @@ function StatChip({
   tone?: "neutral" | "positive" | "negative";
 }) {
   const dot =
-    tone === "positive" ? "bg-emerald-500" : tone === "negative" ? "bg-rose-500" : "bg-[var(--muted-foreground)]";
+    tone === "positive"
+      ? "bg-emerald-500"
+      : tone === "negative"
+        ? "bg-rose-500"
+        : "bg-[var(--muted-foreground)]";
   return (
     <div className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-2">
       <span className={cn("h-1.5 w-1.5 rounded-full", dot)} aria-hidden />
       <span className="font-display text-lg leading-none tracking-[-0.01em]">{value}</span>
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">{label}</span>
+      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        {label}
+      </span>
     </div>
   );
 }
@@ -382,7 +418,10 @@ function StatePill({ active, label }: { active: boolean; label: string }) {
           : "border-rose-200 bg-rose-50 text-rose-700",
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-emerald-500" : "bg-rose-500")} aria-hidden />
+      <span
+        className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-emerald-500" : "bg-rose-500")}
+        aria-hidden
+      />
       {label}
     </span>
   );
@@ -540,9 +579,9 @@ function CreateAccountModal({
             extra={
               <div className="flex flex-col gap-2 border-t border-[var(--border)] pt-4">
                 <p className="text-xs text-[var(--muted-foreground)]">
-                  They fill in their own clinical profile and you approve it
-                  before they can log in — so they&rsquo;ll appear in this list
-                  once they&rsquo;ve finished setting up, not straight away.
+                  They fill in their own clinical profile and you approve it before they can log in
+                  — so they&rsquo;ll appear in this list once they&rsquo;ve finished setting up, not
+                  straight away.
                 </p>
                 {manualDoctorHref ? (
                   <Link
@@ -559,13 +598,26 @@ function CreateAccountModal({
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-4">
             <Field label="Username">
-              <Input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" autoFocus />
+              <Input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="off"
+                autoFocus
+              />
             </Field>
             <Field label="Full name (optional)">
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Alice Adams" />
+              <Input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="e.g. Alice Adams"
+              />
             </Field>
             <Field label="Phone / contact (optional)">
-              <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="e.g. +94 77 123 4567" />
+              <Input
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="e.g. +94 77 123 4567"
+              />
             </Field>
             <Field label="Password" error={passwordError(password) ?? undefined}>
               <Input

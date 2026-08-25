@@ -37,15 +37,31 @@ export function ProfileSection({
         <Hint>Usernames can&apos;t be changed.</Hint>
       </Field>
       <Field label="Full name">
-        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Alice Adams" />
+        <Input
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="e.g. Alice Adams"
+        />
       </Field>
       <Field label="Phone / contact">
-        <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="e.g. +94 77 123 4567" />
+        <Input
+          value={contact}
+          onChange={(e) => setContact(e.target.value)}
+          placeholder="e.g. +94 77 123 4567"
+        />
       </Field>
       {update.error ? <ErrorBanner>{explainError(update.error.error)}</ErrorBanner> : null}
       <div>
         <Button
-          onClick={() => update.mutate({ username: account.username, body: { fullName: fullName.trim(), contact: contact.trim() } }, { onSuccess: onSaved })}
+          onClick={() =>
+            update.mutate(
+              {
+                username: account.username,
+                body: { fullName: fullName.trim(), contact: contact.trim() },
+              },
+              { onSuccess: onSaved },
+            )
+          }
           disabled={!dirty || update.isPending}
         >
           {update.isPending ? "Saving…" : "Save changes"}
@@ -133,16 +149,29 @@ export function PasswordSection({ username, self = false }: { username: string; 
 
 // ── layout helpers (shared) ────────────────────────────────────────────
 
-export function StatusHeader({ active, label, sub }: { active: boolean; label: string; sub?: string }) {
+export function StatusHeader({
+  active,
+  label,
+  sub,
+}: {
+  active: boolean;
+  label: string;
+  sub?: string;
+}) {
   return (
     <div className="flex items-center gap-3">
       <span
         className={
           "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-[0.12em] " +
-          (active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")
+          (active
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+            : "border-rose-200 bg-rose-50 text-rose-700")
         }
       >
-        <span className={"h-1.5 w-1.5 rounded-full " + (active ? "bg-emerald-500" : "bg-rose-500")} aria-hidden />
+        <span
+          className={"h-1.5 w-1.5 rounded-full " + (active ? "bg-emerald-500" : "bg-rose-500")}
+          aria-hidden
+        />
         {label}
       </span>
       {sub ? <span className="truncate text-sm text-[var(--muted-foreground)]">{sub}</span> : null}
