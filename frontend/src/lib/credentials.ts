@@ -28,8 +28,7 @@
 export const MIN_PASSWORD_LEN = 10;
 
 export const USERNAME_WHITESPACE_MESSAGE = "Username cannot contain spaces.";
-export const PASSWORD_EDGE_WHITESPACE_MESSAGE =
-  "Password cannot start or end with a space.";
+export const PASSWORD_EDGE_WHITESPACE_MESSAGE = "Password cannot start or end with a space.";
 export const PASSWORD_TOO_SHORT_MESSAGE = `Choose a password at least ${MIN_PASSWORD_LEN} characters long.`;
 /** Field-hint / placeholder copy, so the number in the UI can't drift either. */
 export const PASSWORD_LENGTH_HINT = `At least ${MIN_PASSWORD_LEN} characters`;
@@ -83,10 +82,7 @@ export function newPasswordError(value: string): string | null {
  *    before this policy may genuinely have it stored. Worded as a possibility
  *    so it doesn't mislead the very users it exists to help.
  */
-export function loginWhitespaceHint(
-  username: string,
-  password: string,
-): string | null {
+export function loginWhitespaceHint(username: string, password: string): string | null {
   if (/\s/.test(username)) {
     return "Your username contains a space. Usernames never do — remove it and try again.";
   }

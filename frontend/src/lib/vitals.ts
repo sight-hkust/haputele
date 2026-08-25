@@ -138,11 +138,13 @@ export function parseVitalsValidationError(err: ApiError | null | undefined): Pa
     // The model-level BP-order rule (loc is just ["body"]). Pydantic prefixes
     // raised ValueErrors with "Value error, " — match on our sentinel.
     if (msg.includes("diaBp_must_be_below_sysBp")) {
-      fieldErrors.diaBp = "Diastolic must be lower than systolic — check the two BP numbers aren't swapped.";
+      fieldErrors.diaBp =
+        "Diastolic must be lower than systolic — check the two BP numbers aren't swapped.";
       continue;
     }
 
-    if (!formError) formError = "Some vitals are out of range. Fix the highlighted fields and try again.";
+    if (!formError)
+      formError = "Some vitals are out of range. Fix the highlighted fields and try again.";
   }
 
   return { fieldErrors, formError };

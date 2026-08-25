@@ -28,7 +28,8 @@ export function ConsultationStepper({ current }: { current: ConsultationStage })
                   state === "done" && "bg-emerald-100 text-emerald-700",
                   state === "current" &&
                     "bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] text-white shadow-accent",
-                  state === "future" && "border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)]",
+                  state === "future" &&
+                    "border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)]",
                 )}
               >
                 {state === "done" ? <Check className="h-4 w-4" /> : s.n}
@@ -45,7 +46,9 @@ export function ConsultationStepper({ current }: { current: ConsultationStage })
                 <span
                   className={cn(
                     "mt-1 text-sm font-semibold tracking-[-0.01em]",
-                    state === "future" ? "text-[var(--muted-foreground)]" : "text-[var(--foreground)]",
+                    state === "future"
+                      ? "text-[var(--muted-foreground)]"
+                      : "text-[var(--foreground)]",
                   )}
                 >
                   {s.label}

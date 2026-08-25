@@ -79,14 +79,20 @@ export function QueueBookForm({
         )}
       </div>
 
-      {book.error && <ErrorBanner>{explainError(book.error.error, book.error.message)}</ErrorBanner>}
+      {book.error && (
+        <ErrorBanner>{explainError(book.error.error, book.error.message)}</ErrorBanner>
+      )}
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={book.isPending}>
           Cancel
         </Button>
         <Button type="submit" disabled={!doctorId || !scheduledAt || book.isPending}>
-          {book.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />}
+          {book.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <CalendarPlus className="h-4 w-4" />
+          )}
           {book.isPending ? "Booking…" : "Book appointment"}
         </Button>
       </div>

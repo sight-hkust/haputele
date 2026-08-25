@@ -21,10 +21,13 @@ import { Textarea } from "@/components/primitives/select";
 import { StatusBadge } from "@/components/primitives/status-badge";
 import { SignaturePad, type SignaturePadHandle } from "@/components/consent/signature-pad";
 import { AttachmentsPanel } from "@/components/healthworker/attachments-panel";
-import { MASTER_CONSENT_BODY, SESSION_CONSENT_BODY } from "@/components/healthworker/master-consent-text";
+import {
+  MASTER_CONSENT_BODY,
+  SESSION_CONSENT_BODY,
+} from "@/components/healthworker/master-consent-text";
 import { VitalsForm } from "@/components/healthworker/vitals-form";
 import { MeetingModal } from "@/components/meeting/meeting-modal";
-import { ApiError } from "@/lib/api";
+import type { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { parseVitalsValidationError } from "@/lib/vitals";
 import {
@@ -82,7 +85,9 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
       {/* Vitals — editable in consent_pending / data_collection; read-only after */}
       <VitalsStep
         appointmentId={aptId}
-        editable={appointment.status === "consent_pending" || appointment.status === "data_collection"}
+        editable={
+          appointment.status === "consent_pending" || appointment.status === "data_collection"
+        }
         sessionConsented={sessionConsented}
         sessionConsentResolved={sessionConsentResolved}
         preconsult={preconsult}
@@ -90,10 +95,7 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
       />
 
       {/* Photo attachments — FEEDBACK §3. Available pre-meeting through awaiting_notes. */}
-      <AttachmentsPanel
-        appointmentId={aptId}
-        status={appointment.status}
-      />
+      <AttachmentsPanel appointmentId={aptId} status={appointment.status} />
 
       {/* Meeting — start in data_collection, end in in_progress */}
       <MeetingStep appointmentId={aptId} status={appointment.status} />
@@ -106,7 +108,9 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
               <FileText className="h-5 w-5 text-violet-700" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold tracking-[-0.01em]">Awaiting doctor&rsquo;s notes</h3>
+              <h3 className="text-lg font-semibold tracking-[-0.01em]">
+                Awaiting doctor&rsquo;s notes
+              </h3>
               <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
                 The meeting has ended. The assigned doctor is writing up the consultation. The
                 prescription will be available here once they sign and submit.
@@ -178,10 +182,7 @@ function MasterConsentGate({
   const submitAgreed = () => {
     const sig = padRef.current?.toDataURL() ?? null;
     if (!sig) return;
-    reConsent.mutate(
-      { agreed: true, signatureImage: sig },
-      { onSuccess: closeAndReset },
-    );
+    reConsent.mutate({ agreed: true, signatureImage: sig }, { onSuccess: closeAndReset });
   };
 
   if (status === "ok") {
@@ -237,9 +238,7 @@ function MasterConsentGate({
           label="Patient signature"
         />
         {reConsent.error && (
-          <ErrorBanner className="mt-3">
-            {explainError(reConsent.error.error)}
-          </ErrorBanner>
+          <ErrorBanner className="mt-3">{explainError(reConsent.error.error)}</ErrorBanner>
         )}
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="secondary" onClick={closeAndReset} disabled={reConsent.isPending}>
@@ -279,10 +278,7 @@ function SessionConsentStep({
   const submitAgreed = () => {
     const sig = padRef.current?.toDataURL() ?? null;
     if (!sig) return;
-    recordConsent.mutate(
-      { agreed: true, signatureImage: sig },
-      { onSuccess: closeAndReset },
-    );
+    recordConsent.mutate({ agreed: true, signatureImage: sig }, { onSuccess: closeAndReset });
   };
 
   const submitDeclined = () => {
@@ -317,7 +313,8 @@ function SessionConsentStep({
           <div className="flex-1">
             <h3 className="text-lg font-semibold tracking-[-0.01em]">Capture session consent</h3>
             <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-              Read the consent statement to the patient and capture their signature before entering vitals.
+              Read the consent statement to the patient and capture their signature before entering
+              vitals.
             </p>
             <div className="mt-4 flex gap-2">
               <Button onClick={() => setOpen(true)} disabled={!masterAvailable}>
@@ -348,18 +345,13 @@ function SessionConsentStep({
           label="Patient signature"
         />
         {recordConsent.error && (
-          <ErrorBanner className="mt-3">
-            {explainError(recordConsent.error.error)}
-          </ErrorBanner>
+          <ErrorBanner className="mt-3">{explainError(recordConsent.error.error)}</ErrorBanner>
         )}
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="secondary" onClick={submitDeclined} disabled={recordConsent.isPending}>
             Patient declined
           </Button>
-          <Button
-            onClick={submitAgreed}
-            disabled={recordConsent.isPending || signatureEmpty}
-          >
+          <Button onClick={submitAgreed} disabled={recordConsent.isPending || signatureEmpty}>
             {recordConsent.isPending ? "Saving…" : "Patient agreed"}
           </Button>
         </div>
@@ -407,8 +399,7 @@ function VitalsStep({
     if (err.status === 422) {
       const p = parseVitalsValidationError(err);
       const b =
-        p.formError ??
-        (Object.keys(p.fieldErrors).length === 0 ? explainError(err.error) : null);
+        p.formError ?? (Object.keys(p.fieldErrors).length === 0 ? explainError(err.error) : null);
       return { fieldErrors: p.fieldErrors, banner: b };
     }
     return { fieldErrors: undefined, banner: explainError(err.error) };
@@ -475,13 +466,7 @@ function VitalsStep({
   );
 }
 
-function MeetingStep({
-  appointmentId,
-  status,
-}: {
-  appointmentId: number;
-  status: string;
-}) {
+function MeetingStep({ appointmentId, status }: { appointmentId: number; status: string }) {
   const startMeeting = useStartMeeting(appointmentId);
   const endMeeting = useEndMeeting(appointmentId);
   const meetingToken = useMeetingToken(appointmentId);
@@ -499,7 +484,9 @@ function MeetingStep({
       onSuccess: (res) => setCreds({ token: res.token, serverUrl: res.serverUrl }),
     });
 
-  const apiError = (startMeeting.error ?? endMeeting.error ?? meetingToken.error) as ApiError | null;
+  const apiError = (startMeeting.error ??
+    endMeeting.error ??
+    meetingToken.error) as ApiError | null;
 
   return (
     <>
@@ -521,9 +508,7 @@ function MeetingStep({
                 ? "End the meeting once the doctor signals they're done. Marks the appointment ready for notes."
                 : "Opens the consultation video call and moves the appointment to “in progress”."}
             </p>
-            {apiError && (
-              <ErrorBanner className="mt-3">{explainError(apiError.error)}</ErrorBanner>
-            )}
+            {apiError && <ErrorBanner className="mt-3">{explainError(apiError.error)}</ErrorBanner>}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {status === "data_collection" && (
                 <Button onClick={handleStart} disabled={startMeeting.isPending}>
@@ -606,7 +591,9 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
           </div>
           <div>
             <h3 className="text-lg font-semibold tracking-[-0.01em]">Prescription</h3>
-            <p className="text-xs text-[var(--muted-foreground)]">Signed and locked. §1.7 compliant.</p>
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Signed and locked. §1.7 compliant.
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -636,7 +623,11 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
         {error ? (
           <div className="p-8 text-center text-sm text-rose-600">{error}</div>
         ) : url ? (
-          <iframe src={url} className="h-[680px] w-full" title={`Prescription for appointment ${appointmentId}`} />
+          <iframe
+            src={url}
+            className="h-[680px] w-full"
+            title={`Prescription for appointment ${appointmentId}`}
+          />
         ) : (
           <div className="p-8 text-center text-sm text-[var(--muted-foreground)]">
             Loading prescription…
@@ -710,11 +701,15 @@ function CancelAction({
         }
       >
         <div className="flex flex-col gap-3">
-          <label className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <label
+            htmlFor="queue-cancel-reason"
+            className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]"
+          >
             Reason (optional)
           </label>
           <Textarea
             rows={3}
+            id="queue-cancel-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="e.g. Patient requested reschedule"
@@ -765,7 +760,8 @@ function CancelAction({
                 placeholder="Notes for the new entry — e.g. 'wants to reschedule next week'"
               />
               <p className="text-xs text-[var(--muted-foreground)]">
-                Will be added with the same doctor as preferred. The original entry (if any) is auto-closed.
+                Will be added with the same doctor as preferred. The original entry (if any) is
+                auto-closed.
               </p>
             </div>
           )}

@@ -36,7 +36,12 @@ type FormShape = {
     others: { text: string }[];
   };
   surgicalHistory: { description: string }[];
-  allergies: { type: AllergyEntry["type"] | ""; name: string; medication: string; treatedWhere: string }[];
+  allergies: {
+    type: AllergyEntry["type"] | "";
+    name: string;
+    medication: string;
+    treatedWhere: string;
+  }[];
   medications: { drug: string; dosage: string; frequency: string; notes: string }[];
   lifestyle: {
     smoking: "" | NonNullable<Lifestyle["smoking"]>;
@@ -233,7 +238,11 @@ export function ProfileForm({
           <RepeaterRow key={f.id} onRemove={() => surgeries.remove(i)}>
             <div className="flex flex-col gap-2">
               <Label htmlFor={`s-${i}`}>Description</Label>
-              <Input id={`s-${i}`} {...register(`surgicalHistory.${i}.description` as const)} placeholder="e.g. Appendectomy, 2018" />
+              <Input
+                id={`s-${i}`}
+                {...register(`surgicalHistory.${i}.description` as const)}
+                placeholder="e.g. Appendectomy, 2018"
+              />
             </div>
           </RepeaterRow>
         ))}
@@ -246,7 +255,12 @@ export function ProfileForm({
         addLabel="Add allergy"
         empty={allergies.fields.length === 0}
         onAdd={() =>
-          allergies.append({ type: "" as AllergyEntry["type"] | "", name: "", medication: "", treatedWhere: "" })
+          allergies.append({
+            type: "" as AllergyEntry["type"] | "",
+            name: "",
+            medication: "",
+            treatedWhere: "",
+          })
         }
       >
         {allergies.fields.map((f, i) => (
@@ -295,15 +309,27 @@ export function ProfileForm({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor={`em-${i}-do`}>Dosage</Label>
-                <Input id={`em-${i}-do`} {...register(`medications.${i}.dosage` as const)} placeholder="e.g. 5 mg" />
+                <Input
+                  id={`em-${i}-do`}
+                  {...register(`medications.${i}.dosage` as const)}
+                  placeholder="e.g. 5 mg"
+                />
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor={`em-${i}-f`}>Frequency</Label>
-                <Input id={`em-${i}-f`} {...register(`medications.${i}.frequency` as const)} placeholder="e.g. once daily" />
+                <Input
+                  id={`em-${i}-f`}
+                  {...register(`medications.${i}.frequency` as const)}
+                  placeholder="e.g. once daily"
+                />
               </div>
               <div className="flex flex-col gap-2 sm:col-span-2">
                 <Label htmlFor={`em-${i}-n`}>Notes</Label>
-                <Textarea id={`em-${i}-n`} rows={2} {...register(`medications.${i}.notes` as const)} />
+                <Textarea
+                  id={`em-${i}-n`}
+                  rows={2}
+                  {...register(`medications.${i}.notes` as const)}
+                />
               </div>
             </div>
           </RepeaterRow>

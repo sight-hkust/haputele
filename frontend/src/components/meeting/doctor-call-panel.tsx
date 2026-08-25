@@ -6,7 +6,7 @@ import { PhoneOff, Video } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
-import { ApiError } from "@/lib/api";
+import type { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { useMeetingToken } from "@/lib/use-api";
 import type { AppointmentStatus } from "@/types/api";

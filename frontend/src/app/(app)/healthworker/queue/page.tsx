@@ -77,7 +77,10 @@ export default function QueuePage() {
             </Select>
           </Filter>
           <Filter label="Priority">
-            <Select value={priority} onChange={(e) => setPriority(e.target.value as QueuePriority | "")}>
+            <Select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as QueuePriority | "")}
+            >
               <option value="">All</option>
               <option value="urgent">Urgent</option>
               <option value="routine">Routine</option>

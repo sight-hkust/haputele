@@ -124,8 +124,7 @@ function SetupWizard() {
           >
             {stage === "token" ? (
               <>
-                Welcome to{" "}
-                <span className="gradient-text">HapuTele</span>.
+                Welcome to <span className="gradient-text">HapuTele</span>.
               </>
             ) : stage === "configure" ? (
               <>
@@ -170,7 +169,11 @@ function SetupWizard() {
           )}
 
           <motion.p variants={fadeIn} className="text-xs text-[var(--muted-foreground)]">
-            Stuck? Run <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-xs">docker compose logs api | grep -A1 banner</code> for the latest token banner.
+            Stuck? Run{" "}
+            <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-xs">
+              docker compose logs api | grep -A1 banner
+            </code>{" "}
+            for the latest token banner.
           </motion.p>
         </motion.div>
 
@@ -310,7 +313,8 @@ function ConfigureStage({
     }
 
     if (!passwordConfirm) next.passwordConfirm = "Confirm your password.";
-    else if (password && password !== passwordConfirm) next.passwordConfirm = "Passwords don't match.";
+    else if (password && password !== passwordConfirm)
+      next.passwordConfirm = "Passwords don't match.";
 
     if (!instituteName.trim()) next.instituteName = "Institute name is required.";
 
@@ -369,7 +373,11 @@ function ConfigureStage({
     >
       {/* Sys-admin account */}
       <FieldGroup title="Sys-admin account">
-        <Field label="Username" htmlFor="sa-user" error={errors.username ?? usernameError(username) ?? undefined}>
+        <Field
+          label="Username"
+          htmlFor="sa-user"
+          error={errors.username ?? usernameError(username) ?? undefined}
+        >
           <Input
             id="sa-user"
             value={username}
@@ -521,12 +529,7 @@ function ConfigureStage({
 
       {errors._form && <ErrorPill>{errors._form}</ErrorPill>}
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={initialize.isPending}
-        className="w-full sm:w-auto"
-      >
+      <Button type="submit" size="lg" disabled={initialize.isPending} className="w-full sm:w-auto">
         <ServerCog className="h-4 w-4" />
         {initialize.isPending ? "Initializing…" : "Initialize system"}
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -561,17 +564,13 @@ function OperatingAccountsStage() {
   const [healthworkers, setHealthworkers] = useState<DraftAccount[]>(() => [newDraft()]);
   const [submitting, setSubmitting] = useState(false);
 
-  const updateDraft = (
-    setter: typeof setAdmins,
-    id: number,
-    patch: Partial<DraftAccount>,
-  ) => setter((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  const updateDraft = (setter: typeof setAdmins, id: number, patch: Partial<DraftAccount>) =>
+    setter((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
 
   const removeDraft = (setter: typeof setAdmins, id: number) =>
     setter((rows) => (rows.length > 1 ? rows.filter((r) => r.id !== id) : rows));
 
-  const addDraft = (setter: typeof setAdmins) =>
-    setter((rows) => [...rows, newDraft()]);
+  const addDraft = (setter: typeof setAdmins) => setter((rows) => [...rows, newDraft()]);
 
   const hasAnyFilled = (rows: DraftAccount[]) =>
     rows.some((r) => r.username.trim() || r.password || r.passwordConfirm);
@@ -604,9 +603,7 @@ function OperatingAccountsStage() {
     // A row counts as "intended" if the operator typed anything in it.
     // Fully-empty rows are silently dropped — they're placeholder slots
     // from the "+ Add another" button the operator didn't end up using.
-    const adminRows = admins.filter(
-      (r) => r.username.trim() || r.password || r.passwordConfirm,
-    );
+    const adminRows = admins.filter((r) => r.username.trim() || r.password || r.passwordConfirm);
     const hwRows = healthworkers.filter(
       (r) => r.username.trim() || r.password || r.passwordConfirm,
     );
@@ -623,12 +620,16 @@ function OperatingAccountsStage() {
     for (const r of [...adminRows, ...hwRows]) errors.set(r.id, validateRow(r));
     const hasInvalid = [...errors.values()].some((m) => m !== undefined);
 
-    setAdmins((rows) => rows.map((r) =>
-      errors.has(r.id) ? { ...r, error: errors.get(r.id) } : { ...r, error: undefined }
-    ));
-    setHealthworkers((rows) => rows.map((r) =>
-      errors.has(r.id) ? { ...r, error: errors.get(r.id) } : { ...r, error: undefined }
-    ));
+    setAdmins((rows) =>
+      rows.map((r) =>
+        errors.has(r.id) ? { ...r, error: errors.get(r.id) } : { ...r, error: undefined },
+      ),
+    );
+    setHealthworkers((rows) =>
+      rows.map((r) =>
+        errors.has(r.id) ? { ...r, error: errors.get(r.id) } : { ...r, error: undefined },
+      ),
+    );
     if (hasInvalid) return;
 
     // All validation passed — submit everything. If a row fails on the
@@ -701,19 +702,11 @@ function OperatingAccountsStage() {
             idPrefix={`hw-${row.id}`}
             value={row}
             onChange={(patch) => updateDraft(setHealthworkers, row.id, patch)}
-            onRemove={
-              healthworkers.length > 1
-                ? () => removeDraft(setHealthworkers, row.id)
-                : null
-            }
+            onRemove={healthworkers.length > 1 ? () => removeDraft(setHealthworkers, row.id) : null}
             showLabel={idx === 0}
           />
         ))}
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => addDraft(setHealthworkers)}
-        >
+        <Button type="button" variant="ghost" onClick={() => addDraft(setHealthworkers)}>
           <Plus className="size-4" aria-hidden /> Add another healthworker
         </Button>
       </FieldGroup>
@@ -724,9 +717,7 @@ function OperatingAccountsStage() {
         </Button>
         <Button
           type="submit"
-          disabled={
-            submitting || (!hasAnyFilled(admins) && !hasAnyFilled(healthworkers))
-          }
+          disabled={submitting || (!hasAnyFilled(admins) && !hasAnyFilled(healthworkers))}
         >
           {submitting ? "Creating…" : "Create accounts & continue"}{" "}
           <ArrowRight className="size-4" aria-hidden />
@@ -803,9 +794,15 @@ function AccountDraftRow({
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {showLabel ? (
         <>
-          <Field label="Username" htmlFor={`${idPrefix}-user`}>{usernameInput}</Field>
-          <Field label="Password" htmlFor={`${idPrefix}-pw`}>{passwordInput}</Field>
-          <Field label="Confirm password" htmlFor={`${idPrefix}-pw2`}>{confirmInput}</Field>
+          <Field label="Username" htmlFor={`${idPrefix}-user`}>
+            {usernameInput}
+          </Field>
+          <Field label="Password" htmlFor={`${idPrefix}-pw`}>
+            {passwordInput}
+          </Field>
+          <Field label="Confirm password" htmlFor={`${idPrefix}-pw2`}>
+            {confirmInput}
+          </Field>
         </>
       ) : (
         <>

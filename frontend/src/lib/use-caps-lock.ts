@@ -37,7 +37,9 @@ function readCapsLock(event: Event): void {
   const next = (event as KeyboardEvent | MouseEvent).getModifierState("CapsLock");
   if (next === sharedCapsLockOn) return;
   sharedCapsLockOn = next;
-  subscribers.forEach((notify) => notify(next));
+  subscribers.forEach((notify) => {
+    notify(next);
+  });
 }
 
 // capture: true so a click's mousedown is recorded before the browser's

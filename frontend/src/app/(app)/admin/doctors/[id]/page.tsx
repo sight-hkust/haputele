@@ -3,7 +3,18 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { CheckCircle2, Mail, RefreshCw, ShieldCheck, ShieldX, Trash2, ToggleLeft, ToggleRight, UserPlus2, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Mail,
+  RefreshCw,
+  ShieldCheck,
+  ShieldX,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  UserPlus2,
+  XCircle,
+} from "lucide-react";
 
 import { DoctorForm } from "@/components/admin/doctor-form";
 import { BackLink } from "@/components/primitives/back-link";
@@ -143,12 +154,10 @@ export default function DoctorDetailPage() {
                 <ShieldCheck className="h-4 w-4 text-sky-700" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-sky-900">
-                  Awaiting your approval
-                </p>
+                <p className="text-sm font-semibold text-sky-900">Awaiting your approval</p>
                 <p className="mt-1 text-sm text-sky-800">
-                  This doctor submitted their profile. Review the §1.7 fields
-                  below, then approve to let them log in.
+                  This doctor submitted their profile. Review the §1.7 fields below, then approve to
+                  let them log in.
                 </p>
               </div>
             </div>
@@ -190,13 +199,11 @@ export default function DoctorDetailPage() {
                 <XCircle className="h-4 w-4 text-rose-700" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-rose-900">
-                  Submission rejected
-                </p>
+                <p className="text-sm font-semibold text-rose-900">Submission rejected</p>
                 <p className="mt-1 text-sm text-rose-800">
                   The doctor can&rsquo;t log in.{" "}
-                  {d.rejectedReason ? `Reason: ${d.rejectedReason}.` : ""} Invite
-                  them to reapply for a fresh submission, or erase the record.
+                  {d.rejectedReason ? `Reason: ${d.rejectedReason}.` : ""} Invite them to reapply
+                  for a fresh submission, or erase the record.
                 </p>
               </div>
             </div>
@@ -251,12 +258,10 @@ export default function DoctorDetailPage() {
                 <Mail className="h-4 w-4 text-amber-700" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-amber-900">
-                  Awaiting onboarding
-                </p>
+                <p className="text-sm font-semibold text-amber-900">Awaiting onboarding</p>
                 <p className="mt-1 text-sm text-amber-800">
-                  This doctor hasn&rsquo;t set their password yet. The most
-                  recent invite link is still active.
+                  This doctor hasn&rsquo;t set their password yet. The most recent invite link is
+                  still active.
                 </p>
               </div>
             </div>
@@ -287,9 +292,7 @@ export default function DoctorDetailPage() {
             </div>
           </div>
           {reissueInvite.error && (
-            <ErrorBanner className="mt-3">
-              {explainError(reissueInvite.error.error)}
-            </ErrorBanner>
+            <ErrorBanner className="mt-3">{explainError(reissueInvite.error.error)}</ErrorBanner>
           )}
         </Card>
       )}
@@ -317,7 +320,8 @@ export default function DoctorDetailPage() {
             };
             if (payload.password) body.password = payload.password;
             if (payload.rubberStampImage) body.rubberStampImage = payload.rubberStampImage;
-            if (payload.defaultSignatureImage) body.defaultSignatureImage = payload.defaultSignatureImage;
+            if (payload.defaultSignatureImage)
+              body.defaultSignatureImage = payload.defaultSignatureImage;
             if (payload.clearDefaultSignature) body.clearDefaultSignature = true;
             update.mutate(body);
           }}
@@ -390,9 +394,7 @@ export default function DoctorDetailPage() {
           </Button>
           <Button
             variant="destructive"
-            onClick={() =>
-              deactivate.mutate(d.id, { onSuccess: () => setConfirmOpen(false) })
-            }
+            onClick={() => deactivate.mutate(d.id, { onSuccess: () => setConfirmOpen(false) })}
             disabled={deactivate.isPending}
           >
             {deactivate.isPending ? "Deactivating…" : "Deactivate"}
@@ -419,9 +421,7 @@ export default function DoctorDetailPage() {
           </Button>
           <Button
             variant="destructive"
-            onClick={() =>
-              purge.mutate(d.id, { onSuccess: () => router.push("/admin") })
-            }
+            onClick={() => purge.mutate(d.id, { onSuccess: () => router.push("/admin") })}
             disabled={purge.isPending}
           >
             {purge.isPending ? "Erasing…" : "Erase permanently"}

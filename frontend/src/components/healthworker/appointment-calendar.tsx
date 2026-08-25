@@ -25,19 +25,19 @@ import { APP_TIMEZONE } from "@/lib/format";
 type StatusBucket = "upcoming" | "live" | "done" | "cancelled";
 
 const STATUS_BUCKET: Record<AppointmentStatus, StatusBucket> = {
-  scheduled:       "upcoming",
+  scheduled: "upcoming",
   consent_pending: "upcoming",
   data_collection: "upcoming",
-  in_progress:     "live",
-  awaiting_notes:  "live",
-  completed:       "done",
-  cancelled:       "cancelled",
+  in_progress: "live",
+  awaiting_notes: "live",
+  completed: "done",
+  cancelled: "cancelled",
 };
 
 const BUCKET_COLORS: Record<StatusBucket, { bg: string; border: string; text: string }> = {
-  upcoming:  { bg: "#f1f5f9", border: "#cbd5e1", text: "#334155" },
-  live:      { bg: "#dbeafe", border: "#0052ff", text: "#0052ff" },
-  done:      { bg: "#d1fae5", border: "#6ee7b7", text: "#065f46" },
+  upcoming: { bg: "#f1f5f9", border: "#cbd5e1", text: "#334155" },
+  live: { bg: "#dbeafe", border: "#0052ff", text: "#0052ff" },
+  done: { bg: "#d1fae5", border: "#6ee7b7", text: "#065f46" },
   cancelled: { bg: "#f8fafc", border: "#e2e8f0", text: "#94a3b8" },
 };
 

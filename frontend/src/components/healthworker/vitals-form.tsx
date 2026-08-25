@@ -130,30 +130,61 @@ export function VitalsForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Vital label="Height (cm)" id="height" disabled={disabled}
-          error={errors.height?.message} {...register("height", rule("height"))} />
-        <Vital label="Weight (kg)" id="weight" disabled={disabled}
-          error={errors.weight?.message} {...register("weight", rule("weight"))} />
-        <Vital label="Pulse (bpm)" id="pulse" disabled={disabled}
-          error={errors.pulse?.message} {...register("pulse", rule("pulse"))} />
-        <Vital label="Systolic BP (mmHg)" id="sysBp" disabled={disabled}
+        <Vital
+          label="Height (cm)"
+          id="height"
+          disabled={disabled}
+          error={errors.height?.message}
+          {...register("height", rule("height"))}
+        />
+        <Vital
+          label="Weight (kg)"
+          id="weight"
+          disabled={disabled}
+          error={errors.weight?.message}
+          {...register("weight", rule("weight"))}
+        />
+        <Vital
+          label="Pulse (bpm)"
+          id="pulse"
+          disabled={disabled}
+          error={errors.pulse?.message}
+          {...register("pulse", rule("pulse"))}
+        />
+        <Vital
+          label="Systolic BP (mmHg)"
+          id="sysBp"
+          disabled={disabled}
           error={errors.sysBp?.message}
           {...register("sysBp", {
             ...rule("sysBp"),
             // Re-check the pair when systolic changes so a now-valid ordering
             // clears the diastolic error (and vice-versa).
-            onBlur: () => { if (getValues("diaBp").trim()) void trigger("diaBp"); },
-          })} />
-        <Vital label="Diastolic BP (mmHg)" id="diaBp" disabled={disabled}
+            onBlur: () => {
+              if (getValues("diaBp").trim()) void trigger("diaBp");
+            },
+          })}
+        />
+        <Vital
+          label="Diastolic BP (mmHg)"
+          id="diaBp"
+          disabled={disabled}
           error={errors.diaBp?.message}
           {...register("diaBp", {
             validate: (value: string) =>
               validateVital("diaBp", value) ??
               validateBloodPressurePair(getValues("sysBp"), value) ??
               true,
-          })} />
-        <Vital label="Temperature (°C)" id="temperature" step="0.1" disabled={disabled}
-          error={errors.temperature?.message} {...register("temperature", rule("temperature"))} />
+          })}
+        />
+        <Vital
+          label="Temperature (°C)"
+          id="temperature"
+          step="0.1"
+          disabled={disabled}
+          error={errors.temperature?.message}
+          {...register("temperature", rule("temperature"))}
+        />
       </div>
       {!disabled && (
         <div className="flex justify-end">

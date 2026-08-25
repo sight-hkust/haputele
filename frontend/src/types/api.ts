@@ -189,8 +189,15 @@ export type PreconsultRequest = {
 
 // ── Profile JSONB shapes ─────────────────────────────────────────────
 export type DiseaseCode =
-  | "diabetes" | "hypertension" | "ihd" | "asthma_copd" | "kidney"
-  | "thyroid" | "cancer" | "mental_health" | "other";
+  | "diabetes"
+  | "hypertension"
+  | "ihd"
+  | "asthma_copd"
+  | "kidney"
+  | "thyroid"
+  | "cancer"
+  | "mental_health"
+  | "other";
 
 export type DiseaseEntry = { code: DiseaseCode; text?: string };
 export type SurgeryEntry = { description: string };
@@ -237,10 +244,29 @@ export type ProfileRequest = {
 
 // ── Consultation JSONB shapes ────────────────────────────────────────
 export type DiagnosisCode =
-  | "allergy" | "alzheimers" | "arthritis" | "asthma" | "autoimmune" | "cancer"
-  | "ckd" | "chronic_liver" | "chronic_pain" | "common_cold" | "copd" | "covid19"
-  | "diabetes" | "heart_disease" | "hiv_aids" | "hypertension" | "influenza"
-  | "mental_health" | "obesity" | "osteoporosis" | "stroke" | "thyroid" | "others";
+  | "allergy"
+  | "alzheimers"
+  | "arthritis"
+  | "asthma"
+  | "autoimmune"
+  | "cancer"
+  | "ckd"
+  | "chronic_liver"
+  | "chronic_pain"
+  | "common_cold"
+  | "copd"
+  | "covid19"
+  | "diabetes"
+  | "heart_disease"
+  | "hiv_aids"
+  | "hypertension"
+  | "influenza"
+  | "mental_health"
+  | "obesity"
+  | "osteoporosis"
+  | "stroke"
+  | "thyroid"
+  | "others";
 
 export type DiagnosisEntry = { code: DiagnosisCode; text?: string };
 export type MedicationEntry = {

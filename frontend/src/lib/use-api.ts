@@ -78,8 +78,7 @@ import type {
 export function useAuthedApi() {
   const { session } = useAuth();
   return useCallback(
-    <T,>(path: string, options: Parameters<typeof api>[1] = {}) => api<T>(path, options),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    <T>(path: string, options: Parameters<typeof api>[1] = {}) => api<T>(path, options),
     [session],
   );
 }
@@ -105,8 +104,7 @@ export function usePatient(id: number | null, opts?: { enabled?: boolean }) {
   const fetcher = useAuthedApi();
   return useQuery({
     queryKey: ["patients", id],
-    queryFn: () =>
-      fetcher<{ patient: Patient; profile: Profile | null }>(`/patients/${id}`),
+    queryFn: () => fetcher<{ patient: Patient; profile: Profile | null }>(`/patients/${id}`),
     enabled: !!id && (opts?.enabled ?? true),
   });
 }
@@ -115,8 +113,7 @@ export function useUpsertProfile(patientId: number) {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Profile, ApiError, ProfileRequest>({
-    mutationFn: (body) =>
-      fetcher(`/patients/${patientId}/profile`, { method: "PUT", body }),
+    mutationFn: (body) => fetcher(`/patients/${patientId}/profile`, { method: "PUT", body }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["patients", patientId] });
       qc.invalidateQueries({ queryKey: ["appointments"] }); // any open cockpit
@@ -314,8 +311,7 @@ export function useResendDoctorInvite() {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<DoctorInvite, ApiError, number>({
-    mutationFn: (inviteId) =>
-      fetcher(`/doctors/invites/${inviteId}/resend`, { method: "POST" }),
+    mutationFn: (inviteId) => fetcher(`/doctors/invites/${inviteId}/resend`, { method: "POST" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["doctor-invites"] });
       qc.invalidateQueries({ queryKey: ["doctors"] });
@@ -328,8 +324,7 @@ export function useRevokeDoctorInvite() {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<void, ApiError, number>({
-    mutationFn: (inviteId) =>
-      fetcher(`/doctors/invites/${inviteId}`, { method: "DELETE" }),
+    mutationFn: (inviteId) => fetcher(`/doctors/invites/${inviteId}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["doctor-invites"] });
       qc.invalidateQueries({ queryKey: ["doctors"] });
@@ -382,7 +377,6 @@ export function usePurgeDoctor() {
   });
 }
 
-
 // Soft-delete — backend sets active=false, preserves FK references on past
 // appointments / consultations.
 export function useDeactivateDoctor() {
@@ -431,7 +425,11 @@ export function useAppointment(id: number | null) {
 export function useCreateAppointment() {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
-  return useMutation<Appointment, ApiError, { patientId: number; doctorId: number; scheduledAt: string }>({
+  return useMutation<
+    Appointment,
+    ApiError,
+    { patientId: number; doctorId: number; scheduledAt: string }
+  >({
     mutationFn: (body) => fetcher("/appointments", { method: "POST", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments", "list"] }),
   });
@@ -489,7 +487,11 @@ export function useGetSessionConsent(appointmentId: number | null) {
 export function useUpsertPreconsult(appointmentId: number) {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
-  return useMutation<{ preconsult: Preconsult; appointment: Appointment }, ApiError, PreconsultRequest>({
+  return useMutation<
+    { preconsult: Preconsult; appointment: Appointment },
+    ApiError,
+    PreconsultRequest
+  >({
     mutationFn: (body) =>
       fetcher(`/appointments/${appointmentId}/preconsult`, { method: "PUT", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["appointments", appointmentId] }),
@@ -560,8 +562,7 @@ export function useUpdateConsultation(consultationId: number) {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Consultation, ApiError, ConsultationPatch>({
-    mutationFn: (body) =>
-      fetcher(`/consultations/${consultationId}`, { method: "PATCH", body }),
+    mutationFn: (body) => fetcher(`/consultations/${consultationId}`, { method: "PATCH", body }),
     onSuccess: (data) => {
       qc.setQueryData(["consultations", consultationId], data);
       qc.invalidateQueries({ queryKey: ["appointments", data.appointmentId] });
@@ -656,19 +657,14 @@ export function useDoctorAvailability(
   const q = qs.toString();
   return useQuery({
     queryKey: ["availability", "doctor", doctorId, range],
-    queryFn: () =>
-      fetcher<Availability[]>(`/doctors/${doctorId}/availability${q ? `?${q}` : ""}`),
+    queryFn: () => fetcher<Availability[]>(`/doctors/${doctorId}/availability${q ? `?${q}` : ""}`),
     enabled: !!doctorId && (opts?.enabled ?? true),
   });
 }
 
 // Cross-doctor list — for HW booking calendars / multi-doctor planners.
 // Doctors get scoped to their own id server-side; admin/HW see everyone.
-export function useAvailabilityList(params: {
-  from?: string;
-  to?: string;
-  doctorId?: number;
-}) {
+export function useAvailabilityList(params: { from?: string; to?: string; doctorId?: number }) {
   const fetcher = useAuthedApi();
   const qs = new URLSearchParams();
   if (params.from) qs.set("from", params.from);
@@ -684,8 +680,7 @@ export function useCreateAvailability(doctorId: number) {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Availability, ApiError, AvailabilityCreateRequest>({
-    mutationFn: (body) =>
-      fetcher(`/doctors/${doctorId}/availability`, { method: "POST", body }),
+    mutationFn: (body) => fetcher(`/doctors/${doctorId}/availability`, { method: "POST", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
   });
 }
@@ -704,8 +699,7 @@ export function useUpdateAvailability() {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
   return useMutation<Availability, ApiError, { id: number; body: AvailabilityUpdateRequest }>({
-    mutationFn: ({ id, body }) =>
-      fetcher(`/availability/${id}`, { method: "PATCH", body }),
+    mutationFn: ({ id, body }) => fetcher(`/availability/${id}`, { method: "PATCH", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
   });
 }
@@ -809,7 +803,10 @@ export function useCancelQueueEntry(id: number) {
 
 // ── Prescription PDF ─────────────────────────────────────────────────
 // Returns a typed Blob; callers hand it to URL.createObjectURL().
-export function usePrescriptionPdf(appointmentId: number | null, opts?: UseQueryOptions<Blob, ApiError>) {
+export function usePrescriptionPdf(
+  appointmentId: number | null,
+  opts?: UseQueryOptions<Blob, ApiError>,
+) {
   const fetcher = useAuthedApi();
   return useQuery<Blob, ApiError>({
     queryKey: ["appointments", appointmentId, "summary.pdf"],
@@ -912,7 +909,10 @@ export function useUpdateAttachment(appointmentId: number) {
 // Fetches the raw bytes for an attachment with the auth header attached
 // and returns a blob: URL that an <img> can render. Cleans up on unmount.
 // Mirrors the trick used by PrescriptionViewer for the PDF.
-export function useAttachmentImage(appointmentId: number, attachmentId: number): {
+export function useAttachmentImage(
+  appointmentId: number,
+  attachmentId: number,
+): {
   url: string | null;
   error: ApiError | null;
 } {
@@ -1063,7 +1063,11 @@ export function useCreateOperatingAccount() {
 export function useUpdateAccount() {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();
-  return useMutation<AccountRosterEntry, ApiError, { username: string; body: AccountUpdateRequest }>({
+  return useMutation<
+    AccountRosterEntry,
+    ApiError,
+    { username: string; body: AccountUpdateRequest }
+  >({
     mutationFn: ({ username, body }) =>
       fetcher(`/accounts/${encodeURIComponent(username)}`, { method: "PATCH", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sysadmin", "accounts"] }),
@@ -1124,14 +1128,11 @@ export function useDeleteAccount() {
 // inside the QR) so the desktop can build the scannable link.
 export function useCreateCaptureSession() {
   const fetcher = useAuthedApi();
-  return useMutation<
-    CaptureSession,
-    ApiError,
-    { purpose: CapturePurpose; appointmentId?: number }
-  >({
-    mutationFn: (body) =>
-      fetcher<CaptureSession>("/capture/sessions", { method: "POST", body }),
-  });
+  return useMutation<CaptureSession, ApiError, { purpose: CapturePurpose; appointmentId?: number }>(
+    {
+      mutationFn: (body) => fetcher<CaptureSession>("/capture/sessions", { method: "POST", body }),
+    },
+  );
 }
 
 // Poll a capture session's status while the QR modal is open. `intervalMs`
@@ -1152,4 +1153,3 @@ export function useCaptureSessionStatus(
     gcTime: 0,
   });
 }
-

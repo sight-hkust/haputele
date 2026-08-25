@@ -53,7 +53,9 @@ export default function ConsultationPage() {
 
   return (
     <div className="mx-auto flex max-w-[110rem] flex-col gap-10 px-6 py-12">
-      <BackLink href={`/doctor/appointments/${apt.data.appointment.id}`}>Back to appointment</BackLink>
+      <BackLink href={`/doctor/appointments/${apt.data.appointment.id}`}>
+        Back to appointment
+      </BackLink>
 
       <div
         className={

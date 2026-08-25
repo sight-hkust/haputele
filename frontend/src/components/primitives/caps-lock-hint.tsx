@@ -8,8 +8,7 @@ import { cn } from "@/lib/cn";
  * credential policy — putting it there would send the next reader hunting for
  * a backend rule that does not exist.
  */
-export const CAPS_LOCK_MESSAGE =
-  "Caps Lock is on. Your password will be typed in capital letters.";
+export const CAPS_LOCK_MESSAGE = "Caps Lock is on. Your password will be typed in capital letters.";
 
 /**
  * Inline warning, rendered as a sibling directly BELOW a password input and

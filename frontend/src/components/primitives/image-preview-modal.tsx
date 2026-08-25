@@ -53,7 +53,10 @@ export function ImagePreviewModal({
             className="flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl"
           >
             <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
-              <span className="truncate text-sm font-medium text-[var(--foreground)]" title={title ?? alt}>
+              <span
+                className="truncate text-sm font-medium text-[var(--foreground)]"
+                title={title ?? alt}
+              >
                 {title ?? alt}
               </span>
               <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close preview">
@@ -61,7 +64,6 @@ export function ImagePreviewModal({
               </Button>
             </div>
             <div className="flex flex-1 items-center justify-center overflow-auto bg-[var(--muted)]/40 p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
                 alt={alt}

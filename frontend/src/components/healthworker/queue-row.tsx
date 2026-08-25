@@ -1,14 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  AlertOctagon,
-  CalendarPlus,
-  Clock,
-  Stethoscope,
-  UserPlus,
-  X,
-} from "lucide-react";
+import { AlertOctagon, CalendarPlus, Clock, Stethoscope, UserPlus, X } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
@@ -21,8 +14,16 @@ export const QUEUE_SOURCE_META: Record<
   { label: string; Icon: typeof Stethoscope; tone: string }
 > = {
   walk_in: { label: "Walk-in", Icon: UserPlus, tone: "text-sky-700 bg-sky-50 border-sky-200" },
-  screening: { label: "Screening", Icon: AlertOctagon, tone: "text-amber-800 bg-amber-50 border-amber-200" },
-  follow_up: { label: "Follow-up", Icon: Stethoscope, tone: "text-violet-700 bg-violet-50 border-violet-200" },
+  screening: {
+    label: "Screening",
+    Icon: AlertOctagon,
+    tone: "text-amber-800 bg-amber-50 border-amber-200",
+  },
+  follow_up: {
+    label: "Follow-up",
+    Icon: Stethoscope,
+    tone: "text-violet-700 bg-violet-50 border-violet-200",
+  },
 };
 
 export function QueueRow({
@@ -76,7 +77,9 @@ export function QueueRow({
           </span>
         </div>
 
-        <div className={`flex flex-wrap items-baseline gap-x-3 gap-y-1 ${compact ? "mt-2" : "mt-3"}`}>
+        <div
+          className={`flex flex-wrap items-baseline gap-x-3 gap-y-1 ${compact ? "mt-2" : "mt-3"}`}
+        >
           <Link
             href={`/healthworker/patients/${entry.patientId}`}
             className={`font-semibold tracking-[-0.01em] hover:text-[var(--accent)] hover:underline ${compact ? "text-sm" : "text-base"}`}
@@ -92,7 +95,9 @@ export function QueueRow({
         </div>
 
         {entry.notes && (
-          <p className={`text-sm text-[var(--muted-foreground)] ${compact ? "mt-1.5 line-clamp-2 text-xs" : "mt-2"}`}>
+          <p
+            className={`text-sm text-[var(--muted-foreground)] ${compact ? "mt-1.5 line-clamp-2 text-xs" : "mt-2"}`}
+          >
             {entry.notes}
           </p>
         )}

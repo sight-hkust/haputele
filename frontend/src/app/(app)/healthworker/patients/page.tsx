@@ -111,7 +111,9 @@ export default function PatientListPage() {
                     <span className="font-mono text-xs text-[var(--muted-foreground)]">
                       {p.nationalId ?? "—"}
                     </span>
-                    <span className="text-sm text-[var(--muted-foreground)]">{p.contact ?? "—"}</span>
+                    <span className="text-sm text-[var(--muted-foreground)]">
+                      {p.contact ?? "—"}
+                    </span>
                     <span className="text-right font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
                       {fmtRelative(p.createdAt)}
                     </span>
@@ -121,21 +123,30 @@ export default function PatientListPage() {
             </ul>
           </Card>
 
-          <Pagination
-            page={page}
-            onChange={setPage}
-            hasNext={patients.length === PAGE_SIZE}
-          />
+          <Pagination page={page} onChange={setPage} hasNext={patients.length === PAGE_SIZE} />
         </>
       )}
     </div>
   );
 }
 
-function Pagination({ page, hasNext, onChange }: { page: number; hasNext: boolean; onChange: (n: number) => void }) {
+function Pagination({
+  page,
+  hasNext,
+  onChange,
+}: {
+  page: number;
+  hasNext: boolean;
+  onChange: (n: number) => void;
+}) {
   return (
     <div className="flex items-center justify-end gap-2">
-      <Button variant="secondary" size="sm" disabled={page === 1} onClick={() => onChange(page - 1)}>
+      <Button
+        variant="secondary"
+        size="sm"
+        disabled={page === 1}
+        onClick={() => onChange(page - 1)}
+      >
         <ChevronLeft className="h-4 w-4" />
         Prev
       </Button>

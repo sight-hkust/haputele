@@ -20,7 +20,10 @@ const baseSchema = z.object({
   // derives it from dob. Enforced here as well as server-side so a health
   // worker finds out at intake rather than the doctor finding out at signing.
   dob: z.string().min(1, "Date of birth is required"),
-  language: z.enum(["en", "ta", "si"]).optional().or(z.literal("") as z.ZodType<"">),
+  language: z
+    .enum(["en", "ta", "si"])
+    .optional()
+    .or(z.literal("") as z.ZodType<"">),
   screeningRef: z.string().optional(),
   nationalId: z
     .string()

@@ -92,10 +92,14 @@ export function PatientContext({
                       <span className="font-mono text-xs uppercase text-rose-600">urgent</span>
                     )}
                     {e.targetDate && (
-                      <span className="text-amber-800/80">{fmtTargetWeek(e.targetDate).toLowerCase()}</span>
+                      <span className="text-amber-800/80">
+                        {fmtTargetWeek(e.targetDate).toLowerCase()}
+                      </span>
                     )}
                   </div>
-                  {e.notes && <span className="line-clamp-2 text-xs text-amber-900/70">{e.notes}</span>}
+                  {e.notes && (
+                    <span className="line-clamp-2 text-xs text-amber-900/70">{e.notes}</span>
+                  )}
                 </div>
                 <Button size="sm" onClick={() => onBookQueueEntry(e)}>
                   <CalendarPlus className="h-3 w-3" />

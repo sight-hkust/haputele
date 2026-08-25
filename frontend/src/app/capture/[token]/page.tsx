@@ -58,10 +58,9 @@ export default function CapturePage() {
     let cancelled = false;
     (async () => {
       try {
-        const peek = await api<{ purpose: string; expiresAt: string }>(
-          `/capture/${token}`,
-          { skipAuthRedirect: true },
-        );
+        const peek = await api<{ purpose: string; expiresAt: string }>(`/capture/${token}`, {
+          skipAuthRedirect: true,
+        });
         if (!cancelled) setState({ mode: "ready", purpose: peek.purpose });
       } catch (err) {
         if (cancelled) return;
@@ -99,7 +98,9 @@ export default function CapturePage() {
           audio: false,
         });
         if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
+          stream.getTracks().forEach((t) => {
+            t.stop();
+          });
           return;
         }
         streamRef.current = stream;
@@ -128,7 +129,9 @@ export default function CapturePage() {
 
     return () => {
       cancelled = true;
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => {
+        t.stop();
+      });
       streamRef.current = null;
     };
   }, [cameraActive, facing]);
@@ -137,7 +140,9 @@ export default function CapturePage() {
   useEffect(
     () => () => {
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => {
+        t.stop();
+      });
     },
     [],
   );
@@ -276,17 +281,13 @@ export default function CapturePage() {
       </div>
 
       <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           ref={videoRef}
           playsInline
           muted
           className={"h-full w-full object-contain " + (shot ? "hidden" : "block")}
         />
-        {shot && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={shot} alt="Captured" className="h-full w-full object-contain" />
-        )}
+        {shot && <img src={shot} alt="Captured" className="h-full w-full object-contain" />}
         {!ready && !shot && !error && (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
             Starting camera…

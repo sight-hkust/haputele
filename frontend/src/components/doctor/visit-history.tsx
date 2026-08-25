@@ -75,7 +75,10 @@ export function VisitHistoryPanel({
 function VisitItem({ item }: { item: HistoryConsultationItem }) {
   const dx = item.diagnoses.slice(0, 3);
   const moreDx = item.diagnoses.length - dx.length;
-  const meds = item.prescription.slice(0, 2).map((m) => m.genericName).filter(Boolean);
+  const meds = item.prescription
+    .slice(0, 2)
+    .map((m) => m.genericName)
+    .filter(Boolean);
   const moreMeds = item.prescription.length - meds.length;
 
   return (

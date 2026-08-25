@@ -8,16 +8,11 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input, Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { PatientPicker } from "@/components/healthworker/patient-picker";
-import { ApiError } from "@/lib/api";
+import type { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { fmtTargetWeek, fullName } from "@/lib/format";
 import { useCreateQueueEntry, useDoctorList } from "@/lib/use-api";
-import type {
-  Patient,
-  QueueEntry,
-  QueueEntryCreateRequest,
-  QueuePriority,
-} from "@/types/api";
+import type { Patient, QueueEntry, QueueEntryCreateRequest, QueuePriority } from "@/types/api";
 
 // HW intake form for adding a queue entry. Walk-in or screening source
 // (follow-up entries are server-generated only). Handles the soft
@@ -98,11 +93,7 @@ export function QueueEntryForm({
     >
       <div className="flex flex-col gap-2">
         <Label>Patient</Label>
-        <PatientPicker
-          picked={picked}
-          onPick={setPicked}
-          onClear={() => setPicked(null)}
-        />
+        <PatientPicker picked={picked} onPick={setPicked} onClear={() => setPicked(null)} />
         {!picked && (
           <p className="text-xs text-[var(--muted-foreground)]">
             Patient must be registered first (with master consent).
@@ -121,19 +112,13 @@ export function QueueEntryForm({
           </Select>
         </Field>
         <Field label="Priority">
-          <Select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as QueuePriority)}
-          >
+          <Select value={priority} onChange={(e) => setPriority(e.target.value as QueuePriority)}>
             <option value="routine">Routine</option>
             <option value="urgent">Urgent</option>
           </Select>
         </Field>
         <Field label="Preferred doctor (optional)">
-          <Select
-            value={preferredDoctorId}
-            onChange={(e) => setPreferredDoctorId(e.target.value)}
-          >
+          <Select value={preferredDoctorId} onChange={(e) => setPreferredDoctorId(e.target.value)}>
             <option value="">Any doctor</option>
             {(doctors.data ?? []).map((d) => (
               <option key={d.id} value={d.id}>
@@ -143,11 +128,7 @@ export function QueueEntryForm({
           </Select>
         </Field>
         <Field label="Target week (optional)">
-          <Input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-          />
+          <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} />
           <p className="text-xs text-[var(--muted-foreground)]">
             Pick any day in the target week — we&rsquo;ll snap to that week&rsquo;s Monday.
           </p>
@@ -176,7 +157,11 @@ export function QueueEntryForm({
           </Button>
         )}
         <Button type="submit" disabled={!picked || create.isPending}>
-          {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          {create.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4" />
+          )}
           {create.isPending ? "Adding…" : "Add to queue"}
         </Button>
       </div>
@@ -219,7 +204,13 @@ function DuplicateConfirm({
             className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3 text-sm"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="font-medium">{e.source === "walk_in" ? "Walk-in" : e.source === "screening" ? "Screening" : "Follow-up"}</span>
+              <span className="font-medium">
+                {e.source === "walk_in"
+                  ? "Walk-in"
+                  : e.source === "screening"
+                    ? "Screening"
+                    : "Follow-up"}
+              </span>
               <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
                 #{e.id} · {e.priority}
               </span>
@@ -229,12 +220,15 @@ function DuplicateConfirm({
                 {fmtTargetWeek(e.targetDate)}
               </div>
             )}
-            {e.notes && <div className="mt-1 text-xs text-[var(--muted-foreground)]">{e.notes}</div>}
+            {e.notes && (
+              <div className="mt-1 text-xs text-[var(--muted-foreground)]">{e.notes}</div>
+            )}
           </li>
         ))}
       </ul>
       <p className="text-sm text-[var(--muted-foreground)]">
-        If the new entry is for a different reason, you can still add it. Otherwise, book or update the existing one.
+        If the new entry is for a different reason, you can still add it. Otherwise, book or update
+        the existing one.
       </p>
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onCancel} disabled={pending}>

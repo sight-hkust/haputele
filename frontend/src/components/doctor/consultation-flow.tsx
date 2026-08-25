@@ -4,7 +4,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { ArrowLeft, ArrowRight, CalendarPlus, CheckCircle2, Clock4, FileSignature, Save, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarPlus,
+  CheckCircle2,
+  Clock4,
+  FileSignature,
+  Save,
+  X,
+} from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/primitives/button";
@@ -25,13 +34,15 @@ import {
 } from "@/components/doctor/consultation-editors";
 import { ConsultationReview } from "@/components/doctor/consultation-review";
 import { DoctorSlotPicker } from "@/components/doctor/doctor-slot-picker";
-import {
-  SignatureCanvas,
-  type SignatureCanvasHandle,
-} from "@/components/doctor/signature-canvas";
+import { SignatureCanvas, type SignatureCanvasHandle } from "@/components/doctor/signature-canvas";
 import { explainError } from "@/lib/error-codes";
 import { appLocalToUtcIso, fmtRelative } from "@/lib/format";
-import { MY_SIGNATURE_URL, useCurrentDoctor, useSubmitConsultation, useUpdateConsultation } from "@/lib/use-api";
+import {
+  MY_SIGNATURE_URL,
+  useCurrentDoctor,
+  useSubmitConsultation,
+  useUpdateConsultation,
+} from "@/lib/use-api";
 import type { Consultation, FollowUpInput } from "@/types/api";
 import { cn } from "@/lib/cn";
 
@@ -45,9 +56,7 @@ const formSchema = z.object({
     symptoms: z.string(),
     observations: z.string(),
   }),
-  diagnoses: z.array(
-    z.object({ code: z.string(), text: z.string().optional() }),
-  ),
+  diagnoses: z.array(z.object({ code: z.string(), text: z.string().optional() })),
   medications: z.array(
     z.object({
       genericName: z.string(),
@@ -58,9 +67,7 @@ const formSchema = z.object({
       instructions: z.string().optional(),
     }),
   ),
-  labs: z.array(
-    z.object({ testName: z.string().optional(), instructions: z.string().optional() }),
-  ),
+  labs: z.array(z.object({ testName: z.string().optional(), instructions: z.string().optional() })),
   referrals: z.array(
     z.object({
       specialistOrDepartment: z.string().optional(),
@@ -133,7 +140,10 @@ function toPatch(v: ConsultationFormShape) {
       })),
     labs: v.labs
       .filter((l) => l.testName?.trim() || l.instructions?.trim())
-      .map((l) => ({ testName: l.testName || undefined, instructions: l.instructions || undefined })),
+      .map((l) => ({
+        testName: l.testName || undefined,
+        instructions: l.instructions || undefined,
+      })),
     referrals: v.referrals
       .filter((r) => r.specialistOrDepartment?.trim() || r.instructions?.trim())
       .map((r) => ({
@@ -285,9 +295,7 @@ export function ConsultationFlow({
       <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-8">
         {stage === "notes" && (
           <Card variant="elevated" className="p-8">
-            <h2 className="mb-2 font-display text-2xl tracking-[-0.01em]">
-              Consultation notes
-            </h2>
+            <h2 className="mb-2 font-display text-2xl tracking-[-0.01em]">Consultation notes</h2>
             <p className="mb-6 text-sm text-[var(--muted-foreground)]">
               Capture the patient&rsquo;s complaint and your observations from the call.
             </p>
@@ -297,11 +305,7 @@ export function ConsultationFlow({
 
         {stage === "rx" && (
           <Card variant="elevated" className="flex flex-col gap-10 p-8">
-            <DiagnosesEditor
-              control={form.control}
-              register={form.register}
-              watch={form.watch}
-            />
+            <DiagnosesEditor control={form.control} register={form.register} watch={form.watch} />
             <MedicationsEditor control={form.control} register={form.register} />
             <LabsEditor control={form.control} register={form.register} />
             <ReferralsEditor control={form.control} register={form.register} />
@@ -382,7 +386,8 @@ export function ConsultationFlow({
                       />
                     </div>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      Creates a queue entry tagged to you as preferred doctor, snapped to the Monday of that target week.
+                      Creates a queue entry tagged to you as preferred doctor, snapped to the Monday
+                      of that target week.
                     </p>
                   </div>
                 )}
@@ -406,7 +411,6 @@ export function ConsultationFlow({
                 ) : (
                   <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
                     <div className="flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-white">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={MY_SIGNATURE_URL}
                         alt="Your saved e-signature"
@@ -439,12 +443,8 @@ export function ConsultationFlow({
             footer is sticky at the bottom, so a banner at the top of the page
             would sit outside the viewport and a failed click would look like
             a dead button. */}
-        {update.error && (
-          <ErrorBanner>{explainError(update.error.error)}</ErrorBanner>
-        )}
-        {submit.error && (
-          <ErrorBanner>{explainError(submit.error.error)}</ErrorBanner>
-        )}
+        {update.error && <ErrorBanner>{explainError(update.error.error)}</ErrorBanner>}
+        {submit.error && <ErrorBanner>{explainError(submit.error.error)}</ErrorBanner>}
 
         {/* Footer — back / save / next / submit */}
         <div className="sticky bottom-4 z-10 flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-lg backdrop-blur">
@@ -528,7 +528,9 @@ function FollowUpOption({
       <div
         className={cn(
           "flex h-8 w-8 items-center justify-center rounded-lg",
-          active ? "bg-[var(--accent)]/15 text-[var(--accent)]" : "bg-[var(--muted)] text-[var(--muted-foreground)]",
+          active
+            ? "bg-[var(--accent)]/15 text-[var(--accent)]"
+            : "bg-[var(--muted)] text-[var(--muted-foreground)]",
         )}
       >
         <Icon className="h-4 w-4" />

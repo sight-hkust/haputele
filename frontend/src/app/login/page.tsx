@@ -93,9 +93,8 @@ function LoginScreen() {
         // mode, by design. But we can see what was typed, and the user
         // can't: a stray space in a masked password field is invisible.
         // Offer it as a possible explanation alongside the real error.
-        const hint = err.error === "invalid_credentials"
-          ? loginWhitespaceHint(username, password)
-          : null;
+        const hint =
+          err.error === "invalid_credentials" ? loginWhitespaceHint(username, password) : null;
         setError([explainError(err.error), hint].filter(Boolean).join(" "));
       } else {
         setError("Couldn't reach the server. Try again in a moment.");
