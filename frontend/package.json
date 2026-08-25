@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "check:dob": "node --experimental-strip-types scripts/check-dob-date.mjs",
     "check:calendar": "node --experimental-strip-types scripts/check-calendar-date.mjs",
-    "generate:api": "kubb generate"
+    "generate:api": "python3 ../backend/app/scripts/export_openapi.py openapi.json && kubb generate"
   },
   "dependencies": {
     "@fullcalendar/core": "6.1.21",
