@@ -77,6 +77,7 @@ import type {
 // The dep on `session` ensures consumers re-render after login/logout.
 export function useAuthedApi() {
   const { session } = useAuth();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `session` deliberately invalidates the memoized fetcher on login/logout so consumer effects re-run against the new session.
   return useCallback(
     <T>(path: string, options: Parameters<typeof api>[1] = {}) => api<T>(path, options),
     [session],
@@ -933,6 +934,7 @@ export function useAttachmentImage(
   const [error, setError] = useState<ApiError | null>(null);
   const [attempt, setAttempt] = useState(0);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is a retry trigger and `session` re-fetches on login/logout; neither is read in the body.
   useEffect(() => {
     let cancelled = false;
     let created: string | null = null;

@@ -90,6 +90,7 @@ export function AttachmentsPanel({
 
   // Object URLs outlive the component otherwise — revoke whatever is still
   // staged if the panel unmounts mid-review.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: unmount-only cleanup must capture `staged` as-last-rendered — listing it would revoke live object URLs on every stage change.
   useEffect(() => {
     return () =>
       staged.forEach((s) => {

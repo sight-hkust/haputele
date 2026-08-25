@@ -36,7 +36,7 @@ export function cellKey(dayIndex: number, slotIndex: number): CellKey {
   return `${dayIndex}-${slotIndex}`;
 }
 
-function parseCellKey(k: CellKey): { dayIndex: number; slotIndex: number } {
+function _parseCellKey(k: CellKey): { dayIndex: number; slotIndex: number } {
   const [d, s] = k.split("-").map(Number);
   return { dayIndex: d, slotIndex: s };
 }
@@ -219,14 +219,16 @@ function FragmentRow({
         const isBooked = booked?.has(k) ?? false;
         const disabled = readOnly || d.isPast;
         return (
-          <div
+          <button
             key={d.index}
+            type="button"
+            tabIndex={-1}
             onPointerDown={(e) => onPointerDownCell(d.index, slotIndex, e)}
             onPointerEnter={() => onPointerEnterCell(d.index, slotIndex)}
             className={cn(
-              "relative border-t border-[var(--border)]/60",
+              "relative block w-full border-t border-[var(--border)]/60",
               !onHourBoundary && "border-t-dashed",
-              "transition-colors duration-75",
+              "transition-colors duration-75 p-0 text-left",
               !disabled && "cursor-pointer",
               active
                 ? "bg-emerald-400/70 hover:bg-emerald-400/80"
@@ -248,7 +250,7 @@ function FragmentRow({
                 }}
               />
             )}
-          </div>
+          </button>
         );
       })}
     </>

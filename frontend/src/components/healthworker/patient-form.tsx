@@ -40,7 +40,7 @@ type FormValues = z.infer<typeof baseSchema>;
 const GENDER_OPTIONS = ["female", "male", "other"];
 
 function strip(v: string | undefined): string | undefined {
-  return v && v.trim() ? v.trim() : undefined;
+  return v?.trim() || undefined;
 }
 
 export type PatientFormSubmit =

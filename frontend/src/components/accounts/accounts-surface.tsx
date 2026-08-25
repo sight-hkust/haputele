@@ -443,12 +443,18 @@ function AccountRow({
   const Icon = isDoctor ? Stethoscope : account.role === "sys-admin" ? ShieldCheck : UserCog;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: table row acting as a button — HTML forbids <button> inside <tr>; role/tabIndex/aria-pressed + key handler replicate it.
     <tr
       onClick={onOpen}
       tabIndex={0}
       role="button"
       aria-pressed={selected}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
       className={cn(
         "cursor-pointer border-b border-[var(--border)] outline-none transition-colors last:border-0 hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/40",
         selected && "bg-[var(--accent)]/5 hover:bg-[var(--accent)]/5",

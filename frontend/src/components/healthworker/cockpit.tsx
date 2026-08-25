@@ -381,6 +381,7 @@ function VitalsStep({
   // Briefly confirm a successful save so the HW knows the vitals were stored —
   // there's no other signal once the form re-renders with the same values.
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `upsert.data` re-arms the toast when a second save stores identical values — `isSuccess` alone wouldn't flip.
   useEffect(() => {
     if (!upsert.isSuccess) return;
     setSavedAt(fmtTime(new Date().toISOString()));
@@ -559,6 +560,7 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
 
   // Hand-rolled fetch so we can manage the object URL lifecycle (revoke
   // on unmount) — usePrescriptionPdf would keep the blob in the cache.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is a retry trigger — bumping it re-runs the fetch without being read in the body.
   useEffect(() => {
     let revoked = false;
     let createdUrl: string | null = null;

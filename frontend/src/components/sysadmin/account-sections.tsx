@@ -169,7 +169,7 @@ export function StatusHeader({
         }
       >
         <span
-          className={"h-1.5 w-1.5 rounded-full " + (active ? "bg-emerald-500" : "bg-rose-500")}
+          className={`h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-rose-500"}`}
           aria-hidden
         />
         {label}

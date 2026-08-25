@@ -21,7 +21,6 @@ import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banne
 import { Input, Label } from "@/components/primitives/input";
 import { Modal } from "@/components/primitives/modal";
 import {
-  Field,
   PasswordSection,
   ProfileSection,
   Section,
@@ -116,6 +115,7 @@ function ManageableBody({
   const disable = useDisableAccount();
   const enable = useEnableAccount();
   const del = useDeleteAccount();
+  const statusError = disable.error ?? enable.error;
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isDisabled = account.disabledAt !== null;
@@ -158,9 +158,7 @@ function ManageableBody({
             Disable sign-in
           </Button>
         )}
-        {disable.error || enable.error ? (
-          <ErrorBanner>{explainError((disable.error ?? enable.error)!.error)}</ErrorBanner>
-        ) : null}
+        {statusError ? <ErrorBanner>{explainError(statusError.error)}</ErrorBanner> : null}
       </Section>
 
       <PasswordSection username={account.username} />

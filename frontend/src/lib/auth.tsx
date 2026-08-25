@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // stay anonymous. Anything else (rejected fetch, 5xx) means the backend
   // state is *unknown*: flag bootstrapFailed so guards show a retry screen
   // instead of mistaking a valid session for a lapsed one.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is the retryBootstrap trigger — bumping it re-probes without being read in the body.
   useEffect(() => {
     let cancelled = false;
     (async () => {

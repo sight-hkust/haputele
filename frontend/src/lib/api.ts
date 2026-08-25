@@ -78,7 +78,7 @@ export async function api<T = unknown>(path: string, options: ApiOptions = {}): 
   // /setup/initialize reads Authorization, the rest of the app reads
   // the session cookie. Cookies still ride along (credentials: include)
   // but the server's gate decides which one matters per endpoint.
-  if (auth) finalHeaders["Authorization"] = `Bearer ${auth}`;
+  if (auth) finalHeaders.Authorization = `Bearer ${auth}`;
 
   // CSRF echo on unsafe verbs. No cookie → no header; the backend
   // responds with 401 (no session) or 403 (csrf_failed), and the caller

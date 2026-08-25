@@ -92,6 +92,7 @@ function Workspace() {
   // user-driven mode changes afterwards aren't overwritten.
   const queueEntryQ = useQueueEntry(bookFromQueueParam ? Number(bookFromQueueParam) : null);
   const [consumedQueueParam, setConsumedQueueParam] = useState(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: guarded one-shot deep-link consumer — focusBookingCard/router identities change per render and the consumedQueueParam flag makes refires no-ops.
   useEffect(() => {
     if (!consumedQueueParam && queueEntryQ.data) {
       focusBookingCard(queueEntryQ.data);
@@ -291,9 +292,8 @@ function BookingCard({
   // in fresh mode where the HW is choosing a patient. In from-queue mode we
   // don't show it (the queue entry is already the context).
   const [activePatientId, setActivePatientId] = useState<number | undefined>(initialPatientId);
-
-  const error =
-    create.error || book.error ? explainError((create.error || book.error)!.error) : null;
+  const submitError = create.error ?? book.error;
+  const error = submitError ? explainError(submitError.error) : null;
   const submitting = create.isPending || book.isPending;
 
   const handleSubmit = (v: { patientId: number; doctorId: number; scheduledAt: string }) => {
