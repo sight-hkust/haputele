@@ -945,3 +945,147 @@ class CapturePeekOut(BaseModel):
     beyond holding the token, so we leak nothing identifying."""
     purpose: str
     expiresAt: datetime
+
+
+# ── Composite endpoint responses ─────────────────────────────────────
+# Named response models for endpoints that previously declared
+# `response_model=dict` (or a bare `-> dict` return). The OpenAPI spec —
+# and the frontend codegen it feeds — needs declared shapes; a bare dict
+# comes out as an untyped object on the TS side. Wire output is unchanged:
+# these only declare what the handlers already return.
+# Multi-entity wrappers take *Response; single-concept payloads keep the *Out suffix.
+
+
+class PatientCreateResponse(BaseModel):
+    """POST /patients — the new patient plus its signed master consent."""
+
+    patient: PatientOut
+    masterConsent: ConsentOut
+
+
+class PatientListResponse(BaseModel):
+    """GET /patients — one search page."""
+
+    patients: list[PatientOut]
+    page: int
+
+
+class PatientDetailResponse(BaseModel):
+    """GET /patients/{id} — profile is null until the first intake save."""
+
+    patient: PatientOut
+    profile: ProfileOut | None
+
+
+class MasterConsentResponse(BaseModel):
+    """POST /patients/{id}/consents (and .../revoke)."""
+
+    masterConsent: ConsentOut
+
+
+class SessionConsentResponse(BaseModel):
+    """POST /appointments/{id}/consent."""
+
+    consent: ConsentOut
+    appointment: AppointmentOut
+
+
+class PreconsultGetResponse(BaseModel):
+    """GET /appointments/{id}/preconsult — `editable` mirrors the backend
+    state gate (consent_pending / data_collection)."""
+
+    preconsult: PreconsultOut | None
+    appointment: AppointmentOut
+    editable: bool
+
+
+class PreconsultUpsertResponse(BaseModel):
+    """PUT /appointments/{id}/preconsult."""
+
+    preconsult: PreconsultOut
+    appointment: AppointmentOut
+
+
+class MeetingTokenResponse(BaseModel):
+    """LiveKit join credentials, minted per role."""
+
+    room: str
+    token: str
+    serverUrl: str
+
+
+class StartMeetingResponse(MeetingTokenResponse):
+    """POST /appointments/{id}/start-meeting — token payload plus the
+    appointment flipped to in_progress."""
+
+    appointment: AppointmentOut
+
+
+class ConsultationDraftResponse(BaseModel):
+    """POST /appointments/{id}/consultation/draft."""
+
+    consultationId: int
+    draft: ConsultationOut
+
+
+class SubmitConsultationResponse(BaseModel):
+    """POST /consultations/{id}/submit — the follow-up keys appear only when
+    the doctor opted into an exact appointment / N-weeks follow-up."""
+
+    consultation: ConsultationOut
+    appointment: AppointmentOut
+    followUpAppointment: AppointmentOut | None = None
+    followUpQueueEntry: QueueEntryOut | None = None
+
+
+class AppointmentCancelResponse(BaseModel):
+    """POST /appointments/{id}/cancel — queueEntry appears only when the
+    healthworker opted into re-queueing."""
+
+    appointment: AppointmentOut
+    queueEntry: QueueEntryOut | None = None
+
+
+class QueueBookResponse(BaseModel):
+    """POST /queue/{id}/book."""
+
+    queueEntry: QueueEntryOut
+    appointment: AppointmentOut
+
+
+class CaptureUploadOut(BaseModel):
+    """POST /capture/{token} — upload ack from the phone relay. `purpose`
+    stays `str`: the value is validated when the session is minted."""
+
+    ok: bool
+    purpose: str
+
+
+class DoctorInviteCreateOut(BaseModel):
+    """POST /doctors/invites and POST /doctors/{id}/reinvite-reapply."""
+
+    inviteId: int
+    email: str
+
+
+class SysadminMeOut(BaseModel):
+    """GET /sysadmin/me."""
+
+    username: str
+    role: str
+    fullName: str | None = None
+    contact: str | None = None
+
+
+class SystemConfigOut(BaseModel):
+    """GET/PATCH /sysadmin/system-config."""
+
+    # Keys are always emitted (possibly null); PATCH responses carry the full row.
+    initializedAt: datetime | None
+    instituteName: str | None
+    instituteAddressLines: list[str] | None
+    instituteContactPhone: str | None
+    instituteContactEmail: str | None
+    appTimezone: str | None
+    exportTimezone: str | None
+    masterConsentVersion: str | None
