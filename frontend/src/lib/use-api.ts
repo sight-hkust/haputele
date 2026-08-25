@@ -23,6 +23,7 @@ import type {
   CaptureSessionStatus,
   Consent,
   Consultation,
+  ConsultationDraftResponse,
   AccountRosterEntry,
   AccountUpdateRequest,
   CreateOperatingAccountRequest,
@@ -528,8 +529,6 @@ export function useMeetingToken(appointmentId: number) {
 }
 
 // ── Consultation (doctor flow) ───────────────────────────────────────
-export type ConsultationDraftResponse = { consultationId: number; draft: Consultation };
-
 export function useCreateOrGetDraft() {
   const fetcher = useAuthedApi();
   const qc = useQueryClient();

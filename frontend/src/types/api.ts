@@ -1,7 +1,20 @@
-// Mirror of backend/app/schemas.py output shapes. Critical detail: PatientOut,
-// DoctorOut, and AppointmentOut all expose `id` (mapped from patient_id /
-// doctor_id / appointment_id server-side). Don't reference *_id on these.
+// Wire-contract types for the FastAPI backend.
+//
+// Everything here is either:
+//   1. an alias onto OpenAPI-generated types (src/types/generated.ts,
+//      regenerated via `npm run generate:api`; CI fails when it drifts), or
+//   2. a hand-written overlay the spec can't express: several enums are
+//      declared as plain `str` on the backend, so the UI unions live here.
+//
+// Backend class names are the source of truth; the aliases preserve the
+// historical frontend names so call sites stay stable. If a backend model
+// is renamed, update only the alias below.
 
+import type { components } from "./generated";
+
+type Schemas = components["schemas"];
+
+// ── Overlays: backend declares these as plain `str` ──────────────────
 export type Role = "admin" | "doctor" | "healthworker" | "sys-admin";
 export type Lang = "en" | "ta" | "si";
 
@@ -23,173 +36,14 @@ export const LIVE_STATES: AppointmentStatus[] = [
   "awaiting_notes",
 ];
 
-// ── Patient ──────────────────────────────────────────────────────────
-export type Patient = {
-  id: number;
-  given: string;
-  family: string;
-  gender: string;
-  dob: string | null;
-  language: Lang | null;
-  screeningRef: string | null;
-  nationalId: string | null;
-  contact: string | null;
-  address: string | null;
-  masterConsentId: number | null;
-  createdAt: string;
-};
+export type CapturePurpose = "appointment_attachment" | "rubber_stamp";
+export type OperatingAccountRole = "admin" | "healthworker";
+export type AccountRole = "sys-admin" | "admin" | "healthworker" | "doctor";
+export type QueueSource = "screening" | "walk_in" | "follow_up";
+export type QueueStatus = "pending" | "booked" | "cancelled";
+export type QueuePriority = "urgent" | "routine";
 
-export type PatientCreateRequest = {
-  masterConsent: {
-    agreed: boolean;
-    version?: string;
-    capturedAt?: string;
-    // Base64-encoded PNG from the on-screen signature pad. Required when
-    // `agreed=true` (server rejects with `signature_required` otherwise).
-    signatureImage?: string;
-  };
-  given: string;
-  family: string;
-  gender: string;
-  // Required — the prescription PDF derives the §1.7-mandatory patient age
-  // from it. `PatientUpdateRequest` below is Partial<…>, so editing an older
-  // record without a dob stays possible.
-  dob: string;
-  language?: Lang;
-  screeningRef?: string;
-  nationalId?: string;
-  contact?: string;
-  address?: string;
-};
-
-export type PatientUpdateRequest = Partial<Omit<PatientCreateRequest, "masterConsent" | "dob">> & {
-  dob?: string | null;
-};
-
-// ── Doctor ───────────────────────────────────────────────────────────
-export type Doctor = {
-  id: number;
-  username: string;
-  givenName: string;
-  familyName: string;
-  contact: string;
-  email: string;
-  slmcRegistrationNumber: string;
-  qualifications: string;
-  practitionerAddress: string;
-  instituteName: string;
-  // Institute phone is optional — null when the doctor didn't provide one.
-  instituteContact: string | null;
-  // True when the doctor has saved a default e-signature (lets them finalise
-  // consultations without drawing one each time). The image itself is fetched
-  // separately from GET /doctors/me/signature, never inlined here.
-  hasDefaultSignature?: boolean;
-  active: boolean;
-  // Four-state lifecycle (server-computed):
-  //   awaiting_setup    → live unconsumed invite, no form submission yet
-  //   awaiting_approval → doctor self-onboarded; admin needs to act
-  //   rejected          → admin reviewed + rejected
-  //   active            → approved + usable
-  // Optional for backward compatibility with older response shapes.
-  onboardingStatus?: "awaiting_setup" | "awaiting_approval" | "rejected" | "active";
-  // Lifecycle audit. submittedAt is always present (row creation time);
-  // the rest populate at the relevant transition. previousDoctorId links
-  // a reapplication back to the rejected attempt it supersedes.
-  submittedAt?: string;
-  approvedAt?: string | null;
-  rejectedAt?: string | null;
-  rejectedReason?: string | null;
-  approvedBy?: string | null;
-  rejectedBy?: string | null;
-  previousDoctorId?: number | null;
-  // Only the singular GET /doctors/{id} populates this (as a base64 data URL);
-  // the list endpoint omits it to keep payloads lean.
-  rubberStampImage?: string | null;
-};
-
-// GET /doctors/summary — per-status counts driving the approval-queue tabs.
-export type DoctorSummary = {
-  awaitingApproval: number;
-  awaitingSetup: number;
-  // Open email-only invites whose doctor hasn't onboarded yet (live + expired).
-  invited: number;
-  active: number;
-  rejected: number;
-  total: number;
-};
-
-// GET /doctors/invites — open email-only invites whose doctor hasn't completed
-// onboarding yet. No Doctor row exists for these; they're surfaced in the admin
-// queue's "Invited" tab so they're visible and can be resent / revoked.
-export type DoctorInvite = {
-  inviteId: number;
-  email: string;
-  // Optional admin-provided greeting hint; the real name is captured at onboarding.
-  familyName: string | null;
-  createdAt: string;
-  expiresAt: string;
-  // "invited" → live link; "invite_expired" → past expiry, resend to refresh.
-  status: "invited" | "invite_expired";
-};
-
-// ── Consent ──────────────────────────────────────────────────────────
-export type Consent = {
-  id: number;
-  patientId: number;
-  scope: "master" | "session";
-  version: string | null;
-  agreed: boolean;
-  appointmentId: number | null;
-  capturedAt: string;
-  revokedAt: string | null;
-  reason: string | null;
-  // hasSignature is derived server-side from signature_image NOT NULL —
-  // bytes themselves stay on the server. signatureMethod distinguishes
-  // 'signature' from future channels (e.g. 'voice').
-  hasSignature: boolean;
-  signatureMethod: string | null;
-};
-
-// ── Appointment ──────────────────────────────────────────────────────
-export type Appointment = {
-  id: number;
-  patientId: number;
-  doctorId: number;
-  scheduledAt: string;
-  status: AppointmentStatus;
-  cancellationReason: string | null;
-  createdAt: string;
-};
-
-export type CalendarAppointment = Appointment & {
-  patientName: string;
-  doctorName: string;
-};
-
-// ── Preconsult ───────────────────────────────────────────────────────
-export type Preconsult = {
-  appointmentId: number;
-  height: number | null;
-  weight: number | null;
-  sysBp: number | null;
-  diaBp: number | null;
-  pulse: number | null;
-  temperature: number | null;
-  primaryComplaint: string | null;
-  submittedAt: string;
-};
-
-export type PreconsultRequest = {
-  height?: number | null;
-  weight?: number | null;
-  sysBp?: number | null;
-  diaBp?: number | null;
-  pulse?: number | null;
-  temperature?: number | null;
-  primaryComplaint?: string | null;
-};
-
-// ── Profile JSONB shapes ─────────────────────────────────────────────
+// ── Profile / consultation enum overlays ─────────────────────────────
 export type DiseaseCode =
   | "diabetes"
   | "hypertension"
@@ -201,50 +55,6 @@ export type DiseaseCode =
   | "mental_health"
   | "other";
 
-export type DiseaseEntry = { code: DiseaseCode; text?: string };
-export type SurgeryEntry = { description: string };
-export type AllergyEntry = {
-  type: "food" | "medication" | "other";
-  name: string;
-  medication?: string;
-  treatedWhere?: string;
-};
-export type ExistingMedicationEntry = {
-  drug: string;
-  dosage?: string;
-  frequency?: string;
-  notes?: string;
-};
-export type Lifestyle = {
-  smoking: "never" | "current" | "prior" | null;
-  alcohol: "none" | "occasional" | "regular" | null;
-  // Betel quid / areca nut chewing. Same never/current/prior shape as smoking,
-  // not alcohol's frequency scale — "prior" carries oral-cancer risk long after
-  // someone stops. (#64 calls it "acorn", a mishearing of "areca".)
-  betelAreca: "never" | "current" | "prior" | null;
-  occupation: string | null;
-  physicalActivity: string | null;
-};
-
-export type Profile = {
-  patientId: number;
-  diseaseHistory: DiseaseEntry[];
-  surgicalHistory: SurgeryEntry[];
-  allergies: AllergyEntry[];
-  medications: ExistingMedicationEntry[];
-  lifestyle: Lifestyle;
-  updatedAt: string;
-};
-
-export type ProfileRequest = {
-  diseaseHistory: DiseaseEntry[];
-  surgicalHistory: SurgeryEntry[];
-  allergies: AllergyEntry[];
-  medications: ExistingMedicationEntry[];
-  lifestyle: Partial<Lifestyle>;
-};
-
-// ── Consultation JSONB shapes ────────────────────────────────────────
 export type DiagnosisCode =
   | "allergy"
   | "alzheimers"
@@ -270,350 +80,125 @@ export type DiagnosisCode =
   | "thyroid"
   | "others";
 
-export type DiagnosisEntry = { code: DiagnosisCode; text?: string };
-export type MedicationEntry = {
-  genericName: string;
-  tradeName?: string;
-  dose?: string;
-  frequency?: string;
-  duration?: string;
-  instructions?: string;
+// ── Entities ─────────────────────────────────────────────────────────
+export type Patient = Schemas["PatientOut"];
+export type Doctor = Schemas["DoctorOut"] & { rubberStampImage?: string | null };
+export type DoctorSummary = Schemas["DoctorSummaryOut"];
+export type DoctorInvite = Schemas["DoctorInviteOut"];
+export type Consent = Schemas["ConsentOut"];
+export type Appointment = Schemas["AppointmentOut"] & { status: AppointmentStatus };
+export type CalendarAppointment = Schemas["CalendarAppointmentOut"] & {
+  status: AppointmentStatus;
 };
-export type LabEntry = { testName?: string; instructions?: string };
-export type ReferralEntry = { specialistOrDepartment?: string; instructions?: string };
-
-export type Notes = {
-  complaint?: string | null;
-  onset?: string | null;
-  symptoms?: string | null;
-  observations?: string | null;
+export type Preconsult = Schemas["PreconsultOut"];
+export type Profile = Schemas["ProfileOut"] & {
+  diseaseHistory: Schemas["DiseaseEntry"][];
+  surgicalHistory: Schemas["SurgeryEntry"][];
+  allergies: Schemas["AllergyEntry"][];
+  medications: Schemas["ExistingMedicationEntry"][];
+  lifestyle: Schemas["Lifestyle"];
 };
-
-export type Consultation = {
-  id: number;
-  appointmentId: number;
-  status: "draft" | "completed";
-  notes: Notes;
-  diagnoses: DiagnosisEntry[];
-  medications: MedicationEntry[];
-  labs: LabEntry[];
-  referrals: ReferralEntry[];
-  followUpDate: string | null;
-  followUpWeeks: number | null;
-  followUpAppointmentId: number | null;
+export type Consultation = Schemas["ConsultationOut"] & {
+  diagnoses: Schemas["DiagnosisEntry"][];
+  medications: Schemas["MedicationEntry"][];
+  labs: Schemas["LabEntry"][];
+  referrals: Schemas["ReferralEntry"][];
   signedAt: string | null;
 };
-
-// Discriminated follow-up block for `POST /consultations/{id}/submit`.
-// Doctor either books an exact follow-up appointment for themselves
-// (server uses parent appointment's doctor_id), or recommends N weeks
-// (server creates a follow-up queue entry). Omit for no follow-up.
-export type FollowUpInput =
-  | { kind: "appointment"; scheduledAt: string }
-  | { kind: "weeks"; weeks: number };
-
-// ── Attachments (HW-uploaded photos) ─────────────────────────────────
-export type AttachmentMeta = {
-  id: number;
-  appointmentId: number;
-  filename: string;
-  mimeType: string;
-  byteSize: number;
-  caption: string | null;
-  uploadedBy: string;
-  uploadedAt: string;
-};
-
-// ── Capture sessions (phone-as-camera via QR) ────────────────────────
-export type CapturePurpose = "appointment_attachment" | "rubber_stamp";
-
-export type CaptureSession = {
-  id: number;
-  token: string; // raw secret — only present in the creation response
-  purpose: CapturePurpose;
-  expiresAt: string;
-};
-
-export type CaptureSessionStatus = {
-  id: number;
-  purpose: CapturePurpose;
-  expiresAt: string;
-  closed: boolean;
-  uploadCount: number;
-  relayReady: boolean;
-};
-
-export type AppointmentDetail = {
+export type Notes = Schemas["NotesPatch"];
+export type AttachmentMeta = Schemas["AttachmentMetaOut"];
+export type AppointmentDetail = Omit<
+  Schemas["AppointmentDetailOut"],
+  "appointment" | "preconsult" | "profile" | "consultation"
+> & {
   appointment: Appointment;
-  patient: Patient | null;
-  profile: Profile | null;
   preconsult: Preconsult | null;
+  profile: Profile | null;
   consultation: Consultation | null;
-  masterConsentStatus: "ok" | "needs_reconsent";
-  attachments: AttachmentMeta[];
 };
-
-// ── History ──────────────────────────────────────────────────────────
-export type HistoryConsultationItem = {
-  consultationId: number;
-  appointmentId: number;
-  date: string;
-  diagnoses: DiagnosisEntry[];
-  prescription: MedicationEntry[];
-  notes: Notes;
+export type HistoryConsultationItem = Schemas["HistoryConsultationItem"] & {
+  diagnoses: Schemas["DiagnosisEntry"][];
+  prescription: Schemas["MedicationEntry"][];
 };
-
-export type PatientHistory = {
-  appointments: Appointment[];
+export type PatientHistory = Omit<Schemas["PatientHistoryOut"], "consultations"> & {
   consultations: HistoryConsultationItem[];
 };
-
-// ── First-run setup wizard (backend 0006_system_init) ─────────────────
-
-export type SetupStatusResponse = { initialized: boolean };
-
-export type VerifySetupTokenRequest = { token: string };
-// The setup-session JWT travels in the body — the wizard holds it in
-// React state and sends it back as `Authorization: Bearer …` on
-// /setup/initialize. No cookies are set during the setup flow.
-export type VerifySetupTokenResponse = {
-  expiresAt: string;
-  setupSessionToken: string;
-};
-
-export type InitializeSystemRequest = {
-  sysAdmin: { username: string; password: string };
-  instituteIdentity: {
-    name: string;
-    addressLines: string[];
-    contactPhone: string;
-    contactEmail: string;
-  };
-  appTimezone: string;
-  exportTimezone: string;
-  masterConsentVersion: string;
-};
-
-export type InitializeSystemResponse = {
-  ok: boolean;
-  username: string;
-  role: "sys-admin";
-  expiresAt: string;
-};
-
-// POST /accounts — open to both administrative roles, but what each may
-// create differs: sys-admin → admin | healthworker, admin → healthworker
-// only. Creating a role outside your reach is a 403 `cannot_manage_role`.
-// Doctors are never created here; use POST /doctors.
-export type OperatingAccountRole = "admin" | "healthworker";
-
-export type CreateOperatingAccountRequest = {
-  username: string;
-  password: string;
-  role: OperatingAccountRole;
-  fullName?: string;
-  contact?: string;
-};
-
-export type CreateOperatingAccountResponse = {
-  username: string;
-  role: OperatingAccountRole;
-};
-
-// GET /accounts — the roster THIS caller may see. A sys-admin gets the
-// whole platform (admins + healthworkers manageable, doctors read-only);
-// an admin gets healthworkers only, with admin and sys-admin rows withheld
-// server-side rather than filtered here. Roles beyond the operating two can
-// appear, so this is the broad role union.
-export type AccountRole = "sys-admin" | "admin" | "healthworker" | "doctor";
-
-export type AccountRosterEntry = {
-  username: string;
-  role: AccountRole;
-  // Ops-managed profile (operating accounts only); null for doctors and
-  // the sys-admin.
-  fullName: string | null;
-  contact: string | null;
-  // Account-level soft-disable stamp; null = active. Always null for
-  // doctors (see `doctorActive`) and the sys-admin.
-  disabledAt: string | null;
-  // Whether this surface can mutate the row (admin / healthworker only).
-  manageable: boolean;
-  // Only populated for doctor rows, mirroring the doctor.active flag.
-  doctorActive: boolean | null;
-  // Only populated for doctor rows — opens the doctor's full editor.
-  doctorId: number | null;
-};
-
-// POST /accounts/{username}/reset-password
-export type ResetAccountPasswordRequest = {
-  password: string;
-};
-
-// PATCH /accounts/{username} — edit ops-managed profile.
-export type AccountUpdateRequest = {
-  fullName?: string;
-  contact?: string;
-};
-
-// GET /sysadmin/me — the signed-in ops account + its editable profile.
-// The sys-admin manages its own account from the System page (it's
-// excluded from the /accounts roster).
-export type SysadminMe = {
-  username: string;
-  role: "sys-admin";
-  fullName: string | null;
-  contact: string | null;
-};
-
-// ── Sys-admin system config ───────────────────────────────────────────
-
-export type SystemConfig = {
-  initializedAt: string | null;
-  instituteName: string | null;
-  instituteAddressLines: string[] | null;
-  instituteContactPhone: string | null;
-  instituteContactEmail: string | null;
-  appTimezone: string | null;
-  exportTimezone: string | null;
-  masterConsentVersion: string | null;
-};
-
-// PATCH /sysadmin/system-config — all fields optional (PATCH semantics).
-export type SystemConfigUpdateRequest = {
-  instituteName?: string | null;
-  instituteAddressLines?: string[] | null;
-  instituteContactPhone?: string | null;
-  instituteContactEmail?: string | null;
-  appTimezone?: string | null;
-  exportTimezone?: string | null;
-  masterConsentVersion?: string | null;
-};
-
-// ── Wrappers used by certain endpoints ───────────────────────────────
-export type PatientListResponse = { patients: Patient[]; page: number };
-export type PatientCreateResponse = { patient: Patient; masterConsent: Consent };
-export type SessionConsentRequest = {
-  agreed: boolean;
-  // Required server-side when `agreed=true` — declines stay signature-less.
-  signatureImage?: string;
-  capturedAt?: string;
-};
-export type SessionConsentResponse = { consent: Consent; appointment: Appointment };
-export type ReConsentRequest = {
-  agreed: boolean;
-  version?: string;
-  capturedAt?: string;
-  signatureImage?: string;
-};
-export type MeetingTokenResponse = { room: string; token: string; serverUrl: string };
-export type StartMeetingResponse = MeetingTokenResponse & { appointment: Appointment };
-export type ReConsentResponse = { masterConsent: Consent };
-
-// ── Doctor availability ──────────────────────────────────────────────
-// Advisory time windows declaring when a doctor is reachable. Booking is
-// not gated on these — they overlay on the HW time picker as reference.
-export type Availability = {
-  id: number;
-  doctorId: number;
-  startAt: string;
-  endAt: string;
-  note: string | null;
-  createdBy: string;
-  createdAt: string;
-};
-
-export type AvailabilityCreateRequest = {
-  startAt: string;
-  endAt: string;
-  note?: string;
-};
-
-export type AvailabilityBulkCreateRequest = {
-  windows: AvailabilityCreateRequest[];
-};
-
-export type AvailabilityUpdateRequest = Partial<AvailabilityCreateRequest>;
-
-// ── Queue ────────────────────────────────────────────────────────────
-export type QueueSource = "screening" | "walk_in" | "follow_up";
-export type QueueStatus = "pending" | "booked" | "cancelled";
-export type QueuePriority = "urgent" | "routine";
-
-export type QueueEntry = {
-  id: number;
-  patientId: number;
+export type Availability = Schemas["AvailabilityOut"];
+export type QueueEntry = Schemas["QueueEntryOut"] & {
   source: QueueSource;
   status: QueueStatus;
   priority: QueuePriority;
-  preferredDoctorId: number | null;
-  targetDate: string | null;
-  notes: string | null;
-  sourceMeta: Record<string, unknown>;
-  appointmentId: number | null;
-  createdBy: string;
-  createdAt: string;
-  bookedAt: string | null;
-  cancelledAt: string | null;
-  cancellationReason: string | null;
 };
-
-// `POST /queue` — manual create rejects source='follow_up'.
-export type QueueEntryCreateRequest = {
-  patientId: number;
-  source: Exclude<QueueSource, "follow_up">;
-  priority?: QueuePriority;
-  preferredDoctorId?: number | null;
-  targetDate?: string | null;
-  notes?: string | null;
-  sourceMeta?: Record<string, unknown>;
-  force?: boolean;
+export type CaptureSession = Schemas["CaptureSessionOut"];
+export type CaptureSessionStatus = Schemas["CaptureSessionStatusOut"];
+export type AccountRosterEntry = Schemas["AccountRow"] & {
+  role: AccountRole;
+  fullName: string | null;
+  contact: string | null;
+  doctorActive: boolean | null;
+  doctorId: number | null;
 };
-
-export type QueueEntryUpdateRequest = {
-  priority?: QueuePriority;
-  preferredDoctorId?: number | null;
-  targetDate?: string | null;
-  notes?: string | null;
-  sourceMeta?: Record<string, unknown>;
+export type SysadminMe = Schemas["SysadminMeOut"] & {
+  role: "sys-admin";
+  fullName: string | null;
+  contact: string | null;
 };
+export type SystemConfig = Schemas["SystemConfigOut"];
+export type SetupStatusResponse = Schemas["SetupStatusOut"];
+export type VerifySetupTokenResponse = Schemas["VerifyTokenOut"];
+export type InitializeSystemResponse = Schemas["InitializeOut"] & { role: "sys-admin" };
 
-export type QueueBookRequest = { doctorId: number; scheduledAt: string };
-export type QueueCancelRequest = { reason?: string };
+// JSONB entry shapes — backend names match 1:1.
+export type DiseaseEntry = Schemas["DiseaseEntry"];
+export type SurgeryEntry = Schemas["SurgeryEntry"];
+export type AllergyEntry = Schemas["AllergyEntry"];
+export type ExistingMedicationEntry = Schemas["ExistingMedicationEntry"];
+export type Lifestyle = Schemas["Lifestyle"];
+export type DiagnosisEntry = Schemas["DiagnosisEntry"];
+export type MedicationEntry = Schemas["MedicationEntry"];
+export type LabEntry = Schemas["LabEntry"];
+export type ReferralEntry = Schemas["ReferralEntry"];
 
-export type QueueBookResponse = { queueEntry: QueueEntry; appointment: Appointment };
+// ── Requests ─────────────────────────────────────────────────────────
+export type PatientCreateRequest = Schemas["PatientCreate"];
+export type PatientUpdateRequest = Schemas["PatientUpdate"];
+export type ProfileRequest = Schemas["ProfileIn"];
+export type PreconsultRequest = Schemas["PreconsultIn"];
+export type SessionConsentRequest = Omit<Schemas["SessionConsentIn"], "scope">;
+export type ReConsentRequest = Omit<Schemas["ReConsentIn"], "scope">;
+export type SubmitConsultationRequest = Schemas["ConsultationSubmitIn"];
+export type FollowUpInput = Schemas["FollowUpAppointment"] | Schemas["FollowUpWeeks"];
+export type QueueEntryCreateRequest = Schemas["QueueEntryCreate"];
+export type QueueEntryUpdateRequest = Schemas["QueueEntryUpdate"];
+export type QueueBookRequest = Schemas["QueueBookIn"];
+export type QueueCancelRequest = Schemas["QueueCancelIn"];
+export type AppointmentCancelRequest = Schemas["AppointmentCancelIn"];
+export type RequeueOnCancelInput = Schemas["RequeueOnCancel"];
+export type ResetAccountPasswordRequest = Schemas["PasswordResetIn"];
+export type CreateOperatingAccountRequest = Schemas["AccountCreateIn"];
+export type CreateOperatingAccountResponse = Schemas["AccountOut"];
+export type AccountUpdateRequest = Schemas["AccountUpdateIn"];
+export type SystemConfigUpdateRequest = Schemas["SystemConfigUpdateIn"];
+export type VerifySetupTokenRequest = Schemas["VerifyTokenIn"];
+export type InitializeSystemRequest = Schemas["InitializeIn"];
+export type AvailabilityCreateRequest = Schemas["AvailabilityCreate"];
+export type AvailabilityUpdateRequest = Schemas["AvailabilityUpdate"];
+export type AvailabilityBulkCreateRequest = Schemas["AvailabilityBulkCreate"];
 
-// ── Appointment cancel — opt-in requeue ──────────────────────────────
-export type RequeueOnCancelInput = {
-  source: Exclude<QueueSource, "follow_up">;
-  priority?: QueuePriority;
-  preferredDoctorId?: number | null;
-  targetDate?: string | null;
-  notes?: string | null;
-  sourceMeta?: Record<string, unknown>;
-};
-
-export type AppointmentCancelRequest = {
-  reason?: string;
-  requeue?: RequeueOnCancelInput;
-};
-
-export type AppointmentCancelResponse = {
+// ── Composite responses (backend models from Phase A) ────────────────
+export type PatientListResponse = Schemas["PatientListResponse"];
+export type PatientCreateResponse = Schemas["PatientCreateResponse"];
+export type PatientDetailResponse = Schemas["PatientDetailResponse"];
+export type MasterConsentResponse = Schemas["MasterConsentResponse"];
+export type SessionConsentResponse = Schemas["SessionConsentResponse"];
+export type ReConsentResponse = Schemas["MasterConsentResponse"];
+export type MeetingTokenResponse = Schemas["MeetingTokenResponse"];
+export type StartMeetingResponse = Schemas["StartMeetingResponse"];
+export type QueueBookResponse = Omit<Schemas["QueueBookResponse"], "appointment"> & {
   appointment: Appointment;
-  queueEntry?: QueueEntry;
 };
-
-// ── Submit consultation ──────────────────────────────────────────────
-export type SubmitConsultationRequest = {
-  // Optional: omit to finalise with the doctor's saved default e-signature.
-  // Required only when the doctor has no saved signature.
-  signature?: string;
-  followUp?: FollowUpInput;
-};
-
-export type SubmitConsultationResponse = {
-  consultation: Consultation;
-  appointment: Appointment;
-  followUpAppointment?: Appointment;
-  followUpQueueEntry?: QueueEntry;
+export type AppointmentCancelResponse = Schemas["AppointmentCancelResponse"];
+export type SubmitConsultationResponse = Schemas["SubmitConsultationResponse"];
+export type ConsultationDraftResponse = Omit<Schemas["ConsultationDraftResponse"], "draft"> & {
+  draft: Consultation;
 };
