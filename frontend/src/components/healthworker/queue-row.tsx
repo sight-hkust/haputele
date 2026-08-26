@@ -2,27 +2,29 @@
 
 import Link from "next/link";
 import { AlertOctagon, CalendarPlus, Clock, Stethoscope, UserPlus, X } from "lucide-react";
+import { useMemo } from "react";
 
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
+import { useI18n } from "@/lib/i18n";
 import { usePatient } from "@/lib/use-api";
 import { fmtRelative, fmtTargetWeek, fullName } from "@/lib/format";
 import type { QueueEntry, QueueSource } from "@/types/api";
 
-export const QUEUE_SOURCE_META: Record<
+const QUEUE_SOURCE_TONE: Record<
   QueueSource,
-  { label: string; Icon: typeof Stethoscope; tone: string }
+  { Icon: typeof Stethoscope; tone: string; labelKey: string }
 > = {
-  walk_in: { label: "Walk-in", Icon: UserPlus, tone: "text-sky-700 bg-sky-50 border-sky-200" },
+  walk_in: { Icon: UserPlus, tone: "text-sky-700 bg-sky-50 border-sky-200", labelKey: "queue.walkIn" },
   screening: {
-    label: "Screening",
     Icon: AlertOctagon,
     tone: "text-amber-800 bg-amber-50 border-amber-200",
+    labelKey: "queue.screening",
   },
   follow_up: {
-    label: "Follow-up",
     Icon: Stethoscope,
     tone: "text-violet-700 bg-violet-50 border-violet-200",
+    labelKey: "queue.followUp",
   },
 };
 
@@ -37,10 +39,17 @@ export function QueueRow({
   onCancel: () => void;
   compact?: boolean;
 }) {
+  const { t } = useI18n();
   const patient = usePatient(entry.patientId);
-  const meta = QUEUE_SOURCE_META[entry.source];
+  const meta = QUEUE_SOURCE_TONE[entry.source];
   const Icon = meta.Icon;
   const isPending = entry.status === "pending";
+
+  const statusLabel = useMemo(() => {
+    const key = `queue.status.${entry.status}` as const;
+    const translated = t(key);
+    return translated === key ? entry.status : translated;
+  }, [entry.status, t]);
 
   return (
     <li>
@@ -50,12 +59,12 @@ export function QueueRow({
             className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] ${meta.tone}`}
           >
             <Icon className="h-3 w-3" />
-            {meta.label}
+            {t(meta.labelKey)}
           </div>
           {entry.priority === "urgent" && (
             <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
               <AlertOctagon className="h-3 w-3" />
-              Urgent
+              {t("queue.urgent")}
             </span>
           )}
           {!compact && (
@@ -69,7 +78,7 @@ export function QueueRow({
                     : "border border-[var(--border)] bg-[var(--muted)]/50 text-[var(--muted-foreground)]")
               }
             >
-              {entry.status}
+              {statusLabel}
             </span>
           )}
           <span className="ml-auto font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
@@ -84,7 +93,9 @@ export function QueueRow({
             href={`/healthworker/patients/${entry.patientId}`}
             className={`font-semibold tracking-[-0.01em] hover:text-[var(--accent)] hover:underline ${compact ? "text-sm" : "text-base"}`}
           >
-            {patient.data?.patient ? fullName(patient.data.patient) : `Patient #${entry.patientId}`}
+            {patient.data?.patient
+              ? fullName(patient.data.patient)
+              : t("forms.patientId", { id: entry.patientId })}
           </Link>
           {entry.targetDate && (
             <span className="inline-flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
@@ -104,7 +115,7 @@ export function QueueRow({
 
         {entry.cancellationReason && !compact && (
           <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-            Cancelled: {entry.cancellationReason}
+            {t("queue.cancelledReason", { reason: entry.cancellationReason })}
           </p>
         )}
 
@@ -112,11 +123,11 @@ export function QueueRow({
           <div className={`flex justify-end gap-2 ${compact ? "mt-2" : "mt-3"}`}>
             <Button variant="secondary" size="sm" onClick={onCancel}>
               <X className="h-4 w-4" />
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button size="sm" onClick={onBook}>
               <CalendarPlus className="h-4 w-4" />
-              Book
+              {t("common.book")}
             </Button>
           </div>
         )}

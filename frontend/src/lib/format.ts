@@ -1,6 +1,8 @@
-import { differenceInYears, formatDistanceToNow, parseISO } from "date-fns";
+import { differenceInYears, parseISO } from "date-fns";
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
 import { formatWeekRange } from "@/lib/calendar-date";
+import { dateFnsLocale, formatRelativeLocalized, formatWithIntl } from "@/lib/date-locale";
+import { getActiveLocale, translate } from "@/lib/i18n";
 
 // Single-source-of-truth for the application timezone. The DB stays in UTC;
 // every visible timestamp is converted to APP_TIMEZONE at render time so the
@@ -18,7 +20,15 @@ export const EXPORT_TIMEZONE = "Asia/Colombo";
 export function fmtDate(iso: string | null | undefined, pattern = "d MMM yyyy"): string {
   if (!iso) return "—";
   try {
-    return formatInTimeZone(parseISO(iso), APP_TIMEZONE, pattern);
+    if (getActiveLocale() === "si") {
+      const date = parseISO(iso);
+      return formatWithIntl(toZonedTime(date, APP_TIMEZONE), {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    }
+    return formatInTimeZone(parseISO(iso), APP_TIMEZONE, pattern, { locale: dateFnsLocale() });
   } catch {
     return iso;
   }
@@ -34,11 +44,7 @@ export function fmtTime(iso: string | null | undefined): string {
 
 export function fmtRelative(iso: string | null | undefined): string {
   if (!iso) return "—";
-  try {
-    return formatDistanceToNow(parseISO(iso), { addSuffix: true });
-  } catch {
-    return iso;
-  }
+  return formatRelativeLocalized(iso);
 }
 
 // Patient age for the on-screen patient headers — derived from dob, computed
@@ -129,5 +135,6 @@ export function statusLabel(s: string): string {
 // the week semantics stay explicit without making Monday look like the choice.
 export function fmtTargetWeek(yyyyMmDd: string | null | undefined): string {
   if (!yyyyMmDd) return "—";
-  return `Week · ${formatWeekRange(yyyyMmDd)}`;
+  const range = formatWeekRange(yyyyMmDd);
+  return translate(getActiveLocale(), "calendar.weekRange", { range });
 }

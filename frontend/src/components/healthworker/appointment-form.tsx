@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -13,24 +13,13 @@ import { DoctorSlotPicker } from "@/components/doctor/doctor-slot-picker";
 import { PatientPicker } from "@/components/healthworker/patient-picker";
 import type { Doctor, Patient } from "@/types/api";
 import { appLocalToUtcIso, doctorName } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { usePatient } from "@/lib/use-api";
 
-// Normalize undefined/empty/NaN to 0 so the .positive() check produces the
-// friendly "Pick a …" message instead of Zod's raw "Expected number, received
-// nan" — happens when the picker is cleared (setValue with undefined) or the
-// doctor select is left on its empty option.
 const toIntOrZero = (v: unknown) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.trunc(n) : 0;
 };
-
-const schema = z.object({
-  patientId: z.preprocess(toIntOrZero, z.number().int().positive("Pick a patient")),
-  doctorId: z.preprocess(toIntOrZero, z.number().int().positive("Pick a doctor")),
-  scheduledAt: z.string().min(1, "Pick a date and time"),
-});
-
-type Values = z.infer<typeof schema>;
 
 export function AppointmentForm({
   doctors,
@@ -44,14 +33,11 @@ export function AppointmentForm({
   onSubmit,
   onCancel,
   onPatientChange,
-  submitLabel = "Book appointment",
+  submitLabel,
 }: {
   doctors: Doctor[];
   defaultPatientId?: number;
-  /** Pre-fill the doctor select — used when booking from a queue entry that
-      has a preferredDoctorId. */
   defaultDoctorId?: number;
-  /** Pre-fill the slot picker — datetime-local string. */
   defaultScheduledAt?: string;
   hidePatientPicker?: boolean;
   patientLabel?: string;
@@ -59,11 +45,21 @@ export function AppointmentForm({
   errorMessage?: string | null;
   onSubmit: (v: { patientId: number; doctorId: number; scheduledAt: string }) => void;
   onCancel?: () => void;
-  /** Fires whenever the picker's selection changes — page uses this to drive
-      the patient-context panel (existing appointments + queue). */
   onPatientChange?: (patientId: number | undefined) => void;
   submitLabel?: string;
 }) {
+  const { t } = useI18n();
+  const schema = useMemo(
+    () =>
+      z.object({
+        patientId: z.preprocess(toIntOrZero, z.number().int().positive(t("forms.pickPatient"))),
+        doctorId: z.preprocess(toIntOrZero, z.number().int().positive(t("forms.pickDoctor"))),
+        scheduledAt: z.string().min(1, t("forms.pickDateTime")),
+      }),
+    [t],
+  );
+  type Values = z.infer<typeof schema>;
+
   const {
     register,
     handleSubmit,
@@ -79,7 +75,6 @@ export function AppointmentForm({
     },
   });
 
-  // Hidden fields that the slot picker writes to via setValue.
   register("patientId");
   register("scheduledAt");
 
@@ -88,24 +83,12 @@ export function AppointmentForm({
   const doctorIdNum =
     typeof watchedDoctorId === "number" ? watchedDoctorId : Number(watchedDoctorId) || 0;
 
-  // When the picker is in use (no preselected patient), we track the chosen
-  // patient locally for the chip display.
   const [picked, setPicked] = useState<Patient | null>(null);
 
-  // Hydrate the picker chip when the form arrives with a `defaultPatientId`
-  // (e.g. "Book" from a patient profile). The form value is already seeded by
-  // useForm; this is purely so the UI shows the patient instead of an empty
-  // search box. Only runs when the picker is visible (not from-queue mode).
-  //
-  // Keep the queryKey stable across `picked` toggles — gating the id on
-  // `!picked` would flip the query in/out of cache, making `prefillQ.data` go
-  // PATIENT → undefined → PATIENT when the user clicks "Change" and re-fire
-  // the hydrate effect, which would silently re-hydrate the chip the user
-  // just cleared. Using `enabled` alone is identity-stable.
   const prefillQ = usePatient(!hidePatientPicker && defaultPatientId ? defaultPatientId : null, {
     enabled: !hidePatientPicker && !!defaultPatientId && !picked,
   });
-  // biome-ignore lint/correctness/useExhaustiveDependencies: deliberately keyed to prefillQ.data alone — see block comment above: reacting to `picked`/onPatientChange identity changes would silently re-hydrate a chip the user just cleared.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deliberately keyed to prefillQ.data alone — see block comment in git history: reacting to `picked`/onPatientChange identity changes would silently re-hydrate a chip the user just cleared.
   useEffect(() => {
     if (!picked && prefillQ.data) {
       setPicked(prefillQ.data.patient);
@@ -117,14 +100,12 @@ export function AppointmentForm({
     onSubmit({
       patientId: v.patientId,
       doctorId: v.doctorId,
-      // The datetime-local input value is interpreted as APP_TIMEZONE (Sri
-      // Lanka) regardless of the browser's tz, so what the healthworker
-      // types is exactly what gets stored.
       scheduledAt: appLocalToUtcIso(v.scheduledAt),
     }),
   );
 
   const activeDoctors = doctors.filter((d) => d.active);
+  const resolvedSubmitLabel = submitLabel ?? t("pages.healthworker.appointments.bookAppointment");
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
@@ -133,13 +114,13 @@ export function AppointmentForm({
       {hidePatientPicker && patientLabel ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm">
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            For patient
+            {t("forms.forPatient")}
           </span>
           <div className="mt-1 font-medium">{patientLabel}</div>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <Label>Patient</Label>
+          <Label>{t("forms.patient")}</Label>
           <PatientPicker
             picked={picked}
             onPick={(p) => {
@@ -158,9 +139,9 @@ export function AppointmentForm({
       )}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="doctorId">Doctor</Label>
+        <Label htmlFor="doctorId">{t("forms.doctor")}</Label>
         <Select id="doctorId" {...register("doctorId")}>
-          <option value="">Select a doctor…</option>
+          <option value="">{t("forms.selectDoctor")}</option>
           {activeDoctors.map((d) => (
             <option key={d.id} value={d.id}>
               {doctorName(d)}
@@ -171,7 +152,7 @@ export function AppointmentForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Scheduled time</Label>
+        <Label>{t("forms.scheduledTime")}</Label>
         {doctorIdNum > 0 ? (
           <DoctorSlotPicker
             doctorId={doctorIdNum}
@@ -180,7 +161,7 @@ export function AppointmentForm({
           />
         ) : (
           <p className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3 text-xs text-[var(--muted-foreground)]">
-            Pick a doctor first to see their open slots.
+            {t("forms.pickDoctorForSlots")}
           </p>
         )}
         {errors.scheduledAt && (
@@ -191,11 +172,11 @@ export function AppointmentForm({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Booking…" : submitLabel}
+          {submitting ? t("forms.booking") : resolvedSubmitLabel}
         </Button>
       </div>
     </form>

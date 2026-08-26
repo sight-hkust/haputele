@@ -3,9 +3,6 @@
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
-// luxon3 plugin teaches FullCalendar how to resolve IANA tz names (e.g.
-// "Asia/Hong_Kong"). Without it, `timeZone` only honors "local" / "UTC" and
-// silently renders named zones at UTC offsets — see CLAUDE.md Timezones.
 import luxonPlugin from "@fullcalendar/luxon3";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -13,7 +10,9 @@ import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
+import { getFullCalendarLocaleCode, getFullCalendarLocales } from "@/lib/fullcalendar-locale";
 import { APP_TIMEZONE } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 // The calendar collapses the 7-state §11 lifecycle into 3 visual buckets so
 // the grid reads at a glance. Modals still render the precise status via
@@ -51,6 +50,9 @@ export function AppointmentCalendar({
   basePath?: string;
 }) {
   const router = useRouter();
+  const { locale, t } = useI18n();
+  const fcLocale = getFullCalendarLocaleCode(locale);
+  const fcLocales = getFullCalendarLocales(locale);
 
   const events = useMemo(() => {
     const apptEvents = appointments.map((a) => {
@@ -91,8 +93,11 @@ export function AppointmentCalendar({
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele">
       <style>{FC_CSS}</style>
       <FullCalendar
+        key={locale}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin, luxonPlugin]}
         timeZone={APP_TIMEZONE}
+        locale={fcLocale}
+        locales={fcLocales}
         initialView="timeGridWeek"
         headerToolbar={{
           left: "prev,next today",
@@ -100,8 +105,11 @@ export function AppointmentCalendar({
           right: "timeGridDay,timeGridWeek,dayGridMonth,listWeek",
         }}
         buttonText={{
-          timeGridDay: "day",
-          listWeek: "agenda",
+          today: t("common.today"),
+          timeGridDay: t("calendar.day"),
+          timeGridWeek: t("calendar.week"),
+          dayGridMonth: t("calendar.month"),
+          listWeek: t("calendar.agenda"),
         }}
         height="calc(100vh - 180px)"
         events={events}

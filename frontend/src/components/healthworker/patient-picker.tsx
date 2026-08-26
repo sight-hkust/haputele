@@ -4,13 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 
 import { Input } from "@/components/primitives/input";
+import { useI18n } from "@/lib/i18n";
 import { usePatientList } from "@/lib/use-api";
 import type { Patient } from "@/types/api";
 import { fullName } from "@/lib/format";
 
-// Search-as-you-type combobox over `/patients?search=`. Debounces 250ms.
-// Click-outside collapses; Escape clears. Used by both the booking form and
-// the queue intake form.
 export function PatientPicker({
   picked,
   onPick,
@@ -20,14 +18,15 @@ export function PatientPicker({
   onPick: (p: Patient) => void;
   onClear: () => void;
 }) {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebounced(query.trim()), 250);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebounced(query.trim()), 250);
+    return () => clearTimeout(timer);
   }, [query]);
 
   useEffect(() => {
@@ -46,7 +45,7 @@ export function PatientPicker({
       <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3">
         <div className="text-sm">
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            For patient
+            {t("forms.forPatient")}
           </span>
           <div className="mt-1 font-medium">
             {fullName(picked)}{" "}
@@ -63,7 +62,7 @@ export function PatientPicker({
           className="inline-flex items-center gap-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
         >
           <X className="h-3 w-3" />
-          Change
+          {t("common.change")}
         </button>
       </div>
     );
@@ -75,7 +74,7 @@ export function PatientPicker({
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
         <Input
           type="text"
-          placeholder="Search by name or NID…"
+          placeholder={t("forms.searchByNameOrNid")}
           className="pl-9"
           value={query}
           onChange={(e) => {
@@ -95,10 +94,12 @@ export function PatientPicker({
       {open && (
         <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg">
           {list.isLoading ? (
-            <div className="px-4 py-3 text-sm text-[var(--muted-foreground)]">Searching…</div>
+            <div className="px-4 py-3 text-sm text-[var(--muted-foreground)]">
+              {t("common.searching")}
+            </div>
           ) : results.length === 0 ? (
             <div className="px-4 py-3 text-sm text-[var(--muted-foreground)]">
-              {debounced ? "No patients match." : "Start typing to search."}
+              {debounced ? t("forms.noPatientsMatch") : t("forms.startTypingToSearch")}
             </div>
           ) : (
             <ul className="py-1">

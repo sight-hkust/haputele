@@ -334,7 +334,9 @@ function BookingCard({
       : undefined;
   const queuePatientLabel = queuePatientQ.data
     ? `${fullName(queuePatientQ.data.patient)} · #${queuePatientQ.data.patient.id}`
-    : `Patient #${mode.kind === "from-queue" ? mode.entry.patientId : ""}`;
+    : t("forms.patientId", {
+        id: mode.kind === "from-queue" ? mode.entry.patientId : "",
+      });
 
   return (
     <Card className="flex flex-col gap-3 p-4">
