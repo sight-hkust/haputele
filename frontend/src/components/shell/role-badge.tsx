@@ -1,16 +1,20 @@
+"use client";
+
 import { ServerCog, ShieldCheck, Stethoscope, UserRound, type LucideIcon } from "lucide-react";
 import type { Role } from "@/lib/auth";
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 
-const ROLE_META: Record<Role, { label: string; Icon: LucideIcon }> = {
-  admin: { label: "Admin", Icon: ShieldCheck },
-  doctor: { label: "Doctor", Icon: Stethoscope },
-  healthworker: { label: "Healthworker", Icon: UserRound },
-  "sys-admin": { label: "Sys-admin", Icon: ServerCog },
+const ROLE_META: Record<Role, { labelKey: string; Icon: LucideIcon }> = {
+  admin: { labelKey: "roles.admin", Icon: ShieldCheck },
+  doctor: { labelKey: "roles.doctor", Icon: Stethoscope },
+  healthworker: { labelKey: "roles.healthworker", Icon: UserRound },
+  "sys-admin": { labelKey: "roles.sys-admin", Icon: ServerCog },
 };
 
 export function RoleBadge({ role, className }: { role: Role; className?: string }) {
-  const { label, Icon } = ROLE_META[role];
+  const { t } = useI18n();
+  const { labelKey, Icon } = ROLE_META[role];
   return (
     <span
       className={cn(
@@ -20,7 +24,7 @@ export function RoleBadge({ role, className }: { role: Role; className?: string 
     >
       <Icon className="h-3.5 w-3.5 text-[var(--accent)]" />
       <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--foreground)]">
-        {label}
+        {t(labelKey)}
       </span>
     </span>
   );

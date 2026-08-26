@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Stethoscope, UserCog } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 import { useDoctorSummary } from "@/lib/use-api";
 
 // `/admin` is both the doctors dashboard and the prefix of every other
@@ -13,7 +14,7 @@ import { useDoctorSummary } from "@/lib/use-api";
 const NAV = [
   {
     href: "/admin",
-    label: "Doctors",
+    labelKey: "nav.doctors",
     Icon: Stethoscope,
     isActive: (p: string) => p === "/admin" || p.startsWith("/admin/doctors"),
     // Only this tab carries the awaiting-approval count.
@@ -21,7 +22,7 @@ const NAV = [
   },
   {
     href: "/admin/healthworkers",
-    label: "Health workers",
+    labelKey: "nav.healthworkers",
     Icon: UserCog,
     isActive: (p: string) => p.startsWith("/admin/healthworkers"),
     badge: false,
@@ -30,6 +31,7 @@ const NAV = [
 
 export function AdminNav() {
   const pathname = usePathname() ?? "";
+  const { t } = useI18n();
   // Surface the actionable backlog on the nav itself so a fresh
   // submission is noticed without opening the dashboard.
   const summary = useDoctorSummary();
@@ -37,7 +39,7 @@ export function AdminNav() {
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--background)]/85 backdrop-blur supports-[backdrop-filter]:bg-[var(--background)]/70">
       <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-6 py-2">
-        {NAV.map(({ href, label, Icon, isActive, badge }) => {
+        {NAV.map(({ href, labelKey, Icon, isActive, badge }) => {
           const active = isActive(pathname);
           return (
             <Link
@@ -59,10 +61,10 @@ export function AdminNav() {
                     : "text-[var(--muted-foreground)] group-hover:text-[var(--accent)]",
                 )}
               />
-              {label}
+              {t(labelKey)}
               {badge && pending > 0 && (
                 <span
-                  title={`${pending} awaiting approval`}
+                  title={t("common.awaitingApproval", { count: pending })}
                   className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1.5 py-0.5 font-mono text-xs text-sky-700"
                 >
                   {pending}

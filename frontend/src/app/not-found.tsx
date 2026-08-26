@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { BackLink } from "@/components/primitives/back-link";
 import { ROLE_HOMES, useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 
 // Global not-found boundary for any unmatched URL. Next renders this for paths
 // with no matching route (and for explicit notFound() calls) inside the root
@@ -15,6 +16,7 @@ import { ROLE_HOMES, useAuth } from "@/lib/auth";
 export default function NotFound() {
   const router = useRouter();
   const { session, loading } = useAuth();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (loading) return;
@@ -27,7 +29,7 @@ export default function NotFound() {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Loading…
+          {t("common.loading")}
         </span>
       </main>
     );
@@ -37,14 +39,14 @@ export default function NotFound() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
       <div className="flex flex-col gap-2">
         <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Error 404
+          {t("common.error404")}
         </span>
-        <h1 className="font-display text-4xl tracking-[-0.02em] sm:text-5xl">Page not found</h1>
-        <p className="max-w-md text-[var(--muted-foreground)]">
-          The page you&apos;re looking for doesn&apos;t exist or has moved.
-        </p>
+        <h1 className="font-display text-4xl tracking-[-0.02em] sm:text-5xl">
+          {t("common.pageNotFound")}
+        </h1>
+        <p className="max-w-md text-[var(--muted-foreground)]">{t("common.pageNotFoundBody")}</p>
       </div>
-      <BackLink href={ROLE_HOMES[session.role]}>Back to your dashboard</BackLink>
+      <BackLink href={ROLE_HOMES[session.role]}>{t("common.backToDashboard")}</BackLink>
     </main>
   );
 }

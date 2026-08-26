@@ -5,18 +5,20 @@ import { usePathname } from "next/navigation";
 import { ServerCog, Users } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 
 const NAV = [
-  { href: "/sysadmin", label: "System", Icon: ServerCog, exact: true },
-  { href: "/sysadmin/accounts", label: "Accounts", Icon: Users, exact: false },
+  { href: "/sysadmin", labelKey: "nav.system", Icon: ServerCog, exact: true },
+  { href: "/sysadmin/accounts", labelKey: "nav.accounts", Icon: Users, exact: false },
 ];
 
 export function SysAdminNav() {
   const pathname = usePathname() ?? "";
+  const { t } = useI18n();
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--background)]/85 backdrop-blur supports-[backdrop-filter]:bg-[var(--background)]/70">
       <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-6 py-2">
-        {NAV.map(({ href, label, Icon, exact }) => {
+        {NAV.map(({ href, labelKey, Icon, exact }) => {
           const active = exact ? pathname === href : pathname.startsWith(href);
           return (
             <Link
@@ -38,7 +40,7 @@ export function SysAdminNav() {
                     : "text-[var(--muted-foreground)] group-hover:text-[var(--accent)]",
                 )}
               />
-              {label}
+              {t(labelKey)}
             </Link>
           );
         })}

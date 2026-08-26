@@ -5,21 +5,23 @@ import { usePathname } from "next/navigation";
 import { CalendarDays, Clock, UserCog } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 
 const NAV = [
-  { href: "/doctor", label: "Calendar", Icon: CalendarDays, exact: true },
-  { href: "/doctor/availability", label: "Availability", Icon: Clock },
-  { href: "/doctor/profile", label: "Profile", Icon: UserCog },
+  { href: "/doctor", labelKey: "nav.calendar", Icon: CalendarDays, exact: true },
+  { href: "/doctor/availability", labelKey: "nav.availability", Icon: Clock },
+  { href: "/doctor/profile", labelKey: "nav.profile", Icon: UserCog },
 ];
 
 // Doctor section is calendar-centric — kept open for adding history/profile
 // pages later. Same chrome as healthworker for consistency.
 export function DoctorNav() {
   const pathname = usePathname() ?? "";
+  const { t } = useI18n();
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--background)]/85 backdrop-blur supports-[backdrop-filter]:bg-[var(--background)]/70">
       <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-6 py-2">
-        {NAV.map(({ href, label, Icon, exact }) => {
+        {NAV.map(({ href, labelKey, Icon, exact }) => {
           const active = exact ? pathname === href : pathname.startsWith(href);
           return (
             <Link
@@ -41,7 +43,7 @@ export function DoctorNav() {
                     : "text-[var(--muted-foreground)] group-hover:text-[var(--accent)]",
                 )}
               />
-              {label}
+              {t(labelKey)}
             </Link>
           );
         })}

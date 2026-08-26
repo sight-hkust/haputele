@@ -9,11 +9,13 @@ import { Button } from "@/components/primitives/button";
 import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
+import { LanguageToggle } from "@/components/shell/language-toggle";
 import { LoginHeroGraphic } from "@/components/marketing/login-hero-graphic";
 import { resolveLoginRedirect, useAuth, type Role } from "@/lib/auth";
 import { ApiError, api } from "@/lib/api";
 import { loginWhitespaceHint } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import { useSetupStatus } from "@/lib/use-api";
@@ -37,6 +39,7 @@ function LoginScreen() {
   const router = useRouter();
   const search = useSearchParams();
   const { session, login, loading } = useAuth();
+  const { t } = useI18n();
   const setupStatus = useSetupStatus();
   const uninitialized = setupStatus.data?.initialized === false;
   // A failed status probe (backend unreachable / erroring) must not hold the
@@ -100,7 +103,7 @@ function LoginScreen() {
           err.error === "invalid_credentials" ? loginWhitespaceHint(username, password) : null;
         setError([explainError(err.error), hint].filter(Boolean).join(" "));
       } else {
-        setError("Couldn't reach the server. Try again in a moment.");
+        setError(t("login.couldNotReach"));
       }
     } finally {
       setSubmitting(false);
@@ -113,7 +116,7 @@ function LoginScreen() {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Loading…
+          {t("common.loading")}
         </span>
       </main>
     );
@@ -129,16 +132,20 @@ function LoginScreen() {
 
       {/* Brand strip */}
       <div className="absolute inset-x-0 top-0 z-10 px-6 py-6 sm:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] shadow-accent">
               <span className="font-display text-lg leading-none text-white">H</span>
             </div>
+            {/* Brand name stays English in every locale. */}
             <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
           </div>
-          <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
-            Telemedicine · Sri Lanka
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+              {t("login.telemedicine")}
+            </span>
+            <LanguageToggle />
+          </div>
         </div>
       </div>
 
@@ -151,14 +158,14 @@ function LoginScreen() {
           className="flex flex-col gap-7"
         >
           <motion.div variants={fadeInUp}>
-            <SectionLabel pulse>Secure portal · ready</SectionLabel>
+            <SectionLabel pulse>{t("login.securePortal")}</SectionLabel>
           </motion.div>
 
           <motion.h1
             variants={fadeInUp}
             className="font-display text-[2.75rem] leading-[1.05] tracking-[-0.02em] sm:text-6xl lg:text-[4.5rem]"
           >
-            Welcome back to{" "}
+            {t("login.welcomeBack")}{" "}
             <span className="relative inline-block">
               <span className="gradient-text">HapuTele</span>
               <span
@@ -177,7 +184,7 @@ function LoginScreen() {
             variants={fadeInUp}
             className="max-w-md text-base leading-relaxed text-[var(--muted-foreground)] sm:text-lg"
           >
-            Sign in to continue your work.
+            {t("login.signInToContinue")}
           </motion.p>
 
           <motion.form
@@ -186,20 +193,20 @@ function LoginScreen() {
             className="flex w-full max-w-md flex-col gap-4"
           >
             <div className="flex flex-col gap-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t("login.username")}</Label>
               <Input
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="off"
-                placeholder="your.username"
+                placeholder={t("login.usernamePlaceholder")}
                 autoFocus
                 required
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("login.password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -224,13 +231,13 @@ function LoginScreen() {
             )}
 
             <Button type="submit" size="lg" disabled={submitting} className="w-full sm:w-auto">
-              {submitting ? "Signing in…" : "Sign in"}
+              {submitting ? t("login.signingIn") : t("login.signIn")}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </motion.form>
 
           <motion.p variants={fadeIn} className="text-sm text-[var(--muted-foreground)]">
-            Need access? Contact your administrator.
+            {t("login.needAccess")}
           </motion.p>
         </motion.div>
 

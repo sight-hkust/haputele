@@ -1,16 +1,17 @@
 "use client";
 
 import { AccountsSurface } from "@/components/accounts/accounts-surface";
+import { useI18n } from "@/lib/i18n";
 
 export default function SysadminAccountsPage() {
+  const { t } = useI18n();
   return (
     <AccountsSurface
       header={{
-        label: "Sys-admin",
-        title: "Account",
-        highlight: "management.",
-        subtitle:
-          "Every account except your own — admins and healthworkers fully, doctors via the shared doctor tools. Click a row to manage it. (Manage your own ops account from the System page.)",
+        label: t("pages.sysadmin.accounts.label"),
+        title: t("pages.sysadmin.accounts.title"),
+        highlight: t("pages.sysadmin.accounts.highlight"),
+        subtitle: t("pages.sysadmin.accounts.subtitle"),
       }}
       // Doctor is a UI-only entry in this list. Picking it swaps the modal to
       // the email invite (POST /doctors/invites), because a doctor is an
@@ -18,11 +19,11 @@ export default function SysadminAccountsPage() {
       // something POST /accounts can mint.
       creatableRoles={["admin", "healthworker", "doctor"]}
       manualDoctorHref="/sysadmin/doctors/new?mode=manual"
-      addButtonLabel="Add account"
-      createTitle="Add account"
-      createDescription="Create an admin, health worker, or doctor account."
-      emptyTitle="No accounts yet"
-      emptyDescription="Create the first admin or healthworker account to get started."
+      addButtonLabel={t("pages.sysadmin.accounts.addAccount")}
+      createTitle={t("pages.sysadmin.accounts.createTitle")}
+      createDescription={t("pages.sysadmin.accounts.createDescription")}
+      emptyTitle={t("pages.sysadmin.accounts.emptyTitle")}
+      emptyDescription={t("pages.sysadmin.accounts.emptyDescription")}
     />
   );
 }

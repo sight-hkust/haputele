@@ -31,6 +31,7 @@ import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { newPasswordError, passwordError, usernameError } from "@/lib/credentials";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { useAccountRoster, useCreateOperatingAccount } from "@/lib/use-api";
 import type { AccountRole, AccountRosterEntry, OperatingAccountRole } from "@/types/api";
 
@@ -40,6 +41,10 @@ const ROLE_LABEL: Record<AccountRole, string> = {
   healthworker: "Healthworker",
   doctor: "Doctor",
 };
+
+function translateRole(role: AccountRole, t: (key: string) => string): string {
+  return t(`roles.${role}`);
+}
 
 /** A role offered in the create form's dropdown. "doctor" is a UI-only
  *  member: picking it swaps the modal to the doctor invite, which posts to
@@ -94,6 +99,7 @@ export function AccountsSurface({
   emptyDescription,
   manualDoctorHref,
 }: AccountsSurfaceProps) {
+  const { t } = useI18n();
   const { data, error, isLoading, refetch } = useAccountRoster();
   const [createOpen, setCreateOpen] = useState(false);
   // The drawer tracks a username, not a row snapshot, so it always reflects
@@ -183,9 +189,9 @@ export function AccountsSurface({
       {error ? <ApiErrorBanner error={error} onRetry={() => refetch()} /> : null}
 
       <div className="flex flex-wrap gap-3">
-        <StatChip label="Total" value={stats.total} />
-        <StatChip label="Active" value={stats.active} tone="positive" />
-        <StatChip label="Inactive" value={stats.inactive} tone="negative" />
+        <StatChip label={t("common.total")} value={stats.total} />
+        <StatChip label={t("common.active")} value={stats.active} tone="positive" />
+        <StatChip label={t("common.inactive")} value={stats.inactive} tone="negative" />
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
@@ -197,9 +203,9 @@ export function AccountsSurface({
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by username or name…"
+                  placeholder={t("pages.sysadmin.sharedAccounts.searchPlaceholder")}
                   className="h-11 pl-10"
-                  aria-label="Search accounts"
+                  aria-label={t("pages.sysadmin.sharedAccounts.searchAria")}
                 />
               </div>
               <div className="flex gap-3">
@@ -208,12 +214,12 @@ export function AccountsSurface({
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value as "all" | AccountRole)}
                     className="h-11 w-full sm:w-44"
-                    aria-label="Filter by role"
+                    aria-label={t("pages.sysadmin.sharedAccounts.filterByRole")}
                   >
-                    <option value="all">All roles</option>
+                    <option value="all">{t("pages.sysadmin.sharedAccounts.allRoles")}</option>
                     {rolesPresent.map((r) => (
                       <option key={r} value={r}>
-                        {ROLE_LABEL[r]}
+                        {translateRole(r, t)}
                       </option>
                     ))}
                   </Select>
@@ -222,27 +228,29 @@ export function AccountsSurface({
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
                   className="h-11 w-full sm:w-40"
-                  aria-label="Filter by status"
+                  aria-label={t("pages.sysadmin.sharedAccounts.filterByStatus")}
                 >
-                  <option value="all">All statuses</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="all">{t("pages.sysadmin.sharedAccounts.allStatuses")}</option>
+                  <option value="active">{t("common.active")}</option>
+                  <option value="inactive">{t("common.inactive")}</option>
                 </Select>
               </div>
             </div>
 
             {isLoading || !data ? (
               <div className="p-10 text-center text-sm text-[var(--muted-foreground)]">
-                Loading…
+                {t("common.loading")}
               </div>
             ) : rows.length === 0 ? (
               <div className="p-6">
                 <EmptyState
                   Icon={Users}
-                  title={filtersActive ? "No accounts match these filters" : emptyTitle}
+                  title={
+                    filtersActive ? t("pages.sysadmin.sharedAccounts.noAccountsMatch") : emptyTitle
+                  }
                   description={
                     filtersActive
-                      ? "Try a different search term or clear the role/status filters."
+                      ? t("pages.sysadmin.sharedAccounts.noAccountsMatchDescription")
                       : emptyDescription
                   }
                   action={
@@ -255,7 +263,7 @@ export function AccountsSurface({
                           setStatusFilter("all");
                         }}
                       >
-                        Clear filters
+                        {t("common.clearFilters")}
                       </Button>
                     ) : (
                       <Button onClick={() => setCreateOpen(true)}>
@@ -271,7 +279,7 @@ export function AccountsSurface({
                 <thead>
                   <tr className="border-b border-[var(--border)] text-left">
                     <SortableTh
-                      label="Account"
+                      label={t("pages.sysadmin.sharedAccounts.accountColumn")}
                       sortKey="username"
                       active={sortKey}
                       dir={sortDir}
@@ -279,7 +287,7 @@ export function AccountsSurface({
                     />
                     {showRole ? (
                       <SortableTh
-                        label="Role"
+                        label={t("pages.sysadmin.sharedAccounts.roleColumn")}
                         sortKey="role"
                         active={sortKey}
                         dir={sortDir}
@@ -287,7 +295,7 @@ export function AccountsSurface({
                       />
                     ) : null}
                     <SortableTh
-                      label="Status"
+                      label={t("pages.sysadmin.sharedAccounts.statusColumn")}
                       sortKey="status"
                       active={sortKey}
                       dir={sortDir}
@@ -313,8 +321,14 @@ export function AccountsSurface({
 
           {data && rows.length > 0 ? (
             <p className="text-xs text-[var(--muted-foreground)]">
-              Showing {rows.length} of {accounts.length}{" "}
-              {accounts.length === 1 ? "account" : "accounts"}.
+              {t("pages.sysadmin.sharedAccounts.showingCount", {
+                shown: rows.length,
+                total: accounts.length,
+                label:
+                  accounts.length === 1
+                    ? t("pages.sysadmin.sharedAccounts.singleAccountLabel")
+                    : t("pages.sysadmin.sharedAccounts.multiAccountLabel"),
+              })}
             </p>
           ) : null}
         </div>
@@ -401,14 +415,16 @@ function SortableTh({
 }
 
 function RoleBadge({ role }: { role: AccountRole }) {
+  const { t } = useI18n();
   return (
     <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
-      {ROLE_LABEL[role]}
+      {translateRole(role, t)}
     </span>
   );
 }
 
 function StatePill({ active, label }: { active: boolean; label: string }) {
+  const { t } = useI18n();
   return (
     <span
       className={cn(
@@ -422,7 +438,11 @@ function StatePill({ active, label }: { active: boolean; label: string }) {
         className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-emerald-500" : "bg-rose-500")}
         aria-hidden
       />
-      {label}
+      {label === "Disabled"
+        ? t("pages.sysadmin.sharedAccounts.disabled")
+        : active
+          ? t("common.active")
+          : t("common.inactive")}
     </span>
   );
 }
@@ -505,6 +525,7 @@ function CreateAccountModal({
   description: string;
   manualDoctorHref?: string;
 }) {
+  const { t } = useI18n();
   const create = useCreateOperatingAccount();
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
@@ -538,13 +559,13 @@ function CreateAccountModal({
     // Doctors never reach here — that branch renders the invite panel, which
     // owns its own submit. Guarding also narrows `role` for POST /accounts.
     if (role === "doctor") return;
-    if (!username) return setLocalError("Username is required.");
+    if (!username) return setLocalError(t("errors.username_required"));
     // Credentials are rejected, never repaired — see lib/credentials.ts.
     const nameErr = usernameError(username);
     if (nameErr) return setLocalError(nameErr);
     const pwErr = newPasswordError(password);
     if (pwErr) return setLocalError(pwErr);
-    if (password !== confirm) return setLocalError("Passwords do not match.");
+    if (password !== confirm) return setLocalError(t("pages.sysadmin.sharedAccounts.passwordsDoNotMatch"));
     create.mutate(
       {
         // Verbatim; fullName/contact keep trimming — they aren't credentials.
@@ -567,11 +588,11 @@ function CreateAccountModal({
         {/* With one creatable role there is nothing to choose — the role is
             fixed and stated in the modal description instead. */}
         {roles.length > 1 ? (
-          <Field label="Role">
+          <Field label={t("pages.sysadmin.sharedAccounts.role")}>
             <Select value={role} onChange={(e) => setRole(e.target.value as CreatableRole)}>
               {roles.map((r) => (
                 <option key={r} value={r}>
-                  {ROLE_LABEL[r]}
+                  {translateRole(r as AccountRole, t)}
                 </option>
               ))}
             </Select>
@@ -585,9 +606,7 @@ function CreateAccountModal({
             extra={
               <div className="flex flex-col gap-2 border-t border-[var(--border)] pt-4">
                 <p className="text-xs text-[var(--muted-foreground)]">
-                  They fill in their own clinical profile and you approve it before they can log in
-                  — so they&rsquo;ll appear in this list once they&rsquo;ve finished setting up, not
-                  straight away.
+                  {t("pages.sysadmin.sharedAccounts.doctorInviteHelp")}
                 </p>
                 {manualDoctorHref ? (
                   <Link
@@ -595,7 +614,7 @@ function CreateAccountModal({
                     onClick={close}
                     className="w-fit text-xs font-medium text-[var(--accent)] underline-offset-4 hover:underline"
                   >
-                    Need to type the full profile yourself?
+                    {t("pages.sysadmin.sharedAccounts.manualDoctorLink")}
                   </Link>
                 ) : null}
               </div>
@@ -603,7 +622,7 @@ function CreateAccountModal({
           />
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-4">
-            <Field label="Username">
+            <Field label={t("login.username")}>
               <Input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -611,21 +630,21 @@ function CreateAccountModal({
                 autoFocus
               />
             </Field>
-            <Field label="Full name (optional)">
+            <Field label={t("pages.sysadmin.sharedAccounts.fullNameOptional")}>
               <Input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="e.g. Alice Adams"
               />
             </Field>
-            <Field label="Phone / contact (optional)">
+            <Field label={t("pages.sysadmin.sharedAccounts.phoneOptional")}>
               <Input
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 placeholder="e.g. +94 77 123 4567"
               />
             </Field>
-            <Field label="Password" error={passwordError(password) ?? undefined}>
+            <Field label={t("pages.sysadmin.sharedAccounts.password")} error={passwordError(password) ?? undefined}>
               <Input
                 type="password"
                 value={password}
@@ -635,7 +654,7 @@ function CreateAccountModal({
               />
               <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
             </Field>
-            <Field label="Confirm password">
+            <Field label={t("pages.sysadmin.sharedAccounts.confirmPassword")}>
               <Input
                 type="password"
                 value={confirm}
@@ -651,10 +670,12 @@ function CreateAccountModal({
 
             <div className="mt-2 flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={close}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={create.isPending}>
-                {create.isPending ? "Creating…" : "Create account"}
+                {create.isPending
+                  ? t("pages.sysadmin.sharedAccounts.creatingAccount")
+                  : t("pages.sysadmin.sharedAccounts.createAccount")}
               </Button>
             </div>
           </form>

@@ -4,11 +4,14 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { LanguageToggle } from "@/components/shell/language-toggle";
 import { RoleBadge } from "@/components/shell/role-badge";
 import { ROLE_HOMES, useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 
 export function Topbar() {
   const { session, logout } = useAuth();
+  const { t } = useI18n();
   if (!session) return null;
 
   return (
@@ -19,6 +22,7 @@ export function Topbar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] shadow-accent">
               <span className="font-display text-sm leading-none text-white">H</span>
             </div>
+            {/* Brand name stays English in every locale. */}
             <span className="font-display text-lg tracking-[-0.01em]">HapuTele</span>
           </Link>
           <div className="hidden h-5 w-px bg-[var(--border)] sm:block" />
@@ -27,13 +31,15 @@ export function Topbar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          {/* Usernames are identity data — never translated. */}
           <span className="hidden font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] md:inline">
             {session.username}
           </span>
+          <LanguageToggle className="shrink-0" />
           <Button variant="ghost" size="sm" onClick={logout}>
             <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Sign out</span>
+            <span className="hidden sm:inline">{t("common.signOut")}</span>
           </Button>
         </div>
       </div>

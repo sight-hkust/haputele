@@ -6,11 +6,13 @@ import { AppointmentCalendar } from "@/components/healthworker/appointment-calen
 import { Card } from "@/components/primitives/card";
 import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
+import { useI18n } from "@/lib/i18n";
 import { useAppointmentList, useCurrentDoctor } from "@/lib/use-api";
 
 const RANGE_DAYS = 60;
 
 export default function DoctorCalendar() {
+  const { t } = useI18n();
   const { doctor } = useCurrentDoctor();
   // Memoize so the query key is stable across renders — otherwise `new Date()`
   // produces a fresh ISO string each pass and react-query never settles.
@@ -27,10 +29,10 @@ export default function DoctorCalendar() {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
       <PageHeader
-        label="Today"
-        title={`Welcome,`}
-        highlight={doctor ? `Dr. ${doctor.familyName}.` : "Doctor."}
-        subtitle="Your appointments only — the server filters everyone else's away. Click any event to open the patient and start the consultation."
+        label={t("pages.doctor.calendar.label")}
+        title={t("pages.doctor.calendar.welcome")}
+        highlight={doctor ? `Dr. ${doctor.familyName}.` : t("pages.doctor.calendar.fallbackHighlight")}
+        subtitle={t("pages.doctor.calendar.subtitle")}
         pulseLabel
       />
 
@@ -39,7 +41,9 @@ export default function DoctorCalendar() {
       {list.error ? (
         <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
       ) : list.isLoading ? (
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
+          {t("common.loading")}
+        </Card>
       ) : (
         <AppointmentCalendar appointments={list.data ?? []} basePath="/doctor/appointments" />
       )}
@@ -48,13 +52,18 @@ export default function DoctorCalendar() {
 }
 
 function Legend() {
+  const { t } = useI18n();
   // The calendar collapses the 7 backend statuses into 3 buckets (plus a
   // muted cancelled). Modals still surface the precise status.
   const items = [
-    { key: "upcoming", label: "Upcoming", swatch: "bg-slate-200" },
-    { key: "live", label: "Live", swatch: "bg-[var(--accent)]" },
-    { key: "done", label: "Done", swatch: "bg-emerald-200" },
-    { key: "cancelled", label: "Cancelled", swatch: "bg-slate-100 line-through text-slate-400" },
+    { key: "upcoming", label: t("pages.doctor.calendar.upcoming"), swatch: "bg-slate-200" },
+    { key: "live", label: t("pages.doctor.calendar.live"), swatch: "bg-[var(--accent)]" },
+    { key: "done", label: t("pages.doctor.calendar.done"), swatch: "bg-emerald-200" },
+    {
+      key: "cancelled",
+      label: t("pages.doctor.calendar.cancelled"),
+      swatch: "bg-slate-100 line-through text-slate-400",
+    },
   ];
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-[var(--muted-foreground)]">

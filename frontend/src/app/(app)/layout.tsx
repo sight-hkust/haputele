@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/primitives/button";
 import { Topbar } from "@/components/shell/topbar";
 import { ROLE_HOMES, SEGMENT_TO_ROLE, useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 
 // Auth gate + role guard for everything under (app). If you're at /admin/* but
 // signed in as a doctor, you're redirected to /doctor (server-side ACLs are still
@@ -13,6 +14,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? "/";
   const { session, loading, bootstrapFailed, retryBootstrap } = useAuth();
+  const { t } = useI18n();
 
   // The first path segment names the role section. If it's a section that
   // isn't this user's, they're on a page they don't belong on. Computed during
@@ -45,17 +47,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
         <div role="alert" className="flex flex-col gap-2">
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            Connection problem
+            {t("common.connectionProblem")}
           </span>
-          <h1 className="font-display text-4xl tracking-[-0.02em]">
-            Couldn&apos;t reach the server
-          </h1>
-          <p className="max-w-md text-[var(--muted-foreground)]">
-            This page couldn&apos;t verify your session because the server didn&apos;t respond. Your
-            session is unaffected — check your connection and try again.
-          </p>
+          <h1 className="font-display text-4xl tracking-[-0.02em]">{t("common.couldNotReachServer")}</h1>
+          <p className="max-w-md text-[var(--muted-foreground)]">{t("common.sessionVerifyFailed")}</p>
         </div>
-        <Button onClick={retryBootstrap}>Try again</Button>
+        <Button onClick={retryBootstrap}>{t("common.retry")}</Button>
       </main>
     );
   }
@@ -67,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Loading…
+          {t("common.loading")}
         </span>
       </main>
     );

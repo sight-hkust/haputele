@@ -21,9 +21,9 @@ const config: Config = {
         ring: "var(--ring)",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        display: ["var(--font-calistoga)", "Georgia", "serif"],
-        mono: ["var(--font-jetbrains)", "ui-monospace", "monospace"],
+        sans: ["var(--font-inter)", "var(--font-sinhala)", "system-ui", "sans-serif"],
+        display: ["var(--font-calistoga)", "var(--font-sinhala)", "Georgia", "serif"],
+        mono: ["var(--font-jetbrains)", "var(--font-sinhala)", "ui-monospace", "monospace"],
       },
       boxShadow: {
         accent: "0 4px 14px rgba(0, 82, 255, 0.25)",

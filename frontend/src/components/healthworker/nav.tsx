@@ -5,27 +5,29 @@ import { usePathname } from "next/navigation";
 import { CalendarRange, Clock, Download, Inbox, Users } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 
 // The Appointments workspace shows the active pending queue inline alongside
 // the calendar. The /healthworker/queue route is a separate, fuller view with
 // filters + booked/cancelled history + per-entry inspection. "Book this" from
 // here forwards to the workspace so the booking experience stays unified.
 const NAV = [
-  { href: "/healthworker/appointments", label: "Appointments", Icon: CalendarRange },
-  { href: "/healthworker/patients", label: "Patients", Icon: Users },
-  { href: "/healthworker/queue", label: "Queue", Icon: Inbox },
-  { href: "/healthworker/availability", label: "Availability", Icon: Clock },
-  { href: "/healthworker/exports", label: "Exports", Icon: Download },
+  { href: "/healthworker/appointments", labelKey: "nav.appointments", Icon: CalendarRange },
+  { href: "/healthworker/patients", labelKey: "nav.patients", Icon: Users },
+  { href: "/healthworker/queue", labelKey: "nav.queue", Icon: Inbox },
+  { href: "/healthworker/availability", labelKey: "nav.availability", Icon: Clock },
+  { href: "/healthworker/exports", labelKey: "nav.exports", Icon: Download },
 ];
 
 // Secondary nav. Sits below the main topbar; mirrors the design system's
 // section-label aesthetic (rounded pills, tight tracking).
 export function HealthworkerNav() {
   const pathname = usePathname() ?? "";
+  const { t } = useI18n();
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--background)]/85 backdrop-blur supports-[backdrop-filter]:bg-[var(--background)]/70">
       <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-6 py-2">
-        {NAV.map(({ href, label, Icon }) => {
+        {NAV.map(({ href, labelKey, Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
@@ -47,7 +49,7 @@ export function HealthworkerNav() {
                     : "text-[var(--muted-foreground)] group-hover:text-[var(--accent)]",
                 )}
               />
-              {label}
+              {t(labelKey)}
             </Link>
           );
         })}

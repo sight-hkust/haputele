@@ -13,8 +13,10 @@ import { Input } from "@/components/primitives/input";
 import { PageHeader } from "@/components/primitives/page-header";
 import { usePatientList } from "@/lib/use-api";
 import { fmtRelative, fullName } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 export default function PatientListPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -36,15 +38,15 @@ export default function PatientListPage() {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
       <PageHeader
-        label="Patients"
-        title="Patient"
-        highlight="roster."
-        subtitle="Search by name or national ID. Click any patient to view their record."
+        label={t("pages.healthworker.patients.label")}
+        title={t("pages.healthworker.patients.title")}
+        highlight={t("pages.healthworker.patients.highlight")}
+        subtitle={t("pages.healthworker.patients.subtitle")}
         action={
           <Link href="/healthworker/patients/new">
             <Button>
               <UserPlus className="h-4 w-4" />
-              Register
+              {t("pages.healthworker.patients.register")}
             </Button>
           </Link>
         }
@@ -55,7 +57,7 @@ export default function PatientListPage() {
         <Input
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search by name or national ID…"
+          placeholder={t("pages.healthworker.patients.searchPlaceholder")}
           className="pl-11"
         />
       </div>
@@ -63,22 +65,28 @@ export default function PatientListPage() {
       {list.error ? (
         <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
       ) : list.isLoading ? (
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
+          {t("common.loading")}
+        </Card>
       ) : patients.length === 0 ? (
         <EmptyState
           Icon={Users}
-          title={search ? "No matches" : "No patients yet"}
+          title={
+            search
+              ? t("pages.healthworker.patients.noMatches")
+              : t("pages.healthworker.patients.noPatientsYet")
+          }
           description={
             search
-              ? `No patients match "${search}". Try a different name or ID.`
-              : "Register your first patient to start tracking appointments."
+              ? t("pages.healthworker.patients.noMatchesDescription", { search })
+              : t("pages.healthworker.patients.noPatientsDescription")
           }
           action={
             !search && (
               <Link href="/healthworker/patients/new">
                 <Button>
                   <UserPlus className="h-4 w-4" />
-                  Register a patient
+                  {t("pages.healthworker.patients.registerPatient")}
                 </Button>
               </Link>
             )
@@ -88,10 +96,10 @@ export default function PatientListPage() {
         <>
           <Card className="overflow-hidden p-0">
             <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-4 border-b border-[var(--border)] bg-[var(--muted)]/30 px-6 py-3 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              <span>Name</span>
-              <span>National ID</span>
-              <span>Contact</span>
-              <span className="text-right">Registered</span>
+              <span>{t("common.name")}</span>
+              <span>{t("common.nationalId")}</span>
+              <span>{t("common.contact")}</span>
+              <span className="text-right">{t("common.registered")}</span>
             </div>
             <ul className="divide-y divide-[var(--border)]">
               {patients.map((p) => (
@@ -138,6 +146,7 @@ function Pagination({
   hasNext: boolean;
   onChange: (n: number) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="flex items-center justify-end gap-2">
       <Button
@@ -147,13 +156,13 @@ function Pagination({
         onClick={() => onChange(page - 1)}
       >
         <ChevronLeft className="h-4 w-4" />
-        Prev
+        {t("pages.healthworker.patients.prev")}
       </Button>
       <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        Page {page}
+        {t("common.page")} {page}
       </span>
       <Button variant="secondary" size="sm" disabled={!hasNext} onClick={() => onChange(page + 1)}>
-        Next
+        {t("common.next")}
         <ChevronRight className="h-4 w-4" />
       </Button>
     </div>

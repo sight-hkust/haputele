@@ -35,20 +35,14 @@ import {
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtRelative } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import type { Doctor, DoctorInvite } from "@/types/api";
 
 type Tab = "all" | "awaiting_approval" | "awaiting_setup" | "active" | "rejected";
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "awaiting_approval", label: "Awaiting approval" },
-  { key: "awaiting_setup", label: "Awaiting setup" },
-  { key: "active", label: "Active" },
-  { key: "rejected", label: "Rejected" },
-];
-
 export default function AdminDoctors() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("all");
   const summary = useDoctorSummary();
   const filter: DoctorListFilter | undefined = tab === "all" ? undefined : { status: tab };
@@ -62,6 +56,13 @@ export default function AdminDoctors() {
   const showInvites = tab === "all" || tab === "awaiting_setup";
   const invites = showInvites ? (invitesQuery.data ?? []) : [];
   const doctors = list.data ?? [];
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "all", label: t("pages.admin.doctors.tabs.all") },
+    { key: "awaiting_approval", label: t("pages.admin.doctors.tabs.awaitingApproval") },
+    { key: "awaiting_setup", label: t("pages.admin.doctors.tabs.awaitingSetup") },
+    { key: "active", label: t("pages.admin.doctors.tabs.active") },
+    { key: "rejected", label: t("pages.admin.doctors.tabs.rejected") },
+  ];
 
   // Reject needs a reason, so it opens a modal targeting one doctor.
   const [rejectTarget, setRejectTarget] = useState<Doctor | null>(null);
@@ -91,15 +92,15 @@ export default function AdminDoctors() {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
       <PageHeader
-        label="Admin"
-        title="Doctor"
-        highlight="accounts."
-        subtitle="Track onboarding submissions, approve or reject pending doctors, rotate passwords, and manage the §1.7 prescription mandatory fields."
+        label={t("pages.admin.doctors.label")}
+        title={t("pages.admin.doctors.title")}
+        highlight={t("pages.admin.doctors.highlight")}
+        subtitle={t("pages.admin.doctors.subtitle")}
         action={
           <Link href="/admin/doctors/new">
             <Button>
               <UserPlus2 className="h-4 w-4" />
-              Create doctor
+              {t("pages.admin.doctors.createDoctor")}
             </Button>
           </Link>
         }
@@ -108,7 +109,7 @@ export default function AdminDoctors() {
       {/* Status tabs with live counts. Awaiting-approval (sky) is the
           actionable one — highlighted so new submissions are noticed. */}
       <div className="inline-flex w-fit flex-wrap items-center gap-1 rounded-2xl border border-[var(--border)] bg-[var(--muted)]/50 p-1">
-        {TABS.map(({ key, label }) => {
+        {tabs.map(({ key, label }) => {
           const n = countFor(key);
           return (
             <button
@@ -149,26 +150,30 @@ export default function AdminDoctors() {
           />
         </div>
       ) : loading ? (
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
+          {t("common.loading")}
+        </Card>
       ) : isEmpty ? (
         <EmptyState
           Icon={Stethoscope}
           title={
             tab === "all"
-              ? "No doctors yet"
-              : `Nothing ${TABS.find((t) => t.key === tab)?.label.toLowerCase()}`
+              ? t("pages.admin.doctors.emptyAllTitle")
+              : t("pages.admin.doctors.emptyFilteredTitle", {
+                  status: tabs.find((item) => item.key === tab)?.label.toLowerCase() ?? "",
+                })
           }
           description={
             tab === "all"
-              ? "Create the first doctor account to start booking appointments."
-              : `Switch to "All" to see every doctor regardless of status.`
+              ? t("pages.admin.doctors.emptyAllDescription")
+              : t("pages.admin.doctors.emptyFilteredDescription")
           }
           action={
             tab === "all" && (
               <Link href="/admin/doctors/new">
                 <Button>
                   <UserPlus2 className="h-4 w-4" />
-                  Create doctor
+                  {t("pages.admin.doctors.createDoctor")}
                 </Button>
               </Link>
             )
@@ -192,6 +197,7 @@ export default function AdminDoctors() {
 }
 
 function InviteCard({ invite }: { invite: DoctorInvite }) {
+  const { t } = useI18n();
   const resend = useResendDoctorInvite();
   const revoke = useRevokeDoctorInvite();
   const [confirmRevoke, setConfirmRevoke] = useState(false);
@@ -222,12 +228,12 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
       <h3 className="mt-4 break-all font-display text-lg tracking-[-0.01em]">{invite.email}</h3>
       {invite.familyName && (
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-          Name hint: {invite.familyName}
+          {t("pages.admin.doctors.nameHint")}: {invite.familyName}
         </p>
       )}
       <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-[var(--muted-foreground)]">
         <Clock className="h-3 w-3" />
-        Sent {fmtRelative(invite.createdAt)}
+        {t("pages.admin.doctors.sent")} {fmtRelative(invite.createdAt)}
       </p>
       <p
         className={cn(
@@ -235,11 +241,12 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
           expired ? "text-rose-600" : "text-[var(--muted-foreground)]",
         )}
       >
-        {expired ? "Expired" : "Expires"} {fmtRelative(invite.expiresAt)}
+        {expired ? t("pages.admin.doctors.expired") : t("pages.admin.doctors.expires")}{" "}
+        {fmtRelative(invite.expiresAt)}
       </p>
 
       <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2 text-xs text-[var(--muted-foreground)]">
-        Hasn&rsquo;t completed onboarding yet — no profile on file.
+        {t("pages.admin.doctors.invitePendingDescription")}
       </div>
 
       {err && <ErrorBanner className="mt-3">{explainError(err.error)}</ErrorBanner>}
@@ -248,7 +255,7 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
         {confirmRevoke ? (
           <>
             <span className="flex-1 text-xs text-[var(--muted-foreground)]">
-              Revoke this invite?
+              {t("pages.admin.doctors.revokeInviteQuestion")}
             </span>
             <Button
               variant="destructive"
@@ -256,7 +263,9 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
               onClick={() => revoke.mutate(invite.inviteId)}
               disabled={revoke.isPending}
             >
-              {revoke.isPending ? "Revoking…" : "Revoke"}
+              {revoke.isPending
+                ? t("pages.admin.doctors.revoking")
+                : t("pages.admin.doctors.revoke")}
             </Button>
             <Button
               variant="ghost"
@@ -264,7 +273,7 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
               onClick={() => setConfirmRevoke(false)}
               disabled={revoke.isPending}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
           </>
         ) : (
@@ -277,7 +286,9 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
               disabled={busy}
             >
               <Send className={cn("h-4 w-4", resend.isPending && "animate-pulse")} />
-              {resend.isPending ? "Resending…" : "Resend"}
+              {resend.isPending
+                ? t("pages.admin.doctors.resending")
+                : t("pages.admin.doctors.resend")}
             </Button>
             <Button
               variant="ghost"
@@ -286,7 +297,7 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
               disabled={busy}
             >
               <Trash2 className="h-4 w-4" />
-              Revoke
+              {t("pages.admin.doctors.revoke")}
             </Button>
           </>
         )}
@@ -296,20 +307,22 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
 }
 
 function InviteStatusPill({ expired }: { expired: boolean }) {
+  const { t } = useI18n();
   return expired ? (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
       <MailX className="h-3 w-3" />
-      Expired
+      {t("pages.admin.doctors.expired")}
     </span>
   ) : (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
       <Mail className="h-3 w-3" />
-      Awaiting setup
+      {t("pages.admin.doctors.tabs.awaitingSetup")}
     </span>
   );
 }
 
 function DoctorCard({ doctor: d, onReject }: { doctor: Doctor; onReject: () => void }) {
+  const { t } = useI18n();
   const approve = useApproveDoctor();
   const awaiting = d.onboardingStatus === "awaiting_approval";
   const rejected = d.onboardingStatus === "rejected";
@@ -330,7 +343,7 @@ function DoctorCard({ doctor: d, onReject }: { doctor: Doctor; onReject: () => v
         {d.submittedAt && (
           <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-[var(--muted-foreground)]">
             <Clock className="h-3 w-3" />
-            Submitted {fmtRelative(d.submittedAt)}
+            {t("pages.admin.doctors.submitted")} {fmtRelative(d.submittedAt)}
           </p>
         )}
         {rejected && d.rejectedReason && (
@@ -340,8 +353,8 @@ function DoctorCard({ doctor: d, onReject }: { doctor: Doctor; onReject: () => v
           </p>
         )}
         <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-[var(--border)] pt-4">
-          <Mini label="SLMC" value={d.slmcRegistrationNumber} />
-          <Mini label="Institute" value={d.instituteName} />
+          <Mini label={t("pages.admin.doctors.slmc")} value={d.slmcRegistrationNumber} />
+          <Mini label={t("pages.admin.doctors.institute")} value={d.instituteName} />
         </div>
       </Link>
 
@@ -357,11 +370,13 @@ function DoctorCard({ doctor: d, onReject }: { doctor: Doctor; onReject: () => v
             disabled={approve.isPending}
           >
             <CheckCircle2 className={cn("h-4 w-4", approve.isPending && "animate-pulse")} />
-            {approve.isPending ? "Approving…" : "Approve"}
+            {approve.isPending
+              ? t("pages.admin.doctors.approving")
+              : t("pages.admin.doctors.approve")}
           </Button>
           <Button variant="ghost" size="sm" onClick={onReject} disabled={approve.isPending}>
             <ShieldX className="h-4 w-4" />
-            Reject
+            {t("pages.admin.doctors.reject")}
           </Button>
         </div>
       )}
@@ -373,6 +388,7 @@ function DoctorCard({ doctor: d, onReject }: { doctor: Doctor; onReject: () => v
 }
 
 function StatusPills({ doctor: d }: { doctor: Doctor }) {
+  const { t } = useI18n();
   // One coherent status pill. A doctor still in a pending lifecycle state
   // (awaiting setup / approval) isn't usable yet, so they never show "Active"
   // — the previous double-pill ("Active" + "Awaiting setup") was misleading.
@@ -382,7 +398,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
         <Mail className="h-3 w-3" />
-        Awaiting setup
+        {t("pages.admin.doctors.tabs.awaitingSetup")}
       </span>
     );
   }
@@ -390,7 +406,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-sky-700">
         <ShieldCheck className="h-3 w-3" />
-        Awaiting approval
+        {t("pages.admin.doctors.tabs.awaitingApproval")}
       </span>
     );
   }
@@ -398,7 +414,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
         <XCircle className="h-3 w-3" />
-        Rejected
+        {t("pages.admin.doctors.tabs.rejected")}
       </span>
     );
   }
@@ -406,17 +422,18 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   return d.active ? (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
       <CheckCircle2 className="h-3 w-3" />
-      Active
+      {t("common.active")}
     </span>
   ) : (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--muted)] px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
       <XCircle className="h-3 w-3" />
-      Inactive
+      {t("common.inactive")}
     </span>
   );
 }
 
 function RejectModal({ target, onClose }: { target: Doctor | null; onClose: () => void }) {
+  const { t } = useI18n();
   const reject = useRejectDoctor();
   const [reason, setReason] = useState("");
 
@@ -424,24 +441,24 @@ function RejectModal({ target, onClose }: { target: Doctor | null; onClose: () =
     <Modal
       open={target !== null}
       onClose={() => !reject.isPending && onClose()}
-      title="Reject this submission?"
-      description="The doctor won't be able to log in. They'll see the reason you enter below if they try."
+      title={t("pages.admin.doctors.rejectSubmissionTitle")}
+      description={t("pages.admin.doctors.rejectSubmissionDescription")}
     >
       {reject.error && (
         <ErrorBanner className="mb-3">{explainError(reject.error.error)}</ErrorBanner>
       )}
       <div className="mb-4 flex flex-col gap-2">
-        <Label htmlFor="reject-reason">Reason (shown to the doctor)</Label>
+        <Label htmlFor="reject-reason">{t("pages.admin.doctors.rejectReasonLabel")}</Label>
         <Input
           id="reject-reason"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="e.g. SLMC number couldn't be verified"
+          placeholder={t("pages.admin.doctors.rejectReasonPlaceholder")}
         />
       </div>
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose} disabled={reject.isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="destructive"
@@ -459,7 +476,9 @@ function RejectModal({ target, onClose }: { target: Doctor | null; onClose: () =
           }
           disabled={reject.isPending}
         >
-          {reject.isPending ? "Rejecting…" : "Reject submission"}
+          {reject.isPending
+            ? t("pages.admin.doctors.rejecting")
+            : t("pages.admin.doctors.rejectSubmission")}
         </Button>
       </div>
     </Modal>
