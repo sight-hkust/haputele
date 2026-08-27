@@ -103,6 +103,7 @@ export type SystemConfig = Generated.SystemConfigOut;
 export type SetupStatusResponse = Generated.SetupStatusOut;
 export type VerifySetupTokenResponse = Generated.VerifyTokenOut;
 export type InitializeSystemResponse = Generated.InitializeOut;
+export type Health = Generated.HealthOut;
 
 // JSONB entry shapes — backend names match 1:1.
 export type DiseaseEntry = Generated.DiseaseEntry;

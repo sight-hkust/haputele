@@ -58,6 +58,7 @@ import type {
   QueueEntryUpdateRequest,
   ReConsentRequest,
   ReConsentResponse,
+  Health,
   ReferralEntry,
   SessionConsentRequest,
   SessionConsentResponse,
@@ -80,6 +81,21 @@ import type {
 function useGeneratedQuery<TData>(generated: unknown, overrides: UseQueryOptions<TData, ApiError>) {
   const generatedOptions = generated as UseQueryOptions<TData, ApiError>;
   return useQuery<TData, ApiError>({ ...generatedOptions, ...overrides });
+}
+
+// ── Meta ─────────────────────────────────────────────────────────────
+// Version footer data. The plain liveness probe only — never ?full=true —
+// so the footer can't be talked into hammering Postgres/S3. Version is
+// immutable for the life of the container, so one fetch per browser
+// session is enough; a dead backend just means no footer (retry: false,
+// callers render null on error).
+export function useHealth() {
+  const generated = ApiQueries.healthHealthGetQueryOptions({}, { client: generatedApiClient });
+  return useGeneratedQuery<Health>(generated, {
+    queryKey: ["health"],
+    staleTime: Infinity,
+    retry: false,
+  });
 }
 
 // ── Patients ─────────────────────────────────────────────────────────
