@@ -150,9 +150,12 @@ function Workspace() {
           )}
         </div>
 
-        {/* Side rail — Booking card on top, Queue card below */}
-        <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-          <div ref={bookingCardRef}>
+        {/* Side rail — Booking card on top, tabbed list below.
+            Fixed height (not max-h) so the list below can flex into whatever
+            space the booking card leaves; overflow-y-auto stays as a safety
+            valve for the tall from-queue booking form. */}
+        <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto">
+          <div ref={bookingCardRef} className="lg:shrink-0">
             <BookingCard
               mode={bookingMode}
               setMode={setBookingMode}
@@ -249,7 +252,7 @@ function RailCard({
   activeBookingEntryId?: number;
 }) {
   return (
-    <Card className="flex flex-col gap-3 p-4">
+    <Card className="flex flex-col gap-3 p-4 lg:min-h-0 lg:flex-1">
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-1 rounded-xl bg-[var(--muted)] p-1">
           <RailTabButton active={tab === "appointments"} onClick={() => setTab("appointments")}>
@@ -325,7 +328,7 @@ function AppointmentsPanel({
     );
   }
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
       {appointments.map((a) => (
         <AppointmentRow
           key={a.id}
@@ -402,7 +405,7 @@ function QueuePanelBody({
           className="py-6"
         />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
           {pending.map((e) => (
             <div
               key={e.id}

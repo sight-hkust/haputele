@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
-import { APP_TIMEZONE } from "@/lib/format";
+import { APP_TIMEZONE, fmtDate } from "@/lib/format";
 
 // v7 resolves IANA tz names (e.g. "Asia/Hong_Kong") natively via Temporal
 // (temporal-polyfill), so no timezone plugin is needed — see CLAUDE.md Timezones.
@@ -26,6 +26,24 @@ import { APP_TIMEZONE } from "@/lib/format";
 //   live     = in_progress / awaiting_notes (meeting + write-up window)
 //   done     = completed
 //   cancelled is rendered muted/strikethrough rather than as a fourth color.
+// Grid bounds. SLOT_MIN_HOUR is both the `slotMinTime` prop below and the
+// floor the focus-scroll clamps to — they have to agree, so they share a
+// constant rather than repeating the literal.
+const SLOT_MIN_HOUR = 7;
+const SLOT_MAX_HOUR = 20;
+// Land the focused appointment just below the top edge rather than flush
+// against it, so the slot before it stays visible for context.
+const FOCUS_LEAD_MIN = 30;
+
+// Where to scroll the time grid so `iso` is comfortably in view. Read through
+// fmtDate because scheduledAt is UTC while the grid renders in APP_TIMEZONE —
+// going via the app's own formatter avoids a timezone slip here.
+function focusScrollTime(iso: string): { hours: number; minutes: number } {
+  const [h, m] = fmtDate(iso, "HH:mm").split(":").map(Number);
+  const minutes = Math.max(h * 60 + m - FOCUS_LEAD_MIN, SLOT_MIN_HOUR * 60);
+  return { hours: Math.floor(minutes / 60), minutes: minutes % 60 };
+}
+
 type StatusBucket = "upcoming" | "live" | "done" | "cancelled";
 
 const STATUS_BUCKET: Record<AppointmentStatus, StatusBucket> = {
@@ -73,7 +91,17 @@ export function AppointmentCalendar({
   // disorienting. `focusAt` rather than `focusId` so re-selecting the same
   // row after paging away still brings the grid back.
   useEffect(() => {
-    if (focusAt) controller.gotoDate(focusAt);
+    if (!focusAt) return;
+    controller.gotoDate(focusAt);
+    // gotoDate re-renders the grid, so scrolling in the same tick would act on
+    // the old layout. Defer a frame — the same idiom the workspace uses for
+    // its scrollIntoView. scrollToTime lives on CalendarApi, not on the
+    // controller; `view` is undefined until the first mount completes, and is
+    // a no-op axis in month/agenda views.
+    const raf = requestAnimationFrame(() => {
+      controller.view?.calendar.scrollToTime(focusScrollTime(focusAt));
+    });
+    return () => cancelAnimationFrame(raf);
   }, [controller, focusAt]);
 
   const events = useMemo(() => {
@@ -140,9 +168,9 @@ export function AppointmentCalendar({
         // consistent. All-day strip hidden — appointments always have a time.
         slotDuration="00:15:00"
         slotHeaderInterval="01:00:00"
-        slotMinTime="07:00:00"
-        slotMaxTime="20:00:00"
-        scrollTime="07:00:00"
+        slotMinTime={`${String(SLOT_MIN_HOUR).padStart(2, "0")}:00:00`}
+        slotMaxTime={`${String(SLOT_MAX_HOUR).padStart(2, "0")}:00:00`}
+        scrollTime={`${String(SLOT_MIN_HOUR).padStart(2, "0")}:00:00`}
         allDaySlot={false}
         // Keep 15-min blocks at readable height (2.6em ≈ 42px) — without a
         // floor, v7 packs the 52 slots into the container height.
