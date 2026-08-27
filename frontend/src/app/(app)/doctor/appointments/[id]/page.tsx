@@ -16,8 +16,10 @@ import { explainError } from "@/lib/error-codes";
 import { fmtDateTime } from "@/lib/format";
 import { useAppointment, useCreateOrGetDraft } from "@/lib/use-api";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
+import { useI18n } from "@/lib/i18n";
 
 export default function DoctorAppointmentDetail() {
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const id = parseIdParam(params.id);
   const router = useRouter();
@@ -36,7 +38,7 @@ export default function DoctorAppointmentDetail() {
   if (!apt.data) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">{t("common.loading")}</Card>
       </div>
     );
   }
@@ -56,11 +58,11 @@ export default function DoctorAppointmentDetail() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
-      <BackLink href="/doctor">Back to calendar</BackLink>
+      <BackLink href="/doctor">{t("pages.doctor.calendar.backToCalendar")}</BackLink>
 
       <PageHeader
-        label={`Appointment #${appointment.id}`}
-        title={patient ? `${patient.given} ${patient.family}` : "Patient"}
+        label={t("pages.doctor.appointments.appointmentId", { id: appointment.id })}
+        title={patient ? `${patient.given} ${patient.family}` : t("forms.patient")}
         subtitle={fmtDateTime(appointment.scheduledAt)}
         action={<StatusBadge status={appointment.status} />}
       />
@@ -74,10 +76,10 @@ export default function DoctorAppointmentDetail() {
                 <Stethoscope className="mt-0.5 h-5 w-5 text-[var(--muted-foreground)]" />
                 <div>
                   <h3 className="text-base font-semibold tracking-[-0.01em]">
-                    Waiting on the healthworker
+                    {t("pages.doctor.appointments.waitingTitle")}
                   </h3>
                   <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                    The consultation flow opens once vitals are submitted and the meeting starts.
+                    {t("pages.doctor.appointments.waitingDescription")}
                   </p>
                 </div>
               </div>
@@ -88,12 +90,11 @@ export default function DoctorAppointmentDetail() {
             <Card variant="elevated" className="p-8">
               <h2 className="font-display text-2xl tracking-[-0.01em]">
                 {appointment.status === "awaiting_notes"
-                  ? "Write up the consultation"
-                  : "Open the consultation while you talk"}
+                  ? t("pages.doctor.appointments.writeUpTitle")
+                  : t("pages.doctor.appointments.openWhileTalkingTitle")}
               </h2>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                Three stages — notes, prescription, then review &amp; sign. Drafts persist between
-                stages so you can step away and come back.
+                {t("pages.doctor.appointments.consultationStagesDescription")}
               </p>
 
               {draft.error && (
@@ -103,7 +104,9 @@ export default function DoctorAppointmentDetail() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Button onClick={beginConsultation} disabled={draft.isPending}>
                   <FileSignature className="h-4 w-4" />
-                  {draft.isPending ? "Opening…" : "Begin consultation"}
+                  {draft.isPending
+                    ? t("pages.doctor.appointments.opening")
+                    : t("pages.doctor.appointments.beginConsultation")}
                 </Button>
               </div>
             </Card>
@@ -111,15 +114,17 @@ export default function DoctorAppointmentDetail() {
 
           {isCompleted && consultation && (
             <Card variant="elevated" className="p-8">
-              <h2 className="font-display text-2xl tracking-[-0.01em]">Consultation completed</h2>
+              <h2 className="font-display text-2xl tracking-[-0.01em]">
+                {t("pages.doctor.appointments.completedTitle")}
+              </h2>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                Signed and locked. Open the record to review the diagnoses, prescription, and notes.
+                {t("pages.doctor.appointments.completedDescription")}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href={`/doctor/consultations/${consultation.id}`}>
                   <Button variant="secondary">
                     <ExternalLink className="h-4 w-4" />
-                    View record
+                    {t("pages.doctor.appointments.viewRecord")}
                   </Button>
                 </Link>
               </div>
@@ -142,7 +147,9 @@ export default function DoctorAppointmentDetail() {
             </>
           ) : (
             <Card className="p-6">
-              <p className="text-sm text-[var(--muted-foreground)]">Patient unavailable.</p>
+              <p className="text-sm text-[var(--muted-foreground)]">
+                {t("pages.doctor.appointments.patientUnavailable")}
+              </p>
             </Card>
           )}
         </aside>

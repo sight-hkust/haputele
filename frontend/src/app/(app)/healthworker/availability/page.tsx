@@ -33,8 +33,11 @@ import {
   useDoctorList,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { formatWeekSpan } from "@/lib/date-locale";
+import { useI18n } from "@/lib/i18n";
 
 export default function HealthworkerAvailabilityPage() {
+  const { t } = useI18n();
   const doctors = useDoctorList({ active: true });
   const [doctorId, setDoctorId] = useState<number | null>(null);
 
@@ -106,7 +109,9 @@ export default function HealthworkerAvailabilityPage() {
   };
 
   if (doctors.isLoading) {
-    return <div className="px-6 py-12 text-sm text-[var(--muted-foreground)]">Loading…</div>;
+    return (
+      <div className="px-6 py-12 text-sm text-[var(--muted-foreground)]">{t("common.loading")}</div>
+    );
   }
   if (doctors.error) {
     return (
@@ -118,22 +123,22 @@ export default function HealthworkerAvailabilityPage() {
   if ((doctors.data ?? []).length === 0) {
     return (
       <div className="px-6 py-12 text-sm text-[var(--muted-foreground)]">
-        No active doctors. Ask the admin to onboard one before setting availability.
+        {t("pages.healthworker.availability.noActiveDoctors")}
       </div>
     );
   }
 
-  const weekLabel = `${format(weekStart, "d MMM")} – ${format(addDays(weekStart, 6), "d MMM yyyy")}`;
+  const weekLabel = formatWeekSpan(weekStart, addDays(weekStart, 6));
   const saving = deleteRange.isPending || bulkCreate.isPending;
   const selectedDoctor = doctors.data?.find((d) => d.id === doctorId) ?? null;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-8">
       <PageHeader
-        label="Availability"
-        title="Manage doctor"
-        highlight="availability"
-        subtitle="Set or adjust a doctor's reachable windows on their behalf. Drag across cells to paint, drag again over filled cells to erase. This is an advisory reference for booking — bookings outside these windows are still allowed."
+        label={t("pages.healthworker.availability.label")}
+        title={t("pages.healthworker.availability.title")}
+        highlight={t("pages.healthworker.availability.highlight")}
+        subtitle={t("pages.healthworker.availability.subtitle")}
       />
 
       <Card>
@@ -144,7 +149,7 @@ export default function HealthworkerAvailabilityPage() {
                 value={doctorId ?? ""}
                 onChange={(e) => setDoctorId(Number(e.target.value))}
                 className="sm:max-w-xs"
-                aria-label="Select doctor"
+                aria-label={t("pages.healthworker.availability.selectDoctor")}
               >
                 {doctors.data?.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -154,7 +159,9 @@ export default function HealthworkerAvailabilityPage() {
               </Select>
               <div>
                 <CardTitle>{weekLabel}</CardTitle>
-                {dirty && <CardDescription>Unsaved changes</CardDescription>}
+                {dirty && (
+                  <CardDescription>{t("pages.healthworker.availability.unsavedChanges")}</CardDescription>
+                )}
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -163,21 +170,21 @@ export default function HealthworkerAvailabilityPage() {
                 size="sm"
                 onClick={() => setWeekStart((w) => addDays(w, -7))}
               >
-                ← Prev
+                {t("pages.healthworker.availability.prev")}
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => setWeekStart(startOfWeekLocal(new Date()))}
               >
-                This week
+                {t("pages.healthworker.availability.thisWeek")}
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => setWeekStart((w) => addDays(w, 7))}
               >
-                Next →
+                {t("pages.healthworker.availability.next")}
               </Button>
               <CopyWeekButton
                 doctorId={doctorId ?? 0}
@@ -191,7 +198,7 @@ export default function HealthworkerAvailabilityPage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {saving ? "Saving…" : "Save week"}
+                {saving ? t("pages.healthworker.availability.saving") : t("pages.healthworker.availability.saveWeek")}
               </Button>
             </div>
           </div>
@@ -205,9 +212,10 @@ export default function HealthworkerAvailabilityPage() {
           )}
           {selectedDoctor && (
             <p className="mb-2 text-xs text-[var(--muted-foreground)]">
-              Editing availability for{" "}
+              {t("pages.healthworker.availability.editingFor")}{" "}
               <span className="font-medium text-[var(--foreground)]">
-                Dr {selectedDoctor.givenName} {selectedDoctor.familyName}
+                {t("pages.healthworker.availability.doctorPrefix")} {selectedDoctor.givenName}{" "}
+                {selectedDoctor.familyName}
               </span>
               .
             </p>
@@ -221,8 +229,7 @@ export default function HealthworkerAvailabilityPage() {
                   "repeating-linear-gradient(45deg, transparent 0, transparent 4px, rgba(15, 23, 42, 0.22) 4px, rgba(15, 23, 42, 0.22) 7px)",
               }}
             />
-            Hatched cells already have a booked appointment — informational only, you can still
-            paint over them.
+            {t("pages.healthworker.availability.hatchedHint")}
           </p>
           <WeekGrid
             weekStart={weekStart}
@@ -247,6 +254,7 @@ function CopyWeekButton({
   cells: Set<CellKey>;
   disabled: boolean;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(4);
   const [busy, setBusy] = useState(false);
@@ -280,13 +288,13 @@ function CopyWeekButton({
     <>
       <Button variant="secondary" size="sm" onClick={() => setOpen(true)} disabled={disabled}>
         <Copy className="h-4 w-4" />
-        Copy week to…
+        {t("pages.healthworker.availability.copyWeekTo")}
       </Button>
       <Modal
         open={open}
         onClose={() => !busy && setOpen(false)}
-        title="Copy this week's pattern"
-        description="Replicate the currently visible week's availability over the next N weeks. Existing windows in those target weeks will be replaced."
+        title={t("pages.healthworker.availability.copyModalTitle")}
+        description={t("pages.healthworker.availability.copyModalDescription")}
       >
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-2">
@@ -302,25 +310,28 @@ function CopyWeekButton({
                     : "border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--accent)]/30")
                 }
               >
-                {n} week{n === 1 ? "" : "s"}
+                {n === 1
+                  ? t("pages.healthworker.availability.weekCount", { n })
+                  : t("pages.healthworker.availability.weekCountPlural", { n })}
               </button>
             ))}
           </div>
           <p className="text-sm text-[var(--muted-foreground)]">
-            Will overwrite the {count} week{count === 1 ? "" : "s"} starting{" "}
-            <span className="font-medium text-[var(--foreground)]">
-              {format(addDays(weekStart, 7), "d MMM yyyy")}
-            </span>
-            .
+            {t("pages.healthworker.availability.willOverwrite", {
+              count,
+              date: format(addDays(weekStart, 7), "d MMM yyyy"),
+            })}
           </p>
           {error && <ErrorBanner>{error}</ErrorBanner>}
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setOpen(false)} disabled={busy}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button onClick={run} disabled={busy}>
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              {busy ? "Copying…" : `Copy to ${count} week${count === 1 ? "" : "s"}`}
+              {busy
+                ? t("pages.healthworker.availability.copying")
+                : t("pages.healthworker.availability.copyToWeeks", { count })}
             </Button>
           </div>
         </div>

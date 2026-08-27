@@ -10,7 +10,8 @@ import { Select } from "@/components/primitives/select";
 import { DoctorSlotPicker } from "@/components/doctor/doctor-slot-picker";
 import { useBookQueueEntry, useDoctorList } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
-import { appLocalToUtcIso } from "@/lib/format";
+import { appLocalToUtcIso, doctorName } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { Appointment, QueueEntry } from "@/types/api";
 
 // "Book from queue" form. Pre-fills the preferred doctor and target date if
@@ -25,6 +26,7 @@ export function QueueBookForm({
   onBooked: (a: Appointment) => void;
   onCancel: () => void;
 }) {
+  const { t } = useI18n();
   const doctors = useDoctorList({ active: true });
   const book = useBookQueueEntry(entry.id);
 
@@ -52,20 +54,20 @@ export function QueueBookForm({
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <Label>Doctor</Label>
+        <Label>{t("forms.doctor")}</Label>
         <Select value={doctorId} onChange={(e) => setDoctorId(e.target.value)}>
-          <option value="">Select a doctor…</option>
+          <option value="">{t("forms.selectDoctor")}</option>
           {(doctors.data ?? []).map((d) => (
             <option key={d.id} value={d.id}>
-              Dr. {d.givenName} {d.familyName}
-              {entry.preferredDoctorId === d.id ? " · preferred" : ""}
+              {doctorName(d)}
+              {entry.preferredDoctorId === d.id ? t("queue.preferredSuffix") : ""}
             </option>
           ))}
         </Select>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Scheduled time</Label>
+        <Label>{t("forms.scheduledTime")}</Label>
         {doctorId ? (
           <DoctorSlotPicker
             doctorId={Number(doctorId)}
@@ -74,7 +76,7 @@ export function QueueBookForm({
           />
         ) : (
           <p className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3 text-xs text-[var(--muted-foreground)]">
-            Pick a doctor first to see their open slots.
+            {t("forms.pickDoctorForSlots")}
           </p>
         )}
       </div>
@@ -85,7 +87,7 @@ export function QueueBookForm({
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={book.isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button type="submit" disabled={!doctorId || !scheduledAt || book.isPending}>
           {book.isPending ? (
@@ -93,7 +95,7 @@ export function QueueBookForm({
           ) : (
             <CalendarPlus className="h-4 w-4" />
           )}
-          {book.isPending ? "Booking…" : "Book appointment"}
+          {book.isPending ? t("forms.booking") : t("pages.healthworker.appointments.bookAppointment")}
         </Button>
       </div>
     </form>

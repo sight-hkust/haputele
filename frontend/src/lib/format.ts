@@ -75,7 +75,11 @@ export function ageFromDob(dob: string | null | undefined): number | null {
 export function fmtAge(dob: string | null | undefined): string | null {
   const years = ageFromDob(dob);
   if (years === null) return null;
-  return `${years} ${years === 1 ? "year" : "years"} old`;
+  return translate(
+    getActiveLocale(),
+    years === 1 ? "format.ageYearsOldOne" : "format.ageYearsOld",
+    { years },
+  );
 }
 
 // Convert a datetime-local input value (e.g. "2026-04-29T09:00") to a UTC
@@ -109,7 +113,8 @@ export function fullName(p: { given: string; family: string }): string {
 }
 
 export function doctorName(d: { givenName: string; familyName: string }): string {
-  return `Dr. ${d.givenName} ${d.familyName}`.trim();
+  const prefix = translate(getActiveLocale(), "format.doctorPrefix");
+  return `${prefix} ${d.givenName} ${d.familyName}`.trim();
 }
 
 // The §11 status values are named for the step being entered, not the step just
@@ -117,18 +122,19 @@ export function doctorName(d: { givenName: string; familyName: string }): string
 // `data_collection` *after* the vitals are saved. Rendering them raw told the
 // health worker the opposite of the truth, so never show the raw value: map it
 // to whatever is actually outstanding.
-const STATUS_LABELS: Record<string, string> = {
-  scheduled: "Scheduled",
-  consent_pending: "Vitals pending",
-  data_collection: "Ready to start",
-  in_progress: "In progress",
-  awaiting_notes: "Awaiting notes",
-  completed: "Completed",
-  cancelled: "Cancelled",
+const STATUS_KEYS: Record<string, string> = {
+  scheduled: "format.status.scheduled",
+  consent_pending: "format.status.consent_pending",
+  data_collection: "format.status.data_collection",
+  in_progress: "format.status.in_progress",
+  awaiting_notes: "format.status.awaiting_notes",
+  completed: "format.status.completed",
+  cancelled: "format.status.cancelled",
 };
 
 export function statusLabel(s: string): string {
-  return STATUS_LABELS[s] ?? s.replace(/_/g, " ");
+  const key = STATUS_KEYS[s];
+  return key ? translate(getActiveLocale(), key) : s.replace(/_/g, " ");
 }
 
 // Queue target-date is stored canonically as Monday; render the full range so

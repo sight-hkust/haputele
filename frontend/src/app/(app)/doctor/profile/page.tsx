@@ -25,6 +25,7 @@ import {
   type DoctorSelfUpdateRequest,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 
 // Editable practice-profile fields a doctor controls themselves. Identity and
 // credential fields (name, email, SLMC number) are admin-only and shown
@@ -38,6 +39,7 @@ type EditableText = {
 };
 
 export default function DoctorProfilePage() {
+  const { t } = useI18n();
   const { doctor, hasDefaultSignature, isLoading, error, refetch } = useCurrentDoctor();
   const update = useUpdateMyProfile();
 
@@ -108,7 +110,7 @@ export default function DoctorProfilePage() {
     return (
       <div className="flex items-center gap-2 text-[var(--muted-foreground)]">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading your profile…
+        {t("pages.doctor.profile.loading")}
       </div>
     );
   }
@@ -116,7 +118,7 @@ export default function DoctorProfilePage() {
   if (error || !doctor) {
     return (
       <ErrorBanner>
-        {explainError((error as { error?: string })?.error ?? "", "Couldn't load your profile.")}
+        {explainError((error as { error?: string })?.error ?? "", t("pages.doctor.profile.loadFailed"))}
       </ErrorBanner>
     );
   }
@@ -129,9 +131,9 @@ export default function DoctorProfilePage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        label="Doctor"
-        title="My profile"
-        subtitle="Update your practice details, rubber stamp, and saved e-signature."
+        label={t("pages.doctor.profile.label")}
+        title={t("pages.doctor.profile.title")}
+        subtitle={t("pages.doctor.profile.subtitle")}
         action={
           <Button onClick={onSave} disabled={update.isPending}>
             {update.isPending ? (
@@ -139,64 +141,64 @@ export default function DoctorProfilePage() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {update.isPending ? "Saving…" : "Save changes"}
+            {update.isPending ? t("common.saving") : t("common.saveChanges")}
           </Button>
         }
       />
 
       {update.isError && (
         <ErrorBanner>
-          {explainError(update.error?.error ?? "", "Couldn't save your changes.")}
+          {explainError(update.error?.error ?? "", t("pages.doctor.profile.saveFailed"))}
         </ErrorBanner>
       )}
       {saved && (
         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700">
-          Profile saved.
+          {t("pages.doctor.profile.saved")}
         </div>
       )}
 
       {/* Read-only identity — changed by an admin only. */}
       <Card>
         <CardHeader>
-          <CardTitle>Identity</CardTitle>
+          <CardTitle>{t("pages.doctor.profile.identityTitle")}</CardTitle>
           <CardDescription>
-            Managed by your administrator. Contact them to change these.
+            {t("pages.doctor.profile.identityDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <ReadOnly label="Name" value={`${doctor.givenName} ${doctor.familyName}`} />
-          <ReadOnly label="Email" value={doctor.email} />
-          <ReadOnly label="SLMC registration number" value={doctor.slmcRegistrationNumber} />
-          <ReadOnly label="Username" value={doctor.username} mono />
+          <ReadOnly label={t("common.name")} value={`${doctor.givenName} ${doctor.familyName}`} />
+          <ReadOnly label={t("common.email")} value={doctor.email} />
+          <ReadOnly label={t("forms.slmcRegistrationNumber")} value={doctor.slmcRegistrationNumber} />
+          <ReadOnly label={t("forms.username")} value={doctor.username} mono />
         </CardContent>
       </Card>
 
       {/* Editable practice profile. */}
       <Card>
         <CardHeader>
-          <CardTitle>Practice details</CardTitle>
-          <CardDescription>Reproduced on the prescription PDFs you sign.</CardDescription>
+          <CardTitle>{t("pages.doctor.profile.practiceTitle")}</CardTitle>
+          <CardDescription>{t("pages.doctor.profile.practiceDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <FieldText label="Contact number" value={text.contact} onChange={setField("contact")} />
+          <FieldText label={t("forms.contactNumber")} value={text.contact} onChange={setField("contact")} />
           <FieldText
-            label="Institute name"
+            label={t("forms.instituteName")}
             value={text.instituteName}
             onChange={setField("instituteName")}
           />
           <FieldText
-            label="Institute contact"
+            label={t("forms.instituteContact")}
             value={text.instituteContact}
             onChange={setField("instituteContact")}
-            placeholder="Optional"
+            placeholder={t("common.optional")}
           />
           <FieldArea
-            label="Qualifications"
+            label={t("forms.qualifications")}
             value={text.qualifications}
             onChange={setField("qualifications")}
           />
           <FieldArea
-            label="Practitioner address"
+            label={t("forms.practitionerAddress")}
             value={text.practitionerAddress}
             onChange={setField("practitionerAddress")}
           />
@@ -206,8 +208,8 @@ export default function DoctorProfilePage() {
       {/* Rubber stamp. */}
       <Card>
         <CardHeader>
-          <CardTitle>Rubber stamp</CardTitle>
-          <CardDescription>Replace only if you need to update the existing stamp.</CardDescription>
+          <CardTitle>{t("pages.doctor.profile.rubberStampTitle")}</CardTitle>
+          <CardDescription>{t("pages.doctor.profile.rubberStampDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <RubberStampUploader
@@ -225,10 +227,9 @@ export default function DoctorProfilePage() {
       {/* Saved e-signature. */}
       <Card>
         <CardHeader>
-          <CardTitle>Default e-signature</CardTitle>
+          <CardTitle>{t("pages.doctor.profile.signatureTitle")}</CardTitle>
           <CardDescription>
-            When set, it&rsquo;s applied automatically on every consultation — no need to sign each
-            time. You can still draw a one-off signature per consultation.
+            {t("pages.doctor.profile.signatureDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -237,16 +238,16 @@ export default function DoctorProfilePage() {
               <div className="flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-white">
                 <img
                   src={`${MY_SIGNATURE_URL}?v=${sigVersion}`}
-                  alt="Your saved e-signature"
+                  alt={t("pages.doctor.profile.signatureAlt")}
                   className="max-h-full max-w-full object-contain"
                 />
               </div>
               <div className="flex-1">
                 <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-                  Signature on file
+                  {t("pages.doctor.profile.signatureOnFile")}
                 </div>
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  Applied automatically when you finalise a consultation.
+                  {t("pages.doctor.profile.signatureAppliedHint")}
                 </p>
               </div>
               <div className="flex flex-col gap-1.5">
@@ -257,7 +258,7 @@ export default function DoctorProfilePage() {
                   onClick={() => setReplacingSignature(true)}
                 >
                   <PenLine className="h-3.5 w-3.5" />
-                  Replace
+                  {t("common.replace")}
                 </Button>
                 <Button
                   type="button"
@@ -269,14 +270,14 @@ export default function DoctorProfilePage() {
                     setSaved(false);
                   }}
                 >
-                  Clear
+                  {t("common.clear")}
                 </Button>
               </div>
             </div>
           ) : clearSignature ? (
             <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 p-4 text-sm">
               <span className="text-[var(--muted-foreground)]">
-                Saved signature will be removed when you save.
+                {t("pages.doctor.profile.signatureWillRemove")}
               </span>
               <Button
                 type="button"
@@ -284,7 +285,7 @@ export default function DoctorProfilePage() {
                 size="sm"
                 onClick={() => setClearSignature(false)}
               >
-                Undo
+                {t("common.undo")}
               </Button>
             </div>
           ) : (

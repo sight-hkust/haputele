@@ -58,6 +58,8 @@ export function translate(
 
 type I18nContextValue = {
   locale: Locale;
+  /** False until the stored locale has been read — avoids remounting locale-sensitive widgets mid-hydration. */
+  ready: boolean;
   setLocale: (locale: Locale) => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
 };
@@ -107,7 +109,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     [locale],
   );
 
-  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
+  const value = useMemo(() => ({ locale, ready, setLocale, t }), [locale, ready, setLocale, t]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

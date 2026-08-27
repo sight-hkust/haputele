@@ -9,6 +9,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
 import { RubberStampEditor } from "@/components/admin/rubber-stamp-editor";
+import { useI18n } from "@/lib/i18n";
 import { useFileDrop } from "@/lib/use-file-drop";
 
 const MAX_INPUT_BYTES = 1_000_000; // 1 MB input file limit
@@ -38,6 +39,7 @@ export function RubberStampUploader({
   onChange: (next: string | null) => void;
   enableQrCapture?: boolean;
 }) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -50,11 +52,11 @@ export function RubberStampUploader({
   const processFile = (file: File) => {
     setError(null);
     if (!ACCEPTED.includes(file.type)) {
-      setError("Use a PNG or JPEG.");
+      setError(t("signature.pngOrJpeg"));
       return;
     }
     if (file.size > MAX_INPUT_BYTES) {
-      setError("Image must be under 1 MB.");
+      setError(t("signature.under1mb"));
       return;
     }
     const reader = new FileReader();
@@ -62,7 +64,7 @@ export function RubberStampUploader({
       const result = typeof reader.result === "string" ? reader.result : null;
       if (result) setEditorSource(result);
     };
-    reader.onerror = () => setError("Couldn't read the file. Try again.");
+    reader.onerror = () => setError(t("signature.couldntReadFile"));
     reader.readAsDataURL(file);
   };
 
@@ -71,9 +73,7 @@ export function RubberStampUploader({
   // message rather than a server-side rejection after the whole form submits.
   const acceptEdited = (next: string) => {
     if (dataUrlByteSize(next) > MAX_OUTPUT_BYTES) {
-      setError(
-        "Stamp image is over 1 MB after processing — crop tighter or remove the background.",
-      );
+      setError(t("rubberStamp.processedTooLarge"));
       return;
     }
     setError(null);
@@ -107,22 +107,22 @@ export function RubberStampUploader({
           <button
             type="button"
             onClick={() => setPreviewOpen(true)}
-            aria-label="View rubber stamp at full size"
-            title="Click to enlarge"
+            aria-label={t("rubberStamp.viewFullSizeAria")}
+            title={t("rubberStamp.clickToEnlarge")}
             className="group relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 transition-colors hover:border-[var(--accent)]/40"
           >
             <img
               src={value}
-              alt="Rubber stamp preview"
+              alt={t("rubberStamp.previewAlt")}
               className="max-h-full max-w-full object-contain"
             />
           </button>
           <div className="flex-1">
             <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-              Stamp captured
+              {t("rubberStamp.stampCaptured")}
             </div>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Reproduced on every prescription PDF.
+              {t("rubberStamp.reproducedOnPdf")}
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -133,7 +133,7 @@ export function RubberStampUploader({
               onClick={() => setEditorSource(value)}
             >
               <Pencil className="h-3.5 w-3.5" />
-              Edit
+              {t("common.edit")}
             </Button>
             <Button
               type="button"
@@ -142,21 +142,21 @@ export function RubberStampUploader({
               onClick={() => inputRef.current?.click()}
             >
               <Upload className="h-3.5 w-3.5" />
-              Replace
+              {t("pages.admin.doctors.form.replace")}
             </Button>
             <Button type="button" variant="secondary" size="sm" onClick={() => setCameraOpen(true)}>
               <Camera className="h-3.5 w-3.5" />
-              Take photo
+              {t("rubberStamp.takePhoto")}
             </Button>
             {enableQrCapture && (
               <Button type="button" variant="secondary" size="sm" onClick={() => setQrOpen(true)}>
                 <Smartphone className="h-3.5 w-3.5" />
-                Use phone
+                {t("rubberStamp.usePhone")}
               </Button>
             )}
             <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)}>
               <X className="h-3.5 w-3.5" />
-              Clear
+              {t("common.clear")}
             </Button>
           </div>
         </div>
@@ -178,23 +178,22 @@ export function RubberStampUploader({
             </div>
             <div className="text-center">
               <div className="text-sm font-semibold tracking-[-0.01em]">
-                {isDragging ? "Drop image to upload" : "Upload rubber stamp"}
+                {isDragging ? t("signature.dropToUpload") : t("rubberStamp.uploadTitle")}
               </div>
               <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-                Drag &amp; drop or click · PNG or JPEG · &lt; 1 MB · crop &amp; remove background
-                after upload
+                {t("rubberStamp.uploadHint")}
               </div>
             </div>
           </button>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Button type="button" variant="secondary" size="sm" onClick={() => setCameraOpen(true)}>
               <Camera className="h-3.5 w-3.5" />
-              Take a photo instead
+              {t("rubberStamp.takePhotoInstead")}
             </Button>
             {enableQrCapture && (
               <Button type="button" variant="secondary" size="sm" onClick={() => setQrOpen(true)}>
                 <Smartphone className="h-3.5 w-3.5" />
-                Use phone camera
+                {t("rubberStamp.usePhoneCamera")}
               </Button>
             )}
           </div>
@@ -212,14 +211,14 @@ export function RubberStampUploader({
       <Modal
         open={previewOpen && !!value}
         onClose={() => setPreviewOpen(false)}
-        title="Rubber stamp"
-        description="Reproduced at this size on every prescription PDF."
+        title={t("rubberStamp.modalTitle")}
+        description={t("rubberStamp.modalDescription")}
         className="max-w-2xl"
       >
         <div className="flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 p-6">
           <img
             src={value ?? ""}
-            alt="Rubber stamp full size"
+            alt={t("rubberStamp.fullSizeAlt")}
             className="max-h-[60vh] max-w-full object-contain"
           />
         </div>
@@ -228,7 +227,7 @@ export function RubberStampUploader({
       <Modal
         open={!!editorSource}
         onClose={() => setEditorSource(null)}
-        title="Edit rubber stamp"
+        title={t("rubberStamp.editModalTitle")}
         className="max-w-3xl"
       >
         {editorSource && (
@@ -255,7 +254,7 @@ export function RubberStampUploader({
           onClose={() => setQrOpen(false)}
           purpose="rubber_stamp"
           onRelayReceived={processFile}
-          title="Photograph the stamp with a phone"
+          title={t("rubberStamp.qrTitle")}
         />
       )}
     </div>

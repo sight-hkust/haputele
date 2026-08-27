@@ -13,6 +13,7 @@ import { Input, Label } from "@/components/primitives/input";
 import { PageHeader } from "@/components/primitives/page-header";
 import { useCreateDoctor, useInviteDoctor } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 
 // Two ways to add a doctor:
 //   "invite"  → admin types only email (+ optional name hint). Doctor
@@ -47,6 +48,7 @@ export function NewDoctorSurface({
   createdHref,
   initialMode = "invite",
 }: NewDoctorSurfaceProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
 
@@ -55,26 +57,26 @@ export function NewDoctorSurface({
       <BackLink href={returnHref}>{backLabel}</BackLink>
 
       <PageHeader
-        label="New doctor"
-        title="Add a"
-        highlight="doctor account."
-        subtitle="Invite the doctor by email so they can fill out their own profile, or create the account manually if you've got all the §1.7 information already."
+        label={t("pages.admin.doctors.newDoctorLabel")}
+        title={t("pages.admin.doctors.newDoctorTitle")}
+        highlight={t("pages.admin.doctors.newDoctorHighlight")}
+        subtitle={t("pages.admin.doctors.newDoctorSubtitle")}
       />
 
       {/* Mode picker — full-width, sits above the form so the choice is obvious. */}
       <div className="grid gap-3 sm:grid-cols-2">
         <ModeCard
           Icon={Mail}
-          title="Invite by email"
-          description="Type only the doctor's email. They fill out the full profile and you approve before they can log in."
+          title={t("pages.admin.doctors.inviteByEmail")}
+          description={t("pages.admin.doctors.inviteByEmailDescription")}
           recommended
           selected={mode === "invite"}
           onClick={() => setMode("invite")}
         />
         <ModeCard
           Icon={IdCard}
-          title="Create manually"
-          description="Type the full §1.7 profile yourself. Use this when the doctor isn't reachable by email or you're importing from another system."
+          title={t("pages.admin.doctors.createManually")}
+          description={t("pages.admin.doctors.createManuallyDescription")}
           selected={mode === "manual"}
           onClick={() => setMode("manual")}
         />
@@ -115,6 +117,7 @@ export function InvitePanel({
    *  profile yourself" link here. */
   extra?: ReactNode;
 }) {
+  const { t } = useI18n();
   const invite = useInviteDoctor();
   const [email, setEmail] = useState("");
   const [familyName, setFamilyName] = useState("");
@@ -134,10 +137,11 @@ export function InvitePanel({
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       {showHeading && (
         <div className="flex flex-col gap-1">
-          <h2 className="font-display text-2xl tracking-[-0.01em]">Invite a doctor by email</h2>
+          <h2 className="font-display text-2xl tracking-[-0.01em]">
+            {t("pages.admin.doctors.invitePanelTitle")}
+          </h2>
           <p className="text-sm text-[var(--muted-foreground)]">
-            They&rsquo;ll receive a link to set up their account. Once they submit their profile
-            you&rsquo;ll be able to review and approve from the doctor&rsquo;s page.
+            {t("pages.admin.doctors.invitePanelDescription")}
           </p>
         </div>
       )}
@@ -145,29 +149,28 @@ export function InvitePanel({
       {invite.error && <ErrorBanner>{explainError(invite.error.error)}</ErrorBanner>}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="invite-email">Doctor&rsquo;s email *</Label>
+        <Label htmlFor="invite-email">{t("pages.admin.doctors.inviteEmailLabel")} *</Label>
         <Input
           id="invite-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="doctor@example.com"
+          placeholder={t("pages.admin.doctors.inviteEmailPlaceholder")}
           required
           autoFocus
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="invite-family-name">Family name (optional)</Label>
+        <Label htmlFor="invite-family-name">{t("pages.admin.doctors.inviteFamilyNameLabel")}</Label>
         <Input
           id="invite-family-name"
           value={familyName}
           onChange={(e) => setFamilyName(e.target.value)}
-          placeholder="Perera"
+          placeholder={t("pages.admin.doctors.inviteFamilyNamePlaceholder")}
         />
         <p className="text-xs text-[var(--muted-foreground)]">
-          Used only to personalise the invite email&rsquo;s greeting. The doctor enters their full
-          name themselves.
+          {t("pages.admin.doctors.inviteFamilyNameHint")}
         </p>
       </div>
 
@@ -175,10 +178,10 @@ export function InvitePanel({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <Button type="button" variant="secondary" onClick={onDone}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button type="submit" disabled={invite.isPending || !email.trim()}>
-          {invite.isPending ? "Sending…" : "Send invite"}
+          {invite.isPending ? t("pages.admin.doctors.sending") : t("pages.admin.doctors.sendInvite")}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -197,14 +200,11 @@ function ManualPanel({
   onCancel: () => void;
   onCreated: (id: number) => void;
 }) {
+  const { t } = useI18n();
   const create = useCreateDoctor();
   const errCode = create.error?.error ?? null;
   const missing = (create.error?.detail?.missing as string[] | undefined) ?? undefined;
-  const errorMessage = errCode
-    ? errCode === "missing_prescription_fields"
-      ? "Some §1.7 mandatory fields couldn't be validated server-side."
-      : explainError(errCode)
-    : null;
+  const errorMessage = errCode ? explainError(errCode) : null;
 
   return (
     <DoctorForm
@@ -212,7 +212,7 @@ function ManualPanel({
       submitting={create.isPending}
       errorMessage={errorMessage}
       errorMissingFields={missing}
-      submitLabel="Create doctor"
+      submitLabel={t("pages.admin.doctors.createDoctor")}
       onCancel={onCancel}
       onSubmit={(payload) => {
         // Both fields are required on create and gated by DoctorForm's
@@ -261,6 +261,7 @@ function ModeCard({
   selected: boolean;
   onClick: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <button
       type="button"
@@ -284,7 +285,7 @@ function ModeCard({
           {title}
           {recommended && (
             <span className="rounded-full bg-[var(--accent)]/10 px-2 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
-              Recommended
+              {t("common.recommended")}
             </span>
           )}
         </span>

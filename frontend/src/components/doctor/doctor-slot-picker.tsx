@@ -12,6 +12,8 @@ import { Select } from "@/components/primitives/select";
 import { startOfWeekLocal } from "@/components/doctor/availability-grid-utils";
 import { useAppointmentList, useDoctorAvailability } from "@/lib/use-api";
 import { APP_TIMEZONE, appToday } from "@/lib/format";
+import { formatWeekSpan, formatWithIntl } from "@/lib/date-locale";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 
 // Slot picker for one doctor, one week at a time. Three controls in one frame:
@@ -56,6 +58,7 @@ export function DoctorSlotPicker({
       tends to want soon-as-possible. Consultation follow-up passes 4. */
   defaultWeeksAhead?: number;
 }) {
+  const { t, locale } = useI18n();
   // If a value is already set on mount (e.g. queue entry's targetDate
   // pre-fill, or follow-up branch reopen), land on that week so the chosen
   // chip is immediately visible. Otherwise use defaultWeeksAhead.
@@ -156,10 +159,10 @@ export function DoctorSlotPicker({
         return {
           date: d,
           ymd: format(d, "yyyy-MM-dd"),
-          label: format(d, "EEE d MMM"),
+          label: formatWithIntl(d, { weekday: "short", day: "numeric", month: "short" }),
         };
       }),
-    [weekStartLocal],
+    [weekStartLocal, locale],
   );
 
   const valueAsMs = useMemo(() => {
@@ -197,10 +200,10 @@ export function DoctorSlotPicker({
     const time = customTime || "09:00";
     onChange(`${d}T${time}`);
   };
-  const setCustomTime = (t: string) => {
-    if (!t) return;
+  const setCustomTime = (timeVal: string) => {
+    if (!timeVal) return;
     const date = customDate || formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy-MM-dd");
-    onChange(`${date}T${t}`);
+    onChange(`${date}T${timeVal}`);
   };
 
   // 15-min options for the "Or pick another time" select. Booked and
@@ -217,15 +220,19 @@ export function DoctorSlotPicker({
       const ts = fromZonedTime(`${customDate} ${hh}:${mm}:00`, APP_TIMEZONE).getTime();
       const booked = bookedAt.has(ts);
       const past = ts + SLOT_MS <= nowMs;
-      const suffix = booked ? " · booked" : past ? " · past" : "";
+      const suffix = booked ? t("slotPicker.bookedSuffix") : past ? t("slotPicker.pastSuffix") : "";
       out.push({ value: `${hh}:${mm}`, label: `${hh}:${mm}${suffix}`, disabled: booked || past });
     }
     return out;
-  }, [customDate, bookedAt, nowMs]);
+  }, [customDate, bookedAt, nowMs, t]);
 
   const weekLabel =
-    weeksAhead === 0 ? "This week" : weeksAhead === 1 ? "Next week" : `+${weeksAhead} weeks`;
-  const weekRangeLabel = `${format(weekStartLocal, "d MMM")}–${format(addDays(weekStartLocal, 6), "d MMM yyyy")}`;
+    weeksAhead === 0
+      ? t("slotPicker.thisWeek")
+      : weeksAhead === 1
+        ? t("slotPicker.nextWeek")
+        : t("slotPicker.weeksAhead", { n: weeksAhead });
+  const weekRangeLabel = formatWeekSpan(weekStartLocal, addDays(weekStartLocal, 6));
   const loading = availQ.isLoading || apptQ.isLoading;
 
   return (
@@ -238,7 +245,7 @@ export function DoctorSlotPicker({
           size="icon"
           onClick={() => setWeeksAhead(Math.max(0, weeksAhead - 1))}
           disabled={weeksAhead === 0}
-          aria-label="Previous week"
+          aria-label={t("slotPicker.prevWeek")}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -253,25 +260,24 @@ export function DoctorSlotPicker({
           variant="ghost"
           size="icon"
           onClick={() => setWeeksAhead(weeksAhead + 1)}
-          aria-label="Next week"
+          aria-label={t("slotPicker.nextWeekAria")}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
         {weeksAhead !== 0 && (
           <Button type="button" variant="secondary" size="sm" onClick={() => setWeeksAhead(0)}>
-            This week
+            {t("slotPicker.thisWeek")}
           </Button>
         )}
       </div>
 
-      {/* Chip grid ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
         <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Open slots that week (15-min)
+          {t("slotPicker.openSlots")}
         </span>
         {loading ? (
           <div className="flex items-center gap-2 py-2 text-xs text-[var(--muted-foreground)]">
-            <Loader2 className="h-3 w-3 animate-spin" /> Loading…
+            <Loader2 className="h-3 w-3 animate-spin" /> {t("common.loading")}
           </div>
         ) : (
           <div className="flex flex-col gap-1">
@@ -284,7 +290,9 @@ export function DoctorSlotPicker({
                   </span>
                   {slots.length === 0 ? (
                     <span className="text-xs text-[var(--muted-foreground)]">
-                      {declaredDays.has(d.ymd) ? "No slots remaining" : "No declared availability"}
+                      {declaredDays.has(d.ymd)
+                        ? t("slotPicker.noSlotsRemaining")
+                        : t("slotPicker.noDeclaredAvailability")}
                     </span>
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
@@ -317,21 +325,21 @@ export function DoctorSlotPicker({
 
       {/* Custom date + 15-min slot dropdown ───────────────────────────── */}
       <div className="mt-2 flex flex-col gap-1.5">
-        <Label>Or pick another time</Label>
+        <Label>{t("slotPicker.orPickAnotherTime")}</Label>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <DatePicker
             value={customDate}
             onChange={setCustomDate}
             min={appToday()}
-            placeholder="Choose another date"
-            ariaLabel="Choose another appointment date"
+            placeholder={t("slotPicker.chooseAnotherDate")}
+            ariaLabel={t("slotPicker.chooseAppointmentDate")}
           />
           <Select
             value={customTime}
             onChange={(e) => setCustomTime(e.target.value)}
             disabled={!customDate}
           >
-            <option value="">Pick a slot…</option>
+            <option value="">{t("slotPicker.pickSlot")}</option>
             {customSlotOptions.map((o) => (
               <option key={o.value} value={o.value} disabled={o.disabled}>
                 {o.label}
@@ -342,7 +350,7 @@ export function DoctorSlotPicker({
         {valueOutsideDeclared && (
           <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <span>Outside declared availability — that&rsquo;s fine, just confirming.</span>
+            <span>{t("slotPicker.outsideAvailability")}</span>
           </div>
         )}
       </div>

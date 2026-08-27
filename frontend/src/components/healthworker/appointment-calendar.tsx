@@ -4,13 +4,17 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
 import luxonPlugin from "@fullcalendar/luxon3";
-import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { SafeFullCalendar } from "@/components/healthworker/safe-fullcalendar";
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
-import { getFullCalendarLocaleCode, getFullCalendarLocales } from "@/lib/fullcalendar-locale";
+import {
+  getFullCalendarFormatOptions,
+  getFullCalendarLocaleCode,
+  getFullCalendarLocales,
+} from "@/lib/fullcalendar-locale";
 import { APP_TIMEZONE } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 
@@ -50,9 +54,17 @@ export function AppointmentCalendar({
   basePath?: string;
 }) {
   const router = useRouter();
-  const { locale, t } = useI18n();
+  const { locale, ready, t } = useI18n();
+  // Mount only after i18n + client are stable. SafeFullCalendar recreates the
+  // calendar instance when locale/locales change so date labels pick up Sinhala.
+  const [clientReady, setClientReady] = useState(false);
+  useEffect(() => {
+    setClientReady(true);
+  }, []);
   const fcLocale = getFullCalendarLocaleCode(locale);
   const fcLocales = getFullCalendarLocales(locale);
+  const fcFormats = useMemo(() => getFullCalendarFormatOptions(locale), [locale]);
+  const calendarReady = ready && clientReady;
 
   const events = useMemo(() => {
     const apptEvents = appointments.map((a) => {
@@ -90,14 +102,26 @@ export function AppointmentCalendar({
   }, [appointments, availability]);
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele">
+    <div
+      className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele"
+      data-locale={locale}
+    >
       <style>{FC_CSS}</style>
-      <FullCalendar
-        key={locale}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin, luxonPlugin]}
+      {!calendarReady ? (
+        <div
+          className="flex items-center justify-center text-sm text-[var(--muted-foreground)]"
+          style={{ height: "calc(100vh - 180px)" }}
+        >
+          {t("common.loading")}
+        </div>
+      ) : (
+      <SafeFullCalendar
+        key={fcLocale}
+        plugins={[luxonPlugin, dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
         timeZone={APP_TIMEZONE}
         locale={fcLocale}
         locales={fcLocales}
+        {...fcFormats}
         initialView="timeGridWeek"
         headerToolbar={{
           left: "prev,next today",
@@ -133,6 +157,7 @@ export function AppointmentCalendar({
         }}
         eventDisplay="block"
       />
+      )}
     </div>
   );
 }
@@ -150,6 +175,11 @@ const FC_CSS = `
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--muted-foreground);
+  }
+  .fc-haputele[data-locale="si"] .fc-col-header-cell-cushion,
+  .fc-haputele[data-locale="si"] .fc-list-day-text {
+    text-transform: none;
+    letter-spacing: 0.04em;
   }
   .fc-haputele .fc-timegrid-slot-label-cushion { font-size: 0.8rem; }
   /* Taller rows so 15-min blocks have room to breathe and the event title

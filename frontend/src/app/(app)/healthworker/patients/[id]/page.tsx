@@ -17,9 +17,11 @@ import { ProfileSummary } from "@/components/healthworker/profile-summary";
 import { useDeletePatient, usePatient, usePatientHistory, useUpdatePatient } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { fmtAge, fmtDate, fmtDateTime, fullName } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function PatientDetailPage() {
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const id = parseIdParam(params.id);
   const router = useRouter();
@@ -34,7 +36,9 @@ export default function PatientDetailPage() {
   if (patientQ.isLoading) {
     return (
       <div className="mx-auto max-w-7xl px-6 py-12">
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
+          {t("common.loading")}
+        </Card>
       </div>
     );
   }
@@ -57,19 +61,29 @@ export default function PatientDetailPage() {
   const profile = patientQ.data.profile;
   const age = fmtAge(patient.dob);
   const apts = historyQ.data?.appointments ?? [];
+  const langLabel =
+    patient.language === "en"
+      ? t("common.english")
+      : patient.language === "ta"
+        ? t("common.tamil")
+        : patient.language === "si"
+          ? t("common.sinhala")
+          : null;
+  const genderKey = `forms.genderOptions.${patient.gender}`;
+  const genderLabel = t(genderKey) === genderKey ? patient.gender : t(genderKey);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
-      <BackLink href="/healthworker/patients">Back to patients</BackLink>
+      <BackLink href="/healthworker/patients">{t("pages.healthworker.patients.backToPatients")}</BackLink>
 
       <PageHeader
-        label={`Patient #${patient.id}`}
+        label={t("forms.patientId", { id: patient.id })}
         title={fullName(patient)}
         subtitle={
           [
-            patient.gender,
+            genderLabel,
             age,
-            patient.language ? `Prefers ${patient.language.toUpperCase()}` : null,
+            langLabel ? t("pages.healthworker.patients.prefersLanguage", { lang: langLabel }) : null,
           ]
             .filter(Boolean)
             .join(" · ") || undefined
@@ -79,12 +93,12 @@ export default function PatientDetailPage() {
             <Link href={`/healthworker/appointments/new?patientId=${patient.id}`}>
               <Button variant="secondary" size="md">
                 <CalendarPlus className="h-4 w-4" />
-                Book
+                {t("common.book")}
               </Button>
             </Link>
             <Button variant="secondary" size="md" onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4" />
-              Edit
+              {t("common.edit")}
             </Button>
             <Button variant="ghost" size="md" onClick={() => setDeleteOpen(true)}>
               <Trash2 className="h-4 w-4" />
@@ -101,20 +115,20 @@ export default function PatientDetailPage() {
           <div className="mb-6 flex items-center gap-2">
             <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
             <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-              Demographics
+              {t("pages.healthworker.patients.demographics")}
             </h2>
           </div>
           <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <Field label="Date of birth" value={fmtDate(patient.dob)} />
-            <Field label="Gender" value={patient.gender} />
-            <Field label="National ID" value={patient.nationalId ?? "—"} mono />
-            <Field label="Contact" value={patient.contact ?? "—"} />
+            <Field label={t("forms.dateOfBirth")} value={fmtDate(patient.dob)} />
+            <Field label={t("forms.gender")} value={genderLabel} />
+            <Field label={t("common.nationalId")} value={patient.nationalId ?? "—"} mono />
+            <Field label={t("common.contact")} value={patient.contact ?? "—"} />
             <Field
-              label="Preferred language"
-              value={patient.language ? patient.language.toUpperCase() : "—"}
+              label={t("forms.preferredLanguage")}
+              value={langLabel ?? "—"}
             />
-            <Field label="Screening ref" value={patient.screeningRef ?? "—"} mono />
-            <Field className="sm:col-span-2" label="Address" value={patient.address ?? "—"} />
+            <Field label={t("forms.screeningRef")} value={patient.screeningRef ?? "—"} mono />
+            <Field className="sm:col-span-2" label={t("common.address")} value={patient.address ?? "—"} />
           </dl>
         </Card>
 
@@ -123,13 +137,15 @@ export default function PatientDetailPage() {
           <div className="mb-5 flex items-center gap-2">
             <History className="h-4 w-4 text-[var(--accent)]" />
             <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-              Appointment history
+              {t("pages.healthworker.patients.appointmentHistory")}
             </h2>
           </div>
           {historyQ.isLoading ? (
-            <p className="text-sm text-[var(--muted-foreground)]">Loading…</p>
+            <p className="text-sm text-[var(--muted-foreground)]">{t("common.loading")}</p>
           ) : apts.length === 0 ? (
-            <p className="text-sm text-[var(--muted-foreground)]">No appointments yet.</p>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              {t("pages.healthworker.patients.noAppointmentsYet")}
+            </p>
           ) : (
             <ul className="flex flex-col divide-y divide-[var(--border)]">
               {apts.map((a) => (
@@ -156,7 +172,7 @@ export default function PatientDetailPage() {
       <Modal
         open={editOpen}
         onClose={() => !update.isPending && setEditOpen(false)}
-        title="Edit patient"
+        title={t("pages.healthworker.patients.editPatient")}
         className="max-w-3xl"
       >
         <PatientForm
@@ -164,7 +180,7 @@ export default function PatientDetailPage() {
           initial={patient}
           submitting={update.isPending}
           errorMessage={update.error ? explainError(update.error.error) : null}
-          submitLabel="Save changes"
+          submitLabel={t("common.saveChanges")}
           onSubmit={(s) => {
             if (s.mode !== "update") return;
             update.mutate(s.payload, { onSuccess: () => setEditOpen(false) });
@@ -177,13 +193,13 @@ export default function PatientDetailPage() {
       <Modal
         open={deleteOpen}
         onClose={() => !del.isPending && setDeleteOpen(false)}
-        title="Delete this patient?"
-        description="The record is soft-deleted — past appointments are preserved, but the patient won't appear in lists or be available for new appointments."
+        title={t("pages.healthworker.patients.deleteTitle")}
+        description={t("pages.healthworker.patients.deleteDescription")}
       >
         {del.error && <ErrorBanner className="mb-3">{explainError(del.error.error)}</ErrorBanner>}
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setDeleteOpen(false)} disabled={del.isPending}>
-            Keep
+            {t("common.keep")}
           </Button>
           <Button
             variant="destructive"
@@ -194,7 +210,9 @@ export default function PatientDetailPage() {
             }
             disabled={del.isPending}
           >
-            {del.isPending ? "Deleting…" : "Delete patient"}
+            {del.isPending
+              ? t("common.deleting")
+              : t("pages.healthworker.patients.deletePatient")}
           </Button>
         </div>
       </Modal>

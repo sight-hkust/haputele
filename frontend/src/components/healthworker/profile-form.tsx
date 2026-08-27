@@ -9,6 +9,7 @@ import { Input, Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { DISEASE_OPTIONS, PHYSICAL_ACTIVITY_OPTIONS } from "@/lib/medical-codes";
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 import type {
   AllergyEntry,
   DiseaseCode,
@@ -143,6 +144,7 @@ export function ProfileForm({
   onSubmit: (req: ProfileRequest) => void;
   onCancel?: () => void;
 }) {
+  const { t } = useI18n();
   const form = useForm<FormShape>({
     defaultValues: fromProfile(initial),
   });
@@ -160,8 +162,8 @@ export function ProfileForm({
       {/* ── 1 · Disease history — checkboxes for the named codes ──────── */}
       <Section
         Icon={ClipboardList}
-        title="Disease history"
-        hint="Tick everything that applies. Use the “Other conditions” section below for anything not listed — add as many as you need."
+        title={t("intake.diseaseHistory")}
+        hint={t("intake.diseaseHistoryHint")}
       >
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {NAMED_DISEASE_OPTIONS.map((opt) => (
@@ -180,10 +182,10 @@ export function ProfileForm({
         <div className="mt-6 flex items-end justify-between">
           <div>
             <h4 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Other conditions
+              {t("intake.otherConditions")}
             </h4>
             <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-              Anything not on the list. Add one row per condition.
+              {t("intake.otherConditionsHint")}
             </p>
           </div>
           <Button
@@ -193,12 +195,12 @@ export function ProfileForm({
             onClick={() => others.append({ text: "" })}
           >
             <Plus className="h-3.5 w-3.5" />
-            Add other
+            {t("intake.addOther")}
           </Button>
         </div>
         {others.fields.length === 0 ? (
           <p className="mt-3 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-4 py-4 text-center text-sm text-[var(--muted-foreground)]">
-            No other conditions.
+            {t("intake.noOtherConditions")}
           </p>
         ) : (
           <div className="mt-3 flex flex-col gap-2">
@@ -208,13 +210,13 @@ export function ProfileForm({
                 className="relative rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 py-3 pl-4 pr-12"
               >
                 <Input
-                  aria-label={`Other condition ${i + 1}`}
-                  placeholder="e.g. Crohn disease"
+                  aria-label={t("intake.otherConditionAria", { n: i + 1 })}
+                  placeholder={t("intake.otherConditionPlaceholder")}
                   {...register(`diseases.others.${i}.text` as const)}
                 />
                 <button
                   type="button"
-                  aria-label="Remove"
+                  aria-label={t("common.remove")}
                   onClick={() => others.remove(i)}
                   className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-rose-600"
                 >
@@ -229,19 +231,19 @@ export function ProfileForm({
       {/* ── 2 · Surgical history (repeater) ────────────────────────────── */}
       <RepeaterSection
         Icon={Stethoscope}
-        title="Surgical history"
-        addLabel="Add surgery"
+        title={t("intake.surgicalHistory")}
+        addLabel={t("intake.addSurgery")}
         empty={surgeries.fields.length === 0}
         onAdd={() => surgeries.append({ description: "" })}
       >
         {surgeries.fields.map((f, i) => (
           <RepeaterRow key={f.id} onRemove={() => surgeries.remove(i)}>
             <div className="flex flex-col gap-2">
-              <Label htmlFor={`s-${i}`}>Description</Label>
+              <Label htmlFor={`s-${i}`}>{t("forms.description")}</Label>
               <Input
                 id={`s-${i}`}
                 {...register(`surgicalHistory.${i}.description` as const)}
-                placeholder="e.g. Appendectomy, 2018"
+                placeholder={t("intake.surgeryPlaceholder")}
               />
             </div>
           </RepeaterRow>
@@ -251,8 +253,8 @@ export function ProfileForm({
       {/* ── 3 · Allergies (repeater) ───────────────────────────────────── */}
       <RepeaterSection
         Icon={AlertCircle}
-        title="Allergies"
-        addLabel="Add allergy"
+        title={t("intake.allergies")}
+        addLabel={t("intake.addAllergy")}
         empty={allergies.fields.length === 0}
         onAdd={() =>
           allergies.append({
@@ -267,24 +269,24 @@ export function ProfileForm({
           <RepeaterRow key={f.id} onRemove={() => allergies.remove(i)}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`a-${i}-type`}>Type</Label>
+                <Label htmlFor={`a-${i}-type`}>{t("intake.allergyType.label")}</Label>
                 <Select id={`a-${i}-type`} {...register(`allergies.${i}.type` as const)}>
-                  <option value="">Select…</option>
-                  <option value="food">Food</option>
-                  <option value="medication">Medication</option>
-                  <option value="other">Other</option>
+                  <option value="">{t("intake.allergyType.select")}</option>
+                  <option value="food">{t("intake.allergyType.food")}</option>
+                  <option value="medication">{t("intake.allergyType.medication")}</option>
+                  <option value="other">{t("intake.allergyType.other")}</option>
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`a-${i}-name`}>Allergen</Label>
+                <Label htmlFor={`a-${i}-name`}>{t("intake.allergen")}</Label>
                 <Input id={`a-${i}-name`} {...register(`allergies.${i}.name` as const)} />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`a-${i}-med`}>Reaction medication (if any)</Label>
+                <Label htmlFor={`a-${i}-med`}>{t("intake.reactionMedication")}</Label>
                 <Input id={`a-${i}-med`} {...register(`allergies.${i}.medication` as const)} />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`a-${i}-tw`}>Treated where</Label>
+                <Label htmlFor={`a-${i}-tw`}>{t("intake.treatedWhere")}</Label>
                 <Input id={`a-${i}-tw`} {...register(`allergies.${i}.treatedWhere` as const)} />
               </div>
             </div>
@@ -295,8 +297,8 @@ export function ProfileForm({
       {/* ── 4 · Existing medications (repeater) ────────────────────────── */}
       <RepeaterSection
         Icon={Pill}
-        title="Existing medications"
-        addLabel="Add medication"
+        title={t("intake.medications")}
+        addLabel={t("intake.addMedication")}
         empty={meds.fields.length === 0}
         onAdd={() => meds.append({ drug: "", dosage: "", frequency: "", notes: "" })}
       >
@@ -304,27 +306,27 @@ export function ProfileForm({
           <RepeaterRow key={f.id} onRemove={() => meds.remove(i)}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`em-${i}-d`}>Drug</Label>
+                <Label htmlFor={`em-${i}-d`}>{t("intake.medDrug")}</Label>
                 <Input id={`em-${i}-d`} {...register(`medications.${i}.drug` as const)} />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`em-${i}-do`}>Dosage</Label>
+                <Label htmlFor={`em-${i}-do`}>{t("intake.medDosage")}</Label>
                 <Input
                   id={`em-${i}-do`}
                   {...register(`medications.${i}.dosage` as const)}
-                  placeholder="e.g. 5 mg"
+                  placeholder={t("intake.medDosagePlaceholder")}
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`em-${i}-f`}>Frequency</Label>
+                <Label htmlFor={`em-${i}-f`}>{t("intake.medFrequency")}</Label>
                 <Input
                   id={`em-${i}-f`}
                   {...register(`medications.${i}.frequency` as const)}
-                  placeholder="e.g. once daily"
+                  placeholder={t("intake.medFrequencyPlaceholder")}
                 />
               </div>
               <div className="flex flex-col gap-2 sm:col-span-2">
-                <Label htmlFor={`em-${i}-n`}>Notes</Label>
+                <Label htmlFor={`em-${i}-n`}>{t("intake.medNotes")}</Label>
                 <Textarea
                   id={`em-${i}-n`}
                   rows={2}
@@ -337,24 +339,24 @@ export function ProfileForm({
       </RepeaterSection>
 
       {/* ── 5 · Lifestyle ──────────────────────────────────────────────── */}
-      <Section Icon={Activity} title="Lifestyle & social history">
+      <Section Icon={Activity} title={t("intake.lifestyleTitle")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-smoking">Smoking</Label>
+            <Label htmlFor="ls-smoking">{t("intake.smoking")}</Label>
             <Select id="ls-smoking" {...register("lifestyle.smoking")}>
-              <option value="">Not specified</option>
-              <option value="never">Never</option>
-              <option value="current">Currently smokes</option>
-              <option value="prior">Prior smoker</option>
+              <option value="">{t("intake.smokingOptions.unspecified")}</option>
+              <option value="never">{t("intake.smokingOptions.never")}</option>
+              <option value="current">{t("intake.smokingOptions.current")}</option>
+              <option value="prior">{t("intake.smokingOptions.prior")}</option>
             </Select>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-alcohol">Alcohol</Label>
+            <Label htmlFor="ls-alcohol">{t("intake.alcohol")}</Label>
             <Select id="ls-alcohol" {...register("lifestyle.alcohol")}>
-              <option value="">Not specified</option>
-              <option value="none">None</option>
-              <option value="occasional">Occasional</option>
-              <option value="regular">Regular</option>
+              <option value="">{t("intake.alcoholOptions.unspecified")}</option>
+              <option value="none">{t("intake.alcoholOptions.none")}</option>
+              <option value="occasional">{t("intake.alcoholOptions.occasional")}</option>
+              <option value="regular">{t("intake.alcoholOptions.regular")}</option>
             </Select>
           </div>
           {/* One control for the quid as a whole — betel leaf and areca nut are
@@ -362,22 +364,22 @@ export function ProfileForm({
               both rather than splitting them into two fields nobody fills in
               consistently. */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-betel">Betel leaf / areca nut</Label>
+            <Label htmlFor="ls-betel">{t("intake.betel")}</Label>
             <Select id="ls-betel" {...register("lifestyle.betelAreca")}>
-              <option value="">Not specified</option>
-              <option value="never">Never</option>
-              <option value="current">Currently chews</option>
-              <option value="prior">Prior use</option>
+              <option value="">{t("intake.betelOptions.unspecified")}</option>
+              <option value="never">{t("intake.betelOptions.never")}</option>
+              <option value="current">{t("intake.betelOptions.current")}</option>
+              <option value="prior">{t("intake.betelOptions.prior")}</option>
             </Select>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-job">Occupation</Label>
+            <Label htmlFor="ls-job">{t("intake.occupation")}</Label>
             <Input id="ls-job" {...register("lifestyle.occupation")} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-pa">Physical activity</Label>
+            <Label htmlFor="ls-pa">{t("intake.physicalActivity")}</Label>
             <Select id="ls-pa" {...register("lifestyle.physicalActivity")}>
-              <option value="">Not specified</option>
+              <option value="">{t("forms.notSpecified")}</option>
               {PHYSICAL_ACTIVITY_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
@@ -391,11 +393,15 @@ export function ProfileForm({
       <div className="sticky bottom-4 flex items-center justify-end gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-lg backdrop-blur">
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Saving…" : initial ? "Save profile" : "Create profile"}
+          {submitting
+            ? t("common.saving")
+            : initial
+              ? t("intake.saveProfile")
+              : t("intake.createProfile")}
         </Button>
       </div>
     </form>
@@ -445,6 +451,7 @@ function RepeaterSection({
   empty: boolean;
   children: React.ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-end justify-between">
@@ -461,7 +468,7 @@ function RepeaterSection({
       </div>
       {empty ? (
         <p className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-4 py-6 text-center text-sm text-[var(--muted-foreground)]">
-          None added yet.
+          {t("intake.noneAddedYet")}
         </p>
       ) : (
         <div className="flex flex-col gap-3">{children}</div>
@@ -471,11 +478,12 @@ function RepeaterSection({
 }
 
 function RepeaterRow({ onRemove, children }: { onRemove: () => void; children: React.ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="relative rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 p-4 pr-12">
       <button
         type="button"
-        aria-label="Remove"
+        aria-label={t("common.remove")}
         onClick={onRemove}
         className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-rose-600"
       >

@@ -8,6 +8,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Textarea } from "@/components/primitives/select";
 import { useCancelQueueEntry } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import type { QueueEntry } from "@/types/api";
 
 export function CancelQueueEntryForm({
@@ -19,6 +20,7 @@ export function CancelQueueEntryForm({
   onCancelled: () => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const [reason, setReason] = useState("");
   const cancel = useCancelQueueEntry(entry.id);
   return (
@@ -27,14 +29,14 @@ export function CancelQueueEntryForm({
         rows={3}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder="Reason (optional) — e.g. patient declined"
+        placeholder={t("queue.cancelReasonPlaceholder")}
       />
       {cancel.error && (
         <ErrorBanner>{explainError(cancel.error.error, cancel.error.message)}</ErrorBanner>
       )}
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose} disabled={cancel.isPending}>
-          Back
+          {t("common.back")}
         </Button>
         <Button
           variant="destructive"
@@ -48,7 +50,7 @@ export function CancelQueueEntryForm({
           ) : (
             <X className="h-4 w-4" />
           )}
-          Cancel entry
+          {t("pages.healthworker.appointments.cancelEntry")}
         </Button>
       </div>
     </div>

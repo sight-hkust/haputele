@@ -6,8 +6,10 @@ import { Camera, Check, RefreshCw, SwitchCamera } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
 import { ErrorBanner } from "@/components/primitives/error-banner";
+import { LanguageToggle } from "@/components/shell/language-toggle";
 import { API_URL, ApiError, api } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 
 // Public, token-authenticated "your phone is now a camera" page. Reached by
 // scanning the QR a desktop operator shows; the {token} in the path is the
@@ -30,6 +32,7 @@ const MAX_DIMENSION = 1920;
 const JPEG_QUALITY = 0.92;
 
 export default function CapturePage() {
+  const { t } = useI18n();
   const params = useParams<{ token: string }>();
   const token = Array.isArray(params.token) ? params.token[0] : params.token;
 
@@ -69,7 +72,7 @@ export default function CapturePage() {
         } else {
           setState({
             mode: "invalid",
-            reason: "Couldn't reach the server. Try scanning again in a moment.",
+            reason: t("capture.serverUnreachable"),
           });
         }
       }
@@ -89,7 +92,7 @@ export default function CapturePage() {
 
     (async () => {
       if (!navigator.mediaDevices?.getUserMedia) {
-        setError("This phone or browser doesn't support camera access.");
+        setError(t("capture.cameraUnsupported"));
         return;
       }
       try {
@@ -121,8 +124,8 @@ export default function CapturePage() {
         if (cancelled) return;
         setError(
           err instanceof DOMException && err.name === "NotAllowedError"
-            ? "Camera access was blocked. Allow camera permission and reload."
-            : "Couldn't start the camera. Close other camera apps and try again.",
+            ? t("capture.cameraBlocked")
+            : t("capture.cameraStartFailed"),
         );
       }
     })();
@@ -163,7 +166,7 @@ export default function CapturePage() {
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          setError("Couldn't capture the photo. Try again.");
+          setError(t("capture.captureFailed"));
           return;
         }
         fileRef.current = new File([blob], `phone-${Date.now()}.jpg`, {
@@ -212,7 +215,7 @@ export default function CapturePage() {
       fileRef.current = null;
       setState({ mode: "sent", purpose });
     } catch {
-      setError("Upload failed. Check your connection and try again.");
+      setError(t("capture.uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -227,7 +230,7 @@ export default function CapturePage() {
   if (state.mode === "loading") {
     return (
       <Centered>
-        <p className="text-sm text-white/70">Checking the link…</p>
+        <p className="text-sm text-white/70">{t("capture.checkingLink")}</p>
       </Centered>
     );
   }
@@ -236,10 +239,10 @@ export default function CapturePage() {
     return (
       <Centered>
         <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
-          <h1 className="text-lg font-semibold">Link not active</h1>
+          <h1 className="text-lg font-semibold">{t("capture.linkNotActive")}</h1>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">{state.reason}</p>
           <p className="mt-4 text-xs text-[var(--muted-foreground)]">
-            Ask the person at the computer to show a fresh QR code, then scan again.
+            {t("capture.rescanHint")}
           </p>
         </div>
       </Centered>
@@ -256,16 +259,14 @@ export default function CapturePage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
             <Check className="h-6 w-6" />
           </div>
-          <h1 className="mt-3 text-lg font-semibold">Photo sent</h1>
+          <h1 className="mt-3 text-lg font-semibold">{t("capture.photoSent")}</h1>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-            {isStamp
-              ? "It's on its way to the computer — you can put the phone down now."
-              : "It's now on the computer. Take more if you need to."}
+            {isStamp ? t("capture.sentStampHint") : t("capture.sentAttachmentHint")}
           </p>
           {!isStamp && (
             <Button className="mt-5 w-full" onClick={takeAnother}>
               <Camera className="h-4 w-4" />
-              Take another photo
+              {t("capture.takeAnother")}
             </Button>
           )}
         </div>
@@ -275,9 +276,12 @@ export default function CapturePage() {
 
   // mode === "ready"
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-black">
+    <div className="relative flex min-h-[100dvh] flex-col bg-black">
+      <div className="absolute right-4 top-[max(0.75rem,env(safe-area-inset-top))] z-10 sm:right-6">
+        <LanguageToggle />
+      </div>
       <div className="px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-2 text-center text-sm text-white/80">
-        {isStamp ? "Take a clear photo of the rubber stamp" : "Take a photo for the doctor"}
+        {isStamp ? t("capture.stampInstruction") : t("capture.attachmentInstruction")}
       </div>
 
       <div className="relative flex flex-1 items-center justify-center overflow-hidden">
@@ -287,10 +291,10 @@ export default function CapturePage() {
           muted
           className={`h-full w-full object-contain ${shot ? "hidden" : "block"}`}
         />
-        {shot && <img src={shot} alt="Captured" className="h-full w-full object-contain" />}
+        {shot && <img src={shot} alt={t("capture.capturedAlt")} className="h-full w-full object-contain" />}
         {!ready && !shot && !error && (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
-            Starting camera…
+            {t("capture.startingCamera")}
           </div>
         )}
       </div>
@@ -307,11 +311,11 @@ export default function CapturePage() {
                 className="border-white/30 text-white hover:border-white/50 hover:bg-white/10 hover:text-white"
               >
                 <RefreshCw className="h-4 w-4" />
-                Retake
+                {t("capture.retake")}
               </Button>
               <Button onClick={send} disabled={uploading}>
                 <Check className="h-4 w-4" />
-                {uploading ? "Sending…" : "Send photo"}
+                {uploading ? t("capture.sending") : t("capture.sendPhoto")}
               </Button>
             </>
           ) : (
@@ -321,7 +325,7 @@ export default function CapturePage() {
                   variant="secondary"
                   size="icon"
                   onClick={() => setFacing((f) => (f === "environment" ? "user" : "environment"))}
-                  aria-label="Switch camera"
+                  aria-label={t("capture.switchCameraAria")}
                   className="border-white/30 text-white hover:border-white/50 hover:bg-white/10 hover:text-white"
                 >
                   <SwitchCamera className="h-4 w-4" />
@@ -329,7 +333,7 @@ export default function CapturePage() {
               )}
               <Button size="lg" onClick={capture} disabled={!ready}>
                 <Camera className="h-5 w-5" />
-                Capture
+                {t("capture.capture")}
               </Button>
             </>
           )}
@@ -341,7 +345,10 @@ export default function CapturePage() {
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--foreground)] p-6">
+    <div className="relative flex min-h-[100dvh] items-center justify-center bg-[var(--foreground)] p-6">
+      <div className="absolute right-4 top-[max(0.75rem,env(safe-area-inset-top))] z-10 sm:right-6">
+        <LanguageToggle />
+      </div>
       {children}
     </div>
   );

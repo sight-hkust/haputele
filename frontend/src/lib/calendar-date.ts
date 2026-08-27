@@ -1,6 +1,6 @@
 import { endOfWeek, format, parseISO, startOfWeek } from "date-fns";
 
-import { formatWithIntl } from "@/lib/date-locale";
+import { monthShort } from "@/lib/date-locale";
 import { getActiveLocale } from "@/lib/i18n";
 
 const WEEK_STARTS_ON = 1 as const;
@@ -18,13 +18,12 @@ export function formatWeekRange(value: string): string {
   const end = endOfWeek(date, { weekStartsOn: WEEK_STARTS_ON });
 
   if (getActiveLocale() === "si") {
-    const startDay = formatWithIntl(start, { day: "numeric" });
-    const endDay = formatWithIntl(end, { day: "numeric", month: "short", year: "numeric" });
+    const startDay = start.getDate();
+    const endDay = end.getDate();
     if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-      return `${startDay}–${endDay}`;
+      return `${startDay}–${endDay} ${monthShort(end)} ${end.getFullYear()}`;
     }
-    const startFull = formatWithIntl(start, { day: "numeric", month: "short" });
-    return `${startFull}–${endDay}`;
+    return `${startDay} ${monthShort(start)}–${endDay} ${monthShort(end)} ${end.getFullYear()}`;
   }
 
   // English fallback — keep compact numeric range used before i18n.

@@ -8,6 +8,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { RubberStampEditor } from "@/components/admin/rubber-stamp-editor";
 import { SignatureCanvas, type SignatureCanvasHandle } from "@/components/doctor/signature-canvas";
+import { useI18n } from "@/lib/i18n";
 import { useFileDrop } from "@/lib/use-file-drop";
 
 // Uploads accept PNG/JPEG (a photo of a signature is fine) — the editor crops
@@ -36,6 +37,7 @@ export function SignatureInput({
   value: string | null;
   onChange: (next: string | null) => void;
 }) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const padRef = useRef<SignatureCanvasHandle>(null);
   const [mode, setMode] = useState<Mode>("draw");
@@ -49,11 +51,11 @@ export function SignatureInput({
   const processFile = (file: File) => {
     setError(null);
     if (!ACCEPTED.includes(file.type)) {
-      setError("Use a PNG or JPEG image.");
+      setError(t("signature.pngOrJpeg"));
       return;
     }
     if (file.size > MAX_INPUT_BYTES) {
-      setError("Image must be under 1 MB.");
+      setError(t("signature.under1mb"));
       return;
     }
     const reader = new FileReader();
@@ -61,7 +63,7 @@ export function SignatureInput({
       const result = typeof reader.result === "string" ? reader.result : null;
       if (result) setEditorSource(result); // open the crop / remove-bg editor
     };
-    reader.onerror = () => setError("Couldn't read the file. Try again.");
+    reader.onerror = () => setError(t("signature.couldntReadFile"));
     reader.readAsDataURL(file);
   };
 
@@ -77,7 +79,7 @@ export function SignatureInput({
   // otherwise keep the editor open and nudge the doctor to crop tighter.
   const acceptEdited = (next: string) => {
     if (dataUrlByteSize(next) > MAX_OUTPUT_BYTES) {
-      setError("Cropped signature is over 200 KB — crop tighter or remove the background.");
+      setError(t("signature.croppedTooLarge"));
       return;
     }
     setError(null);
@@ -88,7 +90,7 @@ export function SignatureInput({
   const captureDrawing = () => {
     const url = padRef.current?.toDataURL() ?? null;
     if (!url) {
-      setError("Draw your signature first.");
+      setError(t("signature.drawFirst"));
       return;
     }
     setError(null);
@@ -102,21 +104,21 @@ export function SignatureInput({
           <div className="flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-white">
             <img
               src={value}
-              alt="Saved e-signature preview"
+              alt={t("signature.previewAlt")}
               className="max-h-full max-w-full object-contain"
             />
           </div>
           <div className="flex-1">
             <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-              Signature ready
+              {t("signature.signatureReady")}
             </div>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Applied automatically when you finalise a consultation.
+              {t("pages.doctor.profile.signatureAppliedHint")}
             </p>
           </div>
           <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)}>
             <X className="h-3.5 w-3.5" />
-            Clear
+            {t("common.clear")}
           </Button>
         </div>
         {error && <ErrorBanner>{error}</ErrorBanner>}
@@ -129,13 +131,13 @@ export function SignatureInput({
       <div className="inline-flex w-fit gap-1 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-1">
         <ToggleButton
           Icon={Pencil}
-          label="Draw"
+          label={t("signature.draw")}
           selected={mode === "draw"}
           onClick={() => setMode("draw")}
         />
         <ToggleButton
           Icon={Upload}
-          label="Upload"
+          label={t("common.upload")}
           selected={mode === "upload"}
           onClick={() => setMode("upload")}
         />
@@ -152,7 +154,7 @@ export function SignatureInput({
               disabled={!hasInk}
               onClick={captureDrawing}
             >
-              Use this signature
+              {t("signature.useThisSignature")}
             </Button>
           </div>
         </div>
@@ -173,10 +175,10 @@ export function SignatureInput({
           </div>
           <div className="text-center">
             <div className="text-sm font-semibold tracking-[-0.01em]">
-              {isDragging ? "Drop image to upload" : "Upload signature"}
+              {isDragging ? t("signature.dropToUpload") : t("signature.uploadSignature")}
             </div>
             <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Drag &amp; drop or click · PNG or JPEG · crop &amp; remove background after upload
+              {t("signature.uploadHint")}
             </div>
           </div>
         </button>
@@ -194,13 +196,13 @@ export function SignatureInput({
       <Modal
         open={!!editorSource}
         onClose={() => setEditorSource(null)}
-        title="Edit signature"
+        title={t("signature.editSignature")}
         className="max-w-3xl"
       >
         {editorSource && (
           <RubberStampEditor
             source={editorSource}
-            description="Crop tightly around your signature. Remove the white paper background so it lays cleanly on the prescription."
+            description={t("signature.editorDescription")}
             onCancel={() => setEditorSource(null)}
             onSave={acceptEdited}
             forcePng

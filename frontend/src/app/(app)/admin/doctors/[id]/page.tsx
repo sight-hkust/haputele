@@ -38,8 +38,10 @@ import {
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtDateTime } from "@/lib/format";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
+import { useI18n } from "@/lib/i18n";
 
 export default function DoctorDetailPage() {
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const id = parseIdParam(params.id);
   const router = useRouter();
@@ -73,7 +75,7 @@ export default function DoctorDetailPage() {
   if (!doctor.data) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-12">
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">{t("common.loading")}</Card>
       </div>
     );
   }
@@ -81,18 +83,14 @@ export default function DoctorDetailPage() {
   const d = doctor.data;
   const errCode = update.error?.error ?? null;
   const missing = (update.error?.detail?.missing as string[] | undefined) ?? undefined;
-  const errorMessage = errCode
-    ? errCode === "missing_prescription_fields"
-      ? "Some §1.7 mandatory fields couldn't be validated server-side."
-      : explainError(errCode)
-    : null;
+  const errorMessage = errCode ? explainError(errCode) : null;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-12">
-      <BackLink href="/admin">Back to doctors</BackLink>
+      <BackLink href="/admin">{t("pages.admin.doctors.backToDoctors")}</BackLink>
 
       <PageHeader
-        label={`Doctor #${d.id}`}
+        label={t("pages.admin.doctors.doctorId", { id: d.id })}
         title={doctorName(d)}
         subtitle={d.email}
         action={
@@ -101,7 +99,7 @@ export default function DoctorDetailPage() {
             {d.active ? (
               <Button variant="ghost" size="md" onClick={() => setConfirmOpen(true)}>
                 <ToggleRight className="h-4 w-4" />
-                Deactivate
+                {t("pages.admin.doctors.deactivate")}
               </Button>
             ) : (
               <Button
@@ -111,7 +109,7 @@ export default function DoctorDetailPage() {
                 disabled={update.isPending}
               >
                 <ToggleLeft className="h-4 w-4" />
-                Reactivate
+                {t("pages.admin.doctors.reactivate")}
               </Button>
             )}
           </div>
@@ -121,17 +119,23 @@ export default function DoctorDetailPage() {
       {/* Audit line — when the submission came in, who acted on it, and a
           link back to a prior rejected attempt if this is a reapplication. */}
       <div className="-mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-[var(--muted-foreground)]">
-        {d.submittedAt && <span>Submitted {fmtDateTime(d.submittedAt)}</span>}
+        {d.submittedAt && (
+          <span>{t("pages.admin.doctors.submittedAt", { datetime: fmtDateTime(d.submittedAt) })}</span>
+        )}
         {d.approvedAt && (
           <span>
-            Approved {fmtDateTime(d.approvedAt)}
-            {d.approvedBy ? ` by ${d.approvedBy}` : ""}
+            {t("pages.admin.doctors.approvedAt", {
+              datetime: fmtDateTime(d.approvedAt),
+              user: d.approvedBy ?? "",
+            })}
           </span>
         )}
         {d.rejectedAt && (
           <span>
-            Rejected {fmtDateTime(d.rejectedAt)}
-            {d.rejectedBy ? ` by ${d.rejectedBy}` : ""}
+            {t("pages.admin.doctors.rejectedAt", {
+              datetime: fmtDateTime(d.rejectedAt),
+              user: d.rejectedBy ?? "",
+            })}
           </span>
         )}
         {d.previousDoctorId != null && (
@@ -139,7 +143,7 @@ export default function DoctorDetailPage() {
             href={`/admin/doctors/${d.previousDoctorId}`}
             className="text-[var(--accent)] hover:underline"
           >
-            ← previous attempt #{d.previousDoctorId}
+            {t("pages.admin.doctors.previousAttempt", { id: d.previousDoctorId })}
           </Link>
         )}
       </div>
@@ -154,10 +158,11 @@ export default function DoctorDetailPage() {
                 <ShieldCheck className="h-4 w-4 text-sky-700" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-sky-900">Awaiting your approval</p>
+                <p className="text-sm font-semibold text-sky-900">
+                  {t("pages.admin.doctors.awaitingApprovalTitle")}
+                </p>
                 <p className="mt-1 text-sm text-sky-800">
-                  This doctor submitted their profile. Review the §1.7 fields below, then approve to
-                  let them log in.
+                  {t("pages.admin.doctors.awaitingApprovalDescription")}
                 </p>
               </div>
             </div>
@@ -169,7 +174,7 @@ export default function DoctorDetailPage() {
                 disabled={approve.isPending || reject.isPending}
               >
                 <ShieldX className="h-4 w-4" />
-                Reject
+                {t("pages.admin.doctors.reject")}
               </Button>
               <Button
                 variant="secondary"
@@ -178,7 +183,9 @@ export default function DoctorDetailPage() {
                 disabled={approve.isPending}
               >
                 <CheckCircle2 className={`h-4 w-4 ${approve.isPending ? "animate-pulse" : ""}`} />
-                {approve.isPending ? "Approving…" : "Approve"}
+                {approve.isPending
+                  ? t("pages.admin.doctors.approving")
+                  : t("pages.admin.doctors.approve")}
               </Button>
             </div>
           </div>
@@ -199,11 +206,12 @@ export default function DoctorDetailPage() {
                 <XCircle className="h-4 w-4 text-rose-700" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-rose-900">Submission rejected</p>
+                <p className="text-sm font-semibold text-rose-900">
+                  {t("pages.admin.doctors.rejectedTitle")}
+                </p>
                 <p className="mt-1 text-sm text-rose-800">
-                  The doctor can&rsquo;t log in.{" "}
-                  {d.rejectedReason ? `Reason: ${d.rejectedReason}.` : ""} Invite them to reapply
-                  for a fresh submission, or erase the record.
+                  {t("pages.admin.doctors.rejectedDescription")}
+                  {d.rejectedReason ? ` ${d.rejectedReason}` : ""}
                 </p>
               </div>
             </div>
@@ -211,7 +219,7 @@ export default function DoctorDetailPage() {
               {reapplyJustSent && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
                   <CheckCircle2 className="h-3 w-3" />
-                  Sent
+                  {t("pages.admin.doctors.sent")}
                 </span>
               )}
               <Button
@@ -221,7 +229,7 @@ export default function DoctorDetailPage() {
                 disabled={purge.isPending || reapply.isPending}
               >
                 <Trash2 className="h-4 w-4" />
-                Erase
+                {t("pages.admin.doctors.erase")}
               </Button>
               <Button
                 variant="secondary"
@@ -237,7 +245,9 @@ export default function DoctorDetailPage() {
                 disabled={reapply.isPending}
               >
                 <UserPlus2 className={`h-4 w-4 ${reapply.isPending ? "animate-pulse" : ""}`} />
-                {reapply.isPending ? "Sending…" : "Invite to reapply"}
+                {reapply.isPending
+                  ? t("pages.admin.doctors.sending")
+                  : t("pages.admin.doctors.inviteToReapply")}
               </Button>
             </div>
           </div>
@@ -258,10 +268,11 @@ export default function DoctorDetailPage() {
                 <Mail className="h-4 w-4 text-amber-700" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-amber-900">Awaiting onboarding</p>
+                <p className="text-sm font-semibold text-amber-900">
+                  {t("pages.admin.doctors.awaitingSetupTitle")}
+                </p>
                 <p className="mt-1 text-sm text-amber-800">
-                  This doctor hasn&rsquo;t set their password yet. The most recent invite link is
-                  still active.
+                  {t("pages.admin.doctors.awaitingSetupDescription")}
                 </p>
               </div>
             </div>
@@ -269,7 +280,7 @@ export default function DoctorDetailPage() {
               {inviteJustSent && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
                   <CheckCircle2 className="h-3 w-3" />
-                  Sent
+                  {t("pages.admin.doctors.sent")}
                 </span>
               )}
               <Button
@@ -287,7 +298,9 @@ export default function DoctorDetailPage() {
                 disabled={reissueInvite.isPending}
               >
                 <RefreshCw className={`h-4 w-4 ${reissueInvite.isPending ? "animate-spin" : ""}`} />
-                {reissueInvite.isPending ? "Sending…" : "Re-send invite"}
+                {reissueInvite.isPending
+                  ? t("pages.admin.doctors.sending")
+                  : t("pages.admin.doctors.resend")}
               </Button>
             </div>
           </div>
@@ -304,7 +317,7 @@ export default function DoctorDetailPage() {
           submitting={update.isPending}
           errorMessage={errorMessage}
           errorMissingFields={missing}
-          submitLabel="Save changes"
+          submitLabel={t("common.saveChanges")}
           onSubmit={(payload) => {
             // Strip undefined so we don't accidentally send `null` rubber stamp etc.
             const body: Record<string, unknown> = {
@@ -332,19 +345,19 @@ export default function DoctorDetailPage() {
       <Modal
         open={rejectOpen}
         onClose={() => !reject.isPending && setRejectOpen(false)}
-        title="Reject this submission?"
-        description="The doctor won't be able to log in. They'll see the reason you enter below if they try."
+        title={t("pages.admin.doctors.rejectSubmissionTitle")}
+        description={t("pages.admin.doctors.rejectSubmissionDescription")}
       >
         {reject.error && (
           <ErrorBanner className="mb-3">{explainError(reject.error.error)}</ErrorBanner>
         )}
         <div className="mb-4 flex flex-col gap-2">
-          <Label htmlFor="reject-reason">Reason (shown to the doctor)</Label>
+          <Label htmlFor="reject-reason">{t("pages.admin.doctors.rejectReasonLabel")}</Label>
           <Input
             id="reject-reason"
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="e.g. SLMC number couldn't be verified"
+            placeholder={t("pages.admin.doctors.rejectReasonPlaceholder")}
           />
         </div>
         <div className="flex justify-end gap-2">
@@ -353,7 +366,7 @@ export default function DoctorDetailPage() {
             onClick={() => setRejectOpen(false)}
             disabled={reject.isPending}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -370,7 +383,9 @@ export default function DoctorDetailPage() {
             }
             disabled={reject.isPending}
           >
-            {reject.isPending ? "Rejecting…" : "Reject submission"}
+            {reject.isPending
+              ? t("pages.admin.doctors.rejecting")
+              : t("pages.admin.doctors.rejectSubmission")}
           </Button>
         </div>
       </Modal>
@@ -378,8 +393,8 @@ export default function DoctorDetailPage() {
       <Modal
         open={confirmOpen}
         onClose={() => !deactivate.isPending && setConfirmOpen(false)}
-        title="Deactivate this doctor?"
-        description="The doctor stays in the database — past appointments and consultations are preserved — but they won't appear in healthworker booking. Reactivate any time."
+        title={t("pages.admin.doctors.deactivateTitle")}
+        description={t("pages.admin.doctors.deactivateDescription")}
       >
         {deactivate.error && (
           <ErrorBanner className="mb-3">{explainError(deactivate.error.error)}</ErrorBanner>
@@ -390,14 +405,16 @@ export default function DoctorDetailPage() {
             onClick={() => setConfirmOpen(false)}
             disabled={deactivate.isPending}
           >
-            Keep active
+            {t("pages.admin.doctors.keepActive")}
           </Button>
           <Button
             variant="destructive"
             onClick={() => deactivate.mutate(d.id, { onSuccess: () => setConfirmOpen(false) })}
             disabled={deactivate.isPending}
           >
-            {deactivate.isPending ? "Deactivating…" : "Deactivate"}
+            {deactivate.isPending
+              ? t("pages.admin.doctors.deactivating")
+              : t("pages.admin.doctors.deactivate")}
           </Button>
         </div>
       </Modal>
@@ -405,8 +422,8 @@ export default function DoctorDetailPage() {
       <Modal
         open={purgeOpen}
         onClose={() => !purge.isPending && setPurgeOpen(false)}
-        title="Permanently erase this record?"
-        description="This deletes the rejected doctor's account, profile, and uploaded stamp for good. It can't be undone. Use this only for data-erasure requests — to give the doctor another chance, use “Invite to reapply” instead."
+        title={t("pages.admin.doctors.purgeTitle")}
+        description={t("pages.admin.doctors.purgeDescription")}
       >
         {purge.error && (
           <ErrorBanner className="mb-3">{explainError(purge.error.error)}</ErrorBanner>
@@ -417,14 +434,16 @@ export default function DoctorDetailPage() {
             onClick={() => setPurgeOpen(false)}
             disabled={purge.isPending}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
             onClick={() => purge.mutate(d.id, { onSuccess: () => router.push("/admin") })}
             disabled={purge.isPending}
           >
-            {purge.isPending ? "Erasing…" : "Erase permanently"}
+            {purge.isPending
+              ? t("pages.admin.doctors.erasing")
+              : t("pages.admin.doctors.erasePermanently")}
           </Button>
         </div>
       </Modal>

@@ -28,6 +28,7 @@ import {
 } from "@/components/sysadmin/account-sections";
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtDateTime } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import {
   useApproveDoctor,
   useDeactivateDoctor,
@@ -39,14 +40,7 @@ import {
   useRejectDoctor,
   useUpdateDoctor,
 } from "@/lib/use-api";
-import type { AccountRole, AccountRosterEntry } from "@/types/api";
-
-const ROLE_LABEL: Record<AccountRole, string> = {
-  "sys-admin": "Sys-admin",
-  admin: "Admin",
-  healthworker: "Healthworker",
-  doctor: "Doctor",
-};
+import type { AccountRosterEntry } from "@/types/api";
 
 // Inline detail/edit panel — sits beside the grid (no overlay, no dim) so
 // the table stays visible and clickable while a row is open.
@@ -57,6 +51,7 @@ export function AccountPanel({
   account: AccountRosterEntry;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <motion.aside
       key={account.username}
@@ -73,14 +68,14 @@ export function AccountPanel({
           <div className="min-w-0">
             <h2 className="truncate font-display text-lg tracking-[-0.01em]">{account.username}</h2>
             <p className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
-              {ROLE_LABEL[account.role]} account
+              {t("pages.sysadmin.accounts.roleAccount", { role: t(`roles.${account.role}`) })}
             </p>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            aria-label="Close panel"
+            aria-label={t("pages.sysadmin.accounts.closePanelAria")}
             className="-mr-2 -mt-1 shrink-0"
           >
             <X className="h-4 w-4" />
@@ -94,7 +89,7 @@ export function AccountPanel({
             <DoctorBody doctorId={account.doctorId} />
           ) : (
             <p className="text-sm text-[var(--muted-foreground)]">
-              This account is read-only here.
+              {t("pages.sysadmin.accounts.readOnly")}
             </p>
           )}
         </div>
@@ -112,6 +107,7 @@ function ManageableBody({
   account: AccountRosterEntry;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const disable = useDisableAccount();
   const enable = useEnableAccount();
   const del = useDeleteAccount();
@@ -125,19 +121,21 @@ function ManageableBody({
     <div className="flex flex-col gap-8">
       <StatusHeader
         active={!isDisabled}
-        label={isDisabled ? "Disabled" : "Active"}
+        label={isDisabled ? t("pages.sysadmin.sharedAccounts.disabled") : t("common.active")}
         sub={
-          isDisabled && account.disabledAt ? `since ${fmtDateTime(account.disabledAt)}` : undefined
+          isDisabled && account.disabledAt
+            ? t("pages.sysadmin.accounts.disabledSince", { datetime: fmtDateTime(account.disabledAt) })
+            : undefined
         }
       />
 
       <ProfileSection account={account} />
 
-      <Section title="Sign-in">
+      <Section title={t("pages.sysadmin.accounts.signInSection")}>
         <p className="text-sm text-[var(--muted-foreground)]">
           {isDisabled
-            ? "This account is disabled and can't sign in. Its records are preserved."
-            : "This account can sign in. Disable it to block access without losing its history."}
+            ? t("pages.sysadmin.accounts.signInDisabledHint")
+            : t("pages.sysadmin.accounts.signInActiveHint")}
         </p>
         {isDisabled ? (
           <Button
@@ -146,7 +144,7 @@ function ManageableBody({
             onClick={() => enable.mutate(account.username)}
           >
             <ShieldCheck className="h-4 w-4" />
-            Enable sign-in
+            {t("pages.sysadmin.accounts.enableSignIn")}
           </Button>
         ) : (
           <Button
@@ -155,7 +153,7 @@ function ManageableBody({
             onClick={() => disable.mutate(account.username)}
           >
             <ShieldOff className="h-4 w-4" />
-            Disable sign-in
+            {t("pages.sysadmin.accounts.disableSignIn")}
           </Button>
         )}
         {statusError ? <ErrorBanner>{explainError(statusError.error)}</ErrorBanner> : null}
@@ -163,28 +161,29 @@ function ManageableBody({
 
       <PasswordSection username={account.username} />
 
-      <Section title="Danger zone" tone="danger">
+      <Section title={t("pages.sysadmin.accounts.dangerZone")} tone="danger">
         <p className="text-sm text-[var(--muted-foreground)]">
-          Permanently delete this account. Blocked if it has created any records — disable it
-          instead.
+          {t("pages.sysadmin.accounts.deleteHint")}
         </p>
         <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
           <Trash2 className="h-4 w-4" />
-          Delete account
+          {t("pages.sysadmin.accounts.deleteAccount")}
         </Button>
       </Section>
 
       <Modal
         open={deleteOpen}
         onClose={() => !del.isPending && setDeleteOpen(false)}
-        title="Delete account"
-        description={`Permanently delete "${account.username}". This can't be undone.`}
+        title={t("pages.sysadmin.accounts.deleteAccount")}
+        description={t("pages.sysadmin.accounts.deleteModalDescription", {
+          username: account.username,
+        })}
       >
         <div className="flex flex-col gap-4">
           {del.error ? <ErrorBanner>{explainError(del.error.error)}</ErrorBanner> : null}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={del.isPending}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -198,7 +197,9 @@ function ManageableBody({
                 })
               }
             >
-              {del.isPending ? "Deleting…" : "Delete account"}
+              {del.isPending
+                ? t("common.deleting")
+                : t("pages.sysadmin.accounts.deleteAccount")}
             </Button>
           </div>
         </div>
@@ -210,6 +211,7 @@ function ManageableBody({
 // ── doctor: reuse the full doctor management surface ─────────────────────
 
 function DoctorBody({ doctorId }: { doctorId: number }) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const doctor = useDoctor(doctorId);
   const update = useUpdateDoctor(doctorId);
@@ -231,23 +233,19 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
     return <ApiErrorBanner error={doctor.error} onRetry={() => doctor.refetch()} />;
   }
   if (!doctor.data) {
-    return <p className="text-sm text-[var(--muted-foreground)]">Loading…</p>;
+    return <p className="text-sm text-[var(--muted-foreground)]">{t("common.loading")}</p>;
   }
 
   const d = doctor.data;
   const errCode = update.error?.error ?? null;
   const missing = (update.error?.detail?.missing as string[] | undefined) ?? undefined;
-  const errorMessage = errCode
-    ? errCode === "missing_prescription_fields"
-      ? "Some §1.7 mandatory fields couldn't be validated server-side."
-      : explainError(errCode)
-    : null;
+  const errorMessage = errCode ? explainError(errCode) : null;
 
   return (
     <div className="flex flex-col gap-6">
       <StatusHeader
         active={d.active}
-        label={d.active ? "Active" : "Inactive"}
+        label={d.active ? t("common.active") : t("common.inactive")}
         sub={doctorName(d)}
       />
 
@@ -258,10 +256,11 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
               <ShieldCheck className="h-4 w-4 text-sky-700" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-sky-900">Awaiting your approval</p>
+              <p className="text-sm font-semibold text-sky-900">
+                {t("pages.admin.doctors.awaitingApprovalTitle")}
+              </p>
               <p className="mt-1 text-sm text-sky-800">
-                This doctor submitted their profile. Review the fields below, then approve to let
-                them log in.
+                {t("pages.admin.doctors.awaitingApprovalDescription")}
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <Button
@@ -271,7 +270,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
                   disabled={approve.isPending || reject.isPending}
                 >
                   <ShieldX className="h-4 w-4" />
-                  Reject
+                  {t("pages.admin.doctors.reject")}
                 </Button>
                 <Button
                   variant="secondary"
@@ -280,7 +279,9 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
                   disabled={approve.isPending}
                 >
                   <CheckCircle2 className={`h-4 w-4 ${approve.isPending ? "animate-pulse" : ""}`} />
-                  {approve.isPending ? "Approving…" : "Approve"}
+                  {approve.isPending
+                    ? t("pages.admin.doctors.approving")
+                    : t("pages.admin.doctors.approve")}
                 </Button>
               </div>
               {approve.error && (
@@ -298,9 +299,11 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
               <ShieldX className="h-4 w-4 text-rose-700" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-rose-900">Submission rejected</p>
+              <p className="text-sm font-semibold text-rose-900">
+                {t("pages.admin.doctors.rejectedTitle")}
+              </p>
               <p className="mt-1 text-sm text-rose-800">
-                The doctor can&apos;t log in. Re-issue an invite if you want them to try again.
+                {t("pages.admin.doctors.rejectedDescription")}
               </p>
             </div>
           </div>
@@ -314,10 +317,11 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
               <Mail className="h-4 w-4 text-amber-700" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-amber-900">Awaiting onboarding</p>
+              <p className="text-sm font-semibold text-amber-900">
+                {t("pages.admin.doctors.awaitingSetupTitle")}
+              </p>
               <p className="mt-1 text-sm text-amber-800">
-                This doctor hasn&apos;t set their password yet. The most recent invite link is still
-                active.
+                {t("pages.admin.doctors.awaitingSetupDescription")}
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <Button
@@ -334,12 +338,14 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
                   disabled={reissue.isPending}
                 >
                   <RefreshCw className={`h-4 w-4 ${reissue.isPending ? "animate-spin" : ""}`} />
-                  {reissue.isPending ? "Sending…" : "Re-send invite"}
+                  {reissue.isPending
+                    ? t("pages.admin.doctors.sending")
+                    : t("pages.admin.doctors.resend")}
                 </Button>
                 {inviteJustSent && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
                     <CheckCircle2 className="h-3 w-3" />
-                    Sent
+                    {t("pages.admin.doctors.sent")}
                   </span>
                 )}
               </div>
@@ -353,12 +359,14 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
 
       <div className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] p-3">
         <span className="text-sm text-[var(--muted-foreground)]">
-          {d.active ? "Doctor is active and bookable." : "Doctor is deactivated."}
+          {d.active
+            ? t("pages.sysadmin.accounts.doctorActiveHint")
+            : t("pages.sysadmin.accounts.doctorInactiveHint")}
         </span>
         {d.active ? (
           <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(true)}>
             <ShieldOff className="h-4 w-4" />
-            Deactivate
+            {t("pages.admin.doctors.deactivate")}
           </Button>
         ) : (
           <Button
@@ -368,7 +376,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
             disabled={update.isPending}
           >
             <ShieldCheck className="h-4 w-4" />
-            Reactivate
+            {t("pages.admin.doctors.reactivate")}
           </Button>
         )}
       </div>
@@ -379,7 +387,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
         submitting={update.isPending}
         errorMessage={errorMessage}
         errorMissingFields={missing}
-        submitLabel="Save changes"
+        submitLabel={t("common.saveChanges")}
         onSubmit={(payload) => {
           const body: Record<string, unknown> = {
             givenName: payload.givenName,
@@ -401,19 +409,19 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
       <Modal
         open={rejectOpen}
         onClose={() => !reject.isPending && setRejectOpen(false)}
-        title="Reject this submission?"
-        description="The doctor won't be able to log in. They'll see the reason you enter below if they try."
+        title={t("pages.admin.doctors.rejectSubmissionTitle")}
+        description={t("pages.admin.doctors.rejectSubmissionDescription")}
       >
         {reject.error && (
           <ErrorBanner className="mb-3">{explainError(reject.error.error)}</ErrorBanner>
         )}
         <div className="mb-4 flex flex-col gap-2">
-          <Label htmlFor="reject-reason">Reason (shown to the doctor)</Label>
+          <Label htmlFor="reject-reason">{t("pages.admin.doctors.rejectReasonLabel")}</Label>
           <Input
             id="reject-reason"
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="e.g. SLMC number couldn't be verified"
+            placeholder={t("pages.admin.doctors.rejectReasonPlaceholder")}
           />
         </div>
         <div className="flex justify-end gap-2">
@@ -422,7 +430,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
             onClick={() => setRejectOpen(false)}
             disabled={reject.isPending}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -440,7 +448,9 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
               )
             }
           >
-            {reject.isPending ? "Rejecting…" : "Reject submission"}
+            {reject.isPending
+              ? t("pages.admin.doctors.rejecting")
+              : t("pages.admin.doctors.rejectSubmission")}
           </Button>
         </div>
       </Modal>
@@ -448,8 +458,8 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
       <Modal
         open={confirmOpen}
         onClose={() => !deactivate.isPending && setConfirmOpen(false)}
-        title="Deactivate this doctor?"
-        description="The doctor stays in the database — past appointments and consultations are preserved — but they won't appear in healthworker booking. Reactivate any time."
+        title={t("pages.admin.doctors.deactivateTitle")}
+        description={t("pages.admin.doctors.deactivateDescription")}
       >
         {deactivate.error && (
           <ErrorBanner className="mb-3">{explainError(deactivate.error.error)}</ErrorBanner>
@@ -460,7 +470,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
             onClick={() => setConfirmOpen(false)}
             disabled={deactivate.isPending}
           >
-            Keep active
+            {t("pages.admin.doctors.keepActive")}
           </Button>
           <Button
             variant="destructive"
@@ -474,7 +484,9 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
               })
             }
           >
-            {deactivate.isPending ? "Deactivating…" : "Deactivate"}
+            {deactivate.isPending
+              ? t("pages.admin.doctors.deactivating")
+              : t("pages.admin.doctors.deactivate")}
           </Button>
         </div>
       </Modal>

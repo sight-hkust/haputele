@@ -11,7 +11,8 @@ import { Select, Textarea } from "@/components/primitives/select";
 import { PatientPicker } from "@/components/healthworker/patient-picker";
 import type { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
-import { fmtTargetWeek, fullName } from "@/lib/format";
+import { doctorName, fmtTargetWeek, fullName } from "@/lib/format";
+import { getActiveLocale, translate, useI18n } from "@/lib/i18n";
 import { useCreateQueueEntry, useDoctorList } from "@/lib/use-api";
 import type { Patient, QueueEntry, QueueEntryCreateRequest, QueuePriority } from "@/types/api";
 
@@ -28,6 +29,7 @@ export function QueueEntryForm({
   onCreated: (entry: QueueEntry) => void;
   onCancel?: () => void;
 }) {
+  const { t } = useI18n();
   const [picked, setPicked] = useState<Patient | null>(defaultPatient ?? null);
   const [source, setSource] = useState<"walk_in" | "screening">("walk_in");
   const [priority, setPriority] = useState<QueuePriority>("routine");
@@ -93,65 +95,65 @@ export function QueueEntryForm({
       className="flex flex-col gap-4"
     >
       <div className="flex flex-col gap-2">
-        <Label>Patient</Label>
+        <Label>{t("forms.patient")}</Label>
         <PatientPicker picked={picked} onPick={setPicked} onClear={() => setPicked(null)} />
         {!picked && (
           <p className="text-xs text-[var(--muted-foreground)]">
-            Patient must be registered first (with master consent).
+            {t("queue.registerPatientFirst")}
           </p>
         )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Source">
+        <Field label={t("queue.source")}>
           <Select
             value={source}
             onChange={(e) => setSource(e.target.value as "walk_in" | "screening")}
           >
-            <option value="walk_in">Walk-in</option>
-            <option value="screening">Screening flag</option>
+            <option value="walk_in">{t("queue.walkIn")}</option>
+            <option value="screening">{t("queue.screeningFlag")}</option>
           </Select>
         </Field>
-        <Field label="Priority">
+        <Field label={t("common.priority")}>
           <Select value={priority} onChange={(e) => setPriority(e.target.value as QueuePriority)}>
-            <option value="routine">Routine</option>
-            <option value="urgent">Urgent</option>
+            <option value="routine">{t("queue.routine")}</option>
+            <option value="urgent">{t("queue.urgent")}</option>
           </Select>
         </Field>
-        <Field label="Preferred doctor (optional)">
+        <Field label={t("queue.preferredDoctorOptional")}>
           <Select value={preferredDoctorId} onChange={(e) => setPreferredDoctorId(e.target.value)}>
-            <option value="">Any doctor</option>
+            <option value="">{t("queue.anyDoctor")}</option>
             {(doctors.data ?? []).map((d) => (
               <option key={d.id} value={d.id}>
-                Dr. {d.givenName} {d.familyName}
+                {doctorName(d)}
               </option>
             ))}
           </Select>
         </Field>
-        <Field label="Target week (optional)">
+        <Field label={t("queue.targetWeekOptional")}>
           <DatePicker
             mode="week"
             align="end"
             value={targetDate}
             onChange={setTargetDate}
-            placeholder="Choose a target week"
-            ariaLabel="Choose target week"
+            placeholder={t("forms.chooseTargetWeek")}
+            ariaLabel={t("forms.targetWeek")}
           />
           <p className="text-xs text-[var(--muted-foreground)]">
-            Pick any day — the full Monday–Sunday week will be selected.
+            {t("queue.targetWeekHint")}
           </p>
         </Field>
       </div>
 
-      <Field label="Notes">
+      <Field label={t("common.notes")}>
         <Textarea
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder={
             source === "walk_in"
-              ? "What did the patient ask for? (e.g. 'wants morning slot in 2 weeks')"
-              : "Reason from the screening team (e.g. 'elevated BP, refer urgently'). If there's a hard deadline, mention it here."
+              ? t("queue.notesWalkInPlaceholder")
+              : t("queue.notesScreeningPlaceholder")
           }
         />
       </Field>
@@ -161,7 +163,7 @@ export function QueueEntryForm({
       <div className="flex justify-end gap-2">
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel} disabled={create.isPending}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={!picked || create.isPending}>
@@ -170,7 +172,7 @@ export function QueueEntryForm({
           ) : (
             <Plus className="h-4 w-4" />
           )}
-          {create.isPending ? "Adding…" : "Add to queue"}
+          {create.isPending ? t("queue.adding") : t("pages.healthworker.appointments.addToQueue")}
         </Button>
       </div>
     </form>
@@ -200,10 +202,15 @@ function DuplicateConfirm({
   onConfirmAdd: () => void;
   pending: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col gap-4">
       <ErrorBanner tone="amber">
-        This patient already has {existing.length} pending entry from this source.
+        {t("queue.duplicatePending", {
+          n: existing.length,
+          entry:
+            existing.length === 1 ? t("queue.duplicateEntry") : t("queue.duplicateEntries"),
+        })}
       </ErrorBanner>
       <ul className="flex flex-col gap-2">
         {existing.map((e) => (
@@ -214,13 +221,13 @@ function DuplicateConfirm({
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium">
                 {e.source === "walk_in"
-                  ? "Walk-in"
+                  ? t("queue.walkIn")
                   : e.source === "screening"
-                    ? "Screening"
-                    : "Follow-up"}
+                    ? t("queue.screening")
+                    : t("queue.followUp")}
               </span>
               <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
-                #{e.id} · {e.priority}
+                #{e.id} · {e.priority === "urgent" ? t("queue.urgent") : t("queue.routine")}
               </span>
             </div>
             {e.targetDate && (
@@ -234,17 +241,14 @@ function DuplicateConfirm({
           </li>
         ))}
       </ul>
-      <p className="text-sm text-[var(--muted-foreground)]">
-        If the new entry is for a different reason, you can still add it. Otherwise, book or update
-        the existing one.
-      </p>
+      <p className="text-sm text-[var(--muted-foreground)]">{t("queue.duplicateHint")}</p>
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onCancel} disabled={pending}>
-          Back
+          {t("common.back")}
         </Button>
         <Button onClick={onConfirmAdd} disabled={pending}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          Add as a separate entry
+          {t("queue.addSeparateEntry")}
         </Button>
       </div>
     </div>
@@ -253,5 +257,5 @@ function DuplicateConfirm({
 
 // Tiny helper used by the page when summarising a queue entry inline.
 export function QueueEntryPatientName(p: Patient | null | undefined) {
-  return p ? fullName(p) : "Unknown patient";
+  return p ? fullName(p) : translate(getActiveLocale(), "queue.unknownPatient");
 }

@@ -15,6 +15,8 @@
 // This module is the ONLY place any of these rules may be written down on the
 // client. Every credential form imports from here.
 
+import { getActiveLocale, translate } from "@/lib/i18n";
+
 /**
  * Mirrors MIN_PASSWORD_LEN in backend/app/services/credentials.py.
  *
@@ -33,9 +35,15 @@ export const PASSWORD_TOO_SHORT_MESSAGE = `Choose a password at least ${MIN_PASS
 /** Field-hint / placeholder copy, so the number in the UI can't drift either. */
 export const PASSWORD_LENGTH_HINT = `At least ${MIN_PASSWORD_LEN} characters`;
 
+export function passwordLengthHint(): string {
+  return translate(getActiveLocale(), "credentials.passwordLengthHint", { n: MIN_PASSWORD_LEN });
+}
+
 /** Validation message for a username being *set*, or null when it's fine. */
 export function usernameError(value: string): string | null {
-  return /\s/.test(value) ? USERNAME_WHITESPACE_MESSAGE : null;
+  return /\s/.test(value)
+    ? translate(getActiveLocale(), "errors.username_whitespace")
+    : null;
 }
 
 /**
@@ -46,12 +54,16 @@ export function usernameError(value: string): string | null {
  * length in here would shout "too short" at the first character typed.
  */
 export function passwordError(value: string): string | null {
-  return value !== value.trim() ? PASSWORD_EDGE_WHITESPACE_MESSAGE : null;
+  return value !== value.trim()
+    ? translate(getActiveLocale(), "errors.password_whitespace")
+    : null;
 }
 
 /** Length-only message for a password being *set*, or null when it's fine. */
 export function passwordLengthError(value: string): string | null {
-  return value.length < MIN_PASSWORD_LEN ? PASSWORD_TOO_SHORT_MESSAGE : null;
+  return value.length < MIN_PASSWORD_LEN
+    ? translate(getActiveLocale(), "credentials.passwordTooShort", { n: MIN_PASSWORD_LEN })
+    : null;
 }
 
 /**
@@ -84,10 +96,10 @@ export function newPasswordError(value: string): string | null {
  */
 export function loginWhitespaceHint(username: string, password: string): string | null {
   if (/\s/.test(username)) {
-    return "Your username contains a space. Usernames never do — remove it and try again.";
+    return translate(getActiveLocale(), "credentials.loginUsernameSpaceHint");
   }
   if (password !== password.trim()) {
-    return "Your password starts or ends with a space. If that wasn't deliberate, remove it and try again.";
+    return translate(getActiveLocale(), "credentials.loginPasswordSpaceHint");
   }
   return null;
 }

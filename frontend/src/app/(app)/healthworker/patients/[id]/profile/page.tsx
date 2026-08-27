@@ -9,10 +9,12 @@ import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import { explainError } from "@/lib/error-codes";
 import { fullName } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 import { usePatient, useUpsertProfile } from "@/lib/use-api";
 
 export default function PatientProfilePage() {
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const id = parseIdParam(params.id);
   const router = useRouter();
@@ -31,7 +33,9 @@ export default function PatientProfilePage() {
   if (!patientQ.data) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-12">
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
+          {t("common.loading")}
+        </Card>
       </div>
     );
   }
@@ -40,13 +44,15 @@ export default function PatientProfilePage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-12">
-      <BackLink href={`/healthworker/patients/${patient.id}`}>Back to {fullName(patient)}</BackLink>
+      <BackLink href={`/healthworker/patients/${patient.id}`}>
+        {t("pages.healthworker.patients.backToPatient", { name: fullName(patient) })}
+      </BackLink>
 
       <PageHeader
-        label="Patient profile"
-        title="Intake"
-        highlight="form."
-        subtitle="Capture disease history, allergies, surgeries, existing medications, and lifestyle. Everything here is shown to the doctor in the consultation cockpit."
+        label={t("pages.healthworker.patients.profileLabel")}
+        title={t("pages.healthworker.patients.profileTitle")}
+        highlight={t("pages.healthworker.patients.profileHighlight")}
+        subtitle={t("pages.healthworker.patients.profileSubtitle")}
       />
 
       <Card variant="elevated" className="p-8">

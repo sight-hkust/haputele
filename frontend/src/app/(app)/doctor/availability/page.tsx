@@ -32,8 +32,10 @@ import {
   useDoctorAvailability,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 
 export default function DoctorAvailabilityPage() {
+  const { t } = useI18n();
   const {
     doctor,
     isLoading: doctorLoading,
@@ -99,7 +101,7 @@ export default function DoctorAvailabilityPage() {
   };
 
   if (doctorLoading) {
-    return <div className="px-6 py-12 text-sm text-[var(--muted-foreground)]">Loading…</div>;
+    return <div className="px-6 py-12 text-sm text-[var(--muted-foreground)]">{t("common.loading")}</div>;
   }
   if (doctorError || !doctor) {
     return (
@@ -107,7 +109,7 @@ export default function DoctorAvailabilityPage() {
         {doctorError ? (
           <ApiErrorBanner error={doctorError} onRetry={refetchDoctor} />
         ) : (
-          <ErrorBanner>Doctor profile not found.</ErrorBanner>
+          <ErrorBanner>{t("pages.doctor.availability.profileNotFound")}</ErrorBanner>
         )}
       </div>
     );
@@ -119,10 +121,10 @@ export default function DoctorAvailabilityPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-8">
       <PageHeader
-        label="Availability"
-        title="My"
-        highlight="availability"
-        subtitle="Drag across cells to paint when you're reachable. Drag again over filled cells to erase. This is an advisory reference for the healthworker when booking — bookings outside these windows are still allowed, but will be discussed and confirmed with you first."
+        label={t("nav.availability")}
+        title={t("pages.doctor.availability.title")}
+        highlight={t("pages.doctor.availability.highlight")}
+        subtitle={t("pages.doctor.availability.subtitle")}
       />
 
       <Card>
@@ -130,7 +132,9 @@ export default function DoctorAvailabilityPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle>{weekLabel}</CardTitle>
-              {dirty && <CardDescription>Unsaved changes</CardDescription>}
+              {dirty && (
+                <CardDescription>{t("pages.healthworker.availability.unsavedChanges")}</CardDescription>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -138,21 +142,21 @@ export default function DoctorAvailabilityPage() {
                 size="sm"
                 onClick={() => setWeekStart((w) => addDays(w, -7))}
               >
-                ← Prev
+                {t("pages.healthworker.availability.prev")}
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => setWeekStart(startOfWeekLocal(new Date()))}
               >
-                This week
+                {t("pages.healthworker.availability.thisWeek")}
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => setWeekStart((w) => addDays(w, 7))}
               >
-                Next →
+                {t("pages.healthworker.availability.next")}
               </Button>
               <CopyWeekButton
                 doctorId={doctor.id}
@@ -166,7 +170,7 @@ export default function DoctorAvailabilityPage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {saving ? "Saving…" : "Save week"}
+                {saving ? t("common.saving") : t("pages.healthworker.availability.saveWeek")}
               </Button>
             </div>
           </div>
@@ -187,8 +191,7 @@ export default function DoctorAvailabilityPage() {
                   "repeating-linear-gradient(45deg, transparent 0, transparent 4px, rgba(15, 23, 42, 0.22) 4px, rgba(15, 23, 42, 0.22) 7px)",
               }}
             />
-            Hatched cells already have a booked appointment — informational only, you can still
-            paint over them.
+            {t("pages.doctor.availability.hatchedHint")}
           </p>
           <WeekGrid
             weekStart={weekStart}
@@ -216,6 +219,7 @@ function CopyWeekButton({
   cells: Set<CellKey>;
   disabled: boolean;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(4);
   const [busy, setBusy] = useState(false);
@@ -249,13 +253,13 @@ function CopyWeekButton({
     <>
       <Button variant="secondary" size="sm" onClick={() => setOpen(true)} disabled={disabled}>
         <Copy className="h-4 w-4" />
-        Copy week to…
+        {t("pages.healthworker.availability.copyWeekTo")}
       </Button>
       <Modal
         open={open}
         onClose={() => !busy && setOpen(false)}
-        title="Copy this week's pattern"
-        description="Replicate the currently visible week's availability over the next N weeks. Existing windows in those target weeks will be replaced."
+        title={t("pages.healthworker.availability.copyModalTitle")}
+        description={t("pages.healthworker.availability.copyModalDescription")}
       >
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-2">
@@ -271,25 +275,28 @@ function CopyWeekButton({
                     : "border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--accent)]/30")
                 }
               >
-                {n} week{n === 1 ? "" : "s"}
+                {n === 1
+                  ? t("pages.healthworker.availability.weekCount", { n })
+                  : t("pages.healthworker.availability.weekCountPlural", { n })}
               </button>
             ))}
           </div>
           <p className="text-sm text-[var(--muted-foreground)]">
-            Will overwrite the {count} week{count === 1 ? "" : "s"} starting{" "}
-            <span className="font-medium text-[var(--foreground)]">
-              {format(addDays(weekStart, 7), "d MMM yyyy")}
-            </span>
-            .
+            {t("pages.healthworker.availability.willOverwrite", {
+              count,
+              date: format(addDays(weekStart, 7), "d MMM yyyy"),
+            })}
           </p>
           {error && <ErrorBanner>{error}</ErrorBanner>}
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setOpen(false)} disabled={busy}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button onClick={run} disabled={busy}>
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              {busy ? "Copying…" : `Copy to ${count} week${count === 1 ? "" : "s"}`}
+              {busy
+                ? t("pages.healthworker.availability.copying")
+                : t("pages.healthworker.availability.copyToWeeks", { count })}
             </Button>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { diseaseLabel, physicalActivityLabel } from "@/lib/medical-codes";
 import { fmtRelative } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { Profile } from "@/types/api";
 
 // Read-only profile summary used on the patient detail page. Empty profiles
@@ -18,24 +19,24 @@ export function ProfileSummary({
   profile: Profile | null;
   editHref: string;
 }) {
+  const { t } = useI18n();
   if (!profile || isEmpty(profile)) {
     return (
       <Card className="p-8">
         <div className="mb-3 flex items-center gap-2">
           <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-            Patient profile
+            {t("intake.summary.title")}
           </span>
         </div>
-        <h3 className="font-display text-xl tracking-[-0.01em]">No intake form yet</h3>
+        <h3 className="font-display text-xl tracking-[-0.01em]">{t("intake.summary.noIntakeYet")}</h3>
         <p className="mt-1.5 max-w-md text-sm text-[var(--muted-foreground)]">
-          Capture disease history, allergies, surgeries, existing meds, and lifestyle so the doctor
-          has full context during the consultation.
+          {t("intake.summary.noIntakeDescription")}
         </p>
         <Link href={editHref} className="mt-5 inline-block">
           <Button>
             <Pencil className="h-4 w-4" />
-            Capture profile
+            {t("intake.summary.captureProfile")}
           </Button>
         </Link>
       </Card>
@@ -48,20 +49,20 @@ export function ProfileSummary({
         <div className="flex items-center gap-2">
           <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-            Patient profile
+            {t("intake.summary.title")}
           </span>
         </div>
         <Link href={editHref}>
           <Button variant="secondary" size="sm">
             <Pencil className="h-3.5 w-3.5" />
-            Edit
+            {t("common.edit")}
           </Button>
         </Link>
       </div>
 
       <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
         {profile.diseaseHistory.length > 0 && (
-          <Block Icon={ClipboardList} title="Conditions">
+          <Block Icon={ClipboardList} title={t("intake.summary.conditions")}>
             <Chips
               items={profile.diseaseHistory.map((d) =>
                 d.code === "other" && d.text ? d.text : diseaseLabel(d.code),
@@ -70,12 +71,12 @@ export function ProfileSummary({
           </Block>
         )}
         {profile.allergies.length > 0 && (
-          <Block Icon={AlertCircle} title="Allergies">
+          <Block Icon={AlertCircle} title={t("intake.allergies")}>
             <Chips items={profile.allergies.map((a) => `${a.name} (${a.type})`)} />
           </Block>
         )}
         {profile.medications.length > 0 && (
-          <Block Icon={Pill} title="Existing meds">
+          <Block Icon={Pill} title={t("intake.summary.existingMeds")}>
             <ul className="flex flex-col gap-1.5 text-sm">
               {profile.medications.map((m, i) => (
                 <li key={i}>
@@ -91,7 +92,7 @@ export function ProfileSummary({
           </Block>
         )}
         {profile.surgicalHistory.length > 0 && (
-          <Block Icon={Stethoscope} title="Surgical history">
+          <Block Icon={Stethoscope} title={t("intake.surgicalHistory")}>
             <ul className="flex flex-col gap-1.5 text-sm">
               {profile.surgicalHistory.map((s, i) => (
                 <li key={i}>{s.description}</li>
@@ -100,16 +101,33 @@ export function ProfileSummary({
           </Block>
         )}
         {hasLifestyle(profile) && (
-          <Block Icon={Activity} title="Lifestyle">
+          <Block Icon={Activity} title={t("intake.summary.lifestyle")}>
             <ul className="flex flex-col gap-1 text-sm text-[var(--muted-foreground)]">
-              {profile.lifestyle.smoking && <li>Smoking · {profile.lifestyle.smoking}</li>}
-              {profile.lifestyle.alcohol && <li>Alcohol · {profile.lifestyle.alcohol}</li>}
-              {profile.lifestyle.betelAreca && (
-                <li>Betel / areca · {profile.lifestyle.betelAreca}</li>
+              {profile.lifestyle.smoking && (
+                <li>
+                  {t("intake.smoking")} · {profile.lifestyle.smoking}
+                </li>
               )}
-              {profile.lifestyle.occupation && <li>Occupation · {profile.lifestyle.occupation}</li>}
+              {profile.lifestyle.alcohol && (
+                <li>
+                  {t("intake.alcohol")} · {profile.lifestyle.alcohol}
+                </li>
+              )}
+              {profile.lifestyle.betelAreca && (
+                <li>
+                  {t("intake.betel")} · {profile.lifestyle.betelAreca}
+                </li>
+              )}
+              {profile.lifestyle.occupation && (
+                <li>
+                  {t("intake.occupation")} · {profile.lifestyle.occupation}
+                </li>
+              )}
               {profile.lifestyle.physicalActivity && (
-                <li>Activity · {physicalActivityLabel(profile.lifestyle.physicalActivity)}</li>
+                <li>
+                  {t("intake.summary.activity")} ·{" "}
+                  {physicalActivityLabel(profile.lifestyle.physicalActivity)}
+                </li>
               )}
             </ul>
           </Block>
@@ -117,7 +135,7 @@ export function ProfileSummary({
       </div>
 
       <p className="mt-6 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        Updated {fmtRelative(profile.updatedAt)}
+        {t("intake.summary.updated", { relative: fmtRelative(profile.updatedAt) })}
       </p>
     </Card>
   );

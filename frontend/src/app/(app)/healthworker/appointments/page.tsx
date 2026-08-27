@@ -120,10 +120,6 @@ function Workspace() {
         <div className="min-w-0">
           {apptList.error ? (
             <ApiErrorBanner error={apptList.error} onRetry={() => apptList.refetch()} />
-          ) : apptList.isLoading ? (
-            <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
-              {t("common.loading")}
-            </Card>
           ) : (
             <AppointmentCalendar appointments={apptList.data ?? []} />
           )}

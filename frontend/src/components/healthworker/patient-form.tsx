@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -11,47 +12,22 @@ import { Input, Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { displayDob, maskDobInput, parseDob } from "@/lib/dob-date";
 import { appToday } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { Lang, Patient, PatientCreateRequest, PatientUpdateRequest } from "@/types/api";
 
-// `nationalId` ∈ {10, 12} is enforced server-side; we mirror the rule client-side
-// so feedback is instant. Empty string → omitted from the payload.
-const baseSchema = z.object({
-  given: z.string().min(1, "Given name is required"),
-  family: z.string().min(1, "Family name is required"),
-  gender: z.string().min(1, "Gender is required"),
-  // Required: the prescription PDF must carry the patient's age (§1.7) and
-  // derives it from dob. Enforced here as well as server-side so a health
-  // worker finds out at intake rather than the doctor finding out at signing.
-  dob: z
-    .string()
-    .refine((value) => !value || parseDob(value) !== null, "Enter a valid date in DD/MM/YYYY")
-    .refine((value) => {
-      const dob = parseDob(value);
-      return !dob || dob <= appToday();
-    }, "Date of birth cannot be in the future"),
-  language: z
-    .enum(["en", "ta", "si"])
-    .optional()
-    .or(z.literal("") as z.ZodType<"">),
-  screeningRef: z.string().optional(),
-  nationalId: z
-    .string()
-    .optional()
-    .refine((v) => !v || v.length === 10 || v.length === 12, {
-      message: "National ID must be 10 or 12 characters",
-    }),
-  contact: z.string().optional(),
-  address: z.string().optional(),
-});
+type FormValues = {
+  given: string;
+  family: string;
+  gender: string;
+  dob: string;
+  language: Lang | "";
+  screeningRef?: string;
+  nationalId?: string;
+  contact?: string;
+  address?: string;
+};
 
-const createSchema = baseSchema.refine((value) => value.dob.trim().length > 0, {
-  path: ["dob"],
-  message: "Date of birth is required",
-});
-
-type FormValues = z.infer<typeof baseSchema>;
-
-const GENDER_OPTIONS = ["female", "male", "other"];
+const GENDER_OPTIONS = ["female", "male", "other"] as const;
 
 function strip(v: string | undefined): string | undefined {
   return v?.trim() || undefined;
@@ -68,7 +44,7 @@ export function PatientForm({
   errorMessage,
   onSubmit,
   onCancel,
-  submitLabel = "Save patient",
+  submitLabel,
 }: {
   initial?: Patient | null;
   mode: "create" | "update";
@@ -78,6 +54,45 @@ export function PatientForm({
   onCancel?: () => void;
   submitLabel?: string;
 }) {
+  const { t } = useI18n();
+  const schema = useMemo(() => {
+    // `nationalId` ∈ {10, 12} is enforced server-side; we mirror the rule client-side
+    // so feedback is instant. Empty string → omitted from the payload.
+    const baseSchema = z.object({
+      given: z.string().min(1, t("forms.validation.givenRequired")),
+      family: z.string().min(1, t("forms.validation.familyRequired")),
+      gender: z.string().min(1, t("forms.validation.genderRequired")),
+      // Required: the prescription PDF must carry the patient's age (§1.7) and
+      // derives it from dob. Enforced here as well as server-side so a health
+      // worker finds out at intake rather than the doctor finding out at signing.
+      dob: z
+        .string()
+        .refine((value) => !value || parseDob(value) !== null, t("forms.validation.dobInvalid"))
+        .refine((value) => {
+          const dob = parseDob(value);
+          return !dob || dob <= appToday();
+        }, t("forms.validation.dobFuture")),
+      language: z
+        .enum(["en", "ta", "si"])
+        .optional()
+        .or(z.literal("") as z.ZodType<"">),
+      screeningRef: z.string().optional(),
+      nationalId: z
+        .string()
+        .optional()
+        .refine((v) => !v || v.length === 10 || v.length === 12, {
+          message: t("forms.validation.nationalIdLength"),
+        }),
+      contact: z.string().optional(),
+      address: z.string().optional(),
+    });
+    const createSchema = baseSchema.refine((value) => value.dob.trim().length > 0, {
+      path: ["dob"],
+      message: t("forms.validation.dobRequired"),
+    });
+    return mode === "create" ? createSchema : baseSchema;
+  }, [mode, t]);
+
   const {
     register,
     control,
@@ -86,7 +101,7 @@ export function PatientForm({
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(mode === "create" ? createSchema : baseSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       given: initial?.given ?? "",
       family: initial?.family ?? "",
@@ -120,18 +135,20 @@ export function PatientForm({
     }
   });
 
+  const resolvedSubmitLabel = submitLabel ?? t("forms.savePatient");
+
   return (
     <form onSubmit={submit} className="flex flex-col gap-6">
       {errorMessage && <ErrorBanner>{errorMessage}</ErrorBanner>}
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Given name" htmlFor="given" error={errors.given?.message}>
+        <Field label={t("forms.givenName")} htmlFor="given" error={errors.given?.message}>
           <Input id="given" {...register("given")} />
         </Field>
-        <Field label="Family name" htmlFor="family" error={errors.family?.message}>
+        <Field label={t("forms.familyName")} htmlFor="family" error={errors.family?.message}>
           <Input id="family" {...register("family")} />
         </Field>
-        <Field label="Date of birth" htmlFor="dob" error={errors.dob?.message}>
+        <Field label={t("forms.dateOfBirth")} htmlFor="dob" error={errors.dob?.message}>
           <Controller
             name="dob"
             control={control}
@@ -158,47 +175,51 @@ export function PatientForm({
             )}
           />
         </Field>
-        <Field label="Gender" htmlFor="gender" error={errors.gender?.message}>
+        <Field label={t("forms.gender")} htmlFor="gender" error={errors.gender?.message}>
           <Select id="gender" {...register("gender")}>
-            <option value="">Select gender…</option>
+            <option value="">{t("forms.selectGender")}</option>
             {GENDER_OPTIONS.map((g) => (
               <option key={g} value={g}>
-                {g[0].toUpperCase() + g.slice(1)}
+                {t(`forms.genderOptions.${g}`)}
               </option>
             ))}
           </Select>
         </Field>
-        <Field label="Preferred language" htmlFor="language">
+        <Field label={t("forms.preferredLanguage")} htmlFor="language">
           <Select id="language" {...register("language")}>
-            <option value="">Not specified</option>
-            <option value="en">English</option>
-            <option value="ta">Tamil</option>
-            <option value="si">Sinhala</option>
+            <option value="">{t("forms.notSpecified")}</option>
+            <option value="en">{t("common.english")}</option>
+            <option value="ta">{t("common.tamil")}</option>
+            <option value="si">{t("common.sinhala")}</option>
           </Select>
         </Field>
-        <Field label="National ID" htmlFor="nationalId" error={errors.nationalId?.message}>
-          <Input id="nationalId" {...register("nationalId")} placeholder="10 or 12 characters" />
+        <Field label={t("common.nationalId")} htmlFor="nationalId" error={errors.nationalId?.message}>
+          <Input
+            id="nationalId"
+            {...register("nationalId")}
+            placeholder={t("forms.nationalIdPlaceholder")}
+          />
         </Field>
-        <Field label="Contact number" htmlFor="contact">
-          <Input id="contact" {...register("contact")} placeholder="+94…" />
+        <Field label={t("forms.contactNumber")} htmlFor="contact">
+          <Input id="contact" {...register("contact")} placeholder={t("forms.phonePlaceholder")} />
         </Field>
-        <Field label="Screening reference" htmlFor="screeningRef">
+        <Field label={t("forms.screeningRef")} htmlFor="screeningRef">
           <Input id="screeningRef" {...register("screeningRef")} />
         </Field>
       </div>
 
-      <Field label="Address" htmlFor="address">
+      <Field label={t("common.address")} htmlFor="address">
         <Textarea id="address" rows={3} {...register("address")} />
       </Field>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Saving…" : submitLabel}
+          {submitting ? t("common.saving") : resolvedSubmitLabel}
         </Button>
       </div>
     </form>
@@ -220,6 +241,7 @@ function DobInput({
   onPickerChange: (value: string) => void;
   onBlur: () => void;
 }) {
+  const { t } = useI18n();
   const today = appToday();
 
   return (
@@ -230,7 +252,7 @@ function DobInput({
         name="dob"
         type="text"
         inputMode="numeric"
-        placeholder="dd/mm/yyyy"
+        placeholder={t("forms.dobPlaceholder")}
         maxLength={10}
         value={value}
         aria-invalid={invalid}
@@ -240,7 +262,7 @@ function DobInput({
       />
       <DatePicker
         trigger="icon"
-        ariaLabel="Choose date of birth from calendar"
+        ariaLabel={t("forms.dobCalendarAria")}
         max={today}
         value={parseDob(value) ?? ""}
         onChange={(date) => onPickerChange(displayDob(date))}

@@ -11,6 +11,7 @@ import {
 import { Eraser } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { useI18n } from "@/lib/i18n";
 
 export type SignatureCanvasHandle = {
   /** Returns a base64 PNG data URL, or null if the canvas is empty. */
@@ -25,6 +26,7 @@ export const SignatureCanvas = forwardRef<
   SignatureCanvasHandle,
   { onChange?: (hasInk: boolean) => void; height?: number }
 >(({ onChange, height = 200 }, ref) => {
+  const { locale, t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef(false);
   const [hasInk, setHasInk] = useState(false);
@@ -107,6 +109,11 @@ export const SignatureCanvas = forwardRef<
     drawingRef.current = false;
   };
 
+  const labelClass =
+    locale === "si" ? "text-xs" : "font-mono text-xs uppercase tracking-[0.15em]";
+  const statusClass =
+    locale === "si" ? "text-xs" : "font-mono uppercase tracking-[0.12em]";
+
   return (
     <div className="flex flex-col gap-2">
       <div
@@ -123,16 +130,16 @@ export const SignatureCanvas = forwardRef<
           style={{ touchAction: "none" }}
         />
         {!hasInk && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]/60">
-            Sign here
+          <div className={`pointer-events-none absolute inset-0 flex items-center justify-center text-[var(--muted-foreground)]/60 ${labelClass}`}>
+            {t("signature.signHere")}
           </div>
         )}
       </div>
       <div className="flex items-center justify-between text-xs">
         <span
-          className={`font-mono uppercase tracking-[0.12em] ${hasInk ? "text-emerald-600" : "text-[var(--muted-foreground)]"}`}
+          className={`${statusClass} ${hasInk ? "text-emerald-600" : "text-[var(--muted-foreground)]"}`}
         >
-          {hasInk ? "Signed" : "Not signed yet"}
+          {hasInk ? t("signature.signed") : t("signature.notSignedYet")}
         </span>
         <Button
           type="button"
@@ -147,7 +154,7 @@ export const SignatureCanvas = forwardRef<
           }}
         >
           <Eraser className="h-3.5 w-3.5" />
-          Clear
+          {t("common.clear")}
         </Button>
       </div>
     </div>

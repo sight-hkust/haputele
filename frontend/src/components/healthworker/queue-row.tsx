@@ -39,7 +39,7 @@ export function QueueRow({
   onCancel: () => void;
   compact?: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const patient = usePatient(entry.patientId);
   const meta = QUEUE_SOURCE_TONE[entry.source];
   const Icon = meta.Icon;
@@ -50,6 +50,15 @@ export function QueueRow({
     const translated = t(key);
     return translated === key ? entry.status : translated;
   }, [entry.status, t]);
+
+  const createdAtLabel = useMemo(
+    () => fmtRelative(entry.createdAt),
+    [entry.createdAt, locale],
+  );
+  const weekLabel = useMemo(
+    () => (entry.targetDate ? fmtTargetWeek(entry.targetDate) : null),
+    [entry.targetDate, locale],
+  );
 
   return (
     <li>
@@ -81,8 +90,8 @@ export function QueueRow({
               {statusLabel}
             </span>
           )}
-          <span className="ml-auto font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
-            #{entry.id} · {fmtRelative(entry.createdAt)}
+          <span className="ml-auto font-mono text-xs tracking-[0.12em] text-[var(--muted-foreground)]">
+            #{entry.id} · {createdAtLabel}
           </span>
         </div>
 
@@ -97,10 +106,10 @@ export function QueueRow({
               ? fullName(patient.data.patient)
               : t("forms.patientId", { id: entry.patientId })}
           </Link>
-          {entry.targetDate && (
+          {weekLabel && (
             <span className="inline-flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
               <Clock className="h-3 w-3" />
-              {fmtTargetWeek(entry.targetDate)}
+              {weekLabel}
             </span>
           )}
         </div>

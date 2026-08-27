@@ -6,6 +6,7 @@
 // the field that tripped it.
 
 import type { ApiError } from "@/lib/api";
+import { getActiveLocale, translate } from "@/lib/i18n";
 
 export type VitalField = "height" | "weight" | "sysBp" | "diaBp" | "pulse" | "temperature";
 
@@ -49,19 +50,30 @@ export function validateVital(field: VitalField, raw: string): string | null {
 
   const num = Number(value);
   if (!Number.isFinite(num)) {
-    return `${VITALS_BOUNDS[field].label} must be a number.`;
+    return translate(getActiveLocale(), "vitals.validation.mustBeNumber", {
+      label: vitalLabel(field),
+    });
   }
 
-  const { label, unit, min, max, integer, maxDecimalPlaces } = VITALS_BOUNDS[field];
+  const { unit, min, max, integer, maxDecimalPlaces } = VITALS_BOUNDS[field];
+  const label = vitalLabel(field);
   if (integer && !Number.isInteger(num)) {
-    return `${label} must be a whole number.`;
+    return translate(getActiveLocale(), "vitals.validation.mustBeWhole", { label });
   }
   const decimalPart = value.split(".")[1] ?? "";
   if (!integer && maxDecimalPlaces !== undefined && decimalPart.length > maxDecimalPlaces) {
-    return `${label} can have at most ${maxDecimalPlaces} decimal place.`;
+    return translate(getActiveLocale(), "vitals.validation.maxDecimals", {
+      label,
+      n: maxDecimalPlaces,
+    });
   }
   if (num < min || num > max) {
-    return `${label} looks off — enter a value between ${min} and ${max} ${unit}. Double-check the reading.`;
+    return translate(getActiveLocale(), "vitals.validation.outOfRange", {
+      label,
+      min,
+      max,
+      unit,
+    });
   }
   return null;
 }
@@ -77,7 +89,7 @@ export function validateBloodPressurePair(sysRaw: string, diaRaw: string): strin
   if (!Number.isFinite(sys) || !Number.isFinite(dia)) return null;
   if (sysRaw.trim() === "" || diaRaw.trim() === "") return null;
   if (dia >= sys) {
-    return "Diastolic must be lower than systolic — check the two BP numbers aren't swapped.";
+    return translate(getActiveLocale(), "vitals.validation.bpSwapped");
   }
   return null;
 }
@@ -138,24 +150,35 @@ export function parseVitalsValidationError(err: ApiError | null | undefined): Pa
     // The model-level BP-order rule (loc is just ["body"]). Pydantic prefixes
     // raised ValueErrors with "Value error, " — match on our sentinel.
     if (msg.includes("diaBp_must_be_below_sysBp")) {
-      fieldErrors.diaBp =
-        "Diastolic must be lower than systolic — check the two BP numbers aren't swapped.";
+      fieldErrors.diaBp = translate(getActiveLocale(), "vitals.validation.bpSwapped");
       continue;
     }
 
     if (!formError)
-      formError = "Some vitals are out of range. Fix the highlighted fields and try again.";
+      formError = translate(getActiveLocale(), "vitals.formError");
   }
 
   return { fieldErrors, formError };
 }
 
+function vitalLabel(field: VitalField): string {
+  return translate(getActiveLocale(), `vitals.labels.${field}`);
+}
+
 function outOfRangeMessage(field: VitalField): string {
-  const { label, unit, min, max } = VITALS_BOUNDS[field];
-  return `${label} looks off — enter a value between ${min} and ${max} ${unit}. Double-check the reading.`;
+  const { unit, min, max } = VITALS_BOUNDS[field];
+  return translate(getActiveLocale(), "vitals.validation.outOfRange", {
+    label: vitalLabel(field),
+    min,
+    max,
+    unit,
+  });
 }
 
 function decimalPlacesMessage(field: VitalField): string {
-  const { label, maxDecimalPlaces } = VITALS_BOUNDS[field];
-  return `${label} can have at most ${maxDecimalPlaces ?? 1} decimal place.`;
+  const { maxDecimalPlaces } = VITALS_BOUNDS[field];
+  return translate(getActiveLocale(), "vitals.validation.maxDecimals", {
+    label: vitalLabel(field),
+    n: maxDecimalPlaces ?? 1,
+  });
 }

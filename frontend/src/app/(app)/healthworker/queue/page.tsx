@@ -14,6 +14,7 @@ import { Select } from "@/components/primitives/select";
 import { CancelQueueEntryForm } from "@/components/healthworker/cancel-queue-entry-form";
 import { QueueEntryForm } from "@/components/healthworker/queue-entry-form";
 import { QueueRow } from "@/components/healthworker/queue-row";
+import { useI18n } from "@/lib/i18n";
 import { useQueueList } from "@/lib/use-api";
 import type { QueueEntry, QueuePriority, QueueSource, QueueStatus } from "@/types/api";
 
@@ -23,6 +24,7 @@ import type { QueueEntry, QueuePriority, QueueSource, QueueStatus } from "@/type
 // pre-fills and the row gets ring-highlighted (same UX as picking from the
 // queue card inside the workspace itself).
 export default function QueuePage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [status, setStatus] = useState<QueueStatus | "">("pending");
   const [source, setSource] = useState<QueueSource | "">("");
@@ -45,49 +47,49 @@ export default function QueuePage() {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-8">
       <PageHeader
-        label="Queue"
-        title="Full"
-        highlight="queue."
-        subtitle="Filter, inspect, and audit. Booking happens in the appointments workspace — clicking 'Book' on any entry forwards there with the entry pre-loaded."
+        label={t("pages.healthworker.queuePage.label")}
+        title={t("pages.healthworker.queuePage.title")}
+        highlight={t("pages.healthworker.queuePage.highlight")}
+        subtitle={t("pages.healthworker.queuePage.subtitle")}
         action={
           <Button onClick={() => setAddOpen(true)}>
             <Plus className="h-4 w-4" />
-            Add entry
+            {t("pages.healthworker.appointments.addEntry")}
           </Button>
         }
       />
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
-          <Filter label="Status">
+          <Filter label={t("common.status")}>
             <Select value={status} onChange={(e) => setStatus(e.target.value as QueueStatus | "")}>
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="booked">Booked</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">{t("common.all")}</option>
+              <option value="pending">{t("queue.statusTitle.pending")}</option>
+              <option value="booked">{t("queue.statusTitle.booked")}</option>
+              <option value="cancelled">{t("queue.statusTitle.cancelled")}</option>
             </Select>
           </Filter>
-          <Filter label="Source">
+          <Filter label={t("common.source")}>
             <Select value={source} onChange={(e) => setSource(e.target.value as QueueSource | "")}>
-              <option value="">All</option>
-              <option value="walk_in">Walk-in</option>
-              <option value="screening">Screening</option>
-              <option value="follow_up">Follow-up</option>
+              <option value="">{t("common.all")}</option>
+              <option value="walk_in">{t("queue.walkIn")}</option>
+              <option value="screening">{t("queue.screening")}</option>
+              <option value="follow_up">{t("queue.followUp")}</option>
             </Select>
           </Filter>
-          <Filter label="Priority">
+          <Filter label={t("common.priority")}>
             <Select
               value={priority}
               onChange={(e) => setPriority(e.target.value as QueuePriority | "")}
             >
-              <option value="">All</option>
-              <option value="urgent">Urgent</option>
-              <option value="routine">Routine</option>
+              <option value="">{t("common.all")}</option>
+              <option value="urgent">{t("queue.urgent")}</option>
+              <option value="routine">{t("queue.routine")}</option>
             </Select>
           </Filter>
         </div>
         <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Sort: urgent first → soonest target week → longest waiting
+          {t("pages.healthworker.queuePage.sortHint")}
         </p>
       </div>
 
@@ -96,22 +98,26 @@ export default function QueuePage() {
       ) : list.isLoading ? (
         <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
           <Loader2 className="mx-auto mb-2 h-4 w-4 animate-spin" />
-          Loading…
+          {t("common.loading")}
         </Card>
       ) : entries.length === 0 ? (
         <EmptyState
           Icon={Inbox}
-          title={status === "pending" ? "Queue is clear" : "No entries match"}
+          title={
+            status === "pending"
+              ? t("pages.healthworker.appointments.queueClearTitle")
+              : t("pages.healthworker.queuePage.noEntriesMatch")
+          }
           description={
             status === "pending"
-              ? "No one is currently waiting to be scheduled."
-              : "Try adjusting the filters."
+              ? t("pages.healthworker.queuePage.currentlyWaiting")
+              : t("pages.healthworker.queuePage.tryAdjustingFilters")
           }
           action={
             status === "pending" && (
               <Button onClick={() => setAddOpen(true)}>
                 <Plus className="h-4 w-4" />
-                Add entry
+                {t("pages.healthworker.appointments.addEntry")}
               </Button>
             )
           }
@@ -132,8 +138,8 @@ export default function QueuePage() {
       <Modal
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        title="Add to queue"
-        description="Walk-in or screening intake. Patient must already be registered."
+        title={t("pages.healthworker.appointments.addToQueue")}
+        description={t("pages.healthworker.queuePage.addModalDescription")}
       >
         <QueueEntryForm
           onCreated={() => {
@@ -147,8 +153,8 @@ export default function QueuePage() {
       <Modal
         open={!!cancelEntry}
         onClose={() => setCancelEntry(null)}
-        title="Cancel this entry?"
-        description="Cancelling closes the entry permanently."
+        title={t("pages.healthworker.appointments.cancelEntry")}
+        description={t("pages.healthworker.queuePage.cancelModalDescription")}
       >
         {cancelEntry && (
           <CancelQueueEntryForm

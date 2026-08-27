@@ -10,8 +10,10 @@ import { Card } from "@/components/primitives/card";
 import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { useAppointment, useConsultation } from "@/lib/use-api";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
+import { useI18n } from "@/lib/i18n";
 
 export default function ConsultationPage() {
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const cid = parseIdParam(params.id);
   const consult = useConsultation(cid);
@@ -43,7 +45,7 @@ export default function ConsultationPage() {
   if (!consult.data || !apt.data) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">{t("common.loading")}</Card>
       </div>
     );
   }
@@ -53,7 +55,7 @@ export default function ConsultationPage() {
   return (
     <div className="mx-auto flex max-w-[110rem] flex-col gap-10 px-6 py-12">
       <BackLink href={`/doctor/appointments/${apt.data.appointment.id}`}>
-        Back to appointment
+        {t("pages.doctor.consultations.backToAppointment")}
       </BackLink>
 
       <div
@@ -74,7 +76,9 @@ export default function ConsultationPage() {
         <div className="flex flex-col gap-6 lg:order-2">
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
             <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] align-middle" />
-            {readOnly ? "Record · locked" : "Consultation · in progress"}
+            {readOnly
+              ? t("pages.doctor.consultations.recordLocked")
+              : t("pages.doctor.consultations.inProgress")}
           </span>
           <ConsultationFlow
             consultation={consult.data}

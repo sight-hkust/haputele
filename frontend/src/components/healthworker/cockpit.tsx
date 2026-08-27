@@ -43,6 +43,7 @@ import {
   useUpsertPreconsult,
 } from "@/lib/use-api";
 import { fmtDateTime, fmtTime } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { AppointmentDetail } from "@/types/api";
 
 // Status helpers — derive what's actionable in the current state. The §11
@@ -51,6 +52,7 @@ import type { AppointmentDetail } from "@/types/api";
 const PRE_MEETING_STATES = new Set(["scheduled", "consent_pending", "data_collection"]);
 
 export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
+  const { t } = useI18n();
   const { appointment, patient, masterConsentStatus, preconsult, consultation } = data;
   const aptId = appointment.id;
 
@@ -111,11 +113,10 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
             </div>
             <div>
               <h3 className="text-lg font-semibold tracking-[-0.01em]">
-                Awaiting doctor&rsquo;s notes
+                {t("pages.healthworker.appointments.awaitingNotesTitle")}
               </h3>
               <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-                The meeting has ended. The assigned doctor is writing up the consultation. The
-                prescription will be available here once they sign and submit.
+                {t("pages.healthworker.appointments.awaitingNotesDescription")}
               </p>
             </div>
           </div>
@@ -143,10 +144,14 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
           <div className="flex items-start gap-3">
             <XCircle className="mt-0.5 h-5 w-5 text-rose-600" />
             <div>
-              <h3 className="text-lg font-semibold tracking-[-0.01em]">Appointment cancelled</h3>
+              <h3 className="text-lg font-semibold tracking-[-0.01em]">
+                {t("pages.healthworker.appointments.cancelledTitle")}
+              </h3>
               {appointment.cancellationReason && (
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  Reason: {appointment.cancellationReason}
+                  {t("pages.healthworker.appointments.cancellationReason", {
+                    reason: appointment.cancellationReason,
+                  })}
                 </p>
               )}
             </div>
@@ -170,6 +175,7 @@ function MasterConsentGate({
   patientName: string;
   masterIsRevocable: boolean;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [signatureEmpty, setSignatureEmpty] = useState(true);
   const padRef = useRef<SignaturePadHandle | null>(null);
@@ -194,9 +200,13 @@ function MasterConsentGate({
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Master consent
+              {t("pages.healthworker.appointments.masterConsentLabel")}
             </span>
-            <p className="text-sm font-medium">Active for {patientName || "this patient"}</p>
+            <p className="text-sm font-medium">
+              {t("pages.healthworker.appointments.masterConsentActive", {
+                patientName: patientName || t("forms.patient"),
+              })}
+            </p>
           </div>
         </div>
       </Card>
@@ -210,16 +220,16 @@ function MasterConsentGate({
           <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
           <div className="flex-1">
             <h3 className="text-base font-semibold tracking-[-0.01em] text-amber-900">
-              Master consent needs to be re-recorded
+              {t("pages.healthworker.appointments.masterConsentNeedsReconsent")}
             </h3>
             <p className="mt-1 text-sm text-amber-800/80">
               {masterIsRevocable
-                ? "The patient's previous consent has been revoked, or the existing record is unsigned. Re-record with a signature before any new data is collected."
-                : "No active master consent on this patient. Re-record with a signature before any new data is collected."}
+                ? t("pages.healthworker.appointments.masterConsentRevokedHint")
+                : t("pages.healthworker.appointments.masterConsentMissingHint")}
             </p>
           </div>
           <Button size="sm" onClick={() => setOpen(true)}>
-            Re-record
+            {t("pages.healthworker.appointments.reRecord")}
           </Button>
         </div>
       </Card>
@@ -227,8 +237,8 @@ function MasterConsentGate({
       <Modal
         open={open}
         onClose={() => !reConsent.isPending && closeAndReset()}
-        title="Re-record master consent"
-        description="Read the consent text aloud and ask the patient to sign."
+        title={t("pages.healthworker.appointments.reRecordModalTitle")}
+        description={t("pages.healthworker.appointments.reRecordModalDescription")}
       >
         <p className="mb-4 max-h-48 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4 text-sm leading-relaxed text-[var(--muted-foreground)]">
           {MASTER_CONSENT_BODY}
@@ -237,17 +247,19 @@ function MasterConsentGate({
           ref={padRef}
           onChange={setSignatureEmpty}
           disabled={reConsent.isPending}
-          label="Patient signature"
+          label={t("forms.patientSignature")}
         />
         {reConsent.error && (
           <ErrorBanner className="mt-3">{explainError(reConsent.error.error)}</ErrorBanner>
         )}
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="secondary" onClick={closeAndReset} disabled={reConsent.isPending}>
-            Patient declined
+            {t("pages.healthworker.patients.registerFlow.patientDeclined")}
           </Button>
           <Button onClick={submitAgreed} disabled={reConsent.isPending || signatureEmpty}>
-            {reConsent.isPending ? "Saving…" : "Patient agreed"}
+            {reConsent.isPending
+              ? t("common.saving")
+              : t("pages.healthworker.appointments.patientAgreed")}
           </Button>
         </div>
       </Modal>
@@ -266,6 +278,7 @@ function SessionConsentStep({
   consentTime: string | null;
   masterAvailable: boolean;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [signatureEmpty, setSignatureEmpty] = useState(true);
   const padRef = useRef<SignaturePadHandle | null>(null);
@@ -294,10 +307,12 @@ function SessionConsentStep({
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Session consent
+              {t("pages.healthworker.appointments.sessionConsentLabel")}
             </span>
             <p className="text-sm font-medium">
-              Patient consented{consentTime ? ` at ${fmtTime(consentTime)}` : ""}
+              {t("pages.healthworker.appointments.sessionConsented", {
+                time: consentTime ? fmtTime(consentTime) : "",
+              })}
             </p>
           </div>
         </div>
@@ -313,18 +328,19 @@ function SessionConsentStep({
             <ShieldCheck className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold tracking-[-0.01em]">Capture session consent</h3>
+            <h3 className="text-lg font-semibold tracking-[-0.01em]">
+              {t("pages.healthworker.appointments.captureSessionConsent")}
+            </h3>
             <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-              Read the consent statement to the patient and capture their signature before entering
-              vitals.
+              {t("pages.healthworker.appointments.sessionConsentHint")}
             </p>
             <div className="mt-4 flex gap-2">
               <Button onClick={() => setOpen(true)} disabled={!masterAvailable}>
-                Record consent
+                {t("pages.healthworker.appointments.recordConsent")}
               </Button>
               {!masterAvailable && (
                 <span className="self-center font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
-                  Master consent required first
+                  {t("pages.healthworker.appointments.masterConsentRequiredFirst")}
                 </span>
               )}
             </div>
@@ -335,7 +351,7 @@ function SessionConsentStep({
       <Modal
         open={open}
         onClose={() => !recordConsent.isPending && closeAndReset()}
-        title="Record session consent"
+        title={t("pages.healthworker.appointments.recordSessionModalTitle")}
       >
         <p className="mb-4 max-h-48 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4 text-sm leading-relaxed text-[var(--muted-foreground)]">
           {SESSION_CONSENT_BODY}
@@ -344,17 +360,19 @@ function SessionConsentStep({
           ref={padRef}
           onChange={setSignatureEmpty}
           disabled={recordConsent.isPending}
-          label="Patient signature"
+          label={t("forms.patientSignature")}
         />
         {recordConsent.error && (
           <ErrorBanner className="mt-3">{explainError(recordConsent.error.error)}</ErrorBanner>
         )}
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="secondary" onClick={submitDeclined} disabled={recordConsent.isPending}>
-            Patient declined
+            {t("pages.healthworker.patients.registerFlow.patientDeclined")}
           </Button>
           <Button onClick={submitAgreed} disabled={recordConsent.isPending || signatureEmpty}>
-            {recordConsent.isPending ? "Saving…" : "Patient agreed"}
+            {recordConsent.isPending
+              ? t("common.saving")
+              : t("pages.healthworker.appointments.patientAgreed")}
           </Button>
         </div>
       </Modal>
@@ -377,6 +395,7 @@ function VitalsStep({
   preconsult: AppointmentDetail["preconsult"];
   currentStatus: string;
 }) {
+  const { t } = useI18n();
   const upsert = useUpsertPreconsult(appointmentId);
 
   // Briefly confirm a successful save so the HW knows the vitals were stored —
@@ -421,15 +440,17 @@ function VitalsStep({
           <HeartPulse className="h-5 w-5 text-[var(--accent)]" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold tracking-[-0.01em]">Preconsult vitals</h3>
+          <h3 className="text-lg font-semibold tracking-[-0.01em]">
+            {t("pages.healthworker.appointments.vitalsTitle")}
+          </h3>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             {showLockedNotice
-              ? "Locked — the meeting has started or already concluded."
+              ? t("pages.healthworker.appointments.vitalsLockedHint")
               : showWaitNotice
-                ? "Session consent is needed before vitals can be entered."
+                ? t("pages.healthworker.appointments.vitalsConsentNeededHint")
                 : preconsult
-                  ? "Update before the meeting starts."
-                  : "Capture height, weight, BP, pulse, temperature."}
+                  ? t("pages.healthworker.appointments.vitalsUpdateHint")
+                  : t("pages.healthworker.appointments.vitalsCaptureHint")}
           </p>
         </div>
       </div>
@@ -438,13 +459,12 @@ function VitalsStep({
           form is read-only rather than finding a dead Save button. */}
       {showWaitNotice && (
         <ErrorBanner tone="amber" className="mb-4">
-          Record the patient&rsquo;s session consent above before entering vitals.
+          {t("pages.healthworker.appointments.vitalsConsentBanner")}
         </ErrorBanner>
       )}
       {showLockedNotice && (
         <ErrorBanner tone="amber" className="mb-4">
-          These vitals are locked — the meeting has started or concluded, so they can no longer be
-          edited.
+          {t("pages.healthworker.appointments.vitalsLockedBanner")}
         </ErrorBanner>
       )}
       {savedAt && (
@@ -453,7 +473,7 @@ function VitalsStep({
           className="mb-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Vitals saved at {savedAt}.</span>
+          <span>{t("pages.healthworker.appointments.vitalsSavedAt", { time: savedAt })}</span>
         </div>
       )}
 
@@ -470,6 +490,7 @@ function VitalsStep({
 }
 
 function MeetingStep({ appointmentId, status }: { appointmentId: number; status: string }) {
+  const { t } = useI18n();
   const startMeeting = useStartMeeting(appointmentId);
   const endMeeting = useEndMeeting(appointmentId);
   const meetingToken = useMeetingToken(appointmentId);
@@ -504,19 +525,23 @@ function MeetingStep({ appointmentId, status }: { appointmentId: number; status:
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-semibold tracking-[-0.01em]">
-              {status === "in_progress" ? "Meeting in progress" : "Start the meeting"}
+              {status === "in_progress"
+                ? t("pages.healthworker.appointments.meetingInProgress")
+                : t("pages.healthworker.appointments.meetingStartTitle")}
             </h3>
             <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
               {status === "in_progress"
-                ? "End the meeting once the doctor signals they're done. Marks the appointment ready for notes."
-                : "Opens the consultation video call and moves the appointment to “in progress”."}
+                ? t("pages.healthworker.appointments.meetingInProgressHint")
+                : t("pages.healthworker.appointments.meetingStartHint")}
             </p>
             {apiError && <ErrorBanner className="mt-3">{explainError(apiError.error)}</ErrorBanner>}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {status === "data_collection" && (
                 <Button onClick={handleStart} disabled={startMeeting.isPending}>
                   <PlayCircle className="h-4 w-4" />
-                  {startMeeting.isPending ? "Starting…" : "Start meeting"}
+                  {startMeeting.isPending
+                    ? t("pages.healthworker.appointments.starting")
+                    : t("pages.healthworker.appointments.startMeeting")}
                 </Button>
               )}
               {status === "in_progress" && (
@@ -527,7 +552,9 @@ function MeetingStep({ appointmentId, status }: { appointmentId: number; status:
                     disabled={meetingToken.isPending || !!creds}
                   >
                     <PlayCircle className="h-4 w-4" />
-                    {meetingToken.isPending ? "Reconnecting…" : "Re-open call"}
+                    {meetingToken.isPending
+                      ? t("pages.healthworker.appointments.reconnecting")
+                      : t("pages.healthworker.appointments.reopenCall")}
                   </Button>
                   <Button
                     variant="destructive"
@@ -535,7 +562,9 @@ function MeetingStep({ appointmentId, status }: { appointmentId: number; status:
                     disabled={endMeeting.isPending}
                   >
                     <PhoneOff className="h-4 w-4" />
-                    {endMeeting.isPending ? "Ending…" : "End meeting"}
+                    {endMeeting.isPending
+                      ? t("pages.healthworker.appointments.ending")
+                      : t("pages.healthworker.appointments.endMeeting")}
                   </Button>
                 </>
               )}
@@ -555,6 +584,7 @@ function MeetingStep({ appointmentId, status }: { appointmentId: number; status:
 }
 
 function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
+  const { t } = useI18n();
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -602,8 +632,11 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
         if (!revoked) {
           setError(
             e instanceof ApiError
-              ? explainError(e.error, "Could not load the prescription PDF.")
-              : "Couldn't reach the server. Check your connection and try again.",
+              ? explainError(
+                  e.error,
+                  t("pages.healthworker.appointments.prescriptionLoadFailed"),
+                )
+              : t("errors.network_error"),
           );
         }
       }
@@ -612,7 +645,7 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
       revoked = true;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [appointmentId, attempt]);
+  }, [appointmentId, attempt, t]);
 
   return (
     <Card variant="elevated" className="overflow-hidden">
@@ -622,9 +655,11 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
             <FileText className="h-5 w-5 text-emerald-700" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold tracking-[-0.01em]">Prescription</h3>
+            <h3 className="text-lg font-semibold tracking-[-0.01em]">
+              {t("pages.healthworker.appointments.prescriptionTitle")}
+            </h3>
             <p className="text-xs text-[var(--muted-foreground)]">
-              Signed and locked. §1.7 compliant.
+              {t("pages.healthworker.appointments.prescriptionSubtitle")}
             </p>
           </div>
         </div>
@@ -638,14 +673,14 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
                 className="inline-flex h-9 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-medium hover:border-[var(--accent)]/30 hover:bg-[var(--muted)]/60"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                Open
+                {t("common.open")}
               </a>
               <a
                 href={url}
                 download={`prescription-${appointmentId}.pdf`}
                 className="inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] px-4 text-sm font-medium text-white shadow-sm hover:shadow-accent-lg"
               >
-                Download
+                {t("common.download")}
               </a>
             </>
           )}
@@ -657,18 +692,20 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
             <span>{error}</span>
             <Button variant="secondary" size="sm" onClick={() => setAttempt((n) => n + 1)}>
               <RotateCw className="h-3.5 w-3.5" />
-              Try again
+              {t("common.retry")}
             </Button>
           </div>
         ) : url ? (
           <iframe
             src={url}
             className="h-[680px] w-full"
-            title={`Prescription for appointment ${appointmentId}`}
+            title={t("pages.healthworker.appointments.prescriptionIframeTitle", {
+              id: appointmentId,
+            })}
           />
         ) : (
           <div className="p-8 text-center text-sm text-[var(--muted-foreground)]">
-            Loading prescription…
+            {t("pages.healthworker.appointments.prescriptionLoading")}
           </div>
         )}
       </div>
@@ -687,6 +724,7 @@ function CancelAction({
   doctorId: number;
   scheduledAt: string;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   // Opt-in: when checked, the cancel call also creates a fresh queue entry
@@ -725,17 +763,17 @@ function CancelAction({
           onClick={() => setOpen(true)}
           className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
         >
-          Cancel this appointment
+          {t("pages.healthworker.appointments.cancelLink")}
         </button>
       </div>
       <Modal
         open={open}
         onClose={() => !cancel.isPending && setOpen(false)}
-        title="Cancel this appointment?"
+        title={t("pages.healthworker.appointments.cancelModalTitle")}
         description={
           status === "in_progress"
-            ? "The meeting is currently in progress. Cancelling will not retroactively void any vitals already captured."
-            : "This action will move the appointment to cancelled. It can't be reopened."
+            ? t("pages.healthworker.appointments.cancelInProgressDescription")
+            : t("pages.healthworker.appointments.cancelDefaultDescription")
         }
       >
         <div className="flex flex-col gap-3">
@@ -743,14 +781,14 @@ function CancelAction({
             htmlFor="queue-cancel-reason"
             className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]"
           >
-            Reason (optional)
+            {t("forms.reasonOptional")}
           </label>
           <Textarea
             rows={3}
             id="queue-cancel-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g. Patient requested reschedule"
+            placeholder={t("pages.healthworker.appointments.cancelReasonPlaceholder")}
           />
 
           <label className="mt-2 flex items-center gap-2 text-sm">
@@ -760,35 +798,35 @@ function CancelAction({
               onChange={(e) => setRequeue(e.target.checked)}
               className="h-4 w-4 rounded border-[var(--border)] text-[var(--accent)] focus-visible:ring-[var(--ring)]"
             />
-            <span>Add a new queue entry for this patient</span>
+            <span>{t("pages.healthworker.appointments.requeueCheckbox")}</span>
           </label>
           {requeue && (
             <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-                    Priority
+                    {t("common.priority")}
                   </span>
                   <select
                     value={rqPriority}
                     onChange={(e) => setRqPriority(e.target.value as "routine" | "urgent")}
                     className="h-10 rounded-lg border border-[var(--border)] bg-transparent px-3 text-sm"
                   >
-                    <option value="routine">Routine</option>
-                    <option value="urgent">Urgent</option>
+                    <option value="routine">{t("queue.routine")}</option>
+                    <option value="urgent">{t("queue.urgent")}</option>
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-                    Target week
+                    {t("forms.targetWeek")}
                   </span>
                   <DatePicker
                     mode="week"
                     align="end"
                     value={rqTargetDate}
                     onChange={setRqTargetDate}
-                    placeholder="Choose a target week"
-                    ariaLabel="Choose target week"
+                    placeholder={t("forms.chooseTargetWeek")}
+                    ariaLabel={t("forms.targetWeek")}
                   />
                 </div>
               </div>
@@ -796,11 +834,10 @@ function CancelAction({
                 rows={2}
                 value={rqNotes}
                 onChange={(e) => setRqNotes(e.target.value)}
-                placeholder="Notes for the new entry — e.g. 'wants to reschedule next week'"
+                placeholder={t("pages.healthworker.appointments.requeueNotesPlaceholder")}
               />
               <p className="text-xs text-[var(--muted-foreground)]">
-                Will be added with the same doctor as preferred. The original entry (if any) is
-                auto-closed.
+                {t("pages.healthworker.appointments.requeueHint")}
               </p>
             </div>
           )}
@@ -810,14 +847,14 @@ function CancelAction({
           )}
           <div className="mt-2 flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setOpen(false)} disabled={cancel.isPending}>
-              Keep appointment
+              {t("pages.healthworker.appointments.keepAppointment")}
             </Button>
             <Button variant="destructive" onClick={submit} disabled={cancel.isPending}>
               {cancel.isPending
-                ? "Cancelling…"
+                ? t("pages.healthworker.appointments.cancelling")
                 : requeue
-                  ? "Cancel and re-queue"
-                  : "Cancel appointment"}
+                  ? t("pages.healthworker.appointments.cancelAndRequeue")
+                  : t("pages.healthworker.appointments.cancelAppointment")}
             </Button>
           </div>
         </div>
@@ -834,22 +871,25 @@ export function CockpitHeader({
   data: AppointmentDetail;
   doctorName: string;
 }) {
+  const { t } = useI18n();
   const { appointment, patient } = data;
   return (
     <Card className="p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            Appointment #{appointment.id}
+            {t("pages.healthworker.appointments.appointmentId", { id: appointment.id })}
           </span>
           <h2 className="mt-1 font-display text-2xl tracking-[-0.01em]">
-            {patient ? `${patient.given} ${patient.family}` : "Patient"}
+            {patient ? `${patient.given} ${patient.family}` : t("forms.patient")}
           </h2>
           {/* This line is how a health worker confirms the right doctor was picked (#59),
              so it reads as a second-level heading rather than a grey subtitle. */}
           <p className="mt-1 text-xl font-bold text-[var(--foreground)]">{doctorName}</p>
           <p className="mt-2 font-mono text-xs text-[var(--muted-foreground)]">
-            Scheduled · {fmtDateTime(appointment.scheduledAt)}
+            {t("pages.healthworker.appointments.scheduledAt", {
+              datetime: fmtDateTime(appointment.scheduledAt),
+            })}
           </p>
         </div>
         <StatusBadge status={appointment.status} className="self-start" />

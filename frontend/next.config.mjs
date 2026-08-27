@@ -7,7 +7,9 @@ const nextConfig = {
   // relative in the client bundle, so the same build works behind any
   // hostname (localhost, LAN IP, Cloudflare tunnel, real domain).
   async rewrites() {
-    const target = process.env.API_PROXY_TARGET || "http://api:8000";
+    // Docker compose sets API_PROXY_TARGET=http://api:8000 at build/runtime.
+    // Local `npm run dev` defaults to localhost where the api container is mapped.
+    const target = process.env.API_PROXY_TARGET || "http://localhost:8000";
     return [{ source: "/api/:path*", destination: `${target}/:path*` }];
   },
 };

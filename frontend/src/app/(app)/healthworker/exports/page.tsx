@@ -13,10 +13,12 @@ import { API_URL, ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { useAuth } from "@/lib/auth";
 import { EXPORT_TIMEZONE, appDayWindow, appToday } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 type Kind = "xlsx" | "zip";
 
 export default function ExportsPage() {
+  const { t } = useI18n();
   const { session } = useAuth();
   const [date, setDate] = useState<string>(appToday(EXPORT_TIMEZONE));
   const [downloading, setDownloading] = useState<Kind | null>(null);
@@ -30,14 +32,10 @@ export default function ExportsPage() {
       const path = kind === "xlsx" ? "medications.xlsx" : "prescriptions.zip";
       const { fromISO, toISO } = appDayWindow(date, EXPORT_TIMEZONE);
       const qs = new URLSearchParams({ from: fromISO, to: toISO });
-      // GET, so cookies authorise this on their own — no CSRF echo needed.
       const res = await fetch(`${API_URL}/exports/${path}?${qs.toString()}`, {
         credentials: "include",
       });
       if (!res.ok) {
-        // Parse the uniform error envelope — a 422 range_too_wide deserves
-        // its curated copy, not "Download failed (422)". Same shape api()
-        // unwraps; hand-rolled here because the response is a blob stream.
         let code = "request_failed";
         try {
           const body = (await res.clone().json()) as { detail?: { error?: string } };
@@ -49,8 +47,6 @@ export default function ExportsPage() {
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      // Synthesise a download link — `download` attribute names the file even
-      // when the response Content-Disposition header is present.
       const a = document.createElement("a");
       a.href = url;
       a.download = kind === "xlsx" ? `medication-pickup-${date}.xlsx` : `prescriptions-${date}.zip`;
@@ -58,12 +54,10 @@ export default function ExportsPage() {
       a.click();
       a.remove();
     } catch (e) {
-      // ApiError → curated copy (with the status as fallback context for
-      // unknown codes); a rejected fetch means offline, not "Download failed".
       setError(
         e instanceof ApiError
-          ? explainError(e.error, `Download failed (${e.status}).`)
-          : "Couldn't reach the server. Check your connection and try again.",
+          ? explainError(e.error, t("pages.healthworker.exports.downloadFailed", { status: e.status }))
+          : t("errors.network_error"),
       );
     } finally {
       setDownloading(null);
@@ -73,24 +67,24 @@ export default function ExportsPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-12">
       <PageHeader
-        label="Exports"
-        title="Daily prescription"
-        highlight="exports."
-        subtitle="Pick a date and pull the medication-pickup spreadsheet or a zip of every signed prescription PDF for that day. Only completed appointments are included."
+        label={t("pages.healthworker.exports.label")}
+        title={t("pages.healthworker.exports.title")}
+        highlight={t("pages.healthworker.exports.highlight")}
+        subtitle={t("pages.healthworker.exports.subtitle")}
       />
 
       <Card variant="elevated" className="p-8">
         <div className="flex max-w-xs flex-col gap-2">
-          <Label htmlFor="export-date">Date</Label>
+          <Label htmlFor="export-date">{t("pages.healthworker.exports.dateLabel")}</Label>
           <DatePicker
             id="export-date"
             value={date}
             onChange={setDate}
             max={appToday(EXPORT_TIMEZONE)}
-            ariaLabel="Choose export date"
+            ariaLabel={t("pages.healthworker.exports.chooseExportDate")}
           />
           <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            Sri Lanka time · {EXPORT_TIMEZONE}
+            {t("pages.healthworker.exports.timezoneNote", { tz: EXPORT_TIMEZONE })}
           </p>
         </div>
 
@@ -99,18 +93,20 @@ export default function ExportsPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <DownloadCard
             Icon={FileSpreadsheet}
-            title="Medication pickup list"
-            description="Excel workbook with one row per medication. Header summary shows total appointments, patients, and medications."
-            cta="Download .xlsx"
+            title={t("pages.healthworker.exports.medicationPickupTitle")}
+            description={t("pages.healthworker.exports.medicationPickupDescription")}
+            cta={t("pages.healthworker.exports.downloadXlsx")}
+            loadingLabel={t("pages.healthworker.exports.preparing")}
             loading={downloading === "xlsx"}
             disabled={!date || downloading !== null}
             onClick={() => download("xlsx")}
           />
           <DownloadCard
             Icon={FileArchive}
-            title="All prescription PDFs"
-            description="ZIP of every signed §1.7 prescription PDF, named by appointment + patient. Includes a manifest.txt."
-            cta="Download .zip"
+            title={t("pages.healthworker.exports.allPrescriptionsTitle")}
+            description={t("pages.healthworker.exports.allPrescriptionsDescription")}
+            cta={t("pages.healthworker.exports.downloadZip")}
+            loadingLabel={t("pages.healthworker.exports.preparing")}
             loading={downloading === "zip"}
             disabled={!date || downloading !== null}
             onClick={() => download("zip")}
@@ -126,6 +122,7 @@ function DownloadCard({
   title,
   description,
   cta,
+  loadingLabel,
   loading,
   disabled,
   onClick,
@@ -134,6 +131,7 @@ function DownloadCard({
   title: string;
   description: string;
   cta: string;
+  loadingLabel: string;
   loading: boolean;
   disabled: boolean;
   onClick: () => void;
@@ -153,7 +151,7 @@ function DownloadCard({
         </div>
         <Button onClick={onClick} disabled={disabled} className="self-start">
           <Download className="h-4 w-4" />
-          {loading ? "Preparing…" : cta}
+          {loading ? loadingLabel : cta}
         </Button>
       </div>
     </div>

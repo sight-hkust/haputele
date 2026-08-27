@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { BadgeCheck, ContactRound, IdCard, Mail, PenLine, Stamp } from "lucide-react";
 
@@ -19,42 +19,46 @@ import {
   passwordError as passwordRuleError,
   usernameError as usernameRuleError,
 } from "@/lib/credentials";
+import { useI18n } from "@/lib/i18n";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import type { Doctor } from "@/types/api";
 
 // Mode-aware schema — username + password are required at create time, omitted/optional on edit.
 // Rubber stamp is required on create; on edit it's optional (existing image stays unless replaced).
-const baseFields = {
-  givenName: z.string().min(1, "Given name is required"),
-  familyName: z.string().min(1, "Family name is required"),
-  contact: z.string().min(1, "Contact number is required"),
-  email: z.string().email("Enter a valid email"),
-  slmcRegistrationNumber: z.string().min(1, "SLMC registration number is required (§1.7)"),
-  qualifications: z.string().min(1, "Qualifications are required (§1.7)"),
-  practitionerAddress: z.string().min(1, "Practitioner address is required (§1.7)"),
-  instituteName: z.string().min(1, "Institute name is required"),
-  // Institute phone is optional — §1.7 prescriptions are valid without it.
-  instituteContact: z.string().optional(),
-};
+function buildBaseFields(t: (key: string) => string) {
+  const v = (key: string) => t(`pages.admin.doctors.form.validation.${key}`);
+  return {
+    givenName: z.string().min(1, v("givenNameRequired")),
+    familyName: z.string().min(1, v("familyNameRequired")),
+    contact: z.string().min(1, v("contactRequired")),
+    email: z.string().email(v("emailInvalid")),
+    slmcRegistrationNumber: z.string().min(1, v("slmcRequired")),
+    qualifications: z.string().min(1, v("qualificationsRequired")),
+    practitionerAddress: z.string().min(1, v("practitionerAddressRequired")),
+    instituteName: z.string().min(1, v("instituteNameRequired")),
+    // Institute phone is optional — §1.7 prescriptions are valid without it.
+    instituteContact: z.string().optional(),
+  };
+}
 
-// Password validity now depends on `onboardingMode`. Zod can't peek at
-// React state, so the schema treats password as optional and the submit
-// handler enforces "manual mode → password required". Keeps zod working
-// for everything else while the mode toggle drives the password rule.
-const createSchema = z.object({
-  ...baseFields,
-  username: z.string().min(1, "Username is required"),
-  password: z.string().optional(),
-  passwordConfirm: z.string().optional(),
-});
+function buildCreateSchema(t: (key: string) => string) {
+  return z.object({
+    ...buildBaseFields(t),
+    username: z.string().min(1, t("pages.admin.doctors.form.validation.usernameRequired")),
+    password: z.string().optional(),
+    passwordConfirm: z.string().optional(),
+  });
+}
 
 type OnboardingMode = "invite" | "manual";
 
-const updateSchema = z.object({
-  ...baseFields,
-  password: z.string().optional(),
-  passwordConfirm: z.string().optional(),
-});
+function buildUpdateSchema(t: (key: string) => string) {
+  return z.object({
+    ...buildBaseFields(t),
+    password: z.string().optional(),
+    passwordConfirm: z.string().optional(),
+  });
+}
 
 export type DoctorFormPayload = {
   givenName: string;
@@ -99,9 +103,12 @@ export function DoctorForm({
   onSubmit: (payload: DoctorFormPayload) => void;
   onCancel?: () => void;
 }) {
+  const { t } = useI18n();
   const isCreate = mode === "create";
   const isSelfOnboarding = embedded === "self-onboarding";
-  type Values = z.infer<typeof createSchema>;
+  type Values = z.infer<ReturnType<typeof buildCreateSchema>>;
+  const createSchema = useMemo(() => buildCreateSchema(t), [t]);
+  const updateSchema = useMemo(() => buildUpdateSchema(t), [t]);
   // In update mode we seed the uploader from the existing stamp so admins see
   // what's on file (Stamp captured / Replace / Clear). `stampDirty` flips on any
   // user interaction so we only resend the stamp when it actually changes —
@@ -165,7 +172,7 @@ export function DoctorForm({
 
   const submit = handleSubmit((v) => {
     if (isCreate && !stamp) {
-      setStampError("Rubber stamp image is required (§1.7).");
+      setStampError(t("pages.admin.doctors.form.validation.rubberStampRequired"));
       return;
     }
     setStampError(null);
@@ -176,11 +183,11 @@ export function DoctorForm({
     // In self-onboarding mode the doctor MUST provide both username
     // and password; in admin-create mode the toggle decides.
     if (isCreate && !isSelfOnboarding && onboardingMode === "manual" && !v.password) {
-      setPasswordError("Password is required when sharing credentials manually.");
+      setPasswordError(t("pages.admin.doctors.form.validation.passwordRequiredManual"));
       return;
     }
     if (isCreate && isSelfOnboarding && !v.password) {
-      setPasswordError("Pick a password.");
+      setPasswordError(t("errors.missing_password"));
       return;
     }
     // Credential rules — rejected, never repaired. What is typed is what gets
@@ -207,7 +214,7 @@ export function DoctorForm({
     // edit-mode rotation), the confirmation must match it — compared raw, since
     // edge whitespace has already been rejected above.
     if (v.password && v.password !== (v.passwordConfirm ?? "")) {
-      setPasswordError("Passwords do not match.");
+      setPasswordError(t("pages.admin.doctors.form.validation.passwordsDoNotMatch"));
       return;
     }
     setPasswordError(null);
@@ -266,12 +273,20 @@ export function DoctorForm({
         </ErrorBanner>
       )}
 
-      <Section Icon={ContactRound} title="Identity & contact">
+      <Section Icon={ContactRound} title={t("pages.admin.doctors.form.sections.identityContact")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Given name *" htmlFor="givenName" error={errors.givenName?.message}>
+          <Field
+            label={`${t("forms.givenName")} *`}
+            htmlFor="givenName"
+            error={errors.givenName?.message}
+          >
             <Input id="givenName" {...register("givenName")} />
           </Field>
-          <Field label="Family name *" htmlFor="familyName" error={errors.familyName?.message}>
+          <Field
+            label={`${t("forms.familyName")} *`}
+            htmlFor="familyName"
+            error={errors.familyName?.message}
+          >
             <Input id="familyName" {...register("familyName")} />
           </Field>
           {/* In self-onboarding mode the email is owned by the invite, not
@@ -282,30 +297,43 @@ export function DoctorForm({
               for `email` is present in the values dict, but it isn't
               read by any submit path in self-onboarding mode. */}
           {!isSelfOnboarding && (
-            <Field label="Email *" htmlFor="email" error={errors.email?.message}>
+            <Field
+              label={`${t("common.email")} *`}
+              htmlFor="email"
+              error={errors.email?.message}
+            >
               <Input id="email" type="email" {...register("email")} />
             </Field>
           )}
-          <Field label="Contact number *" htmlFor="contact" error={errors.contact?.message}>
-            <Input id="contact" autoComplete="off" {...register("contact")} placeholder="+94…" />
+          <Field
+            label={`${t("forms.contactNumber")} *`}
+            htmlFor="contact"
+            error={errors.contact?.message}
+          >
+            <Input
+              id="contact"
+              autoComplete="off"
+              {...register("contact")}
+              placeholder={t("forms.phonePlaceholder")}
+            />
           </Field>
         </div>
       </Section>
 
-      <Section Icon={IdCard} title="Login credentials">
+      <Section Icon={IdCard} title={t("pages.admin.doctors.form.sections.loginCredentials")}>
         {isCreate && !isSelfOnboarding && (
           <div className="grid gap-3 sm:grid-cols-2">
             <ModeCard
               Icon={Mail}
-              title="Send invite email"
-              description="Doctor receives a link to set their own password. Recommended."
+              title={t("pages.admin.doctors.form.onboarding.sendInviteEmail")}
+              description={t("pages.admin.doctors.form.onboarding.sendInviteEmailDescription")}
               selected={onboardingMode === "invite"}
               onClick={() => setOnboardingMode("invite")}
             />
             <ModeCard
               Icon={IdCard}
-              title="Set password manually"
-              description="Type a password and share it with the doctor offline."
+              title={t("pages.admin.doctors.form.onboarding.setPasswordManually")}
+              description={t("pages.admin.doctors.form.onboarding.setPasswordManuallyDescription")}
               selected={onboardingMode === "manual"}
               onClick={() => setOnboardingMode("manual")}
             />
@@ -314,7 +342,7 @@ export function DoctorForm({
         <div className="grid gap-4 sm:grid-cols-2">
           {isCreate ? (
             <Field
-              label="Username *"
+              label={`${t("forms.username")} *`}
               htmlFor="username"
               error={usernameRuleError(watch("username") ?? "") ?? errors.username?.message}
             >
@@ -322,7 +350,7 @@ export function DoctorForm({
             </Field>
           ) : (
             <div className="flex flex-col gap-2">
-              <Label>Username</Label>
+              <Label>{t("forms.username")}</Label>
               <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 font-mono text-sm">
                 {initial?.username}
               </div>
@@ -335,7 +363,11 @@ export function DoctorForm({
           {(!isCreate || isSelfOnboarding || onboardingMode === "manual") && (
             <>
               <Field
-                label={isCreate ? "Password *" : "New password (leave blank to keep)"}
+                label={
+                  isCreate
+                    ? t("pages.admin.doctors.form.passwordRequired")
+                    : t("pages.admin.doctors.form.newPasswordKeepBlank")
+                }
                 htmlFor="password"
                 error={
                   passwordError ??
@@ -354,7 +386,11 @@ export function DoctorForm({
                 <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
               </Field>
               <Field
-                label={isCreate ? "Confirm password *" : "Confirm new password"}
+                label={
+                  isCreate
+                    ? t("pages.admin.doctors.form.confirmPasswordRequired")
+                    : t("pages.admin.doctors.form.confirmNewPassword")
+                }
                 htmlFor="passwordConfirm"
               >
                 <Input
@@ -371,16 +407,15 @@ export function DoctorForm({
         </div>
         {isCreate && !isSelfOnboarding && onboardingMode === "invite" && (
           <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-            On save, the doctor receives an invite at the email above. The link expires in 72 hours;
-            you can re-send from the doctor&rsquo;s detail page.
+            {t("pages.admin.doctors.form.onboarding.inviteHint")}
           </p>
         )}
       </Section>
 
       <Section
         Icon={BadgeCheck}
-        title="Sri Lanka §1.7 prescription requirements"
-        hint="These fields plus the rubber stamp are reproduced on every prescription PDF this doctor signs. All are required at account creation except the institute phone."
+        title={t("pages.admin.doctors.form.sections.prescriptionRequirements")}
+        hint={t("pages.admin.doctors.form.prescriptionHint")}
       >
         {/* autoComplete="off" everywhere in this section — browsers see
             field ids like "practitionerAddress" / "instituteName" and
@@ -389,7 +424,7 @@ export function DoctorForm({
             should type these fields explicitly. */}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            label="SLMC registration number *"
+            label={`${t("forms.slmcRegistrationNumber")} *`}
             htmlFor="slmcRegistrationNumber"
             error={errors.slmcRegistrationNumber?.message}
           >
@@ -400,14 +435,14 @@ export function DoctorForm({
             />
           </Field>
           <Field
-            label="Institute name *"
+            label={`${t("forms.instituteName")} *`}
             htmlFor="instituteName"
             error={errors.instituteName?.message}
           >
             <Input id="instituteName" autoComplete="off" {...register("instituteName")} />
           </Field>
           <Field
-            label="Institute contact"
+            label={t("forms.instituteContact")}
             htmlFor="instituteContact"
             error={errors.instituteContact?.message}
           >
@@ -415,11 +450,11 @@ export function DoctorForm({
               id="instituteContact"
               autoComplete="off"
               {...register("instituteContact")}
-              placeholder="Optional"
+              placeholder={t("pages.admin.doctors.form.optionalPlaceholder")}
             />
           </Field>
           <Field
-            label="Qualifications *"
+            label={`${t("forms.qualifications")} *`}
             htmlFor="qualifications"
             full
             error={errors.qualifications?.message}
@@ -429,11 +464,11 @@ export function DoctorForm({
               rows={3}
               autoComplete="off"
               {...register("qualifications")}
-              placeholder="e.g. MBBS, MD"
+              placeholder={t("pages.admin.doctors.form.qualificationsPlaceholder")}
             />
           </Field>
           <Field
-            label="Practitioner address *"
+            label={`${t("forms.practitionerAddress")} *`}
             htmlFor="practitionerAddress"
             full
             error={errors.practitionerAddress?.message}
@@ -450,9 +485,11 @@ export function DoctorForm({
 
       <Section
         Icon={Stamp}
-        title="Rubber stamp"
+        title={t("pages.admin.doctors.form.sections.rubberStamp")}
         hint={
-          isCreate ? "Required (§1.7)." : "Replace only if you need to update the existing stamp."
+          isCreate
+            ? t("pages.admin.doctors.form.rubberStampHintCreate")
+            : t("pages.admin.doctors.form.rubberStampHintUpdate")
         }
       >
         {/* Phone-camera QR needs an authenticated admin to mint a session,
@@ -467,11 +504,11 @@ export function DoctorForm({
 
       <Section
         Icon={PenLine}
-        title="Default e-signature"
+        title={t("pages.admin.doctors.form.sections.defaultSignature")}
         hint={
           isCreate
-            ? "Optional. Save a signature once and it's applied automatically on every consultation — no need to sign each time."
-            : "Replaces or removes the doctor's saved e-signature."
+            ? t("pages.admin.doctors.form.signatureHintCreate")
+            : t("pages.admin.doctors.form.signatureHintUpdate")
         }
       >
         {/* Update mode: show "on file" state with replace / clear actions */}
@@ -484,10 +521,10 @@ export function DoctorForm({
                 <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
                   <div className="flex-1">
                     <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-                      Signature on file
+                      {t("pages.admin.doctors.form.signatureOnFile")}
                     </div>
                     <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                      The doctor has a saved default e-signature.
+                      {t("pages.admin.doctors.form.signatureOnFileDescription")}
                     </p>
                   </div>
                   <button
@@ -495,14 +532,14 @@ export function DoctorForm({
                     onClick={() => setReplacingSignature(true)}
                     className="text-sm text-[var(--accent)] hover:underline"
                   >
-                    Replace
+                    {t("pages.admin.doctors.form.replace")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setClearSignature(true)}
                     className="text-sm text-rose-600 hover:underline"
                   >
-                    Remove
+                    {t("pages.admin.doctors.form.remove")}
                   </button>
                 </div>
               );
@@ -511,14 +548,14 @@ export function DoctorForm({
               return (
                 <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
                   <div className="flex-1 text-sm text-rose-700">
-                    Signature will be removed on save.
+                    {t("pages.admin.doctors.form.signatureWillRemove")}
                   </div>
                   <button
                     type="button"
                     onClick={() => setClearSignature(false)}
                     className="text-sm text-[var(--accent)] hover:underline"
                   >
-                    Undo
+                    {t("pages.admin.doctors.form.undo")}
                   </button>
                 </div>
               );
@@ -536,7 +573,9 @@ export function DoctorForm({
                     }}
                     className="self-start text-xs text-[var(--muted-foreground)] hover:underline"
                   >
-                    {hasOnFile ? "Keep existing" : "Skip"}
+                    {hasOnFile
+                      ? t("pages.admin.doctors.form.keepExisting")
+                      : t("pages.admin.doctors.form.skip")}
                   </button>
                 )}
               </div>
@@ -549,11 +588,11 @@ export function DoctorForm({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Saving…" : submitLabel}
+          {submitting ? t("common.saving") : submitLabel}
         </Button>
       </div>
     </form>

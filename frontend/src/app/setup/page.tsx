@@ -10,16 +10,18 @@ import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { Select } from "@/components/primitives/select";
+import { LanguageToggle } from "@/components/shell/language-toggle";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import {
   MIN_PASSWORD_LEN,
-  PASSWORD_LENGTH_HINT,
   newPasswordError,
   passwordError,
+  passwordLengthHint,
   usernameError,
 } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import {
@@ -77,6 +79,7 @@ type Stage = "token" | "configure" | "operating-accounts";
 
 function SetupWizard() {
   const router = useRouter();
+  const { t } = useI18n();
   const status = useSetupStatus();
 
   const [stage, setStage] = useState<Stage>("token");
@@ -111,10 +114,10 @@ function SetupWizard() {
           <motion.div variants={fadeInUp}>
             <SectionLabel pulse>
               {stage === "token"
-                ? "Step 1 of 3 · Setup token"
+                ? t("setup.stepToken")
                 : stage === "configure"
-                  ? "Step 2 of 3 · Configure"
-                  : "Step 3 of 3 · Operating accounts"}
+                  ? t("setup.stepConfigure")
+                  : t("setup.stepAccounts")}
             </SectionLabel>
           </motion.div>
 
@@ -123,17 +126,11 @@ function SetupWizard() {
             className="font-display text-[2.75rem] leading-[1.05] tracking-[-0.02em] sm:text-5xl lg:text-[3.75rem]"
           >
             {stage === "token" ? (
-              <>
-                Welcome to <span className="gradient-text">HapuTele</span>.
-              </>
+              accentuate(t("setup.welcome"), "HapuTele")
             ) : stage === "configure" ? (
-              <>
-                Configure your <span className="gradient-text">clinic</span>.
-              </>
+              accentuate(t("setup.configureClinic"), "clinic")
             ) : (
-              <>
-                Add your <span className="gradient-text">team</span>.
-              </>
+              accentuate(t("setup.addTeam"), "team")
             )}
           </motion.h1>
 
@@ -142,10 +139,10 @@ function SetupWizard() {
             className="max-w-lg text-base leading-relaxed text-[var(--muted-foreground)] sm:text-lg"
           >
             {stage === "token"
-              ? "Paste the one-time setup token printed when the api container started. Find it in the container logs or at /data/setup-token inside the api container."
+              ? t("setup.subtitleToken")
               : stage === "configure"
-                ? "Your sys-admin account, institute identity, and timezone defaults. You can change everything except the sys-admin username later."
-                : "Optional — create the admins and healthworkers who will run day-to-day operations."}
+                ? t("setup.subtitleConfigure")
+                : t("setup.subtitleAccounts")}
           </motion.p>
 
           {stage === "token" ? (
@@ -169,11 +166,7 @@ function SetupWizard() {
           )}
 
           <motion.p variants={fadeIn} className="text-xs text-[var(--muted-foreground)]">
-            Stuck? Run{" "}
-            <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-xs">
-              docker compose logs api | grep -A1 banner
-            </code>{" "}
-            for the latest token banner.
+            {t("setup.stuckHint")}
           </motion.p>
         </motion.div>
 
@@ -188,6 +181,7 @@ function SetupWizard() {
 // ── Step 1 — token entry ──────────────────────────────────────────────
 
 function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) => void }) {
+  const { t } = useI18n();
   const verify = useVerifySetupToken();
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -197,7 +191,7 @@ function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) =>
     setError(null);
     const trimmed = token.trim();
     if (!trimmed) {
-      setError("Paste the setup token to continue.");
+      setError(t("setup.tokenRequired"));
       return;
     }
     try {
@@ -207,7 +201,7 @@ function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) =>
       if (err instanceof ApiError) {
         setError(explainError(err.error));
       } else {
-        setError("Couldn't reach the server. Try again in a moment.");
+        setError(t("login.couldNotReach"));
       }
     }
   };
@@ -219,7 +213,7 @@ function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) =>
       className="flex w-full max-w-md flex-col gap-4"
     >
       <div className="flex flex-col gap-2">
-        <Label htmlFor="setup-token">Setup token</Label>
+        <Label htmlFor="setup-token">{t("setup.tokenLabel")}</Label>
         <Input
           id="setup-token"
           value={token}
@@ -227,7 +221,7 @@ function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) =>
           autoComplete="off"
           autoFocus
           spellCheck={false}
-          placeholder="e.g. FoQBaDPMaTOrnwh3h-zdjpAsEi6lkcDiV2ADnyUJRSQ"
+          placeholder={t("setup.tokenPlaceholder")}
           required
         />
       </div>
@@ -236,7 +230,7 @@ function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) =>
 
       <Button type="submit" size="lg" disabled={verify.isPending} className="w-full sm:w-auto">
         <KeyRound className="h-4 w-4" />
-        {verify.isPending ? "Verifying…" : "Verify token"}
+        {verify.isPending ? t("setup.verifying") : t("setup.verifyToken")}
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </Button>
     </motion.form>
@@ -267,6 +261,7 @@ function ConfigureStage({
   onSessionExpired: () => void;
   onInitialized: () => void;
 }) {
+  const { t } = useI18n();
   const { login } = useAuth();
   const initialize = useInitializeSystem();
   const timezones = useMemo(listTimezones, []);
@@ -299,29 +294,29 @@ function ConfigureStage({
     // What the operator types is exactly what gets stored and exactly what
     // they will type at login.
     if (!username) {
-      next.username = "Username is required.";
+      next.username = t("setup.usernameRequired");
     } else {
       const err = usernameError(username);
       if (err) next.username = err;
     }
 
     if (!password) {
-      next.password = "Password is required.";
+      next.password = t("setup.passwordRequired");
     } else {
       const err = newPasswordError(password);
       if (err) next.password = err;
     }
 
-    if (!passwordConfirm) next.passwordConfirm = "Confirm your password.";
+    if (!passwordConfirm) next.passwordConfirm = t("setup.confirmRequired");
     else if (password && password !== passwordConfirm)
-      next.passwordConfirm = "Passwords don't match.";
+      next.passwordConfirm = t("setup.passwordsMismatch");
 
-    if (!instituteName.trim()) next.instituteName = "Institute name is required.";
+    if (!instituteName.trim()) next.instituteName = t("setup.instituteNameRequired");
 
     const lines = addressLines.map((s) => s.trim()).filter(Boolean);
-    if (lines.length === 0) next.addressLines = "Provide at least one address line.";
+    if (lines.length === 0) next.addressLines = t("setup.addressRequired");
 
-    if (!contactPhone.trim()) next.contactPhone = "Contact phone is required.";
+    if (!contactPhone.trim()) next.contactPhone = t("setup.contactRequired");
     if (!contactEmail.trim()) next.contactEmail = "Contact email is required.";
 
     setErrors(next);
@@ -360,7 +355,7 @@ function ConfigureStage({
         const field = BACKEND_ERROR_TO_FIELD[err.error] ?? "_form";
         setErrors({ [field]: explainError(err.error) });
       } else {
-        setErrors({ _form: "Couldn't reach the server. Try again in a moment." });
+        setErrors({ _form: t("login.couldNotReach") });
       }
     }
   };
@@ -372,9 +367,9 @@ function ConfigureStage({
       className="flex w-full max-w-2xl flex-col gap-6"
     >
       {/* Sys-admin account */}
-      <FieldGroup title="Sys-admin account">
+      <FieldGroup title={t("setup.sysAdminAccount")}>
         <Field
-          label="Username"
+          label={t("setup.username")}
           htmlFor="sa-user"
           error={errors.username ?? usernameError(username) ?? undefined}
         >
@@ -382,14 +377,14 @@ function ConfigureStage({
             id="sa-user"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="e.g. ops"
+            placeholder={t("setup.usernamePlaceholder")}
             autoComplete="off"
           />
         </Field>
         <Field
-          label="Password"
+          label={t("setup.password")}
           htmlFor="sa-pw"
-          hint={`${PASSWORD_LENGTH_HINT}. Avoid words like 'admin'.`}
+          hint={t("setup.passwordHint", { hint: passwordLengthHint() })}
           error={errors.password ?? passwordError(password) ?? undefined}
         >
           <Input
@@ -402,7 +397,7 @@ function ConfigureStage({
           />
           <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
         </Field>
-        <Field label="Confirm password" htmlFor="sa-pw2" error={errors.passwordConfirm}>
+        <Field label={t("setup.confirmPassword")} htmlFor="sa-pw2" error={errors.passwordConfirm}>
           <Input
             id="sa-pw2"
             type="password"
@@ -416,17 +411,17 @@ function ConfigureStage({
       </FieldGroup>
 
       {/* Institute identity */}
-      <FieldGroup title="Institute identity">
-        <Field label="Institute name" htmlFor="i-name" error={errors.instituteName}>
+      <FieldGroup title={t("setup.instituteIdentity")}>
+        <Field label={t("forms.instituteName")} htmlFor="i-name" error={errors.instituteName}>
           <Input
             id="i-name"
             value={instituteName}
             onChange={(e) => setInstituteName(e.target.value)}
-            placeholder="e.g. HapuTele Demo Clinic"
+            placeholder={t("setup.instituteNamePlaceholder")}
           />
         </Field>
         <div className="flex flex-col gap-2">
-          <Label>Address lines</Label>
+          <Label>{t("pages.sysadmin.system.addressLines")}</Label>
           {addressLines.map((line, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <Input
@@ -444,7 +439,7 @@ function ConfigureStage({
                   size="icon"
                   type="button"
                   onClick={() => setAddressLines(addressLines.filter((_, i) => i !== idx))}
-                  aria-label={`Remove address line ${idx + 1}`}
+                  aria-label={t("setup.removeAddressLineAria", { n: idx + 1 })}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -463,7 +458,7 @@ function ConfigureStage({
           </Button>
           {errors.addressLines && <ErrorPill>{errors.addressLines}</ErrorPill>}
         </div>
-        <Field label="Contact phone" htmlFor="i-phone" error={errors.contactPhone}>
+        <Field label={t("pages.sysadmin.system.contactPhone")} htmlFor="i-phone" error={errors.contactPhone}>
           <Input
             id="i-phone"
             value={contactPhone}
@@ -471,7 +466,7 @@ function ConfigureStage({
             placeholder="+94 11 555 0100"
           />
         </Field>
-        <Field label="Contact email" htmlFor="i-email" error={errors.contactEmail}>
+        <Field label={t("pages.sysadmin.system.contactEmail")} htmlFor="i-email" error={errors.contactEmail}>
           <Input
             id="i-email"
             type="email"
@@ -483,9 +478,9 @@ function ConfigureStage({
       </FieldGroup>
 
       {/* Defaults */}
-      <FieldGroup title="Defaults">
+      <FieldGroup title={t("setup.defaults")}>
         <Field
-          label="App timezone"
+          label={t("pages.sysadmin.system.appTimezone")}
           htmlFor="tz-app"
           hint="IANA zone for clinic-facing dates (calendar, PDFs)."
         >
@@ -499,7 +494,7 @@ function ConfigureStage({
           </Select>
         </Field>
         <Field
-          label="Export timezone"
+          label={t("pages.sysadmin.system.exportTimezone")}
           htmlFor="tz-export"
           hint="IANA zone for medication-pickup and prescription-zip windows."
         >
@@ -513,7 +508,7 @@ function ConfigureStage({
           </Select>
         </Field>
         <Field
-          label="Master consent version"
+          label={t("pages.sysadmin.system.consentVersion")}
           htmlFor="mcv"
           hint="Stamped on every patient consent record for audit. Bump when you revise the consent text."
         >
@@ -531,7 +526,7 @@ function ConfigureStage({
 
       <Button type="submit" size="lg" disabled={initialize.isPending} className="w-full sm:w-auto">
         <ServerCog className="h-4 w-4" />
-        {initialize.isPending ? "Initializing…" : "Initialize system"}
+        {initialize.isPending ? t("setup.initializing") : t("setup.initializeSystem")}
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </Button>
     </motion.form>
@@ -552,6 +547,7 @@ type DraftAccount = {
 };
 
 function OperatingAccountsStage() {
+  const { t } = useI18n();
   const router = useRouter();
   const create = useCreateOperatingAccount();
   const seqRef = useRef(0);
@@ -581,11 +577,11 @@ function OperatingAccountsStage() {
 
   // Pure validator — never touches state, returns the message or undefined.
   const validateRow = (r: DraftAccount): string | undefined => {
-    if (!r.username) return "Username is required.";
+    if (!r.username) return t("setup.usernameRequired");
     const nameErr = usernameError(r.username);
     if (nameErr) return nameErr;
 
-    if (!r.password) return "Password is required.";
+    if (!r.password) return t("setup.passwordRequired");
     // newPasswordError checks edge whitespace BEFORE length: whitespace would
     // otherwise pad a short secret past the gate ("1234 5678 " is ten
     // characters, four of them real). Rejected rather than trimmed — see
@@ -593,7 +589,7 @@ function OperatingAccountsStage() {
     const pwErr = newPasswordError(r.password);
     if (pwErr) return pwErr;
 
-    if (r.password !== r.passwordConfirm) return "Passwords do not match.";
+    if (r.password !== r.passwordConfirm) return t("setup.passwordsMismatch");
     return undefined;
   };
 
@@ -659,7 +655,7 @@ function OperatingAccountsStage() {
           const msg =
             err instanceof ApiError
               ? explainError(err.error)
-              : "Couldn't reach the server. Try again in a moment.";
+              : t("login.couldNotReach");
           updateDraft(setter, r.id, { error: msg });
           return false;
         }
@@ -679,7 +675,7 @@ function OperatingAccountsStage() {
 
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-2xl flex-col gap-6">
-      <FieldGroup title="Admins">
+      <FieldGroup title={t("setup.admins")}>
         {admins.map((row, idx) => (
           <AccountDraftRow
             key={row.id}
@@ -691,11 +687,11 @@ function OperatingAccountsStage() {
           />
         ))}
         <Button type="button" variant="ghost" onClick={() => addDraft(setAdmins)}>
-          <Plus className="size-4" aria-hidden /> Add another admin
+          <Plus className="size-4" aria-hidden /> {t("setup.addAnotherAdmin")}
         </Button>
       </FieldGroup>
 
-      <FieldGroup title="Healthworkers">
+      <FieldGroup title={t("setup.healthworkers")}>
         {healthworkers.map((row, idx) => (
           <AccountDraftRow
             key={row.id}
@@ -707,19 +703,19 @@ function OperatingAccountsStage() {
           />
         ))}
         <Button type="button" variant="ghost" onClick={() => addDraft(setHealthworkers)}>
-          <Plus className="size-4" aria-hidden /> Add another healthworker
+          <Plus className="size-4" aria-hidden /> {t("setup.addAnotherHealthworker")}
         </Button>
       </FieldGroup>
 
       <div className="flex items-center justify-between gap-3">
         <Button type="button" variant="ghost" onClick={onSkip} disabled={submitting}>
-          Skip — finish setup
+          {t("setup.skipFinish")}
         </Button>
         <Button
           type="submit"
           disabled={submitting || (!hasAnyFilled(admins) && !hasAnyFilled(healthworkers))}
         >
-          {submitting ? "Creating…" : "Create accounts & continue"}{" "}
+          {submitting ? t("setup.creating") : t("setup.createAccountsContinue")}{" "}
           <ArrowRight className="size-4" aria-hidden />
         </Button>
       </div>
@@ -740,13 +736,14 @@ function AccountDraftRow({
   onRemove: (() => void) | null;
   showLabel: boolean;
 }) {
+  const { t } = useI18n();
   const passwordCaps = useCapsLock();
   const confirmCaps = useCapsLock();
 
   const usernameInput = (
     <Input
       id={`${idPrefix}-user`}
-      aria-label="Username"
+      aria-label={t("setup.username")}
       value={value.username}
       onChange={(e) => onChange({ username: e.target.value })}
       autoComplete="off"
@@ -759,7 +756,7 @@ function AccountDraftRow({
     <div className="flex flex-col gap-1.5">
       <Input
         id={`${idPrefix}-pw`}
-        aria-label="Password"
+        aria-label={t("setup.password")}
         type="password"
         value={value.password}
         onChange={(e) => onChange({ password: e.target.value })}
@@ -774,7 +771,7 @@ function AccountDraftRow({
     <div className="flex flex-col gap-1.5">
       <Input
         id={`${idPrefix}-pw2`}
-        aria-label="Confirm password"
+        aria-label={t("setup.confirmPassword")}
         type="password"
         value={value.passwordConfirm}
         onChange={(e) => onChange({ passwordConfirm: e.target.value })}
@@ -794,13 +791,13 @@ function AccountDraftRow({
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {showLabel ? (
         <>
-          <Field label="Username" htmlFor={`${idPrefix}-user`}>
+          <Field label={t("setup.username")} htmlFor={`${idPrefix}-user`}>
             {usernameInput}
           </Field>
-          <Field label="Password" htmlFor={`${idPrefix}-pw`}>
+          <Field label={t("setup.password")} htmlFor={`${idPrefix}-pw`}>
             {passwordInput}
           </Field>
-          <Field label="Confirm password" htmlFor={`${idPrefix}-pw2`}>
+          <Field label={t("setup.confirmPassword")} htmlFor={`${idPrefix}-pw2`}>
             {confirmInput}
           </Field>
         </>
@@ -821,7 +818,7 @@ function AccountDraftRow({
       {onRemove && (
         <div className="md:col-span-3">
           <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
-            <Trash2 className="size-4" aria-hidden /> Remove
+            <Trash2 className="size-4" aria-hidden /> {t("common.remove")}
           </Button>
         </div>
       )}
@@ -904,24 +901,29 @@ function Ambient() {
 }
 
 function BrandStrip() {
+  const { t } = useI18n();
   return (
     <div className="absolute inset-x-0 top-0 z-10 px-6 py-6 sm:px-8">
-      <div className="mx-auto flex max-w-6xl items-center justify-between">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] shadow-accent">
             <span className="font-display text-lg leading-none text-white">H</span>
           </div>
           <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
         </div>
-        <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
-          First-run setup
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+            {t("setup.firstRunLabel")}
+          </span>
+          <LanguageToggle />
+        </div>
       </div>
     </div>
   );
 }
 
 function SetupHeroGraphic({ stage }: { stage: Stage }) {
+  const { t } = useI18n();
   return (
     <div className="relative aspect-square w-full max-w-md">
       <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[var(--accent)]/10 via-[var(--accent-secondary)]/5 to-transparent blur-2xl" />
@@ -945,21 +947,35 @@ function SetupHeroGraphic({ stage }: { stage: Stage }) {
           <div>
             <p className="font-display text-xl tracking-[-0.01em]">
               {stage === "token"
-                ? "Bring the token"
+                ? t("setup.heroBringToken")
                 : stage === "configure"
-                  ? "Seal the system"
-                  : "Build your team"}
+                  ? t("setup.heroSealSystem")
+                  : t("setup.heroBuildTeam")}
             </p>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
               {stage === "token"
-                ? "Single-use, printed in the api container logs."
+                ? t("setup.heroBringTokenBody")
                 : stage === "configure"
-                  ? "One transaction, then the system is live."
-                  : "Add admins and healthworkers, or skip for now."}
+                  ? t("setup.heroSealSystemBody")
+                  : t("setup.heroBuildTeamBody")}
             </p>
           </div>
         </motion.div>
       </div>
     </div>
+  );
+}
+
+// Keep gradient-text on the brand name inside a translated string.
+function accentuate(text: string, accent: string) {
+  if (!accent) return text;
+  const i = text.indexOf(accent);
+  if (i === -1) return text;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="gradient-text">{text.slice(i, i + accent.length)}</span>
+      {text.slice(i + accent.length)}
+    </>
   );
 }

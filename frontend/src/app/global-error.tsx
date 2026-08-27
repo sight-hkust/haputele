@@ -1,5 +1,7 @@
 "use client";
 
+import { translate } from "@/lib/i18n";
+
 // Root-level boundary: fires when the root layout itself (providers, fonts)
 // fails to render. Next replaces the whole document — this component must
 // render its own <html>/<body> and cannot rely on globals.css, providers, or
@@ -11,8 +13,19 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Outside <LanguageProvider> — read the persisted locale directly.
+  let locale: "en" | "si" = "en";
+  try {
+    if (typeof window !== "undefined" && window.localStorage.getItem("haputele.locale") === "si") {
+      locale = "si";
+    }
+  } catch {
+    // private mode / blocked storage — stay on default
+  }
+  const t = (key: string) => translate(locale, key);
+
   return (
-    <html lang="en">
+    <html lang={locale === "si" ? "si" : "en"}>
       <body
         style={{
           margin: 0,
@@ -39,14 +52,13 @@ export default function GlobalError({
               color: "#6b7280",
             }}
           >
-            Error
+            {t("common.error")}
           </span>
           <h1 style={{ margin: 0, fontSize: 36, fontWeight: 600, letterSpacing: "-0.02em" }}>
-            Application error
+            {t("common.applicationError")}
           </h1>
           <p style={{ margin: 0, maxWidth: 420, color: "#6b7280", fontSize: 14, lineHeight: 1.6 }}>
-            The app failed to start. Your data is safe — reloading usually fixes it. If it keeps
-            happening, contact your administrator.
+            {t("common.applicationErrorBody")}
           </p>
           <p
             style={{
@@ -61,7 +73,7 @@ export default function GlobalError({
               padding: "8px 12px",
             }}
           >
-            {error.message || "Unknown error"}
+            {error.message || t("common.unknownError")}
             {error.digest && <span style={{ opacity: 0.7 }}> · {error.digest}</span>}
           </p>
         </div>
@@ -79,7 +91,7 @@ export default function GlobalError({
             cursor: "pointer",
           }}
         >
-          Try again
+          {t("common.retry")}
         </button>
       </body>
     </html>

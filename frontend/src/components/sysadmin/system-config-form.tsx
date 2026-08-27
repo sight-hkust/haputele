@@ -8,6 +8,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { useUpdateSystemConfig } from "@/lib/use-api";
 import type { SystemConfig } from "@/types/api";
 import { Field, Hint, Section } from "./account-sections";
@@ -39,10 +40,11 @@ function useTimezoneOptions() {
 }
 
 function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t } = useI18n();
   const groups = useTimezoneOptions();
   return (
     <Select value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">— select timezone —</option>
+      <option value="">{t("pages.sysadmin.system.selectTimezone")}</option>
       {groups.map(([region, zones]) => (
         <optgroup key={region} label={region}>
           {zones.map((tz) => (
@@ -57,6 +59,7 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
 }
 
 export function SystemConfigForm({ config }: { config: SystemConfig }) {
+  const { t } = useI18n();
   const update = useUpdateSystemConfig();
   const [done, setDone] = useState(false);
 
@@ -99,56 +102,56 @@ export function SystemConfigForm({ config }: { config: SystemConfig }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Section title="Institute identity">
-        <Field label="Institute name">
+      <Section title={t("pages.sysadmin.system.instituteIdentity")}>
+        <Field label={t("forms.instituteName")}>
           <Input
             value={instituteName}
             onChange={(e) => setInstituteName(e.target.value)}
-            placeholder="e.g. Hapu Eye Clinic"
+            placeholder={t("pages.sysadmin.system.instituteNamePlaceholder")}
           />
         </Field>
-        <Field label="Address lines">
+        <Field label={t("pages.sysadmin.system.addressLines")}>
           <Textarea
             value={addressText}
             onChange={(e) => setAddressText(e.target.value)}
             rows={3}
-            placeholder={"Line 1\nLine 2\nLine 3"}
+            placeholder={t("pages.sysadmin.system.addressPlaceholder")}
           />
-          <Hint>One line per address entry.</Hint>
+          <Hint>{t("pages.sysadmin.system.addressHint")}</Hint>
         </Field>
-        <Field label="Contact phone">
+        <Field label={t("pages.sysadmin.system.contactPhone")}>
           <Input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g. +94 11 234 5678"
+            placeholder={t("pages.sysadmin.system.phonePlaceholder")}
           />
         </Field>
-        <Field label="Contact email">
+        <Field label={t("pages.sysadmin.system.contactEmail")}>
           <Input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="e.g. contact@clinic.lk"
+            placeholder={t("pages.sysadmin.system.emailPlaceholder")}
           />
         </Field>
       </Section>
 
-      <Section title="Defaults">
-        <Field label="App timezone">
+      <Section title={t("pages.sysadmin.system.defaults")}>
+        <Field label={t("pages.sysadmin.system.appTimezone")}>
           <TimezoneSelect value={appTz} onChange={setAppTz} />
-          <Hint>Used for scheduling and display.</Hint>
+          <Hint>{t("pages.sysadmin.system.appTimezoneHint")}</Hint>
         </Field>
-        <Field label="Export timezone">
+        <Field label={t("pages.sysadmin.system.exportTimezone")}>
           <TimezoneSelect value={exportTz} onChange={setExportTz} />
-          <Hint>Used when exporting reports.</Hint>
+          <Hint>{t("pages.sysadmin.system.exportTimezoneHint")}</Hint>
         </Field>
-        <Field label="Master consent version">
+        <Field label={t("pages.sysadmin.system.consentVersion")}>
           <Input
             value={consentVersion}
             onChange={(e) => setConsentVersion(e.target.value)}
-            placeholder="e.g. 1.0"
+            placeholder={t("pages.sysadmin.system.consentVersionPlaceholder")}
           />
-          <Hint>Version token printed on consent forms.</Hint>
+          <Hint>{t("pages.sysadmin.system.consentVersionHint")}</Hint>
         </Field>
       </Section>
 
@@ -156,12 +159,12 @@ export function SystemConfigForm({ config }: { config: SystemConfig }) {
 
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={!dirty || update.isPending}>
-          {update.isPending ? "Saving…" : "Save changes"}
+          {update.isPending ? t("common.saving") : t("common.saveChanges")}
         </Button>
         {done && !dirty ? (
           <span className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            Saved
+            {t("common.saved")}
           </span>
         ) : null}
       </div>

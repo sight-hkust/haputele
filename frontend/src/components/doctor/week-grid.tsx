@@ -4,6 +4,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { addDays, format } from "date-fns";
 
 import { cn } from "@/lib/cn";
+import { formatWithIntl } from "@/lib/date-locale";
+import { useI18n } from "@/lib/i18n";
 
 // when2meet-style 30-min cell grid for one week. Drag to paint / erase.
 // Pointer events unify mouse + touch. The rectangle between the drag-start
@@ -62,6 +64,7 @@ export function WeekGrid({
   readOnly?: boolean;
   onChange: (next: Set<CellKey>) => void;
 }) {
+  const { locale, t } = useI18n();
   const [drag, setDrag] = useState<DragState>(null);
   const [previewCells, setPreviewCells] = useState<Set<CellKey> | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -83,7 +86,7 @@ export function WeekGrid({
           isToday: d.getTime() === today.getTime(),
         };
       }),
-    [weekStart, today],
+    [weekStart, today, locale],
   );
 
   // Compute the rectangle of cells for the active drag.
@@ -159,7 +162,7 @@ export function WeekGrid({
               d.isPast && "opacity-40",
             )}
           >
-            <div>{format(d.date, "EEE")}</div>
+            <div>{formatWithIntl(d.date, { weekday: "short" })}</div>
             <div className="text-base font-display tracking-[-0.01em] text-[var(--foreground)]">
               {format(d.date, "d")}
             </div>
@@ -201,6 +204,7 @@ function FragmentRow({
   onPointerDownCell: (d: number, s: number, e: React.PointerEvent) => void;
   onPointerEnterCell: (d: number, s: number) => void;
 }) {
+  const { t } = useI18n();
   const onHourBoundary = slotIndex % 2 === 0;
   return (
     <>
@@ -237,12 +241,12 @@ function FragmentRow({
                   : "bg-transparent hover:bg-emerald-100/50",
             )}
             style={{ height: 22 }}
-            aria-label={`${slotLabel(slotIndex)} ${active ? "available" : "free"}${isBooked ? " · appointment" : ""}`}
+            aria-label={`${slotLabel(slotIndex)} ${active ? t("pages.doctor.availability.cellAvailable") : t("pages.doctor.availability.cellFree")}${isBooked ? ` · ${t("pages.doctor.availability.cellBooked")}` : ""}`}
           >
             {isBooked && (
               <span
                 aria-hidden
-                title="You have an appointment in this slot"
+                title={t("pages.doctor.availability.bookedTooltip")}
                 className="pointer-events-none absolute inset-0"
                 style={{
                   backgroundImage:

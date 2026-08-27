@@ -9,12 +9,14 @@ import {
   ProfileSection,
   StatusHeader,
 } from "@/components/sysadmin/account-sections";
+import { useI18n } from "@/lib/i18n";
 import { useSysadminMe } from "@/lib/use-api";
 
 // The signed-in ops account managing itself: edit profile + change password.
 // Deliberately no disable/delete — the singleton ops account can't lock
 // itself out. Lives on the System page; everyone else is on /accounts.
 export function SelfAccountSettings() {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const me = useSysadminMe();
 
@@ -22,12 +24,20 @@ export function SelfAccountSettings() {
     return <ApiErrorBanner error={me.error} onRetry={() => me.refetch()} />;
   }
   if (!me.data) {
-    return <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>;
+    return (
+      <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">
+        {t("common.loading")}
+      </Card>
+    );
   }
 
   return (
     <Card variant="elevated" className="flex flex-col gap-8 p-6">
-      <StatusHeader active label="Active" sub="The ops super user — that's you" />
+      <StatusHeader
+        active
+        label={t("common.active")}
+        sub={t("pages.sysadmin.system.opsSuperUser")}
+      />
       <ProfileSection
         account={me.data}
         onSaved={() => qc.invalidateQueries({ queryKey: ["sysadmin", "me"] })}

@@ -11,14 +11,16 @@ import { Card } from "@/components/primitives/card";
 import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
+import { LanguageToggle } from "@/components/shell/language-toggle";
 import { ApiError, api } from "@/lib/api";
 import {
   MIN_PASSWORD_LEN,
-  PASSWORD_LENGTH_HINT,
   newPasswordError,
   passwordError,
+  passwordLengthHint,
 } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import { useCapsLock } from "@/lib/use-caps-lock";
 
@@ -40,6 +42,7 @@ type PageState =
   | { mode: "submitted_new" };
 
 export default function DoctorOnboardingPage() {
+  const { t } = useI18n();
   const params = useParams<{ token: string }>();
   const token = Array.isArray(params.token) ? params.token[0] : params.token;
   const _router = useRouter();
@@ -62,7 +65,7 @@ export default function DoctorOnboardingPage() {
         } else {
           setState({
             mode: "invalid",
-            reason: "Couldn't reach the server. Try again in a moment.",
+            reason: t("login.couldNotReach"),
           });
         }
       }
@@ -80,16 +83,19 @@ export default function DoctorOnboardingPage() {
       </div>
 
       <div className="absolute inset-x-0 top-0 z-10 px-6 py-6 sm:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] shadow-accent">
               <span className="font-display text-lg leading-none text-white">H</span>
             </div>
             <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
           </div>
-          <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
-            Practitioner onboarding
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+              {t("onboarding.practitionerLabel")}
+            </span>
+            <LanguageToggle />
+          </div>
         </div>
       </div>
 
@@ -104,15 +110,15 @@ export default function DoctorOnboardingPage() {
         {state.mode === "invalid" && <InvalidPanel reason={state.reason} />}
         {state.mode === "submitted_rotation" && (
           <SuccessPanel
-            title="Password set."
-            message="Taking you to the sign-in page…"
+            title={t("onboarding.passwordSetTitle")}
+            message={t("onboarding.redirectingToLogin")}
             redirectTo="/login"
           />
         )}
         {state.mode === "submitted_new" && (
           <SuccessPanel
-            title="Submitted for review."
-            message="An administrator will review your profile shortly. You'll be able to sign in once it's approved."
+            title={t("onboarding.submittedTitle")}
+            message={t("onboarding.submittedMessage")}
             redirectTo="/login"
             redirectDelayMs={3500}
           />
@@ -143,14 +149,16 @@ export default function DoctorOnboardingPage() {
  * ────────────────────────────────────────────────────────────────── */
 
 function LoadingPanel() {
+  const { t } = useI18n();
   return (
     <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-      Checking your invitation…
+      {t("onboarding.checkingInvitation")}
     </span>
   );
 }
 
 function InvalidPanel({ reason }: { reason: string }) {
+  const { t } = useI18n();
   return (
     <motion.div
       initial="hidden"
@@ -160,13 +168,13 @@ function InvalidPanel({ reason }: { reason: string }) {
     >
       <motion.div variants={fadeInUp}>
         <SectionLabel className="border-rose-300/40 bg-rose-100/40">
-          <span className="text-rose-700">Invite unavailable</span>
+          <span className="text-rose-700">{t("onboarding.inviteUnavailable")}</span>
         </SectionLabel>
       </motion.div>
       <motion.div variants={fadeInUp} className="flex items-start gap-3">
         <AlertCircle className="mt-1 h-6 w-6 flex-shrink-0 text-rose-600" />
         <h1 className="font-display text-3xl leading-tight tracking-[-0.02em] sm:text-4xl">
-          This link can&rsquo;t be used.
+          {t("onboarding.linkInvalidTitle")}
         </h1>
       </motion.div>
       <motion.p
@@ -190,6 +198,7 @@ function SuccessPanel({
   redirectTo: string;
   redirectDelayMs?: number;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   useEffect(() => {
     const t = setTimeout(() => router.replace(redirectTo), redirectDelayMs);
@@ -203,7 +212,7 @@ function SuccessPanel({
       className="flex max-w-md flex-col items-start gap-6"
     >
       <motion.div variants={fadeInUp}>
-        <SectionLabel pulse>Submitted</SectionLabel>
+        <SectionLabel pulse>{t("onboarding.submittedLabel")}</SectionLabel>
       </motion.div>
       <motion.div variants={fadeInUp} className="flex items-start gap-3">
         <CheckCircle2 className="mt-1 h-6 w-6 flex-shrink-0 text-emerald-600" />
@@ -236,6 +245,7 @@ function RotationPanel({
   onDone: () => void;
   onInvalid: (reason: string) => void;
 }) {
+  const { t } = useI18n();
   const [password, setPassword] = useState("");
   const passwordCaps = useCapsLock();
   const confirmCaps = useCapsLock();
@@ -253,7 +263,7 @@ function RotationPanel({
       return;
     }
     if (password !== confirm) {
-      setError("Passwords don't match. Re-enter to confirm.");
+      setError(t("onboarding.passwordsMismatch"));
       return;
     }
     setSubmitting(true);
@@ -270,7 +280,7 @@ function RotationPanel({
       } else if (err instanceof ApiError) {
         setError(explainError(err.error));
       } else {
-        setError("Couldn't reach the server. Try again in a moment.");
+        setError(t("login.couldNotReach"));
       }
     } finally {
       setSubmitting(false);
@@ -285,33 +295,36 @@ function RotationPanel({
       className="flex w-full max-w-md flex-col gap-7"
     >
       <motion.div variants={fadeInUp}>
-        <SectionLabel pulse>Invite verified</SectionLabel>
+        <SectionLabel pulse>{t("onboarding.inviteVerified")}</SectionLabel>
       </motion.div>
 
       <motion.h1
         variants={fadeInUp}
         className="font-display text-[2.5rem] leading-[1.05] tracking-[-0.02em] sm:text-5xl"
       >
-        Welcome, <span className="gradient-text">Dr. {peek.familyName ?? ""}</span>.
+        {accentuate(
+          t("onboarding.welcomeDoctor", { name: peek.familyName ?? "" }),
+          peek.familyName ? `${t("format.doctorPrefix")} ${peek.familyName}` : "",
+        )}
       </motion.h1>
 
       <motion.p
         variants={fadeInUp}
         className="text-base leading-relaxed text-[var(--muted-foreground)]"
       >
-        Set a password to finish setting up your account.
+        {t("onboarding.setPasswordSubtitle")}
       </motion.p>
 
       <motion.form variants={fadeInUp} onSubmit={onSubmit} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="password">New password</Label>
+          <Label htmlFor="password">{t("onboarding.newPassword")}</Label>
           <Input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
-            placeholder={PASSWORD_LENGTH_HINT}
+            placeholder={passwordLengthHint()}
             minLength={MIN_PASSWORD_LEN}
             autoFocus
             required
@@ -325,7 +338,7 @@ function RotationPanel({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="confirm">Confirm password</Label>
+          <Label htmlFor="confirm">{t("onboarding.confirmPassword")}</Label>
           <Input
             id="confirm"
             type="password"
@@ -352,13 +365,13 @@ function RotationPanel({
 
         <Button type="submit" size="lg" disabled={submitting} className="w-full sm:w-auto">
           <Lock className="h-4 w-4" />
-          {submitting ? "Setting password…" : "Set password & continue"}
+          {submitting ? t("onboarding.settingPassword") : t("onboarding.setPasswordContinue")}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </motion.form>
 
       <motion.p variants={fadeIn} className="text-sm text-[var(--muted-foreground)]">
-        Trouble signing in? Contact your administrator.
+        {t("onboarding.troubleSigningIn")}
       </motion.p>
     </motion.div>
   );
@@ -379,6 +392,7 @@ function NewDoctorPanel({
   onDone: () => void;
   onInvalid: (reason: string) => void;
 }) {
+  const { t } = useI18n();
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorMissing, setErrorMissing] = useState<string[] | undefined>(undefined);
@@ -388,17 +402,17 @@ function NewDoctorPanel({
     setErrorMissing(undefined);
     // Panel-level backstop. DoctorForm already applies the same rules per
     // field; this catches a payload that reached us some other way.
-    const pwErr = !payload.password ? "Choose a password." : newPasswordError(payload.password);
+    const pwErr = !payload.password ? t("onboarding.choosePassword") : newPasswordError(payload.password);
     if (pwErr) {
       setErrorMessage(pwErr);
       return;
     }
     if (!payload.username) {
-      setErrorMessage("Pick a username.");
+      setErrorMessage(t("onboarding.pickUsername"));
       return;
     }
     if (!payload.rubberStampImage) {
-      setErrorMessage("Upload your rubber-stamp image.");
+      setErrorMessage(t("onboarding.uploadStamp"));
       return;
     }
     setSubmitting(true);
@@ -431,12 +445,12 @@ function NewDoctorPanel({
       } else if (err instanceof ApiError) {
         if (err.error === "missing_prescription_fields") {
           setErrorMissing(err.detail?.missing as string[] | undefined);
-          setErrorMessage("Some §1.7 mandatory fields couldn't be validated server-side.");
+          setErrorMessage(t("errors.missing_prescription_fields"));
         } else {
           setErrorMessage(explainError(err.error));
         }
       } else {
-        setErrorMessage("Couldn't reach the server. Try again in a moment.");
+        setErrorMessage(t("login.couldNotReach"));
       }
     } finally {
       setSubmitting(false);
@@ -451,31 +465,26 @@ function NewDoctorPanel({
       className="flex w-full flex-col gap-7"
     >
       <motion.div variants={fadeInUp}>
-        <SectionLabel pulse>Invite verified</SectionLabel>
+        <SectionLabel pulse>{t("onboarding.inviteVerified")}</SectionLabel>
       </motion.div>
 
       <motion.h1
         variants={fadeInUp}
         className="font-display text-[2.5rem] leading-[1.05] tracking-[-0.02em] sm:text-5xl"
       >
-        {peek.familyName ? (
-          <>
-            Welcome, <span className="gradient-text">Dr. {peek.familyName}</span>.
-          </>
-        ) : (
-          <>
-            Set up your <span className="gradient-text">HapuTele</span> account.
-          </>
-        )}
+        {peek.familyName
+          ? accentuate(
+              t("onboarding.welcomeDoctor", { name: peek.familyName }),
+              `${t("format.doctorPrefix")} ${peek.familyName}`,
+            )
+          : accentuate(t("onboarding.setupAccountTitle"), "HapuTele")}
       </motion.h1>
 
       <motion.p
         variants={fadeInUp}
         className="max-w-2xl text-base leading-relaxed text-[var(--muted-foreground)]"
       >
-        Fill in your full profile below. Once you submit, an administrator will review your
-        information before activating your account. You won&rsquo;t be able to sign in until that
-        approval comes through.
+        {t("onboarding.setupAccountDescription")}
       </motion.p>
 
       {/* Email is fixed by the invite — show read-only for clarity. */}
@@ -483,12 +492,12 @@ function NewDoctorPanel({
         <Card className="flex items-center justify-between gap-3 border-[var(--accent)]/20 bg-[var(--accent)]/[0.04] p-4">
           <div>
             <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Invitation email
+              {t("onboarding.invitationEmail")}
             </div>
             <div className="mt-1 text-sm">{peek.email}</div>
           </div>
           <span className="rounded-full bg-[var(--accent)]/10 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
-            Locked
+            {t("onboarding.locked")}
           </span>
         </Card>
       </motion.div>
@@ -517,11 +526,25 @@ function NewDoctorPanel({
             submitting={submitting}
             errorMessage={errorMessage}
             errorMissingFields={errorMissing}
-            submitLabel="Submit for review"
+            submitLabel={t("onboarding.submitForReview")}
             onSubmit={onSubmit}
           />
         </Card>
       </motion.div>
     </motion.div>
+  );
+}
+
+// Keep gradient-text on a brand name or person name inside a translated string.
+function accentuate(text: string, accent: string) {
+  if (!accent) return text;
+  const i = text.indexOf(accent);
+  if (i === -1) return text;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="gradient-text">{text.slice(i, i + accent.length)}</span>
+      {text.slice(i + accent.length)}
+    </>
   );
 }

@@ -13,6 +13,7 @@ import {
   validateVital,
   type VitalField,
 } from "@/lib/vitals";
+import { useI18n } from "@/lib/i18n";
 import type { Preconsult, PreconsultRequest } from "@/types/api";
 
 type VitalsValues = {
@@ -52,6 +53,7 @@ export function VitalsForm({
   disabled?: boolean;
   onSubmit: (v: PreconsultRequest) => void;
 }) {
+  const { t } = useI18n();
   const {
     register,
     handleSubmit,
@@ -112,17 +114,17 @@ export function VitalsForm({
       {/* FEEDBACK §2: doctors need the *reason* for the visit before the call.
           Free-text, prominent, top of the form so the HW captures it first. */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="primaryComplaint">Primary complaint</Label>
+        <Label htmlFor="primaryComplaint">{t("vitals.primaryComplaint")}</Label>
         <Textarea
           id="primaryComplaint"
           rows={3}
-          placeholder="Why is the patient here today? e.g. cough for 3 days, infected wound on right hand…"
+          placeholder={t("vitals.primaryComplaintPlaceholder")}
           disabled={disabled}
           aria-invalid={!!errors.primaryComplaint}
           {...register("primaryComplaint", {
             maxLength: {
               value: PRIMARY_COMPLAINT_MAX,
-              message: `Keep the complaint under ${PRIMARY_COMPLAINT_MAX} characters.`,
+              message: t("vitals.complaintMaxLength", { n: PRIMARY_COMPLAINT_MAX }),
             },
           })}
         />
@@ -131,28 +133,28 @@ export function VitalsForm({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Vital
-          label="Height (cm)"
+          label={t("vitals.fieldWithUnit.height")}
           id="height"
           disabled={disabled}
           error={errors.height?.message}
           {...register("height", rule("height"))}
         />
         <Vital
-          label="Weight (kg)"
+          label={t("vitals.fieldWithUnit.weight")}
           id="weight"
           disabled={disabled}
           error={errors.weight?.message}
           {...register("weight", rule("weight"))}
         />
         <Vital
-          label="Pulse (bpm)"
+          label={t("vitals.fieldWithUnit.pulse")}
           id="pulse"
           disabled={disabled}
           error={errors.pulse?.message}
           {...register("pulse", rule("pulse"))}
         />
         <Vital
-          label="Systolic BP (mmHg)"
+          label={t("vitals.fieldWithUnit.sysBp")}
           id="sysBp"
           disabled={disabled}
           error={errors.sysBp?.message}
@@ -166,7 +168,7 @@ export function VitalsForm({
           })}
         />
         <Vital
-          label="Diastolic BP (mmHg)"
+          label={t("vitals.fieldWithUnit.diaBp")}
           id="diaBp"
           disabled={disabled}
           error={errors.diaBp?.message}
@@ -178,7 +180,7 @@ export function VitalsForm({
           })}
         />
         <Vital
-          label="Temperature (°C)"
+          label={t("vitals.fieldWithUnit.temperature")}
           id="temperature"
           step="0.1"
           disabled={disabled}
@@ -189,7 +191,11 @@ export function VitalsForm({
       {!disabled && (
         <div className="flex justify-end">
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving…" : initial ? "Update vitals" : "Save vitals"}
+            {submitting
+              ? t("common.saving")
+              : initial
+                ? t("vitals.update")
+                : t("vitals.save")}
           </Button>
         </div>
       )}

@@ -2,22 +2,23 @@
 
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 
 export type ConsultationStage = "notes" | "rx" | "review";
-
-const STAGES: { id: ConsultationStage; label: string; n: string }[] = [
-  { id: "notes", label: "Notes", n: "01" },
-  { id: "rx", label: "Rx & plan", n: "02" },
-  { id: "review", label: "Review & sign", n: "03" },
-];
 
 // Three-step horizontal stepper. Past steps get a check, current gets the
 // gradient treatment, future stays muted. Connector line darkens as you progress.
 export function ConsultationStepper({ current }: { current: ConsultationStage }) {
-  const idx = STAGES.findIndex((s) => s.id === current);
+  const { t } = useI18n();
+  const stages: { id: ConsultationStage; label: string; n: string }[] = [
+    { id: "notes", label: t("consultation.notes"), n: "01" },
+    { id: "rx", label: t("consultation.rxPlan"), n: "02" },
+    { id: "review", label: t("consultation.reviewSign"), n: "03" },
+  ];
+  const idx = stages.findIndex((s) => s.id === current);
   return (
     <ol className="flex items-center gap-3">
-      {STAGES.map((s, i) => {
+      {stages.map((s, i) => {
         const state = i < idx ? "done" : i === idx ? "current" : "future";
         return (
           <li key={s.id} className="flex flex-1 items-center gap-3">
@@ -41,7 +42,7 @@ export function ConsultationStepper({ current }: { current: ConsultationStage })
                     state === "future" ? "text-[var(--muted-foreground)]" : "text-[var(--accent)]",
                   )}
                 >
-                  Step {s.n}
+                  {t("consultation.step", { n: s.n })}
                 </span>
                 <span
                   className={cn(
@@ -55,7 +56,7 @@ export function ConsultationStepper({ current }: { current: ConsultationStage })
                 </span>
               </div>
             </div>
-            {i < STAGES.length - 1 && (
+            {i < stages.length - 1 && (
               <div
                 className={cn(
                   "ml-1 h-px flex-1 transition-colors",

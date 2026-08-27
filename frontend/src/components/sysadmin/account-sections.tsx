@@ -10,6 +10,7 @@ import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { newPasswordError, passwordError } from "@/lib/credentials";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { useResetAccountPassword, useUpdateAccount } from "@/lib/use-api";
 
 // The slice of an account these editable sections need. Both the roster
@@ -25,29 +26,30 @@ export function ProfileSection({
   account: ProfileTarget;
   onSaved?: () => void;
 }) {
+  const { t } = useI18n();
   const update = useUpdateAccount();
   const [fullName, setFullName] = useState(account.fullName ?? "");
   const [contact, setContact] = useState(account.contact ?? "");
   const dirty = fullName !== (account.fullName ?? "") || contact !== (account.contact ?? "");
 
   return (
-    <Section title="Profile">
-      <Field label="Username">
+    <Section title={t("nav.profile")}>
+      <Field label={t("forms.username")}>
         <Input value={account.username} disabled />
-        <Hint>Usernames can&apos;t be changed.</Hint>
+        <Hint>{t("pages.sysadmin.accounts.usernameImmutable")}</Hint>
       </Field>
-      <Field label="Full name">
+      <Field label={t("pages.sysadmin.sharedAccounts.fullNameOptional")}>
         <Input
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="e.g. Alice Adams"
+          placeholder={t("pages.sysadmin.accounts.fullNamePlaceholder")}
         />
       </Field>
-      <Field label="Phone / contact">
+      <Field label={t("pages.sysadmin.sharedAccounts.phoneOptional")}>
         <Input
           value={contact}
           onChange={(e) => setContact(e.target.value)}
-          placeholder="e.g. +94 77 123 4567"
+          placeholder={t("pages.sysadmin.accounts.phonePlaceholder")}
         />
       </Field>
       {update.error ? <ErrorBanner>{explainError(update.error.error)}</ErrorBanner> : null}
@@ -64,7 +66,7 @@ export function ProfileSection({
           }
           disabled={!dirty || update.isPending}
         >
-          {update.isPending ? "Saving…" : "Save changes"}
+          {update.isPending ? t("common.saving") : t("common.saveChanges")}
         </Button>
       </div>
     </Section>
@@ -73,6 +75,7 @@ export function ProfileSection({
 
 // Set/change a password. `self` only tweaks the copy.
 export function PasswordSection({ username, self = false }: { username: string; self?: boolean }) {
+  const { t } = useI18n();
   const resetPw = useResetAccountPassword();
   const [password, setPassword] = useState("");
   const passwordCaps = useCapsLock();
@@ -88,7 +91,7 @@ export function PasswordSection({ username, self = false }: { username: string; 
     // Rejected, never repaired — see lib/credentials.ts.
     const pwErr = newPasswordError(password);
     if (pwErr) return setPwError(pwErr);
-    if (password !== confirm) return setPwError("Passwords do not match.");
+    if (password !== confirm) return setPwError(t("pages.sysadmin.sharedAccounts.passwordsDoNotMatch"));
     resetPw.mutate(
       { username, password },
       {
@@ -102,14 +105,14 @@ export function PasswordSection({ username, self = false }: { username: string; 
   };
 
   return (
-    <Section title="Password">
+    <Section title={t("pages.sysadmin.sharedAccounts.password")}>
       <form onSubmit={submit} className="flex flex-col gap-3">
         <p className="text-sm text-[var(--muted-foreground)]">
           {self
-            ? "Change your own password. You'll keep your current session."
-            : "Set a new password and share it with them directly — they can sign in with it immediately."}
+            ? t("pages.sysadmin.accounts.changeOwnPasswordHint")
+            : t("pages.sysadmin.accounts.setPasswordHint")}
         </p>
-        <Field label="New password" error={passwordError(password) ?? undefined}>
+        <Field label={t("onboarding.newPassword")} error={passwordError(password) ?? undefined}>
           <Input
             type="password"
             value={password}
@@ -119,7 +122,7 @@ export function PasswordSection({ username, self = false }: { username: string; 
           />
           <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
         </Field>
-        <Field label="Confirm password">
+        <Field label={t("pages.sysadmin.sharedAccounts.confirmPassword")}>
           <Input
             type="password"
             value={confirm}
@@ -133,12 +136,16 @@ export function PasswordSection({ username, self = false }: { username: string; 
         {resetPw.error ? <ErrorBanner>{explainError(resetPw.error.error)}</ErrorBanner> : null}
         <div className="flex items-center gap-3">
           <Button type="submit" variant="secondary" disabled={resetPw.isPending || !password}>
-            {resetPw.isPending ? "Saving…" : self ? "Change password" : "Set new password"}
+            {resetPw.isPending
+              ? t("common.saving")
+              : self
+                ? t("pages.sysadmin.accounts.changePassword")
+                : t("pages.sysadmin.accounts.setNewPassword")}
           </Button>
           {pwDone ? (
             <span className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Updated
+              {t("common.updated")}
             </span>
           ) : null}
         </div>
