@@ -3,14 +3,14 @@
 import dayGridPlugin from "@fullcalendar/react/daygrid";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import listPlugin from "@fullcalendar/react/list";
-import FullCalendar from "@fullcalendar/react";
+import FullCalendar, { CalendarController } from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/react/timegrid";
 import themePlugin from "@fullcalendar/react/themes/classic";
 import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/classic/theme.css";
 import "@fullcalendar/react/themes/classic/palette.css";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
 import { APP_TIMEZONE } from "@/lib/format";
@@ -49,12 +49,29 @@ export function AppointmentCalendar({
   appointments,
   availability,
   basePath = "/healthworker/appointments",
+  focusId,
+  focusAt,
 }: {
   appointments: CalendarAppointment[];
   availability?: Availability[];
   basePath?: string;
+  /** Appointment to ring, so a list selection is findable in the grid. */
+  focusId?: number | null;
+  /** Its scheduledAt — the calendar jumps here when this changes. */
+  focusAt?: string | null;
 }) {
   const router = useRouter();
+  // v7 replaced the ref/getApi handle with a controller instance passed as a
+  // prop. One per mount; the calendar attaches its api to it on mount.
+  const [controller] = useState(() => new CalendarController());
+
+  // Jump to the focused appointment's date, keeping whatever view the user
+  // is in — moving the date is the ask, changing the view as well would be
+  // disorienting. `focusAt` rather than `focusId` so re-selecting the same
+  // row after paging away still brings the grid back.
+  useEffect(() => {
+    if (focusAt) controller.gotoDate(focusAt);
+  }, [controller, focusAt]);
 
   const events = useMemo(() => {
     const apptEvents = appointments.map((a) => {
@@ -96,6 +113,7 @@ export function AppointmentCalendar({
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele">
       <style>{FC_CSS}</style>
       <FullCalendar
+        controller={controller}
         plugins={[themePlugin, dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
         timeZone={APP_TIMEZONE}
         initialView="timeGridWeek"
@@ -131,6 +149,9 @@ export function AppointmentCalendar({
         toolbarTitleClass="fc-haputele-title"
         buttonClass={(info) =>
           info.isSelected ? "fc-haputele-button fc-haputele-button-active" : "fc-haputele-button"
+        }
+        eventClass={(info) =>
+          focusId != null && info.event.id === String(focusId) ? "fc-haputele-focus" : ""
         }
         dayHeaderClass="fc-haputele-day-header"
         listDayHeaderClass="fc-haputele-day-header"
@@ -226,6 +247,15 @@ const FC_CSS = `
     animation: fc-haputele-pulse 1.8s ease-in-out infinite;
   }
   .fc-haputele .fc-bucket-cancelled { opacity: 0.6; }
+
+  /* Selected from the appointments list. Outline rather than a fill change so
+     the status bucket's own colour still reads. Wins over .fc-bucket-live's
+     pulse by sitting later in the sheet. */
+  .fc-haputele .fc-haputele-focus {
+    box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0, 82, 255, 0.3) !important;
+    animation: none !important;
+    z-index: 2;
+  }
 
   .fc-haputele-event {
     display: flex;
