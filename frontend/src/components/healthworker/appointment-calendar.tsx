@@ -10,10 +10,10 @@ import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/classic/theme.css";
 import "@fullcalendar/react/themes/classic/palette.css";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
-import { APP_TIMEZONE, fmtDate } from "@/lib/format";
+import { APP_TIMEZONE } from "@/lib/format";
 
 // v7 resolves IANA tz names (e.g. "Asia/Hong_Kong") natively via Temporal
 // (temporal-polyfill), so no timezone plugin is needed — see CLAUDE.md Timezones.
@@ -31,17 +31,24 @@ import { APP_TIMEZONE, fmtDate } from "@/lib/format";
 // constant rather than repeating the literal.
 const SLOT_MIN_HOUR = 7;
 const SLOT_MAX_HOUR = 20;
-// Land the focused appointment just below the top edge rather than flush
-// against it, so the slot before it stays visible for context.
-const FOCUS_LEAD_MIN = 30;
+// The class eventClass hangs on the focused block, so the effect below can
+// find an already-mounted one without going through FullCalendar's api.
+const FOCUS_CLASS = "fc-haputele-focus";
 
-// Where to scroll the time grid so `iso` is comfortably in view. Read through
-// fmtDate because scheduledAt is UTC while the grid renders in APP_TIMEZONE —
-// going via the app's own formatter avoids a timezone slip here.
-function focusScrollTime(iso: string): { hours: number; minutes: number } {
-  const [h, m] = fmtDate(iso, "HH:mm").split(":").map(Number);
-  const minutes = Math.max(h * 60 + m - FOCUS_LEAD_MIN, SLOT_MIN_HOUR * 60);
-  return { hours: Math.floor(minutes / 60), minutes: minutes % 60 };
+// Nearest ancestor that actually scrolls, found by behaviour rather than by
+// class name — FullCalendar v7's internal markup is hashed utility classes and
+// not a surface to depend on. Bounded by `root` so the walk can never reach
+// the page's own scroller and move the whole window instead of the grid.
+function scrollParentWithin(el: HTMLElement, root: HTMLElement): HTMLElement | null {
+  let node: HTMLElement | null = el.parentElement;
+  while (node && root.contains(node)) {
+    const overflowY = getComputedStyle(node).overflowY;
+    if (node.scrollHeight > node.clientHeight && (overflowY === "auto" || overflowY === "scroll")) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
 }
 
 type StatusBucket = "upcoming" | "live" | "done" | "cancelled";
@@ -85,24 +92,47 @@ export function AppointmentCalendar({
   // unconditionally on mount, so a hand-built one throws. The callback also
   // re-renders, which is what keeps `view` and the toolbar button state current.
   const controller = useCalendarController();
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Put the focused block in the middle of the grid. Centring by scrollTop and
+  // letting the browser clamp to [0, scrollHeight - clientHeight] gives the
+  // early-morning "stick to the top" and late-evening "stick to the bottom"
+  // cases for free, with no special-casing.
+  const centreEvent = useCallback((el: HTMLElement) => {
+    const root = rootRef.current;
+    if (!root) return;
+    const scroller = scrollParentWithin(el, root);
+    if (!scroller) return;
+    const elRect = el.getBoundingClientRect();
+    const scRect = scroller.getBoundingClientRect();
+    // Rects, not offsetTop: offsetParent inside the grid is not the scroller.
+    const delta = elRect.top - scRect.top - (scroller.clientHeight - elRect.height) / 2;
+    scroller.scrollTo({
+      top: scroller.scrollTop + delta,
+      // globals.css's reduced-motion block only reaches CSS animations, so a
+      // JS-driven scroll has to check for itself.
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  }, []);
 
   // Jump to the focused appointment's date, keeping whatever view the user
   // is in — moving the date is the ask, changing the view as well would be
   // disorienting. `focusAt` rather than `focusId` so re-selecting the same
   // row after paging away still brings the grid back.
+  //
+  // Centring is driven from the DOM rather than the calendar api: selecting an
+  // appointment in the week already on screen remounts nothing, so eventDidMount
+  // never fires and this effect is the only thing that runs. When the week does
+  // change the block does not exist yet at this point, and eventDidMount picks
+  // it up instead. Whichever fires second is a no-op scroll to where it already is.
   useEffect(() => {
     if (!focusAt) return;
     controller.gotoDate(focusAt);
-    // gotoDate re-renders the grid, so scrolling in the same tick would act on
-    // the old layout. Defer a frame — the same idiom the workspace uses for
-    // its scrollIntoView. scrollToTime lives on CalendarApi, not on the
-    // controller; `view` is undefined until the first mount completes, and is
-    // a no-op axis in month/agenda views.
-    const raf = requestAnimationFrame(() => {
-      controller.view?.calendar.scrollToTime(focusScrollTime(focusAt));
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [controller, focusAt]);
+    const mounted = rootRef.current?.querySelector<HTMLElement>(`.${FOCUS_CLASS}`);
+    if (mounted) centreEvent(mounted);
+  }, [controller, focusAt, centreEvent]);
 
   const events = useMemo(() => {
     const apptEvents = appointments.map((a) => {
@@ -141,7 +171,10 @@ export function AppointmentCalendar({
   }, [appointments, availability]);
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele">
+    <div
+      ref={rootRef}
+      className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele"
+    >
       <style>{FC_CSS}</style>
       <FullCalendar
         controller={controller}
@@ -182,8 +215,14 @@ export function AppointmentCalendar({
           info.isSelected ? "fc-haputele-button fc-haputele-button-active" : "fc-haputele-button"
         }
         eventClass={(info) =>
-          focusId != null && info.event.id === String(focusId) ? "fc-haputele-focus" : ""
+          focusId != null && info.event.id === String(focusId) ? FOCUS_CLASS : ""
         }
+        // Fires the moment the block's element exists, which after a week
+        // change is later than the effect above can see. No polling, no
+        // guessed frame count.
+        eventDidMount={(info) => {
+          if (focusId != null && info.event.id === String(focusId)) centreEvent(info.el);
+        }}
         dayHeaderClass="fc-haputele-day-header"
         listDayHeaderClass="fc-haputele-day-header"
         slotHeaderClass="fc-haputele-slot-header"
