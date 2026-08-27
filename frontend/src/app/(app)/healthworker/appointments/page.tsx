@@ -328,7 +328,7 @@ function AppointmentsPanel({
     );
   }
   return (
-    <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+    <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:p-1">
       {appointments.map((a) => (
         <AppointmentRow
           key={a.id}
@@ -405,7 +405,7 @@ function QueuePanelBody({
           className="py-6"
         />
       ) : (
-        <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+        <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:p-1">
           {pending.map((e) => (
             <div
               key={e.id}

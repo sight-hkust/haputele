@@ -85,7 +85,18 @@ export function AppointmentCalendar({
   // deliberately absent — see the follow-up issue; three approaches to driving
   // v7's scroll position failed, and it needs a browser to sort out.
   useEffect(() => {
-    if (focusAt) controller.gotoDate(focusAt);
+    if (!focusAt) return;
+    const view = controller.view;
+    const at = new Date(focusAt);
+    // Only navigate when the appointment is genuinely off screen. gotoDate
+    // re-snaps the grid to scrollTime even when the date is unchanged
+    // (scrollTimeReset defaults true), so calling it for the week already
+    // shown reads as the calendar lurching to the top for no reason.
+    // Comparing instants is right across the APP_TIMEZONE boundary: active
+    // start/end are absolute Dates for the range on screen.
+    if (!view || at < view.activeStart || at >= view.activeEnd) {
+      controller.gotoDate(focusAt);
+    }
   }, [controller, focusAt]);
 
   const events = useMemo(() => {
