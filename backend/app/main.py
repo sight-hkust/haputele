@@ -13,6 +13,7 @@ from .middleware.request_id import REQUEST_ID_HEADER, RequestIdMiddleware
 from .middleware.setup_gate import SetupRequiredMiddleware
 from .observability import configure_logging
 from .security import CSRF_HEADER_NAME
+from .schemas import ApiErrorResponse, HealthOut
 from .routers import (
     accounts,
     appointments,
@@ -40,6 +41,15 @@ from .version import BUILD_DATE, COMMIT, VERSION, hostname, uptime_seconds
 
 
 _logger = logging.getLogger("haputele")
+_COMMON_ERROR_RESPONSES = {
+    400: {"model": ApiErrorResponse, "description": "Bad request"},
+    401: {"model": ApiErrorResponse, "description": "Authentication required"},
+    403: {"model": ApiErrorResponse, "description": "Forbidden"},
+    404: {"model": ApiErrorResponse, "description": "Not found"},
+    409: {"model": ApiErrorResponse, "description": "Conflict"},
+    422: {"model": ApiErrorResponse, "description": "Validation failed"},
+    500: {"model": ApiErrorResponse, "description": "Internal server error"},
+}
 
 
 @asynccontextmanager
@@ -147,7 +157,12 @@ async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSON
 def create_app() -> FastAPI:
     configure_logging()
 
-    app = FastAPI(title="HapuTele API", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="HapuTele API",
+        version="0.1.0",
+        lifespan=lifespan,
+        responses=_COMMON_ERROR_RESPONSES,
+    )
 
     # Starlette wraps middleware last-added-first, so on entry the order is
     # RequestId → SetupGate → CORS → app, and the reverse on exit. RequestId
@@ -199,7 +214,18 @@ def create_app() -> FastAPI:
     app.include_router(resend_webhook.router)
     app.include_router(doctor_onboarding.router)
 
-    @app.get("/health", tags=["meta"])
+    @app.get(
+        "/health",
+        tags=["meta"],
+        # exclude_unset keeps the wire honest: the plain probe must not
+        # grow a `dependencies` key, and a not_configured dependency must
+        # not grow `latency_ms` (nothing was probed — see
+        # services/health_probe.py). Without it FastAPI injects the
+        # HealthOut field defaults into every response.
+        response_model_exclude_unset=True,
+        response_model=HealthOut,
+        responses={503: {"model": HealthOut, "description": "Dependency degraded"}},
+    )
     def health(response: Response, full: bool = False) -> dict:
         """Liveness probe — process identity only, no dependency is touched,
         so it stays green while Postgres/S3 are down (that is what restart

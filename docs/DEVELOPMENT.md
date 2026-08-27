@@ -71,7 +71,36 @@ All code changes must go through a Pull Request before merging into `main`.
 
 ---
 
-## 5. Release Versioning
+## 5. API Contract Sync (OpenAPI → Kubb)
+
+Backend Pydantic models are the single source of truth for the wire contract.
+Kubb generates models, typed Fetch clients, and TanStack Query factories under
+`frontend/src/gen`; `frontend/src/types/api.ts` keeps stable application-facing
+names and the few response-presence refinements the OpenAPI schema cannot carry.
+
+**When a backend PR adds or changes an endpoint schema:**
+
+1. Declare every JSON response as a Pydantic model (`response_model=`), never
+   a bare `dict`. Declare binary response media types explicitly.
+2. Regenerate the frontend API layer with one command — it exports the spec
+   from the backend app, then runs Kubb:
+   ```bash
+   cd frontend && npm run generate:api
+   ```
+3. If a backend model is renamed, update its stable alias in
+   `frontend/src/types/api.ts`.
+4. Commit `frontend/src/gen` in the same PR as the backend change.
+5. CI enforces the sync (`api-types-drift` job, same script as above):
+   * **Pull requests / tags**: a diff fails the run, so stale generated code
+     can never merge or ship silently.
+   * **Pushes to `main`**: the job self-heals by opening an automated
+     "regenerate API client" PR carrying only the fresh `frontend/src/gen`
+     output — merge it promptly so the committed client matches the deployed
+     backend. Image publication waits on this job either way.
+
+---
+
+## 6. Release Versioning
 
 Release tags use the hybrid CalVer/SemVer format `vYYMM.MINOR.PATCH`:
 

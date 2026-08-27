@@ -40,6 +40,18 @@ from tests.dbguard import assert_test_database
 # call after login looks like a missing-token error.
 os.environ.setdefault("COOKIE_SECURE", "false")
 
+# The lifespan's ensure_bucket() builds an S3 client on app import. With no
+# credentials configured, boto3 walks its chain into ~/.aws and can die on a
+# personal profile (e.g. a login/session provider) instead of reaching the
+# local store — so default to the dev-compose rustfs, mirroring the
+# DATABASE_URL default above. CI passes these explicitly and overrides them;
+# a developer pointing at something else exports their own values.
+os.environ.setdefault("S3_ENDPOINT_URL", "http://localhost:9000")
+os.environ.setdefault("S3_REGION", "us-east-1")
+os.environ.setdefault("S3_BUCKET", "haputele")
+os.environ.setdefault("S3_ACCESS_KEY_ID", "rustfsadmin")
+os.environ.setdefault("S3_SECRET_ACCESS_KEY", "rustfsadmin")
+
 _TEST_DB_NAME = "haputele_test"
 _DEFAULT_TEST_URL = f"postgresql+psycopg2://hapu:hapu@localhost:5432/{_TEST_DB_NAME}"
 

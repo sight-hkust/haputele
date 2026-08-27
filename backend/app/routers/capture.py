@@ -43,6 +43,7 @@ from ..schemas import (
     CaptureSessionOut,
     CaptureSessionStatusOut,
     CapturePeekOut,
+    CaptureUploadOut,
 )
 from ..services import capture
 from ..services.storage import delete_object, get_bytes, object_key, put_bytes
@@ -123,7 +124,19 @@ def capture_session_status(
     )
 
 
-@router.get("/sessions/{session_id}/relay")
+@router.get(
+    "/sessions/{session_id}/relay",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "image/jpeg": {"schema": {"type": "string", "format": "binary"}},
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+                "image/webp": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
+)
 def pull_capture_relay(
     session_id: int,
     db: Session = Depends(db_dep),
@@ -183,7 +196,7 @@ def peek_capture(token: str, db: Session = Depends(db_dep)) -> CapturePeekOut:
     return CapturePeekOut(purpose=session.purpose, expiresAt=session.expires_at)
 
 
-@router.post("/{token}", status_code=status.HTTP_201_CREATED)
+@router.post("/{token}", response_model=CaptureUploadOut, status_code=status.HTTP_201_CREATED)
 async def upload_capture(
     token: str,
     file: UploadFile = File(...),

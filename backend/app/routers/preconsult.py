@@ -11,9 +11,14 @@ from ..models import Appointment, Consent, Doctor, Patient, Preconsultation
 from ..schemas import (
     AppointmentOut,
     ConsentOut,
+    MeetingTokenResponse,
+    PreconsultGetResponse,
     PreconsultIn,
     PreconsultOut,
+    PreconsultUpsertResponse,
     SessionConsentIn,
+    SessionConsentResponse,
+    StartMeetingResponse,
 )
 from ..services.livekit import mint_token, room_for_appointment
 from ..services.signature import decode_signature
@@ -60,7 +65,7 @@ def _latest_session_consent(db: Session, appt_id: int) -> Consent | None:
 
 # ── Session consent ───────────────────────────────────────────────────
 
-@router.post("/{appt_id}/consent", response_model=dict, status_code=status.HTTP_201_CREATED,
+@router.post("/{appt_id}/consent", response_model=SessionConsentResponse, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(_hw())])
 def record_session_consent(appt_id: int, payload: SessionConsentIn, db: Session = Depends(db_dep)):
     appt = _appt(db, appt_id)
@@ -113,7 +118,7 @@ def get_session_consent(appt_id: int, db: Session = Depends(db_dep)):
 EDITABLE_PRECONSULT_STATES = ("consent_pending", "data_collection")
 
 
-@router.get("/{appt_id}/preconsult", response_model=dict, dependencies=[Depends(_hw())])
+@router.get("/{appt_id}/preconsult", response_model=PreconsultGetResponse, dependencies=[Depends(_hw())])
 def get_preconsult(appt_id: int, db: Session = Depends(db_dep)):
     appt = _appt(db, appt_id)
     pre = db.scalar(select(Preconsultation).where(Preconsultation.appointment_id == appt_id))
@@ -124,7 +129,7 @@ def get_preconsult(appt_id: int, db: Session = Depends(db_dep)):
     }
 
 
-@router.put("/{appt_id}/preconsult", response_model=dict, dependencies=[Depends(_hw())])
+@router.put("/{appt_id}/preconsult", response_model=PreconsultUpsertResponse, dependencies=[Depends(_hw())])
 def upsert_preconsult(appt_id: int, payload: PreconsultIn, db: Session = Depends(db_dep)):
     appt = _appt(db, appt_id)
     if appt.status not in EDITABLE_PRECONSULT_STATES:
@@ -204,7 +209,7 @@ def _doctor_token_for(db: Session, appt: Appointment, user: CurrentUser) -> dict
     return {"room": room_for_appointment(appt.appointment_id), "token": jwt, "serverUrl": server_url}
 
 
-@router.post("/{appt_id}/start-meeting", response_model=dict, dependencies=[Depends(_hw())])
+@router.post("/{appt_id}/start-meeting", response_model=StartMeetingResponse, dependencies=[Depends(_hw())])
 def start_meeting(
     appt_id: int,
     db: Session = Depends(db_dep),
@@ -227,7 +232,7 @@ def start_meeting(
     }
 
 
-@router.post("/{appt_id}/meeting-token", response_model=dict)
+@router.post("/{appt_id}/meeting-token", response_model=MeetingTokenResponse)
 def meeting_token(
     appt_id: int,
     db: Session = Depends(db_dep),

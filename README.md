@@ -168,6 +168,21 @@ Other production gaps to plug before any non-dev deployment:
 
 To run against managed Postgres, replace the `db` service with a `DATABASE_URL` value pointed at the managed instance — note that `docker-compose.yml` currently composes `DATABASE_URL` inline from `POSTGRES_*` vars (not from a `${DATABASE_URL}` interpolation), so you'll need to edit `docker-compose.yml` directly.
 
+## Development
+
+Day-to-day development against a checkout:
+
+- **Backend** — Python 3.12 virtualenv plus `pip install -r backend/requirements-dev.txt`; run `pytest` from `backend/`. A reachable Postgres and S3 endpoint are needed or the DB-backed tests silently skip (the CI workflow wires both up as service containers).
+- **Frontend** — `cd frontend && npm ci --legacy-peer-deps` (`--legacy-peer-deps` works around a known @fullcalendar peer conflict), then `npm run dev` (:3000), `npm run lint`, `npm run typecheck`.
+
+Contribution standards — issue tracking, branch naming, conventional commits, PR review — live in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). One rule worth knowing up front: the backend Pydantic models define the API contract, and the frontend's typed clients under `frontend/src/gen` are generated from them. After touching backend request/response models, refresh the client:
+
+```bash
+cd frontend && npm run generate:api   # exports the OpenAPI spec from the app, then runs Kubb
+```
+
+CI runs the same command: PRs fail if the committed client drifted, and a push to `main` that somehow lands stale gets an automated "regenerate API client" PR to merge.
+
 ## Project layout
 
 ```

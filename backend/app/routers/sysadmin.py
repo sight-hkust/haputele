@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from ..deps import CurrentUser, db_dep, require_role
 from ..errors import not_found, unprocessable
 from ..models import Account, SystemConfig
+from ..schemas import SysadminMeOut, SystemConfigOut
 from ..services.system_config import get_system_config, reload_system_config
 
 
@@ -37,7 +38,7 @@ def _clean(value: str | None) -> str | None:
     return trimmed or None
 
 
-@router.get("/me")
+@router.get("/me", response_model=SysadminMeOut)
 def me(
     db: Session = Depends(db_dep),
     user: CurrentUser = Depends(require_role("sys-admin")),
@@ -54,7 +55,7 @@ def me(
     }
 
 
-@router.get("/system-config")
+@router.get("/system-config", response_model=SystemConfigOut)
 def system_config(_: CurrentUser = Depends(require_role("sys-admin"))) -> dict:
     cfg = get_system_config()
     return {
@@ -91,7 +92,7 @@ def _valid_timezone(tz: str | None) -> bool:
         return False
 
 
-@router.patch("/system-config")
+@router.patch("/system-config", response_model=SystemConfigOut)
 def update_system_config(
     payload: SystemConfigUpdateIn,
     db: Session = Depends(db_dep),

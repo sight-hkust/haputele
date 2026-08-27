@@ -72,6 +72,16 @@ def _age_from_dob(dob) -> int | None:
 
 @router.get(
     "/medications.xlsx",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                    "schema": {"type": "string", "format": "binary"},
+                },
+            },
+        },
+    },
     dependencies=[Depends(require_role("healthworker", "admin"))],
 )
 def export_medications_xlsx(
@@ -165,6 +175,14 @@ def export_medications_xlsx(
 
 @router.get(
     "/prescriptions.zip",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "application/zip": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
     dependencies=[Depends(require_role("healthworker", "admin"))],
 )
 def export_prescriptions_zip(

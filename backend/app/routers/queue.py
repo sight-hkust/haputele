@@ -13,6 +13,7 @@ from ..routers.appointments import _reject_if_past, _slot_taken
 from ..schemas import (
     AppointmentOut,
     QueueBookIn,
+    QueueBookResponse,
     QueueCancelIn,
     QueueEntryCreate,
     QueueEntryOut,
@@ -159,7 +160,7 @@ def update_queue_entry(qid: int, payload: QueueEntryUpdate,
     return QueueEntryOut.model_validate(entry)
 
 
-@router.post("/{qid}/book", response_model=dict,
+@router.post("/{qid}/book", response_model=QueueBookResponse,
              dependencies=[Depends(require_role("healthworker"))])
 def book_queue_entry(qid: int, payload: QueueBookIn, db: Session = Depends(db_dep)):
     entry = _get_entry(db, qid)

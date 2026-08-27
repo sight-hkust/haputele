@@ -16,6 +16,7 @@ from ..schemas import (
     DoctorCreate,
     DoctorDetailOut,
     DoctorInviteCreate,
+    DoctorInviteCreateOut,
     DoctorInviteOut,
     DoctorOut,
     DoctorRejectIn,
@@ -224,7 +225,7 @@ def reissue_invite(doctor_id: int, db: Session = Depends(db_dep)) -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/invites", status_code=status.HTTP_201_CREATED,
+@router.post("/invites", response_model=DoctorInviteCreateOut, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role("admin", "sys-admin"))])
 def invite_new_doctor(
     payload: DoctorInviteCreate, db: Session = Depends(db_dep),
@@ -454,7 +455,7 @@ def reject_doctor(
     return _attach_status(out, doctor, has_live_invite=has_live)
 
 
-@router.post("/{doctor_id}/reinvite-reapply", status_code=status.HTTP_201_CREATED,
+@router.post("/{doctor_id}/reinvite-reapply", response_model=DoctorInviteCreateOut, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role("admin", "sys-admin"))])
 def reinvite_reapply(doctor_id: int, db: Session = Depends(db_dep)) -> dict:
     """Invite a previously-rejected doctor to reapply with a fresh
@@ -705,7 +706,17 @@ def update_me(
     return _self_out(db, doctor)
 
 
-@router.get("/me/signature")
+@router.get(
+    "/me/signature",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
+)
 def get_my_signature(
     db: Session = Depends(db_dep),
     user: CurrentUser = Depends(require_role("doctor")),
@@ -717,7 +728,18 @@ def get_my_signature(
     return Response(content=get_bytes(doctor.default_signature_key), media_type="image/png")
 
 
-@router.get("/me/stamp")
+@router.get(
+    "/me/stamp",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
+                "image/jpeg": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+    },
+)
 def get_my_stamp(
     db: Session = Depends(db_dep),
     user: CurrentUser = Depends(require_role("doctor")),
