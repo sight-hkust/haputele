@@ -20,6 +20,7 @@ import {
   passwordLengthHint,
 } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import { useCapsLock } from "@/lib/use-caps-lock";
@@ -42,7 +43,7 @@ type PageState =
   | { mode: "submitted_new" };
 
 export default function DoctorOnboardingPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const params = useParams<{ token: string }>();
   const token = Array.isArray(params.token) ? params.token[0] : params.token;
   const _router = useRouter();
@@ -91,7 +92,7 @@ export default function DoctorOnboardingPage() {
             <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+            <span className={captionClass(locale, "hidden  text-[var(--muted-foreground)] sm:block")}>
               {t("onboarding.practitionerLabel")}
             </span>
             <LanguageToggle />
@@ -149,16 +150,16 @@ export default function DoctorOnboardingPage() {
  * ────────────────────────────────────────────────────────────────── */
 
 function LoadingPanel() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
-    <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+    <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
       {t("onboarding.checkingInvitation")}
     </span>
   );
 }
 
 function InvalidPanel({ reason }: { reason: string }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <motion.div
       initial="hidden"
@@ -198,7 +199,7 @@ function SuccessPanel({
   redirectTo: string;
   redirectDelayMs?: number;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
   useEffect(() => {
     const t = setTimeout(() => router.replace(redirectTo), redirectDelayMs);
@@ -245,7 +246,7 @@ function RotationPanel({
   onDone: () => void;
   onInvalid: (reason: string) => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [password, setPassword] = useState("");
   const passwordCaps = useCapsLock();
   const confirmCaps = useCapsLock();
@@ -392,7 +393,7 @@ function NewDoctorPanel({
   onDone: () => void;
   onInvalid: (reason: string) => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorMissing, setErrorMissing] = useState<string[] | undefined>(undefined);
@@ -491,12 +492,12 @@ function NewDoctorPanel({
       <motion.div variants={fadeInUp}>
         <Card className="flex items-center justify-between gap-3 border-[var(--accent)]/20 bg-[var(--accent)]/[0.04] p-4">
           <div>
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className={captionClass(locale, "text-[var(--muted-foreground)]")}>
               {t("onboarding.invitationEmail")}
             </div>
             <div className="mt-1 text-sm">{peek.email}</div>
           </div>
-          <span className="rounded-full bg-[var(--accent)]/10 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
+          <span className={captionClassTight(locale, "rounded-full bg-[var(--accent)]/10 px-2.5 py-1  text-[var(--accent)]")}>
             {t("onboarding.locked")}
           </span>
         </Card>

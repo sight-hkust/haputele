@@ -13,10 +13,11 @@ import { Input } from "@/components/primitives/input";
 import { PageHeader } from "@/components/primitives/page-header";
 import { usePatientList } from "@/lib/use-api";
 import { fmtRelative, fullName } from "@/lib/format";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 export default function PatientListPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -95,7 +96,7 @@ export default function PatientListPage() {
       ) : (
         <>
           <Card className="overflow-hidden p-0">
-            <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-4 border-b border-[var(--border)] bg-[var(--muted)]/30 px-6 py-3 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className={captionClass(locale, "grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-4 border-b border-[var(--border)] bg-[var(--muted)]/30 px-6 py-3  text-[var(--muted-foreground)]")}>
               <span>{t("common.name")}</span>
               <span>{t("common.nationalId")}</span>
               <span>{t("common.contact")}</span>
@@ -111,7 +112,7 @@ export default function PatientListPage() {
                   >
                     <div>
                       <div className="text-sm font-semibold tracking-[-0.01em]">{fullName(p)}</div>
-                      <div className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                      <div className={captionClassTight(locale, "text-[var(--muted-foreground)]")}>
                         ID #{p.id} · {p.gender}
                       </div>
                     </div>
@@ -121,7 +122,7 @@ export default function PatientListPage() {
                     <span className="text-sm text-[var(--muted-foreground)]">
                       {p.contact ?? "—"}
                     </span>
-                    <span className="text-right font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                    <span className={captionClassTight(locale, "text-right  text-[var(--muted-foreground)]")}>
                       {fmtRelative(p.createdAt)}
                     </span>
                   </button>
@@ -146,7 +147,7 @@ function Pagination({
   hasNext: boolean;
   onChange: (n: number) => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <div className="flex items-center justify-end gap-2">
       <Button
@@ -158,7 +159,7 @@ function Pagination({
         <ChevronLeft className="h-4 w-4" />
         {t("pages.healthworker.patients.prev")}
       </Button>
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
         {t("common.page")} {page}
       </span>
       <Button variant="secondary" size="sm" disabled={!hasNext} onClick={() => onChange(page + 1)}>

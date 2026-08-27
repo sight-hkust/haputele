@@ -13,12 +13,13 @@ import { API_URL, ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { useAuth } from "@/lib/auth";
 import { EXPORT_TIMEZONE, appDayWindow, appToday } from "@/lib/format";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 type Kind = "xlsx" | "zip";
 
 export default function ExportsPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { session } = useAuth();
   const [date, setDate] = useState<string>(appToday(EXPORT_TIMEZONE));
   const [downloading, setDownloading] = useState<Kind | null>(null);
@@ -83,7 +84,7 @@ export default function ExportsPage() {
             max={appToday(EXPORT_TIMEZONE)}
             ariaLabel={t("pages.healthworker.exports.chooseExportDate")}
           />
-          <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <p className={captionClass(locale, "text-[var(--muted-foreground)]")}>
             {t("pages.healthworker.exports.timezoneNote", { tz: EXPORT_TIMEZONE })}
           </p>
         </div>

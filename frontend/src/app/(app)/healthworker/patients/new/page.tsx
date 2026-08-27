@@ -9,16 +9,16 @@ import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
 import { SignaturePad, type SignaturePadHandle } from "@/components/consent/signature-pad";
-import { MASTER_CONSENT_BODY } from "@/components/healthworker/master-consent-text";
 import { PatientForm } from "@/components/healthworker/patient-form";
 import { useCreatePatient } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 type Step = "consent" | "details";
 
 export default function RegisterPatientPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
   const [step, setStep] = useState<Step>("consent");
   const [agreedAt, setAgreedAt] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function RegisterPatientPage() {
           </div>
           <div className="flex flex-col gap-6 p-8">
             <p className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-5 text-sm leading-relaxed text-[var(--muted-foreground)]">
-              {MASTER_CONSENT_BODY}
+              {t("consent.masterBody")}
             </p>
             <SignaturePad ref={padRef} onChange={setSignatureEmpty} label={t("forms.patientSignature")} />
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
@@ -86,7 +86,7 @@ export default function RegisterPatientPage() {
         <Card variant="elevated" className="p-8">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-emerald-700">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            <span className="font-mono text-xs uppercase tracking-[0.12em]">
+            <span className={captionClassTight(locale)}>
               {t("pages.healthworker.patients.registerFlow.consentCaptured")}
             </span>
           </div>

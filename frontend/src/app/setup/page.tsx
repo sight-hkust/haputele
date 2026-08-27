@@ -21,6 +21,7 @@ import {
   usernameError,
 } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
@@ -79,7 +80,7 @@ type Stage = "token" | "configure" | "operating-accounts";
 
 function SetupWizard() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const status = useSetupStatus();
 
   const [stage, setStage] = useState<Stage>("token");
@@ -181,7 +182,7 @@ function SetupWizard() {
 // ── Step 1 — token entry ──────────────────────────────────────────────
 
 function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) => void }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const verify = useVerifySetupToken();
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -261,7 +262,7 @@ function ConfigureStage({
   onSessionExpired: () => void;
   onInitialized: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { login } = useAuth();
   const initialize = useInitializeSystem();
   const timezones = useMemo(listTimezones, []);
@@ -547,7 +548,7 @@ type DraftAccount = {
 };
 
 function OperatingAccountsStage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
   const create = useCreateOperatingAccount();
   const seqRef = useRef(0);
@@ -736,7 +737,7 @@ function AccountDraftRow({
   onRemove: (() => void) | null;
   showLabel: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const passwordCaps = useCapsLock();
   const confirmCaps = useCapsLock();
 
@@ -868,9 +869,10 @@ function TimezoneOptions({ zones, current }: { zones: string[]; current: string 
 }
 
 function FieldGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  const { locale } = useI18n();
   return (
     <fieldset className="flex flex-col gap-4 rounded-2xl border border-[var(--border)] bg-[var(--muted)]/30 p-5">
-      <legend className="px-2 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <legend className={captionClass(locale, "px-2  text-[var(--muted-foreground)]")}>
         {title}
       </legend>
       {children}
@@ -901,7 +903,7 @@ function Ambient() {
 }
 
 function BrandStrip() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <div className="absolute inset-x-0 top-0 z-10 px-6 py-6 sm:px-8">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
@@ -912,7 +914,7 @@ function BrandStrip() {
           <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+          <span className={captionClass(locale, "hidden  text-[var(--muted-foreground)] sm:block")}>
             {t("setup.firstRunLabel")}
           </span>
           <LanguageToggle />
@@ -923,7 +925,7 @@ function BrandStrip() {
 }
 
 function SetupHeroGraphic({ stage }: { stage: Stage }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <div className="relative aspect-square w-full max-w-md">
       <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[var(--accent)]/10 via-[var(--accent-secondary)]/5 to-transparent blur-2xl" />

@@ -12,6 +12,7 @@ import { Button } from "@/components/primitives/button";
 import { Input, Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { DIAGNOSIS_OPTIONS } from "@/lib/medical-codes";
+import { useI18n } from "@/lib/i18n";
 
 // All editors operate on a single shared form schema (see consultation-flow).
 // Names are typed loosely to keep this file portable; the parent form has
@@ -33,18 +34,19 @@ export type ConsultationFormShape = {
 
 // ── Notes ────────────────────────────────────────────────────────────
 export function NotesEditor({ register }: { register: UseFormRegister<ConsultationFormShape> }) {
+  const { t } = useI18n();
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      <Field label="Primary complaint" htmlFor="complaint" full>
+      <Field label={t("vitals.primaryComplaint")} htmlFor="complaint" full>
         <Textarea id="complaint" rows={3} {...register("notes.complaint")} />
       </Field>
-      <Field label="Onset & duration" htmlFor="onset">
+      <Field label={t("consultation.onsetDuration")} htmlFor="onset">
         <Textarea id="onset" rows={3} {...register("notes.onset")} />
       </Field>
-      <Field label="Associated symptoms" htmlFor="symptoms">
+      <Field label={t("consultation.associatedSymptoms")} htmlFor="symptoms">
         <Textarea id="symptoms" rows={3} {...register("notes.symptoms")} />
       </Field>
-      <Field label="Observations (video / self-report)" htmlFor="observations" full>
+      <Field label={t("consultation.observations")} htmlFor="observations" full>
         <Textarea id="observations" rows={3} {...register("notes.observations")} />
       </Field>
     </div>
@@ -61,15 +63,16 @@ export function DiagnosesEditor({
   register: UseFormRegister<ConsultationFormShape>;
   watch: UseFormWatch<ConsultationFormShape>;
 }) {
+  const { t } = useI18n();
   const { fields, append, remove } = useFieldArray({ control, name: "diagnoses" });
   const values = watch("diagnoses") ?? [];
 
   return (
     <Repeater
-      title="Diagnoses"
-      hint="Pick from common conditions or use “Other (specify)” to free-text."
+      title={t("consultation.diagnosesTitle")}
+      hint={t("consultation.diagnosesHint")}
       onAdd={() => append({ code: "", text: "" })}
-      addLabel="Add diagnosis"
+      addLabel={t("consultation.addDiagnosis")}
       empty={fields.length === 0}
     >
       {fields.map((field, i) => {
@@ -78,9 +81,9 @@ export function DiagnosesEditor({
           <RepeaterRow key={field.id} onRemove={() => remove(i)}>
             <div className={requiresText ? "grid gap-3 sm:grid-cols-2" : ""}>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`dx-${i}-code`}>Diagnosis</Label>
+                <Label htmlFor={`dx-${i}-code`}>{t("consultation.diagnosis")}</Label>
                 <Select id={`dx-${i}-code`} {...register(`diagnoses.${i}.code`)}>
-                  <option value="">Select…</option>
+                  <option value="">{t("intake.allergyType.select")}</option>
                   {DIAGNOSIS_OPTIONS.map((opt) => (
                     <option key={opt.code} value={opt.code}>
                       {opt.label}
@@ -90,11 +93,11 @@ export function DiagnosesEditor({
               </div>
               {requiresText && (
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`dx-${i}-text`}>Specify</Label>
+                  <Label htmlFor={`dx-${i}-text`}>{t("consultation.specify")}</Label>
                   <Input
                     id={`dx-${i}-text`}
                     {...register(`diagnoses.${i}.text`)}
-                    placeholder="Required when “Other”"
+                    placeholder={t("consultation.otherRequiredPlaceholder")}
                   />
                 </div>
               )}
@@ -116,11 +119,12 @@ export function MedicationsEditor({
   control: Control<ConsultationFormShape>;
   register: UseFormRegister<ConsultationFormShape>;
 }) {
+  const { t } = useI18n();
   const { fields, append, remove } = useFieldArray({ control, name: "medications" });
   return (
     <Repeater
-      title="Prescription"
-      hint="Generic name is mandatory (§1.7). Trade name appears as supplementary text on the printed Rx."
+      title={t("consultation.prescriptionTitle")}
+      hint={t("consultation.prescriptionHint")}
       onAdd={() =>
         append({
           genericName: "",
@@ -131,44 +135,44 @@ export function MedicationsEditor({
           instructions: "",
         })
       }
-      addLabel="Add medication"
+      addLabel={t("consultation.addMedication")}
       empty={fields.length === 0}
     >
       {fields.map((field, i) => (
         <RepeaterRow key={field.id} onRemove={() => remove(i)}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Generic name *" htmlFor={`m-${i}-g`} full>
+            <Field label={t("consultation.genericNameRequired")} htmlFor={`m-${i}-g`} full>
               <Input
                 id={`m-${i}-g`}
                 {...register(`medications.${i}.genericName` as const)}
                 aria-invalid={false}
               />
             </Field>
-            <Field label="Trade name" htmlFor={`m-${i}-t`}>
+            <Field label={t("consultation.tradeName")} htmlFor={`m-${i}-t`}>
               <Input id={`m-${i}-t`} {...register(`medications.${i}.tradeName` as const)} />
             </Field>
-            <Field label="Dose" htmlFor={`m-${i}-d`}>
+            <Field label={t("consultation.dose")} htmlFor={`m-${i}-d`}>
               <Input
                 id={`m-${i}-d`}
                 {...register(`medications.${i}.dose` as const)}
-                placeholder="e.g. 500 mg"
+                placeholder={t("consultation.dosePlaceholder")}
               />
             </Field>
-            <Field label="Frequency" htmlFor={`m-${i}-f`}>
+            <Field label={t("consultation.frequency")} htmlFor={`m-${i}-f`}>
               <Input
                 id={`m-${i}-f`}
                 {...register(`medications.${i}.frequency` as const)}
-                placeholder="e.g. twice daily"
+                placeholder={t("consultation.frequencyPlaceholder")}
               />
             </Field>
-            <Field label="Duration" htmlFor={`m-${i}-du`}>
+            <Field label={t("consultation.duration")} htmlFor={`m-${i}-du`}>
               <Input
                 id={`m-${i}-du`}
                 {...register(`medications.${i}.duration` as const)}
-                placeholder="e.g. 7 days"
+                placeholder={t("consultation.durationPlaceholder")}
               />
             </Field>
-            <Field label="Instructions / notes" htmlFor={`m-${i}-i`} full>
+            <Field label={t("consultation.instructionsNotes")} htmlFor={`m-${i}-i`} full>
               <Textarea
                 id={`m-${i}-i`}
                 rows={2}
@@ -190,21 +194,22 @@ export function LabsEditor({
   control: Control<ConsultationFormShape>;
   register: UseFormRegister<ConsultationFormShape>;
 }) {
+  const { t } = useI18n();
   const { fields, append, remove } = useFieldArray({ control, name: "labs" });
   return (
     <Repeater
-      title="Laboratory tests"
+      title={t("consultation.labsTitle")}
       onAdd={() => append({ testName: "", instructions: "" })}
-      addLabel="Add lab"
+      addLabel={t("consultation.addLab")}
       empty={fields.length === 0}
     >
       {fields.map((field, i) => (
         <RepeaterRow key={field.id} onRemove={() => remove(i)}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Test" htmlFor={`l-${i}-t`}>
+            <Field label={t("consultation.test")} htmlFor={`l-${i}-t`}>
               <Input id={`l-${i}-t`} {...register(`labs.${i}.testName` as const)} />
             </Field>
-            <Field label="Instructions" htmlFor={`l-${i}-i`}>
+            <Field label={t("consultation.instructions")} htmlFor={`l-${i}-i`}>
               <Input id={`l-${i}-i`} {...register(`labs.${i}.instructions` as const)} />
             </Field>
           </div>
@@ -222,24 +227,25 @@ export function ReferralsEditor({
   control: Control<ConsultationFormShape>;
   register: UseFormRegister<ConsultationFormShape>;
 }) {
+  const { t } = useI18n();
   const { fields, append, remove } = useFieldArray({ control, name: "referrals" });
   return (
     <Repeater
-      title="Referrals"
+      title={t("consultation.referralsTitle")}
       onAdd={() => append({ specialistOrDepartment: "", instructions: "" })}
-      addLabel="Add referral"
+      addLabel={t("consultation.addReferral")}
       empty={fields.length === 0}
     >
       {fields.map((field, i) => (
         <RepeaterRow key={field.id} onRemove={() => remove(i)}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Specialist / department" htmlFor={`r-${i}-s`}>
+            <Field label={t("consultation.specialistDepartment")} htmlFor={`r-${i}-s`}>
               <Input
                 id={`r-${i}-s`}
                 {...register(`referrals.${i}.specialistOrDepartment` as const)}
               />
             </Field>
-            <Field label="Instructions" htmlFor={`r-${i}-i`}>
+            <Field label={t("consultation.instructions")} htmlFor={`r-${i}-i`}>
               <Input id={`r-${i}-i`} {...register(`referrals.${i}.instructions` as const)} />
             </Field>
           </div>
@@ -265,6 +271,7 @@ function Repeater({
   empty: boolean;
   children: React.ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-end justify-between">
@@ -279,7 +286,7 @@ function Repeater({
       </div>
       {empty ? (
         <p className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-4 py-6 text-center text-sm text-[var(--muted-foreground)]">
-          None added yet.
+          {t("intake.noneAddedYet")}
         </p>
       ) : (
         <div className="flex flex-col gap-3">{children}</div>
@@ -289,11 +296,12 @@ function Repeater({
 }
 
 function RepeaterRow({ onRemove, children }: { onRemove: () => void; children: React.ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="relative rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 p-4 pr-12">
       <button
         type="button"
-        aria-label="Remove"
+        aria-label={t("common.remove")}
         onClick={onRemove}
         className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-rose-600"
       >

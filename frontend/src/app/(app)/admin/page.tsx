@@ -35,6 +35,7 @@ import {
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtRelative } from "@/lib/format";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import type { Doctor, DoctorInvite } from "@/types/api";
@@ -42,7 +43,7 @@ import type { Doctor, DoctorInvite } from "@/types/api";
 type Tab = "all" | "awaiting_approval" | "awaiting_setup" | "active" | "rejected";
 
 export default function AdminDoctors() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [tab, setTab] = useState<Tab>("all");
   const summary = useDoctorSummary();
   const filter: DoctorListFilter | undefined = tab === "all" ? undefined : { status: tab };
@@ -197,7 +198,7 @@ export default function AdminDoctors() {
 }
 
 function InviteCard({ invite }: { invite: DoctorInvite }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const resend = useResendDoctorInvite();
   const revoke = useRevokeDoctorInvite();
   const [confirmRevoke, setConfirmRevoke] = useState(false);
@@ -307,14 +308,14 @@ function InviteCard({ invite }: { invite: DoctorInvite }) {
 }
 
 function InviteStatusPill({ expired }: { expired: boolean }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return expired ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
+    <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1  text-rose-700")}>
       <MailX className="h-3 w-3" />
       {t("pages.admin.doctors.expired")}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
+    <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1  text-amber-700")}>
       <Mail className="h-3 w-3" />
       {t("pages.admin.doctors.tabs.awaitingSetup")}
     </span>
@@ -322,7 +323,7 @@ function InviteStatusPill({ expired }: { expired: boolean }) {
 }
 
 function DoctorCard({ doctor: d, onReject }: { doctor: Doctor; onReject: () => void }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const approve = useApproveDoctor();
   const awaiting = d.onboardingStatus === "awaiting_approval";
   const rejected = d.onboardingStatus === "rejected";
@@ -388,7 +389,7 @@ function DoctorCard({ doctor: d, onReject }: { doctor: Doctor; onReject: () => v
 }
 
 function StatusPills({ doctor: d }: { doctor: Doctor }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   // One coherent status pill. A doctor still in a pending lifecycle state
   // (awaiting setup / approval) isn't usable yet, so they never show "Active"
   // — the previous double-pill ("Active" + "Awaiting setup") was misleading.
@@ -396,7 +397,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   const status = d.onboardingStatus ?? "active";
   if (status === "awaiting_setup") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
+      <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1  text-amber-700")}>
         <Mail className="h-3 w-3" />
         {t("pages.admin.doctors.tabs.awaitingSetup")}
       </span>
@@ -404,7 +405,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   }
   if (status === "awaiting_approval") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-sky-700">
+      <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1  text-sky-700")}>
         <ShieldCheck className="h-3 w-3" />
         {t("pages.admin.doctors.tabs.awaitingApproval")}
       </span>
@@ -412,7 +413,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   }
   if (status === "rejected") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
+      <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1  text-rose-700")}>
         <XCircle className="h-3 w-3" />
         {t("pages.admin.doctors.tabs.rejected")}
       </span>
@@ -420,12 +421,12 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
   }
   // active lifecycle — distinguish enabled vs deactivated
   return d.active ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+    <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1  text-emerald-700")}>
       <CheckCircle2 className="h-3 w-3" />
       {t("common.active")}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--muted)] px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+    <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--muted)] px-2.5 py-1  text-[var(--muted-foreground)]")}>
       <XCircle className="h-3 w-3" />
       {t("common.inactive")}
     </span>
@@ -433,7 +434,7 @@ function StatusPills({ doctor: d }: { doctor: Doctor }) {
 }
 
 function RejectModal({ target, onClose }: { target: Doctor | null; onClose: () => void }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const reject = useRejectDoctor();
   const [reason, setReason] = useState("");
 
@@ -486,9 +487,10 @@ function RejectModal({ target, onClose }: { target: Doctor | null; onClose: () =
 }
 
 function Mini({ label, value }: { label: string; value: string }) {
+  const { locale } = useI18n();
   return (
     <div>
-      <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <div className={captionClass(locale, "text-[var(--muted-foreground)]")}>
         {label}
       </div>
       <div className="truncate text-xs text-[var(--foreground)]">{value}</div>

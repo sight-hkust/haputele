@@ -25,6 +25,7 @@ import {
   type DoctorSelfUpdateRequest,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 // Editable practice-profile fields a doctor controls themselves. Identity and
@@ -39,7 +40,7 @@ type EditableText = {
 };
 
 export default function DoctorProfilePage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { doctor, hasDefaultSignature, isLoading, error, refetch } = useCurrentDoctor();
   const update = useUpdateMyProfile();
 
@@ -243,7 +244,7 @@ export default function DoctorProfilePage() {
                 />
               </div>
               <div className="flex-1">
-                <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
+                <div className={captionClass(locale, "text-emerald-600")}>
                   {t("pages.doctor.profile.signatureOnFile")}
                 </div>
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">

@@ -1,6 +1,8 @@
 import { forwardRef, useState, type InputHTMLAttributes, type LabelHTMLAttributes } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { captionClass } from "@/lib/caption-class";
+import { getActiveLocale } from "@/lib/i18n";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
@@ -75,10 +77,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelHTMLAttributes<HTMLLabelE
     // biome-ignore lint/a11y/noLabelWithoutControl: callers associate the control via htmlFor forwarded in props
     <label
       ref={ref}
-      className={cn(
-        "font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]",
-        className,
-      )}
+      className={cn(captionClass(getActiveLocale(), "text-[var(--muted-foreground)]"), className)}
       {...props}
     />
   ),

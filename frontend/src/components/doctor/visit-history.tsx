@@ -1,10 +1,12 @@
 "use client";
 
+import { captionClass } from "@/lib/caption-class";
 import { useState } from "react";
 import { ChevronDown, History } from "lucide-react";
 
 import { Card } from "@/components/primitives/card";
 import { fmtDate } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { diagnosisLabel } from "@/lib/medical-codes";
 import { usePatientHistory } from "@/lib/use-api";
 import type { HistoryConsultationItem } from "@/types/api";
@@ -23,6 +25,7 @@ export function VisitHistoryPanel({
   patientId: number | null;
   excludeAppointmentId: number;
 }) {
+  const { locale, t } = useI18n();
   const [collapsed, setCollapsed] = useState(false);
   const history = usePatientHistory(patientId);
 
@@ -40,8 +43,10 @@ export function VisitHistoryPanel({
       >
         <div className="flex items-center gap-2">
           <History className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-            Previous visits {items.length > 0 ? `· ${items.length}` : ""}
+          <span className={captionClass(locale, "text-[var(--accent)]")}>
+            {items.length > 0
+              ? t("pages.doctor.sidebar.previousVisitsCount", { n: items.length })
+              : t("pages.doctor.sidebar.previousVisits")}
           </span>
         </div>
         <ChevronDown
@@ -54,10 +59,10 @@ export function VisitHistoryPanel({
       {!collapsed && (
         <div className="mt-4">
           {history.isLoading ? (
-            <p className="text-sm text-[var(--muted-foreground)]">Loading history…</p>
+            <p className="text-sm text-[var(--muted-foreground)]">{t("pages.doctor.sidebar.loadingHistory")}</p>
           ) : items.length === 0 ? (
             <p className="text-sm text-[var(--muted-foreground)]">
-              No prior consultations on file.
+              {t("pages.doctor.sidebar.noPriorConsultations")}
             </p>
           ) : (
             <ul className="flex flex-col gap-3">
@@ -73,6 +78,7 @@ export function VisitHistoryPanel({
 }
 
 function VisitItem({ item }: { item: HistoryConsultationItem }) {
+  const { locale, t } = useI18n();
   const dx = item.diagnoses.slice(0, 3);
   const moreDx = item.diagnoses.length - dx.length;
   const meds = item.prescription
@@ -84,7 +90,7 @@ function VisitItem({ item }: { item: HistoryConsultationItem }) {
   return (
     <li className="rounded-xl border border-[var(--border)] p-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
           {fmtDate(item.date)}
         </span>
       </div>
@@ -100,7 +106,7 @@ function VisitItem({ item }: { item: HistoryConsultationItem }) {
           ))}
           {moreDx > 0 && (
             <span className="rounded-md bg-[var(--muted)]/40 px-2 py-0.5 text-xs text-[var(--muted-foreground)]">
-              +{moreDx} more
+              {t("pages.doctor.sidebar.more", { n: moreDx })}
             </span>
           )}
         </div>
@@ -108,7 +114,7 @@ function VisitItem({ item }: { item: HistoryConsultationItem }) {
       {meds.length > 0 && (
         <p className="mt-2 text-xs text-[var(--muted-foreground)]">
           Rx · {meds.join(", ")}
-          {moreMeds > 0 ? ` (+${moreMeds} more)` : ""}
+          {moreMeds > 0 ? ` (${t("pages.doctor.sidebar.more", { n: moreMeds })})` : ""}
         </p>
       )}
       {item.notes.complaint && (

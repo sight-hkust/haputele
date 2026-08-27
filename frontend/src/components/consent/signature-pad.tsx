@@ -4,6 +4,8 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { Eraser } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { captionClass } from "@/lib/caption-class";
+import { useI18n } from "@/lib/i18n";
 
 // FEEDBACK §1: a "click to consent" loses legal meaning. This component is the
 // patient's actual artifact — a PNG of the canvas strokes — submitted with the
@@ -31,10 +33,12 @@ type Props = {
 };
 
 export const SignaturePad = forwardRef<SignaturePadHandle, Props>(function SignaturePad(
-  { onChange, disabled, height = 180, label = "Signature" },
+  { onChange, disabled, height = 180, label },
   ref,
 ) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { locale, t } = useI18n();
+  const resolvedLabel = label ?? t("forms.patientSignature");
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const dirtyRef = useRef(false);
   const lastRef = useRef<{ x: number; y: number } | null>(null);
@@ -157,8 +161,8 @@ export const SignaturePad = forwardRef<SignaturePadHandle, Props>(function Signa
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          {label}
+        <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
+          {resolvedLabel}
         </span>
         <Button
           type="button"
@@ -173,7 +177,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, Props>(function Signa
           disabled={disabled || empty}
         >
           <Eraser className="h-3.5 w-3.5" />
-          Clear
+          {t("common.clear")}
         </Button>
       </div>
       <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-inner">
@@ -186,12 +190,12 @@ export const SignaturePad = forwardRef<SignaturePadHandle, Props>(function Signa
           onPointerLeave={onPointerUp}
           className="block touch-none"
           style={{ cursor: disabled ? "not-allowed" : "crosshair" }}
-          aria-label={label}
+          aria-label={resolvedLabel}
           role="img"
         />
       </div>
       <p className="text-xs text-[var(--muted-foreground)]">
-        Ask the patient to sign above using a finger or stylus on the screen.
+        {t("consent.askPatientToSign")}
       </p>
     </div>
   );

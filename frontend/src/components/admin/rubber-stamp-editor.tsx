@@ -1,5 +1,6 @@
 "use client";
 
+import { captionClass } from "@/lib/caption-class";
 import { RotateCcw, RotateCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
@@ -7,6 +8,7 @@ import "react-image-crop/dist/ReactCrop.css";
 
 import { Button } from "@/components/primitives/button";
 import { rotateDataUrl } from "@/lib/image-rotate";
+import { useI18n } from "@/lib/i18n";
 
 const DEFAULT_THRESHOLD = 240; // luminance cutoff (0–255); brighter pixels become transparent
 
@@ -28,6 +30,7 @@ export function RubberStampEditor({
   // phone photos) and PNG only when transparency is needed.
   forcePng?: boolean;
 }) {
+  const { locale } = useI18n();
   const imgRef = useRef<HTMLImageElement>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
   const [crop, setCrop] = useState<Crop>();
@@ -140,7 +143,7 @@ export function RubberStampEditor({
                 Rotate right
               </Button>
               {totalRotation !== 0 && (
-                <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
                   {formatAngle(totalRotation)}°
                 </span>
               )}
@@ -154,7 +157,7 @@ export function RubberStampEditor({
                     <button
                       type="button"
                       onClick={() => setFine(0)}
-                      className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)] hover:underline"
+                      className={captionClass(locale, "text-[var(--accent)] hover:underline")}
                     >
                       Reset
                     </button>
@@ -176,7 +179,7 @@ export function RubberStampEditor({
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className={captionClass(locale, "text-[var(--muted-foreground)]")}>
               Preview
             </div>
             <div

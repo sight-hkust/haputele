@@ -28,6 +28,7 @@ import {
 } from "@/components/sysadmin/account-sections";
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtDateTime } from "@/lib/format";
+import { captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import {
   useApproveDoctor,
@@ -51,7 +52,7 @@ export function AccountPanel({
   account: AccountRosterEntry;
   onClose: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <motion.aside
       key={account.username}
@@ -67,7 +68,7 @@ export function AccountPanel({
         <header className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div className="min-w-0">
             <h2 className="truncate font-display text-lg tracking-[-0.01em]">{account.username}</h2>
-            <p className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+            <p className={captionClassTight(locale, "text-[var(--muted-foreground)]")}>
               {t("pages.sysadmin.accounts.roleAccount", { role: t(`roles.${account.role}`) })}
             </p>
           </div>
@@ -107,7 +108,7 @@ function ManageableBody({
   account: AccountRosterEntry;
   onClose: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const disable = useDisableAccount();
   const enable = useEnableAccount();
   const del = useDeleteAccount();
@@ -211,7 +212,7 @@ function ManageableBody({
 // ── doctor: reuse the full doctor management surface ─────────────────────
 
 function DoctorBody({ doctorId }: { doctorId: number }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const qc = useQueryClient();
   const doctor = useDoctor(doctorId);
   const update = useUpdateDoctor(doctorId);
@@ -343,7 +344,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
                     : t("pages.admin.doctors.resend")}
                 </Button>
                 {inviteJustSent && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+                  <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1  text-emerald-700")}>
                     <CheckCircle2 className="h-3 w-3" />
                     {t("pages.admin.doctors.sent")}
                   </span>

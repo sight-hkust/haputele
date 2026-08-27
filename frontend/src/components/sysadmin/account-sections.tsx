@@ -10,6 +10,8 @@ import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { newPasswordError, passwordError } from "@/lib/credentials";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import { explainError } from "@/lib/error-codes";
+import { cn } from "@/lib/cn";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useResetAccountPassword, useUpdateAccount } from "@/lib/use-api";
 
@@ -26,7 +28,7 @@ export function ProfileSection({
   account: ProfileTarget;
   onSaved?: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const update = useUpdateAccount();
   const [fullName, setFullName] = useState(account.fullName ?? "");
   const [contact, setContact] = useState(account.contact ?? "");
@@ -75,7 +77,7 @@ export function ProfileSection({
 
 // Set/change a password. `self` only tweaks the copy.
 export function PasswordSection({ username, self = false }: { username: string; self?: boolean }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const resetPw = useResetAccountPassword();
   const [password, setPassword] = useState("");
   const passwordCaps = useCapsLock();
@@ -143,7 +145,7 @@ export function PasswordSection({ username, self = false }: { username: string; 
                 : t("pages.sysadmin.accounts.setNewPassword")}
           </Button>
           {pwDone ? (
-            <span className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+            <span className={captionClassTight(locale, "inline-flex items-center gap-1.5  text-emerald-700")}>
               <CheckCircle2 className="h-3.5 w-3.5" />
               {t("common.updated")}
             </span>
@@ -165,12 +167,12 @@ export function StatusHeader({
   label: string;
   sub?: string;
 }) {
+  const { locale } = useI18n();
   return (
     <div className="flex items-center gap-3">
       <span
         className={
-          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-[0.12em] " +
-          (active
+          cn(captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border px-3 py-1"), active
             ? "border-emerald-200 bg-emerald-50 text-emerald-700"
             : "border-rose-200 bg-rose-50 text-rose-700")
         }
@@ -195,13 +197,14 @@ export function Section({
   tone?: "default" | "danger";
   children: React.ReactNode;
 }) {
+  const { locale } = useI18n();
   return (
     <section className="flex flex-col gap-3">
       <h3
-        className={
-          "font-mono text-xs uppercase tracking-[0.15em] " +
-          (tone === "danger" ? "text-rose-600" : "text-[var(--muted-foreground)]")
-        }
+        className={captionClass(
+          locale,
+          tone === "danger" ? "text-rose-600" : "text-[var(--muted-foreground)]",
+        )}
       >
         {title}
       </h3>

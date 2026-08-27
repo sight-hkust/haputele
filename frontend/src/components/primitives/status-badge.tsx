@@ -1,5 +1,7 @@
 import { cn } from "@/lib/cn";
+import { captionClassTight } from "@/lib/caption-class";
 import { statusLabel } from "@/lib/format";
+import { getActiveLocale } from "@/lib/i18n";
 
 // Maps the §11 appointment state machine to visual treatment.
 // `in_progress` is the only state that pulses — it's the "alive" state.
@@ -78,7 +80,7 @@ export function StatusBadge({ status, className }: { status: string; className?:
         className={cn("h-1.5 w-1.5 rounded-full", style.dot, style.pulse && "animate-pulse-soft")}
         aria-hidden
       />
-      <span className={cn("font-mono text-xs uppercase tracking-[0.12em]", style.text)}>
+      <span className={captionClassTight(getActiveLocale(), style.text)}>
         {statusLabel(status)}
       </span>
     </span>

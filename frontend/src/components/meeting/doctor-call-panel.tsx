@@ -1,5 +1,6 @@
 "use client";
 
+import { captionClass } from "@/lib/caption-class";
 import { useState } from "react";
 import { PhoneOff, Video } from "lucide-react";
 
@@ -8,6 +9,7 @@ import { Card } from "@/components/primitives/card";
 import { ErrorBanner } from "@/components/primitives/error-banner";
 import type { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { useMeetingToken } from "@/lib/use-api";
 import type { AppointmentStatus } from "@/types/api";
 
@@ -22,6 +24,7 @@ type Props = {
 // can see the patient while filling out notes / prescription / review.
 // Uses the same /meeting-token endpoint as the modal join — no state change.
 export function DoctorCallPanel({ appointmentId, status }: Props) {
+  const { locale, t } = useI18n();
   const meetingToken = useMeetingToken(appointmentId);
   const [creds, setCreds] = useState<{ token: string; serverUrl: string } | null>(null);
 
@@ -37,8 +40,8 @@ export function DoctorCallPanel({ appointmentId, status }: Props) {
     return (
       <Card className="flex h-full min-h-[480px] flex-col overflow-hidden p-0">
         <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--muted)]/40 px-4 py-2">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            Live with patient
+          <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
+            {t("consultation.callPanel.liveWithPatient")}
           </span>
           <button
             type="button"
@@ -46,7 +49,7 @@ export function DoctorCallPanel({ appointmentId, status }: Props) {
             className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:text-red-500"
           >
             <PhoneOff className="h-3.5 w-3.5" />
-            Leave
+            {t("consultation.callPanel.leave")}
           </button>
         </div>
         <div className="min-h-0 flex-1 bg-black">
@@ -68,14 +71,18 @@ export function DoctorCallPanel({ appointmentId, status }: Props) {
         </div>
         <div className="flex-1">
           <h3 className="text-sm font-semibold tracking-[-0.01em]">
-            {callOver ? "Call ended" : canJoin ? "Live call available" : "Waiting on healthworker"}
+            {callOver
+              ? t("consultation.callPanel.callEnded")
+              : canJoin
+                ? t("consultation.callPanel.liveCallAvailable")
+                : t("consultation.callPanel.waitingOnHealthworker")}
           </h3>
           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
             {callOver
-              ? "The healthworker has ended the meeting. Continue with notes."
+              ? t("consultation.callPanel.callEndedDescription")
               : canJoin
-                ? "Join to see and speak with the patient while you take notes."
-                : "The healthworker hasn't started the call yet."}
+                ? t("consultation.callPanel.joinDescription")
+                : t("consultation.callPanel.waitingDescription")}
           </p>
           {meetingToken.error && (
             <ErrorBanner className="mt-2">
@@ -86,7 +93,9 @@ export function DoctorCallPanel({ appointmentId, status }: Props) {
             <div className="mt-3">
               <Button onClick={handleJoin} disabled={meetingToken.isPending}>
                 <Video className="h-4 w-4" />
-                {meetingToken.isPending ? "Connecting…" : "Join call"}
+                {meetingToken.isPending
+                  ? t("consultation.callPanel.connecting")
+                  : t("consultation.callPanel.joinCall")}
               </Button>
             </div>
           )}

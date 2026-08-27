@@ -5,13 +5,14 @@ import { useMemo } from "react";
 import { AppointmentCalendar } from "@/components/healthworker/appointment-calendar";
 import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { PageHeader } from "@/components/primitives/page-header";
+import { captionClassBare } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useAppointmentList, useCurrentDoctor } from "@/lib/use-api";
 
 const RANGE_DAYS = 60;
 
 export default function DoctorCalendar() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { doctor } = useCurrentDoctor();
   // Memoize so the query key is stable across renders — otherwise `new Date()`
   // produces a fresh ISO string each pass and react-query never settles.
@@ -47,7 +48,7 @@ export default function DoctorCalendar() {
 }
 
 function Legend() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   // The calendar collapses the 7 backend statuses into 3 buckets (plus a
   // muted cancelled). Modals still surface the precise status.
   const items = [
@@ -65,7 +66,7 @@ function Legend() {
       {items.map((it) => (
         <span key={it.key} className="inline-flex items-center gap-2">
           <span className={`h-2 w-3 rounded-sm ${it.swatch}`} />
-          <span className="font-mono uppercase tracking-[0.12em]">{it.label}</span>
+          <span className={captionClassBare(locale)}>{it.label}</span>
         </span>
       ))}
     </div>

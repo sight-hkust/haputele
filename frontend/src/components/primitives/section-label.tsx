@@ -1,5 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { captionClass } from "@/lib/caption-class";
+import { useI18n } from "@/lib/i18n";
 
 interface SectionLabelProps {
   children: ReactNode;
@@ -8,6 +12,8 @@ interface SectionLabelProps {
 }
 
 export function SectionLabel({ children, pulse = false, className }: SectionLabelProps) {
+  const { locale } = useI18n();
+
   return (
     <div
       className={cn(
@@ -19,9 +25,7 @@ export function SectionLabel({ children, pulse = false, className }: SectionLabe
         className={cn("h-2 w-2 rounded-full bg-[var(--accent)]", pulse && "animate-pulse-soft")}
         aria-hidden
       />
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-        {children}
-      </span>
+      <span className={captionClass(locale, "text-[var(--accent)]")}>{children}</span>
     </div>
   );
 }

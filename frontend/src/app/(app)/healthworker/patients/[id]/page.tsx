@@ -17,11 +17,12 @@ import { ProfileSummary } from "@/components/healthworker/profile-summary";
 import { useDeletePatient, usePatient, usePatientHistory, useUpdatePatient } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { fmtAge, fmtDate, fmtDateTime, fullName } from "@/lib/format";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function PatientDetailPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const params = useParams<{ id: string }>();
   const id = parseIdParam(params.id);
   const router = useRouter();
@@ -114,7 +115,7 @@ export default function PatientDetailPage() {
         <Card variant="elevated" className="p-8">
           <div className="mb-6 flex items-center gap-2">
             <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+            <h2 className={captionClass(locale, "text-[var(--accent)]")}>
               {t("pages.healthworker.patients.demographics")}
             </h2>
           </div>
@@ -136,7 +137,7 @@ export default function PatientDetailPage() {
         <Card className="p-8">
           <div className="mb-5 flex items-center gap-2">
             <History className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+            <h2 className={captionClass(locale, "text-[var(--accent)]")}>
               {t("pages.healthworker.patients.appointmentHistory")}
             </h2>
           </div>
@@ -155,7 +156,7 @@ export default function PatientDetailPage() {
                     className="block rounded-lg px-2 py-3 transition-colors hover:bg-[var(--muted)]/40"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                      <span className={captionClassTight(locale, "text-[var(--muted-foreground)]")}>
                         {fmtDateTime(a.scheduledAt)}
                       </span>
                       <StatusBadge status={a.status} />
@@ -231,9 +232,10 @@ function Field({
   mono?: boolean;
   className?: string;
 }) {
+  const { locale } = useI18n();
   return (
     <div className={className}>
-      <dt className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <dt className={captionClass(locale, "text-[var(--muted-foreground)]")}>
         {label}
       </dt>
       <dd className={mono ? "mt-1 font-mono text-sm" : "mt-1 text-sm"}>{value}</dd>

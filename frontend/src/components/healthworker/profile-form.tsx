@@ -9,6 +9,7 @@ import { Input, Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { DISEASE_OPTIONS, PHYSICAL_ACTIVITY_OPTIONS } from "@/lib/medical-codes";
 import { cn } from "@/lib/cn";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import type {
   AllergyEntry,
@@ -144,7 +145,7 @@ export function ProfileForm({
   onSubmit: (req: ProfileRequest) => void;
   onCancel?: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const form = useForm<FormShape>({
     defaultValues: fromProfile(initial),
   });
@@ -181,7 +182,7 @@ export function ProfileForm({
         {/* Other conditions — repeater so multiple unlisted conditions can be captured. */}
         <div className="mt-6 flex items-end justify-between">
           <div>
-            <h4 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <h4 className={captionClass(locale, "text-[var(--muted-foreground)]")}>
               {t("intake.otherConditions")}
             </h4>
             <p className="mt-1 text-xs text-[var(--muted-foreground)]">
@@ -451,7 +452,7 @@ function RepeaterSection({
   empty: boolean;
   children: React.ReactNode;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-end justify-between">
@@ -478,7 +479,7 @@ function RepeaterSection({
 }
 
 function RepeaterRow({ onRemove, children }: { onRemove: () => void; children: React.ReactNode }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <div className="relative rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 p-4 pr-12">
       <button

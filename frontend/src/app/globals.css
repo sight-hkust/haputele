@@ -28,6 +28,17 @@
     font-feature-settings: "ss01", "cv11";
   }
 
+  /* Sinhala combines vowel signs with consonants — positive letter-spacing and
+     uppercase mono labels pull marks apart and create visible gaps. */
+  html[lang="si"] [class*="tracking-[0."] {
+    letter-spacing: normal;
+  }
+
+  html[lang="si"] .font-mono.uppercase {
+    font-family: inherit;
+    text-transform: none;
+  }
+
   ::selection {
     background: rgba(0, 82, 255, 0.18);
     color: var(--foreground);

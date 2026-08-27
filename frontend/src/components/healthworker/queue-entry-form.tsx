@@ -12,6 +12,7 @@ import { PatientPicker } from "@/components/healthworker/patient-picker";
 import type { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtTargetWeek, fullName } from "@/lib/format";
+import { captionClassTight } from "@/lib/caption-class";
 import { getActiveLocale, translate, useI18n } from "@/lib/i18n";
 import { useCreateQueueEntry, useDoctorList } from "@/lib/use-api";
 import type { Patient, QueueEntry, QueueEntryCreateRequest, QueuePriority } from "@/types/api";
@@ -29,7 +30,7 @@ export function QueueEntryForm({
   onCreated: (entry: QueueEntry) => void;
   onCancel?: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [picked, setPicked] = useState<Patient | null>(defaultPatient ?? null);
   const [source, setSource] = useState<"walk_in" | "screening">("walk_in");
   const [priority, setPriority] = useState<QueuePriority>("routine");
@@ -202,7 +203,7 @@ function DuplicateConfirm({
   onConfirmAdd: () => void;
   pending: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <div className="flex flex-col gap-4">
       <ErrorBanner tone="amber">
@@ -226,7 +227,7 @@ function DuplicateConfirm({
                     ? t("queue.screening")
                     : t("queue.followUp")}
               </span>
-              <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+              <span className={captionClassTight(locale, "text-[var(--muted-foreground)]")}>
                 #{e.id} · {e.priority === "urgent" ? t("queue.urgent") : t("queue.routine")}
               </span>
             </div>

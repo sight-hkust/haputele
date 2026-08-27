@@ -8,6 +8,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Input } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { explainError } from "@/lib/error-codes";
+import { captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useUpdateSystemConfig } from "@/lib/use-api";
 import type { SystemConfig } from "@/types/api";
@@ -40,7 +41,7 @@ function useTimezoneOptions() {
 }
 
 function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const groups = useTimezoneOptions();
   return (
     <Select value={value} onChange={(e) => onChange(e.target.value)}>
@@ -59,7 +60,7 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
 }
 
 export function SystemConfigForm({ config }: { config: SystemConfig }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const update = useUpdateSystemConfig();
   const [done, setDone] = useState(false);
 
@@ -162,7 +163,7 @@ export function SystemConfigForm({ config }: { config: SystemConfig }) {
           {update.isPending ? t("common.saving") : t("common.saveChanges")}
         </Button>
         {done && !dirty ? (
-          <span className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+          <span className={captionClassTight(locale, "inline-flex items-center gap-1.5  text-emerald-700")}>
             <CheckCircle2 className="h-3.5 w-3.5" />
             {t("common.saved")}
           </span>

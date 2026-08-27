@@ -44,7 +44,9 @@ import {
   useUpdateConsultation,
 } from "@/lib/use-api";
 import type { Consultation, FollowUpInput } from "@/types/api";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 
 // Schema mirrors the backend ConsultationPatch + submit payload. Generic name
 // validation is *deferred* until submit so the doctor can save partial drafts
@@ -162,6 +164,7 @@ export function ConsultationFlow({
   appointmentId: number;
   readOnly?: boolean;
 }) {
+  const { locale, t } = useI18n();
   const router = useRouter();
   const [stage, setStage] = useState<ConsultationStage>("notes");
   const [signed, setSigned] = useState(false);
@@ -251,12 +254,12 @@ export function ConsultationFlow({
   // Everything still blocking the submit, in plain words — rendered next to
   // the disabled button so a blocked submit is never a mystery.
   const submitBlockers: string[] = [];
-  if (!medsValid) submitBlockers.push("every medication needs a generic name");
+  if (!medsValid) submitBlockers.push(t("consultation.blockerMedsGeneric"));
   if (followUpChoice === "appointment" && followUpAt.length === 0)
-    submitBlockers.push("pick the follow-up slot");
+    submitBlockers.push(t("consultation.blockerFollowUpSlot"));
   if (followUpChoice === "weeks" && !(followUpWeeks >= 1 && followUpWeeks <= 52))
-    submitBlockers.push("follow-up weeks must be 1–52");
-  if (drawingSignature && !signed) submitBlockers.push("sign in the box above");
+    submitBlockers.push(t("consultation.blockerFollowUpWeeks"));
+  if (drawingSignature && !signed) submitBlockers.push(t("consultation.blockerSign"));
 
   // The review shows exactly what will be submitted — mirror toPatch's
   // filtering so an untouched empty row doesn't render as a warning.
@@ -295,9 +298,11 @@ export function ConsultationFlow({
       <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-8">
         {stage === "notes" && (
           <Card variant="elevated" className="p-8">
-            <h2 className="mb-2 font-display text-2xl tracking-[-0.01em]">Consultation notes</h2>
+            <h2 className="mb-2 font-display text-2xl tracking-[-0.01em]">
+              {t("consultation.notesTitle")}
+            </h2>
             <p className="mb-6 text-sm text-[var(--muted-foreground)]">
-              Capture the patient&rsquo;s complaint and your observations from the call.
+              {t("consultation.notesDescription")}
             </p>
             <NotesEditor register={form.register} />
           </Card>
@@ -310,9 +315,7 @@ export function ConsultationFlow({
             <LabsEditor control={form.control} register={form.register} />
             <ReferralsEditor control={form.control} register={form.register} />
             {!medsValid && (
-              <ErrorBanner tone="amber">
-                Every medication entry needs a generic name before you can submit. (§1.7)
-              </ErrorBanner>
+              <ErrorBanner tone="amber">{t("consultation.medsValidationError")}</ErrorBanner>
             )}
           </Card>
         )}
@@ -323,26 +326,26 @@ export function ConsultationFlow({
 
             <Card variant="elevated" className="flex flex-col gap-6 p-8">
               <div className="flex flex-col gap-3">
-                <Label>Follow-up</Label>
+                <Label>{t("consultation.followUpLabel")}</Label>
                 <div className="grid gap-2 sm:grid-cols-3">
                   <FollowUpOption
                     Icon={X}
-                    title="No follow-up"
-                    description="Patient doesn't need a return visit."
+                    title={t("consultation.noFollowUp")}
+                    description={t("consultation.noFollowUpDescription")}
                     active={followUpChoice === "none"}
                     onClick={() => setFollowUpChoice("none")}
                   />
                   <FollowUpOption
                     Icon={CalendarPlus}
-                    title="Book appointment"
-                    description="Pick the exact return slot now (with you)."
+                    title={t("consultation.bookAppointment")}
+                    description={t("consultation.bookAppointmentDescription")}
                     active={followUpChoice === "appointment"}
                     onClick={() => setFollowUpChoice("appointment")}
                   />
                   <FollowUpOption
                     Icon={Clock4}
-                    title="In N weeks"
-                    description="Add to queue; the healthworker books later."
+                    title={t("consultation.inNWeeks")}
+                    description={t("consultation.inNWeeksDescription")}
                     active={followUpChoice === "weeks"}
                     onClick={() => setFollowUpChoice("weeks")}
                   />
@@ -359,7 +362,7 @@ export function ConsultationFlow({
 
                 {followUpChoice === "weeks" && (
                   <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4">
-                    <Label>Recommend follow-up in</Label>
+                    <Label>{t("consultation.recommendFollowUpIn")}</Label>
                     <div className="flex flex-wrap gap-2">
                       {[2, 4, 6, 8, 12].map((n) => (
                         <button
@@ -373,7 +376,7 @@ export function ConsultationFlow({
                               : "border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--accent)]/30",
                           )}
                         >
-                          {n} weeks
+                          {t("consultation.weeksCount", { n })}
                         </button>
                       ))}
                       <Input
@@ -386,15 +389,14 @@ export function ConsultationFlow({
                       />
                     </div>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      Creates a queue entry tagged to you as preferred doctor, snapped to the Monday
-                      of that target week.
+                      {t("consultation.followUpQueueHint")}
                     </p>
                   </div>
                 )}
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="sig">Signature *</Label>
+                <Label htmlFor="sig">{t("consultation.signatureLabel")}</Label>
                 {drawingSignature ? (
                   <>
                     <SignatureCanvas ref={sigRef} onChange={setSigned} />
@@ -404,7 +406,7 @@ export function ConsultationFlow({
                         onClick={() => setDrawOneOff(false)}
                         className="self-start text-xs font-medium text-[var(--accent)] hover:underline"
                       >
-                        Use my saved signature instead
+                        {t("consultation.useSavedSignature")}
                       </button>
                     )}
                   </>
@@ -413,16 +415,16 @@ export function ConsultationFlow({
                     <div className="flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-white">
                       <img
                         src={MY_SIGNATURE_URL}
-                        alt="Your saved e-signature"
+                        alt={t("consultation.savedSignatureAlt")}
                         className="max-h-full max-w-full object-contain"
                       />
                     </div>
                     <div className="flex-1">
-                      <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-                        Saved signature
+                      <div className={captionClass(locale, "text-emerald-600")}>
+                        {t("consultation.savedSignature")}
                       </div>
                       <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                        Applied automatically when you submit.
+                        {t("consultation.appliedOnSubmit")}
                       </p>
                     </div>
                     <button
@@ -430,7 +432,7 @@ export function ConsultationFlow({
                       onClick={() => setDrawOneOff(true)}
                       className="text-xs font-medium text-[var(--accent)] hover:underline"
                     >
-                      Draw a one-off signature instead
+                      {t("consultation.drawOneOffInstead")}
                     </button>
                   </div>
                 )}
@@ -450,7 +452,7 @@ export function ConsultationFlow({
         <div className="sticky bottom-4 z-10 flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-lg backdrop-blur">
           {stage === "review" && submitBlockers.length > 0 && (
             <p className="text-right text-xs font-medium text-amber-600">
-              To submit: {submitBlockers.join(" · ")}
+              {t("consultation.toSubmit", { blockers: submitBlockers.join(" · ") })}
             </p>
           )}
           <div className="flex items-center justify-between gap-3">
@@ -458,7 +460,7 @@ export function ConsultationFlow({
               {stage !== "notes" && (
                 <Button type="button" variant="secondary" onClick={back}>
                   <ArrowLeft className="h-4 w-4" />
-                  Back
+                  {t("common.back")}
                 </Button>
               )}
               <Button
@@ -468,18 +470,18 @@ export function ConsultationFlow({
                 disabled={update.isPending}
               >
                 <Save className="h-4 w-4" />
-                {update.isPending ? "Saving…" : "Save draft"}
+                {update.isPending ? t("common.saving") : t("consultation.saveDraft")}
               </Button>
               {savedAt && !update.isPending && (
-                <span className="font-mono text-xs uppercase tracking-[0.12em] text-emerald-600">
-                  Saved {fmtRelative(savedAt)}
+                <span className={captionClassTight(locale, "text-emerald-600")}>
+                  {t("consultation.savedAt", { relative: fmtRelative(savedAt) })}
                 </span>
               )}
             </div>
             <div>
               {stage !== "review" && (
                 <Button type="button" onClick={next} disabled={update.isPending}>
-                  {update.isPending ? "Saving…" : "Save & continue"}
+                  {update.isPending ? t("common.saving") : t("consultation.saveAndContinue")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
@@ -490,7 +492,7 @@ export function ConsultationFlow({
                   disabled={submitBlockers.length > 0 || submit.isPending}
                 >
                   <FileSignature className="h-4 w-4" />
-                  {submit.isPending ? "Submitting…" : "Sign & submit"}
+                  {submit.isPending ? t("consultation.submitting") : t("consultation.signAndSubmit")}
                 </Button>
               )}
             </div>
@@ -542,15 +544,18 @@ function FollowUpOption({
 }
 
 function CompletedNotice({ signedAt }: { signedAt: string | null }) {
+  const { locale, t } = useI18n();
   return (
     <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
       <CheckCircle2 className="h-5 w-5 text-emerald-700" />
       <div>
-        <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-700">
-          Locked & signed
+        <div className={captionClass(locale, "text-emerald-700")}>
+          {t("consultation.lockedAndSigned")}
         </div>
         <div className="text-sm font-semibold tracking-[-0.01em]">
-          Submitted {signedAt ? fmtRelative(signedAt) : "earlier"}.
+          {t("consultation.submittedAt", {
+            relative: signedAt ? fmtRelative(signedAt) : t("consultation.submittedEarlier"),
+          })}
         </div>
       </div>
     </div>

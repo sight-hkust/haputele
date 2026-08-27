@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ROLE_HOMES, useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 // Root entry point. Bounce based on system + session state:
@@ -17,7 +18,7 @@ import { useI18n } from "@/lib/i18n";
 export default function Index() {
   const router = useRouter();
   const { session, loading } = useAuth();
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
 
   useEffect(() => {
     if (loading) return;
@@ -49,7 +50,7 @@ export default function Index() {
 
   return (
     <main className="flex min-h-screen items-center justify-center">
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
         {t("common.loading")}
       </span>
     </main>

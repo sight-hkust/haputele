@@ -13,6 +13,7 @@ import { startOfWeekLocal } from "@/components/doctor/availability-grid-utils";
 import { useAppointmentList, useDoctorAvailability } from "@/lib/use-api";
 import { APP_TIMEZONE, appToday } from "@/lib/format";
 import { formatWeekSpan, formatWithIntl } from "@/lib/date-locale";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 
@@ -251,7 +252,7 @@ export function DoctorSlotPicker({
         </Button>
         <div className="flex min-w-[10rem] flex-col items-center">
           <span className="text-sm font-semibold tracking-[-0.01em]">{weekLabel}</span>
-          <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+          <span className={captionClassTight(locale, "text-[var(--muted-foreground)]")}>
             {weekRangeLabel}
           </span>
         </div>
@@ -272,7 +273,7 @@ export function DoctorSlotPicker({
       </div>
 
       <div className="flex flex-col gap-1">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
           {t("slotPicker.openSlots")}
         </span>
         {loading ? (
@@ -285,7 +286,7 @@ export function DoctorSlotPicker({
               const slots = slotsByDay.get(d.ymd) ?? [];
               return (
                 <div key={d.ymd} className="grid grid-cols-[6.5rem_1fr] items-baseline gap-3">
-                  <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                  <span className={captionClassTight(locale, "text-[var(--muted-foreground)]")}>
                     {d.label}
                   </span>
                   {slots.length === 0 ? (

@@ -13,6 +13,7 @@ import { Input, Label } from "@/components/primitives/input";
 import { PageHeader } from "@/components/primitives/page-header";
 import { useCreateDoctor, useInviteDoctor } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 // Two ways to add a doctor:
@@ -48,7 +49,7 @@ export function NewDoctorSurface({
   createdHref,
   initialMode = "invite",
 }: NewDoctorSurfaceProps) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
 
@@ -117,7 +118,7 @@ export function InvitePanel({
    *  profile yourself" link here. */
   extra?: ReactNode;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const invite = useInviteDoctor();
   const [email, setEmail] = useState("");
   const [familyName, setFamilyName] = useState("");
@@ -200,7 +201,7 @@ function ManualPanel({
   onCancel: () => void;
   onCreated: (id: number) => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const create = useCreateDoctor();
   const errCode = create.error?.error ?? null;
   const missing = (create.error?.detail?.missing as string[] | undefined) ?? undefined;
@@ -261,7 +262,7 @@ function ModeCard({
   selected: boolean;
   onClick: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <button
       type="button"
@@ -284,7 +285,7 @@ function ModeCard({
         <span className="flex items-center gap-2 text-sm font-semibold">
           {title}
           {recommended && (
-            <span className="rounded-full bg-[var(--accent)]/10 px-2 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
+            <span className={captionClassTight(locale, "rounded-full bg-[var(--accent)]/10 px-2 py-0.5  text-[var(--accent)]")}>
               {t("common.recommended")}
             </span>
           )}

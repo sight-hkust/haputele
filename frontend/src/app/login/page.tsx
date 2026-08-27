@@ -15,6 +15,7 @@ import { resolveLoginRedirect, useAuth, type Role } from "@/lib/auth";
 import { ApiError, api } from "@/lib/api";
 import { loginWhitespaceHint } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { fadeIn, fadeInUp, staggerTight } from "@/lib/motion";
 import { useCapsLock } from "@/lib/use-caps-lock";
@@ -39,7 +40,7 @@ function LoginScreen() {
   const router = useRouter();
   const search = useSearchParams();
   const { session, login, loading } = useAuth();
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const setupStatus = useSetupStatus();
   const uninitialized = setupStatus.data?.initialized === false;
   // A failed status probe (backend unreachable / erroring) must not hold the
@@ -115,7 +116,7 @@ function LoginScreen() {
   if (!setupLoaded || uninitialized) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
           {t("common.loading")}
         </span>
       </main>
@@ -141,7 +142,7 @@ function LoginScreen() {
             <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+            <span className={captionClass(locale, "hidden  text-[var(--muted-foreground)] sm:block")}>
               {t("login.telemedicine")}
             </span>
             <LanguageToggle />

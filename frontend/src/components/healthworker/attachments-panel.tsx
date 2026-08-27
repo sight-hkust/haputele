@@ -1,5 +1,7 @@
 "use client";
 
+import { cn } from "@/lib/cn";
+import { captionClassTight } from "@/lib/caption-class";
 import { useEffect, useRef, useState } from "react";
 import { Camera, RotateCcw, RotateCw, Smartphone, Trash2, Upload } from "lucide-react";
 
@@ -12,6 +14,7 @@ import { Modal } from "@/components/primitives/modal";
 import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
 import type { ApiError } from "@/lib/api";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { rotateFile } from "@/lib/image-rotate";
 import {
   useAttachmentImage,
@@ -306,6 +309,7 @@ function AttachmentThumb({
   appointmentId: number;
   readonly: boolean;
 }) {
+  const { locale } = useI18n();
   const { url, error, retry } = useAttachmentImage(appointmentId, attachment.id);
   const remove = useDeleteAttachment(appointmentId);
   const [confirming, setConfirming] = useState(false);
@@ -371,8 +375,7 @@ function AttachmentThumb({
             }}
             disabled={remove.isPending}
             className={
-              "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] transition-colors " +
-              (confirming
+              cn(captionClassTight(locale, "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5  transition-colors"), confirming
                 ? "bg-rose-600 text-white"
                 : "text-[var(--muted-foreground)] hover:bg-rose-50 hover:text-rose-700")
             }

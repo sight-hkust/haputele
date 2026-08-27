@@ -13,6 +13,7 @@ import { DoctorSlotPicker } from "@/components/doctor/doctor-slot-picker";
 import { PatientPicker } from "@/components/healthworker/patient-picker";
 import type { Doctor, Patient } from "@/types/api";
 import { appLocalToUtcIso, doctorName } from "@/lib/format";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { usePatient } from "@/lib/use-api";
 
@@ -48,7 +49,7 @@ export function AppointmentForm({
   onPatientChange?: (patientId: number | undefined) => void;
   submitLabel?: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const schema = useMemo(
     () =>
       z.object({
@@ -113,7 +114,7 @@ export function AppointmentForm({
 
       {hidePatientPicker && patientLabel ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
             {t("forms.forPatient")}
           </span>
           <div className="mt-1 font-medium">{patientLabel}</div>

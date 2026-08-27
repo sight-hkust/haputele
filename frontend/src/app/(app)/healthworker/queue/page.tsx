@@ -14,6 +14,7 @@ import { Select } from "@/components/primitives/select";
 import { CancelQueueEntryForm } from "@/components/healthworker/cancel-queue-entry-form";
 import { QueueEntryForm } from "@/components/healthworker/queue-entry-form";
 import { QueueRow } from "@/components/healthworker/queue-row";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useQueueList } from "@/lib/use-api";
 import type { QueueEntry, QueuePriority, QueueSource, QueueStatus } from "@/types/api";
@@ -24,7 +25,7 @@ import type { QueueEntry, QueuePriority, QueueSource, QueueStatus } from "@/type
 // pre-fills and the row gets ring-highlighted (same UX as picking from the
 // queue card inside the workspace itself).
 export default function QueuePage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
   const [status, setStatus] = useState<QueueStatus | "">("pending");
   const [source, setSource] = useState<QueueSource | "">("");
@@ -88,7 +89,7 @@ export default function QueuePage() {
             </Select>
           </Filter>
         </div>
-        <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <p className={captionClass(locale, "text-[var(--muted-foreground)]")}>
           {t("pages.healthworker.queuePage.sortHint")}
         </p>
       </div>
@@ -172,9 +173,10 @@ export default function QueuePage() {
 }
 
 function Filter({ label, children }: { label: string; children: React.ReactNode }) {
+  const { locale } = useI18n();
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
         {label}
       </span>
       {children}

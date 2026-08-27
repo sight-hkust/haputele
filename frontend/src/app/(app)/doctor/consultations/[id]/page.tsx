@@ -10,10 +10,11 @@ import { Card } from "@/components/primitives/card";
 import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { useAppointment, useConsultation } from "@/lib/use-api";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 export default function ConsultationPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const params = useParams<{ id: string }>();
   const cid = parseIdParam(params.id);
   const consult = useConsultation(cid);
@@ -74,7 +75,7 @@ export default function ConsultationPage() {
           </aside>
         )}
         <div className="flex flex-col gap-6 lg:order-2">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
             <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] align-middle" />
             {readOnly
               ? t("pages.doctor.consultations.recordLocked")

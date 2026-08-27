@@ -6,6 +6,7 @@ import { RotateCw } from "lucide-react";
 import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
 import { ROLE_HOMES, useAuth } from "@/lib/auth";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 // Route-segment error boundary for every page under the root layout. This is
@@ -22,7 +23,7 @@ export default function RouteError({
   reset: () => void;
 }) {
   const { session, loading } = useAuth();
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
 
   useEffect(() => {
     console.error(error);
@@ -31,7 +32,7 @@ export default function RouteError({
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
           {t("common.loading")}
         </span>
       </main>
@@ -43,7 +44,7 @@ export default function RouteError({
       <div className="flex flex-col gap-2">
         <span
           role="alert"
-          className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]"
+          className={captionClass(locale, "text-[var(--muted-foreground)]")}
         >
           {t("common.error")}
         </span>

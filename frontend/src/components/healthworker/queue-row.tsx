@@ -6,6 +6,8 @@ import { useMemo } from "react";
 
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
+import { cn } from "@/lib/cn";
+import { captionClassTight, captionMetaClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { usePatient } from "@/lib/use-api";
 import { fmtRelative, fmtTargetWeek, fullName } from "@/lib/format";
@@ -65,13 +67,13 @@ export function QueueRow({
       <Card className={compact ? "p-3" : "p-4"}>
         <div className="flex flex-wrap items-center gap-2">
           <div
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] ${meta.tone}`}
+            className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5", captionClassTight(locale, meta.tone))}
           >
             <Icon className="h-3 w-3" />
             {t(meta.labelKey)}
           </div>
           {entry.priority === "urgent" && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
+            <span className={captionClassTight(locale, "inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5  text-rose-700")}>
               <AlertOctagon className="h-3 w-3" />
               {t("queue.urgent")}
             </span>
@@ -79,8 +81,7 @@ export function QueueRow({
           {!compact && (
             <span
               className={
-                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] " +
-                (entry.status === "pending"
+                cn(captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5"), entry.status === "pending"
                   ? "border border-amber-200 bg-amber-50 text-amber-800"
                   : entry.status === "booked"
                     ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
@@ -90,7 +91,7 @@ export function QueueRow({
               {statusLabel}
             </span>
           )}
-          <span className="ml-auto font-mono text-xs tracking-[0.12em] text-[var(--muted-foreground)]">
+          <span className={captionMetaClass(locale, "ml-auto text-[var(--muted-foreground)]")}>
             #{entry.id} · {createdAtLabel}
           </span>
         </div>

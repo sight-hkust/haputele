@@ -23,10 +23,6 @@ import { Textarea } from "@/components/primitives/select";
 import { StatusBadge } from "@/components/primitives/status-badge";
 import { SignaturePad, type SignaturePadHandle } from "@/components/consent/signature-pad";
 import { AttachmentsPanel } from "@/components/healthworker/attachments-panel";
-import {
-  MASTER_CONSENT_BODY,
-  SESSION_CONSENT_BODY,
-} from "@/components/healthworker/master-consent-text";
 import { MeetingModal } from "@/components/meeting/meeting-modal";
 import { VitalsForm } from "@/components/healthworker/vitals-form";
 import { ApiError } from "@/lib/api";
@@ -43,6 +39,7 @@ import {
   useUpsertPreconsult,
 } from "@/lib/use-api";
 import { fmtDateTime, fmtTime } from "@/lib/format";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import type { AppointmentDetail } from "@/types/api";
 
@@ -52,7 +49,7 @@ import type { AppointmentDetail } from "@/types/api";
 const PRE_MEETING_STATES = new Set(["scheduled", "consent_pending", "data_collection"]);
 
 export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { appointment, patient, masterConsentStatus, preconsult, consultation } = data;
   const aptId = appointment.id;
 
@@ -175,7 +172,7 @@ function MasterConsentGate({
   patientName: string;
   masterIsRevocable: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [open, setOpen] = useState(false);
   const [signatureEmpty, setSignatureEmpty] = useState(true);
   const padRef = useRef<SignaturePadHandle | null>(null);
@@ -199,7 +196,7 @@ function MasterConsentGate({
         <div className="flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
               {t("pages.healthworker.appointments.masterConsentLabel")}
             </span>
             <p className="text-sm font-medium">
@@ -241,7 +238,7 @@ function MasterConsentGate({
         description={t("pages.healthworker.appointments.reRecordModalDescription")}
       >
         <p className="mb-4 max-h-48 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4 text-sm leading-relaxed text-[var(--muted-foreground)]">
-          {MASTER_CONSENT_BODY}
+          {t("consent.masterBody")}
         </p>
         <SignaturePad
           ref={padRef}
@@ -278,7 +275,7 @@ function SessionConsentStep({
   consentTime: string | null;
   masterAvailable: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [open, setOpen] = useState(false);
   const [signatureEmpty, setSignatureEmpty] = useState(true);
   const padRef = useRef<SignaturePadHandle | null>(null);
@@ -306,7 +303,7 @@ function SessionConsentStep({
         <div className="flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
               {t("pages.healthworker.appointments.sessionConsentLabel")}
             </span>
             <p className="text-sm font-medium">
@@ -339,7 +336,7 @@ function SessionConsentStep({
                 {t("pages.healthworker.appointments.recordConsent")}
               </Button>
               {!masterAvailable && (
-                <span className="self-center font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
+                <span className={captionClassTight(locale, "self-center  text-amber-700")}>
                   {t("pages.healthworker.appointments.masterConsentRequiredFirst")}
                 </span>
               )}
@@ -354,7 +351,7 @@ function SessionConsentStep({
         title={t("pages.healthworker.appointments.recordSessionModalTitle")}
       >
         <p className="mb-4 max-h-48 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4 text-sm leading-relaxed text-[var(--muted-foreground)]">
-          {SESSION_CONSENT_BODY}
+          {t("consent.sessionBody")}
         </p>
         <SignaturePad
           ref={padRef}
@@ -395,7 +392,7 @@ function VitalsStep({
   preconsult: AppointmentDetail["preconsult"];
   currentStatus: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const upsert = useUpsertPreconsult(appointmentId);
 
   // Briefly confirm a successful save so the HW knows the vitals were stored —
@@ -490,7 +487,7 @@ function VitalsStep({
 }
 
 function MeetingStep({ appointmentId, status }: { appointmentId: number; status: string }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const startMeeting = useStartMeeting(appointmentId);
   const endMeeting = useEndMeeting(appointmentId);
   const meetingToken = useMeetingToken(appointmentId);
@@ -584,7 +581,7 @@ function MeetingStep({ appointmentId, status }: { appointmentId: number; status:
 }
 
 function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -724,7 +721,7 @@ function CancelAction({
   doctorId: number;
   scheduledAt: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   // Opt-in: when checked, the cancel call also creates a fresh queue entry
@@ -761,7 +758,7 @@ function CancelAction({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
+          className={captionClassTight(locale, "text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline")}
         >
           {t("pages.healthworker.appointments.cancelLink")}
         </button>
@@ -779,7 +776,7 @@ function CancelAction({
         <div className="flex flex-col gap-3">
           <label
             htmlFor="queue-cancel-reason"
-            className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]"
+            className={captionClass(locale, "text-[var(--muted-foreground)]")}
           >
             {t("forms.reasonOptional")}
           </label>
@@ -804,7 +801,7 @@ function CancelAction({
             <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
-                  <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                  <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
                     {t("common.priority")}
                   </span>
                   <select
@@ -817,7 +814,7 @@ function CancelAction({
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                  <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
                     {t("forms.targetWeek")}
                   </span>
                   <DatePicker
@@ -871,13 +868,13 @@ export function CockpitHeader({
   data: AppointmentDetail;
   doctorName: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { appointment, patient } = data;
   return (
     <Card className="p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
             {t("pages.healthworker.appointments.appointmentId", { id: appointment.id })}
           </span>
           <h2 className="mt-1 font-display text-2xl tracking-[-0.01em]">

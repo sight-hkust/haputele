@@ -1,5 +1,6 @@
 "use client";
 
+import { captionClass } from "@/lib/caption-class";
 import { useMemo } from "react";
 import { CalendarPlus, ChevronRight, Clock } from "lucide-react";
 import Link from "next/link";
@@ -7,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/primitives/button";
 import { useAppointmentList, useQueueList } from "@/lib/use-api";
 import { fmtDateTime, fmtTargetWeek, statusLabel } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { QueueEntry } from "@/types/api";
 
 // Beneath the patient picker on the booking form: surface what's already
@@ -24,6 +26,7 @@ export function PatientContext({
   patientId: number;
   onBookQueueEntry: (entry: QueueEntry) => void;
 }) {
+  const { locale } = useI18n();
   const apptQ = useAppointmentList({ patientId });
   const queueQ = useQueueList({ patientId, status: "pending" });
 
@@ -46,7 +49,7 @@ export function PatientContext({
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-3">
-      <p className="font-mono text-xs uppercase tracking-[0.15em] text-amber-800">
+      <p className={captionClass(locale, "text-amber-800")}>
         This patient already has
       </p>
 

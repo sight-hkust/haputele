@@ -7,6 +7,7 @@ import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { diseaseLabel, physicalActivityLabel } from "@/lib/medical-codes";
 import { fmtRelative } from "@/lib/format";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import type { Profile } from "@/types/api";
 
@@ -19,13 +20,13 @@ export function ProfileSummary({
   profile: Profile | null;
   editHref: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   if (!profile || isEmpty(profile)) {
     return (
       <Card className="p-8">
         <div className="mb-3 flex items-center gap-2">
           <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className={captionClass(locale, "text-[var(--accent)]")}>
             {t("intake.summary.title")}
           </span>
         </div>
@@ -48,7 +49,7 @@ export function ProfileSummary({
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className={captionClass(locale, "text-[var(--accent)]")}>
             {t("intake.summary.title")}
           </span>
         </div>
@@ -134,7 +135,7 @@ export function ProfileSummary({
         )}
       </div>
 
-      <p className="mt-6 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <p className={captionClass(locale, "mt-6  text-[var(--muted-foreground)]")}>
         {t("intake.summary.updated", { relative: fmtRelative(profile.updatedAt) })}
       </p>
     </Card>
@@ -150,11 +151,12 @@ function Block({
   title: string;
   children: React.ReactNode;
 }) {
+  const { locale } = useI18n();
   return (
     <div>
       <div className="mb-2 flex items-center gap-2">
         <Icon className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
           {title}
         </span>
       </div>

@@ -8,6 +8,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { RubberStampEditor } from "@/components/admin/rubber-stamp-editor";
 import { SignatureCanvas, type SignatureCanvasHandle } from "@/components/doctor/signature-canvas";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useFileDrop } from "@/lib/use-file-drop";
 
@@ -37,7 +38,7 @@ export function SignatureInput({
   value: string | null;
   onChange: (next: string | null) => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const padRef = useRef<SignatureCanvasHandle>(null);
   const [mode, setMode] = useState<Mode>("draw");
@@ -109,7 +110,7 @@ export function SignatureInput({
             />
           </div>
           <div className="flex-1">
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
+            <div className={captionClass(locale, "text-emerald-600")}>
               {t("signature.signatureReady")}
             </div>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
@@ -177,7 +178,7 @@ export function SignatureInput({
             <div className="text-sm font-semibold tracking-[-0.01em]">
               {isDragging ? t("signature.dropToUpload") : t("signature.uploadSignature")}
             </div>
-            <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className={captionClass(locale, "mt-0.5  text-[var(--muted-foreground)]")}>
               {t("signature.uploadHint")}
             </div>
           </div>

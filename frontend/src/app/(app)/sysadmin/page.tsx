@@ -8,11 +8,12 @@ import { PageHeader } from "@/components/primitives/page-header";
 import { SelfAccountSettings } from "@/components/sysadmin/self-account-form";
 import { SystemConfigForm } from "@/components/sysadmin/system-config-form";
 import { fmtDateTime } from "@/lib/format";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useSystemConfig } from "@/lib/use-api";
 
 export default function SysAdminHome() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { data, error, isLoading, refetch } = useSystemConfig();
 
   return (
@@ -51,7 +52,7 @@ export default function SysAdminHome() {
         ) : (
           <Card className="p-6">
             <dl className="mb-4 flex flex-col gap-1 border-b border-[var(--border)] pb-4">
-              <dt className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+              <dt className={captionClass(locale, "text-[var(--muted-foreground)]")}>
                 {t("pages.sysadmin.system.initializedAt")}
               </dt>
               <dd className="text-sm text-[var(--foreground)]">

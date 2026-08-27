@@ -9,6 +9,7 @@ import { ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { QrCaptureModal } from "@/components/primitives/qr-capture-modal";
 import { RubberStampEditor } from "@/components/admin/rubber-stamp-editor";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useFileDrop } from "@/lib/use-file-drop";
 
@@ -39,7 +40,7 @@ export function RubberStampUploader({
   onChange: (next: string | null) => void;
   enableQrCapture?: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -118,7 +119,7 @@ export function RubberStampUploader({
             />
           </button>
           <div className="flex-1">
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
+            <div className={captionClass(locale, "text-emerald-600")}>
               {t("rubberStamp.stampCaptured")}
             </div>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
@@ -180,7 +181,7 @@ export function RubberStampUploader({
               <div className="text-sm font-semibold tracking-[-0.01em]">
                 {isDragging ? t("signature.dropToUpload") : t("rubberStamp.uploadTitle")}
               </div>
-              <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+              <div className={captionClass(locale, "mt-0.5  text-[var(--muted-foreground)]")}>
                 {t("rubberStamp.uploadHint")}
               </div>
             </div>

@@ -38,10 +38,11 @@ import {
 import { explainError } from "@/lib/error-codes";
 import { doctorName, fmtDateTime } from "@/lib/format";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
+import { captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 export default function DoctorDetailPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const params = useParams<{ id: string }>();
   const id = parseIdParam(params.id);
   const router = useRouter();
@@ -217,7 +218,7 @@ export default function DoctorDetailPage() {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {reapplyJustSent && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+                <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1  text-emerald-700")}>
                   <CheckCircle2 className="h-3 w-3" />
                   {t("pages.admin.doctors.sent")}
                 </span>
@@ -278,7 +279,7 @@ export default function DoctorDetailPage() {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {inviteJustSent && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+                <span className={captionClassTight(locale, "inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1  text-emerald-700")}>
                   <CheckCircle2 className="h-3 w-3" />
                   {t("pages.admin.doctors.sent")}
                 </span>

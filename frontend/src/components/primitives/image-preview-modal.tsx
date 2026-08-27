@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useEffect } from "react";
 
 import { Button } from "@/components/primitives/button";
+import { useI18n } from "@/lib/i18n";
 
 // Image lightbox styled as a popup window — a framed panel with a header bar
 // (title + an explicit X close button) and the image in the body. Closes only
@@ -23,6 +24,7 @@ export function ImagePreviewModal({
   alt: string;
   title?: string | null;
 }) {
+  const { t } = useI18n();
   // Lock body scroll while open. Closes only via the X button — no Esc or
   // backdrop click — matching every other modal.
   useEffect(() => {
@@ -59,7 +61,7 @@ export function ImagePreviewModal({
               >
                 {title ?? alt}
               </span>
-              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close preview">
+              <Button variant="ghost" size="icon" onClick={onClose} aria-label={t("common.close")}>
                 <X className="h-4 w-4" />
               </Button>
             </div>

@@ -6,6 +6,7 @@ import { Activity, Camera, ClipboardList, HeartPulse, MessageSquare, Pill } from
 import { Card } from "@/components/primitives/card";
 import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
 import { explainError } from "@/lib/error-codes";
+import { useI18n } from "@/lib/i18n";
 import { diseaseLabel } from "@/lib/medical-codes";
 import { fmtAge, fmtDate } from "@/lib/format";
 import { useAttachmentImage } from "@/lib/use-api";
@@ -28,6 +29,7 @@ export function PatientSummary({
   attachments: AttachmentMeta[];
   appointmentId: number;
 }) {
+  const { t } = useI18n();
   const age = fmtAge(patient.dob);
   const complaint = preconsult?.primaryComplaint?.trim();
 
@@ -37,20 +39,20 @@ export function PatientSummary({
         <div className="mb-4 flex items-center gap-2">
           <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-            Patient
+            {t("pages.doctor.sidebar.patient")}
           </span>
         </div>
         <h2 className="font-display text-2xl tracking-[-0.01em]">
           {patient.given} {patient.family}
         </h2>
         <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-          {[patient.gender, age, patient.dob ? `DOB ${fmtDate(patient.dob)}` : null]
+          {[patient.gender, age, patient.dob ? t("pages.doctor.sidebar.dob", { date: fmtDate(patient.dob) }) : null]
             .filter(Boolean)
             .join(" · ")}
         </p>
         {patient.nationalId && (
           <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
-            NID · {patient.nationalId}
+            {t("pages.doctor.sidebar.nid", { id: patient.nationalId })}
           </p>
         )}
       </Card>
@@ -62,7 +64,7 @@ export function PatientSummary({
         <div className="mb-3 flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-[var(--accent)]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-            Primary complaint
+            {t("vitals.primaryComplaint")}
           </span>
         </div>
         {complaint ? (
@@ -70,7 +72,9 @@ export function PatientSummary({
             {complaint}
           </p>
         ) : (
-          <p className="text-sm text-[var(--muted-foreground)]">No complaint captured.</p>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {t("pages.doctor.sidebar.noComplaint")}
+          </p>
         )}
       </Card>
 
@@ -79,7 +83,7 @@ export function PatientSummary({
           <div className="mb-3 flex items-center gap-2">
             <Camera className="h-4 w-4 text-[var(--accent)]" />
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-              Photos · {attachments.length}
+              {t("pages.doctor.sidebar.photos", { n: attachments.length })}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -94,15 +98,21 @@ export function PatientSummary({
         <div className="mb-4 flex items-center gap-2">
           <HeartPulse className="h-4 w-4 text-[var(--accent)]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-            Preconsult vitals
+            {t("pages.healthworker.appointments.vitalsTitle")}
           </span>
         </div>
         {preconsult ? (
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-            <Vital label="Height" value={preconsult.height ? `${preconsult.height} cm` : "—"} />
-            <Vital label="Weight" value={preconsult.weight ? `${preconsult.weight} kg` : "—"} />
             <Vital
-              label="Blood pressure"
+              label={t("vitals.labels.height")}
+              value={preconsult.height ? `${preconsult.height} cm` : "—"}
+            />
+            <Vital
+              label={t("vitals.labels.weight")}
+              value={preconsult.weight ? `${preconsult.weight} kg` : "—"}
+            />
+            <Vital
+              label={t("pages.doctor.sidebar.bloodPressure")}
               value={
                 preconsult.sysBp && preconsult.diaBp
                   ? `${preconsult.sysBp}/${preconsult.diaBp}`
@@ -111,12 +121,12 @@ export function PatientSummary({
               unit={preconsult.sysBp ? "mmHg" : undefined}
             />
             <Vital
-              label="Pulse"
+              label={t("vitals.labels.pulse")}
               value={preconsult.pulse ? `${preconsult.pulse}` : "—"}
               unit="bpm"
             />
             <Vital
-              label="Temperature"
+              label={t("vitals.labels.temperature")}
               value={
                 preconsult.temperature != null ? Number(preconsult.temperature).toFixed(1) : "—"
               }
@@ -124,7 +134,9 @@ export function PatientSummary({
             />
           </dl>
         ) : (
-          <p className="text-sm text-[var(--muted-foreground)]">No vitals captured.</p>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {t("pages.doctor.sidebar.noVitals")}
+          </p>
         )}
       </Card>
 
@@ -133,7 +145,7 @@ export function PatientSummary({
           <div className="mb-4 flex items-center gap-2">
             <Activity className="h-4 w-4 text-[var(--accent)]" />
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-              History at a glance
+              {t("pages.doctor.sidebar.historyAtAGlance")}
             </span>
           </div>
           <ProfileFacts profile={profile} />
@@ -150,6 +162,7 @@ function DoctorAttachmentThumb({
   attachment: AttachmentMeta;
   appointmentId: number;
 }) {
+  const { t } = useI18n();
   const { url, error, retry } = useAttachmentImage(appointmentId, attachment.id);
   const [preview, setPreview] = useState(false);
   return (
@@ -184,7 +197,7 @@ function DoctorAttachmentThumb({
             onClick={retry}
             className="font-medium underline underline-offset-2 hover:text-rose-700"
           >
-            Try again
+            {t("common.retry")}
           </button>
         </div>
       ) : (
@@ -211,10 +224,11 @@ function Vital({ label, value, unit }: { label: string; value: string; unit?: st
 }
 
 function ProfileFacts({ profile }: { profile: Profile }) {
+  const { t } = useI18n();
   const sections: { title: string; items: string[] }[] = [];
   if (profile.diseaseHistory.length) {
     sections.push({
-      title: "Conditions",
+      title: t("intake.summary.conditions"),
       items: profile.diseaseHistory.map((d) =>
         d.code === "other" && d.text ? d.text : diseaseLabel(d.code),
       ),
@@ -222,32 +236,39 @@ function ProfileFacts({ profile }: { profile: Profile }) {
   }
   if (profile.allergies.length) {
     sections.push({
-      title: "Allergies",
+      title: t("intake.allergies"),
       items: profile.allergies.map((a) => `${a.name} (${a.type})`),
     });
   }
   if (profile.medications.length) {
     sections.push({
-      title: "Existing meds",
+      title: t("intake.summary.existingMeds"),
       items: profile.medications.map((m) => [m.drug, m.dosage].filter(Boolean).join(" · ")),
     });
   }
   if (profile.surgicalHistory.length) {
     sections.push({
-      title: "Surgical history",
+      title: t("intake.surgicalHistory"),
       items: profile.surgicalHistory.map((s) => s.description),
     });
   }
   const lifestyle: string[] = [];
-  if (profile.lifestyle.smoking) lifestyle.push(`Smoking · ${profile.lifestyle.smoking}`);
-  if (profile.lifestyle.alcohol) lifestyle.push(`Alcohol · ${profile.lifestyle.alcohol}`);
+  if (profile.lifestyle.smoking)
+    lifestyle.push(t("consultation.lifestyleSmoking", { value: profile.lifestyle.smoking }));
+  if (profile.lifestyle.alcohol)
+    lifestyle.push(t("consultation.lifestyleAlcohol", { value: profile.lifestyle.alcohol }));
   if (profile.lifestyle.betelAreca)
-    lifestyle.push(`Betel / areca · ${profile.lifestyle.betelAreca}`);
-  if (profile.lifestyle.occupation) lifestyle.push(`Occupation · ${profile.lifestyle.occupation}`);
-  if (lifestyle.length) sections.push({ title: "Lifestyle", items: lifestyle });
+    lifestyle.push(t("consultation.lifestyleBetel", { value: profile.lifestyle.betelAreca }));
+  if (profile.lifestyle.occupation)
+    lifestyle.push(t("consultation.lifestyleOccupation", { value: profile.lifestyle.occupation }));
+  if (lifestyle.length) sections.push({ title: t("intake.summary.lifestyle"), items: lifestyle });
 
   if (!sections.length) {
-    return <p className="text-sm text-[var(--muted-foreground)]">No profile entries yet.</p>;
+    return (
+      <p className="text-sm text-[var(--muted-foreground)]">
+        {t("pages.doctor.sidebar.noProfile")}
+      </p>
+    );
   }
 
   return (

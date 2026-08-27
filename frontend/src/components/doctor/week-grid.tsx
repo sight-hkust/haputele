@@ -5,6 +5,7 @@ import { addDays, format } from "date-fns";
 
 import { cn } from "@/lib/cn";
 import { formatWithIntl } from "@/lib/date-locale";
+import { captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 // when2meet-style 30-min cell grid for one week. Drag to paint / erase.
@@ -156,8 +157,7 @@ export function WeekGrid({
         {days.map((d) => (
           <div
             key={d.index}
-            className={cn(
-              "px-1 pb-2 text-center font-mono text-xs uppercase tracking-[0.12em]",
+            className={cn("px-1 pb-2 text-center", captionClassTight(locale),
               d.isToday ? "text-[var(--accent)]" : "text-[var(--muted-foreground)]",
               d.isPast && "opacity-40",
             )}
@@ -204,7 +204,7 @@ function FragmentRow({
   onPointerDownCell: (d: number, s: number, e: React.PointerEvent) => void;
   onPointerEnterCell: (d: number, s: number) => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const onHourBoundary = slotIndex % 2 === 0;
   return (
     <>

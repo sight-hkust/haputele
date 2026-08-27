@@ -11,6 +11,8 @@ import {
 import { Eraser } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
+import { cn } from "@/lib/cn";
+import { captionClass, captionClassBare } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 export type SignatureCanvasHandle = {
@@ -109,11 +111,6 @@ export const SignatureCanvas = forwardRef<
     drawingRef.current = false;
   };
 
-  const labelClass =
-    locale === "si" ? "text-xs" : "font-mono text-xs uppercase tracking-[0.15em]";
-  const statusClass =
-    locale === "si" ? "text-xs" : "font-mono uppercase tracking-[0.12em]";
-
   return (
     <div className="flex flex-col gap-2">
       <div
@@ -130,14 +127,19 @@ export const SignatureCanvas = forwardRef<
           style={{ touchAction: "none" }}
         />
         {!hasInk && (
-          <div className={`pointer-events-none absolute inset-0 flex items-center justify-center text-[var(--muted-foreground)]/60 ${labelClass}`}>
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-0 flex items-center justify-center text-[var(--muted-foreground)]/60",
+              captionClass(locale),
+            )}
+          >
             {t("signature.signHere")}
           </div>
         )}
       </div>
       <div className="flex items-center justify-between text-xs">
         <span
-          className={`${statusClass} ${hasInk ? "text-emerald-600" : "text-[var(--muted-foreground)]"}`}
+          className={captionClassBare(locale, hasInk ? "text-emerald-600" : "text-[var(--muted-foreground)]")}
         >
           {hasInk ? t("signature.signed") : t("signature.notSignedYet")}
         </span>

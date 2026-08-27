@@ -27,6 +27,7 @@ import {
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
 import { fullName } from "@/lib/format";
+import { captionClass, captionClassBare } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import type { QueueEntry } from "@/types/api";
 
@@ -53,7 +54,7 @@ export default function AppointmentsWorkspacePage() {
 }
 
 function Workspace() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
   const sp = useSearchParams();
   const initialPatientId = sp.get("patientId");
@@ -177,7 +178,7 @@ function QueueCard({
   /** Highlight the row currently being booked in the booking card. */
   activeBookingEntryId?: number;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <Card className="flex flex-col gap-3 p-4">
       <div className="flex items-center justify-between">
@@ -185,7 +186,7 @@ function QueueCard({
           <h2 className="font-display text-base tracking-[-0.01em]">
             {t("pages.healthworker.appointments.queueTitle")}
           </h2>
-          <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <p className={captionClass(locale, "text-[var(--muted-foreground)]")}>
             {t("pages.healthworker.appointments.queuePending", { count: pending.length })}
           </p>
         </div>
@@ -280,7 +281,7 @@ function BookingCard({
   /** Fires when a from-queue booking succeeds — workspace refetches the queue. */
   onQueueEntryBooked: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const doctors = useDoctorList({ active: true });
   const create = useCreateAppointment();
   const isFromQueue = mode.kind === "from-queue";
@@ -347,7 +348,7 @@ function BookingCard({
       {mode.kind === "from-queue" && (
         <div className="flex items-start justify-between gap-2 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-3 py-2 text-xs">
           <div>
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+            <div className={captionClass(locale, "text-[var(--accent)]")}>
               {t("pages.healthworker.appointments.bookingFromQueue", { id: mode.entry.id })}
             </div>
             <div className="mt-0.5 font-medium">{queuePatientLabel}</div>
@@ -401,11 +402,11 @@ function SubFrame({
   onBack: () => void;
   children: React.ReactNode;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <h3 className={captionClass(locale, "text-[var(--muted-foreground)]")}>
           {title}
         </h3>
         <Button variant="ghost" size="sm" onClick={onBack}>
@@ -420,7 +421,7 @@ function SubFrame({
 // ── Calendar legend ──────────────────────────────────────────────────
 
 function Legend() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   // The calendar collapses the 7 backend statuses into 3 buckets (plus a
   // muted cancelled). Modals still surface the precise status.
   const items: Array<{ key: string; label: string; swatch: string }> = [
@@ -442,7 +443,7 @@ function Legend() {
       {items.map((it) => (
         <span key={it.key} className="inline-flex items-center gap-2">
           <span className={`h-2 w-3 rounded-sm ${it.swatch}`} />
-          <span className="font-mono uppercase tracking-[0.12em]">{it.label}</span>
+          <span className={captionClassBare(locale)}>{it.label}</span>
         </span>
       ))}
     </div>

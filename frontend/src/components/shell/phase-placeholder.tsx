@@ -1,11 +1,13 @@
 "use client";
 
+import { captionClassTight } from "@/lib/caption-class";
 import { motion } from "framer-motion";
 import { ArrowUpRight, type LucideIcon } from "lucide-react";
 
 import { Card } from "@/components/primitives/card";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { fadeInUp, staggerTight } from "@/lib/motion";
+import { useI18n } from "@/lib/i18n";
 
 export type PhaseFeature = { Icon: LucideIcon; title: string; description: string };
 
@@ -25,6 +27,7 @@ export function PhasePlaceholder({
   subtitle: string;
   features: PhaseFeature[];
 }) {
+  const { locale } = useI18n();
   return (
     <motion.div
       initial="hidden"
@@ -72,7 +75,7 @@ export function PhasePlaceholder({
                     {f.description}
                   </p>
                 </div>
-                <div className="mt-auto flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                <div className={captionClassTight(locale, "mt-auto flex items-center gap-1.5  text-[var(--muted-foreground)]")}>
                   Coming soon
                   <ArrowUpRight className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>

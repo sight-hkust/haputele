@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 
 import { Input } from "@/components/primitives/input";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { usePatientList } from "@/lib/use-api";
 import type { Patient } from "@/types/api";
@@ -18,7 +19,7 @@ export function PatientPicker({
   onPick: (p: Patient) => void;
   onClear: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
@@ -44,7 +45,7 @@ export function PatientPicker({
     return (
       <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3">
         <div className="text-sm">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
             {t("forms.forPatient")}
           </span>
           <div className="mt-1 font-medium">
@@ -59,7 +60,7 @@ export function PatientPicker({
             setQuery("");
             setOpen(false);
           }}
-          className="inline-flex items-center gap-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
+          className={captionClassTight(locale, "inline-flex items-center gap-1  text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline")}
         >
           <X className="h-3 w-3" />
           {t("common.change")}

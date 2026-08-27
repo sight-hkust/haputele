@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 export type ConsultationStage = "notes" | "rx" | "review";
@@ -9,7 +10,7 @@ export type ConsultationStage = "notes" | "rx" | "review";
 // Three-step horizontal stepper. Past steps get a check, current gets the
 // gradient treatment, future stays muted. Connector line darkens as you progress.
 export function ConsultationStepper({ current }: { current: ConsultationStage }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const stages: { id: ConsultationStage; label: string; n: string }[] = [
     { id: "notes", label: t("consultation.notes"), n: "01" },
     { id: "rx", label: t("consultation.rxPlan"), n: "02" },
@@ -37,8 +38,7 @@ export function ConsultationStepper({ current }: { current: ConsultationStage })
               </span>
               <div className="flex flex-col leading-none">
                 <span
-                  className={cn(
-                    "font-mono text-xs uppercase tracking-[0.15em]",
+                  className={cn(captionClass(locale),
                     state === "future" ? "text-[var(--muted-foreground)]" : "text-[var(--accent)]",
                   )}
                 >

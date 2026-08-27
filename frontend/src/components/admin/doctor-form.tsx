@@ -19,6 +19,7 @@ import {
   passwordError as passwordRuleError,
   usernameError as usernameRuleError,
 } from "@/lib/credentials";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import type { Doctor } from "@/types/api";
@@ -103,7 +104,7 @@ export function DoctorForm({
   onSubmit: (payload: DoctorFormPayload) => void;
   onCancel?: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const isCreate = mode === "create";
   const isSelfOnboarding = embedded === "self-onboarding";
   type Values = z.infer<ReturnType<typeof buildCreateSchema>>;
@@ -520,7 +521,7 @@ export function DoctorForm({
               return (
                 <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
                   <div className="flex-1">
-                    <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
+                    <div className={captionClass(locale, "text-emerald-600")}>
                       {t("pages.admin.doctors.form.signatureOnFile")}
                     </div>
                     <p className="mt-1 text-sm text-[var(--muted-foreground)]">

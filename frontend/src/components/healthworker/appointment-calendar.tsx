@@ -177,9 +177,12 @@ const FC_CSS = `
     color: var(--muted-foreground);
   }
   .fc-haputele[data-locale="si"] .fc-col-header-cell-cushion,
-  .fc-haputele[data-locale="si"] .fc-list-day-text {
+  .fc-haputele[data-locale="si"] .fc-list-day-text,
+  .fc-haputele[data-locale="si"] .fc-timegrid-axis-cushion,
+  .fc-haputele[data-locale="si"] .fc-timegrid-slot-label-cushion {
+    font-family: var(--font-inter), system-ui, sans-serif;
     text-transform: none;
-    letter-spacing: 0.04em;
+    letter-spacing: normal;
   }
   .fc-haputele .fc-timegrid-slot-label-cushion { font-size: 0.8rem; }
   /* Taller rows so 15-min blocks have room to breathe and the event title

@@ -31,6 +31,7 @@ import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { newPasswordError, passwordError, usernameError } from "@/lib/credentials";
 import { useCapsLock } from "@/lib/use-caps-lock";
 import { explainError } from "@/lib/error-codes";
+import { captionClass, captionClassTight } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 import { useAccountRoster, useCreateOperatingAccount } from "@/lib/use-api";
 import type { AccountRole, AccountRosterEntry, OperatingAccountRole } from "@/types/api";
@@ -99,7 +100,7 @@ export function AccountsSurface({
   emptyDescription,
   manualDoctorHref,
 }: AccountsSurfaceProps) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { data, error, isLoading, refetch } = useAccountRoster();
   const [createOpen, setCreateOpen] = useState(false);
   // The drawer tracks a username, not a row snapshot, so it always reflects
@@ -361,6 +362,7 @@ function StatChip({
   value: number;
   tone?: "neutral" | "positive" | "negative";
 }) {
+  const { locale } = useI18n();
   const dot =
     tone === "positive"
       ? "bg-emerald-500"
@@ -371,7 +373,7 @@ function StatChip({
     <div className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-2">
       <span className={cn("h-1.5 w-1.5 rounded-full", dot)} aria-hidden />
       <span className="font-display text-lg leading-none tracking-[-0.01em]">{value}</span>
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+      <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
         {label}
       </span>
     </div>
@@ -391,13 +393,14 @@ function SortableTh({
   dir: SortDir;
   onSort: (key: SortKey) => void;
 }) {
+  const { locale } = useI18n();
   const isActive = active === sortKey;
   return (
     <th className="px-5 py-3">
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="group inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+        className={captionClass(locale, "group inline-flex items-center gap-1.5  text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]")}
       >
         {label}
         {isActive ? (
@@ -415,20 +418,19 @@ function SortableTh({
 }
 
 function RoleBadge({ role }: { role: AccountRole }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
-    <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+    <span className={captionClassTight(locale, "inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5  text-[var(--muted-foreground)]")}>
       {translateRole(role, t)}
     </span>
   );
 }
 
 function StatePill({ active, label }: { active: boolean; label: string }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   return (
     <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em]",
+      className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5", captionClassTight(locale),
         active
           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
           : "border-rose-200 bg-rose-50 text-rose-700",
@@ -525,7 +527,7 @@ function CreateAccountModal({
   description: string;
   manualDoctorHref?: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const create = useCreateOperatingAccount();
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");

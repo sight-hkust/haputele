@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/primitives/button";
 import { Topbar } from "@/components/shell/topbar";
 import { ROLE_HOMES, SEGMENT_TO_ROLE, useAuth } from "@/lib/auth";
+import { captionClass } from "@/lib/caption-class";
 import { useI18n } from "@/lib/i18n";
 
 // Auth gate + role guard for everything under (app). If you're at /admin/* but
@@ -14,7 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? "/";
   const { session, loading, bootstrapFailed, retryBootstrap } = useAuth();
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
 
   // The first path segment names the role section. If it's a section that
   // isn't this user's, they're on a page they don't belong on. Computed during
@@ -46,7 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
         <div role="alert" className="flex flex-col gap-2">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
             {t("common.connectionProblem")}
           </span>
           <h1 className="font-display text-4xl tracking-[-0.02em]">{t("common.couldNotReachServer")}</h1>
@@ -63,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (loading || !session || roleMismatch) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <span className={captionClass(locale, "text-[var(--muted-foreground)]")}>
           {t("common.loading")}
         </span>
       </main>
