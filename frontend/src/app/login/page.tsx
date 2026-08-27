@@ -9,6 +9,7 @@ import { Button } from "@/components/primitives/button";
 import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
 import { SectionLabel } from "@/components/primitives/section-label";
+import { AppVersion } from "@/components/shell/app-version";
 import { LoginHeroGraphic } from "@/components/marketing/login-hero-graphic";
 import { resolveLoginRedirect, useAuth, type Role } from "@/lib/auth";
 import { ApiError, api } from "@/lib/api";
@@ -120,7 +121,7 @@ function LoginScreen() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
+    <main className="relative flex min-h-screen flex-col overflow-hidden">
       {/* Ambient corner glows — felt more than seen */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-32 top-0 h-[520px] w-[520px] rounded-full bg-[var(--accent)]/[0.04] blur-[150px]" />
@@ -143,7 +144,7 @@ function LoginScreen() {
       </div>
 
       {/* Two-column form / graphic — asymmetric 1.1fr / 0.9fr per the design spec */}
-      <div className="mx-auto grid min-h-screen max-w-6xl items-center gap-12 px-6 py-24 sm:px-8 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-6 py-24 sm:px-8 lg:grid-cols-[1.1fr_0.9fr]">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -239,6 +240,9 @@ function LoginScreen() {
           <LoginHeroGraphic />
         </div>
       </div>
+      <footer className="px-6 py-3 text-right">
+        <AppVersion />
+      </footer>
     </main>
   );
 }

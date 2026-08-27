@@ -19,7 +19,7 @@ on:
         default: ""
       image_tag:
         type: string
-        description: "Image tag to deploy, e.g. 0.1.0 or sha-abc1234 (emergency override; blank = use the terraform.tfvars pin)"
+        description: "Image tag to deploy, e.g. 2608.0.0 or sha-abc1234 (emergency override; blank = use the terraform.tfvars pin)"
         required: false
         default: ""
 

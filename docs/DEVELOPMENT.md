@@ -97,3 +97,16 @@ names and the few response-presence refinements the OpenAPI schema cannot carry.
      "regenerate API client" PR carrying only the fresh `frontend/src/gen`
      output — merge it promptly so the committed client matches the deployed
      backend. Image publication waits on this job either way.
+
+---
+
+## 6. Release Versioning
+
+Release tags use the hybrid CalVer/SemVer format `vYYMM.MINOR.PATCH`:
+
+* `YYMM` identifies the release year and month.
+* `MINOR` increments for feature releases within that month.
+* `PATCH` increments for fixes to that minor release.
+* `MINOR` and `PATCH` reset to `0` when `YYMM` changes.
+
+For example, `v2608.0.0` is the first August 2026 release, `v2608.1.0` is a later feature release that month, and `v2608.1.1` is its first patch.
