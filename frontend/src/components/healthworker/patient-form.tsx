@@ -86,7 +86,7 @@ export function PatientForm({
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(mode === "create" ? createSchema : baseSchema),
+    resolver: zodResolver(mode === "create" ? createSchema : baseSchema) as never,
     defaultValues: {
       given: initial?.given ?? "",
       family: initial?.family ?? "",
