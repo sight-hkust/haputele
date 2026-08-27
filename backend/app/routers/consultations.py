@@ -8,7 +8,7 @@ from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, forbidden, not_found, unprocessable
 from ..dateutils import snap_to_monday
 from ..models import Appointment, Consultation, Doctor, Patient, QueueEntry
-from ..routers.appointments import _reject_if_past, _slot_taken
+from ..routers.appointments import _reject_if_past, _slot_taken, claiming_doctor_slot
 from ..schemas import (
     AppointmentOut,
     ConsultationDraftResponse,
@@ -179,8 +179,10 @@ def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = D
             scheduled_at=payload.followUp.scheduledAt,
             status="scheduled",
         )
-        db.add(follow_up_appt)
-        db.flush()
+        # The flush is what trips the slot index, not the commit below.
+        with claiming_doctor_slot(db):
+            db.add(follow_up_appt)
+            db.flush()
         c.follow_up_date = payload.followUp.scheduledAt.date()
         c.follow_up_appointment_id = follow_up_appt.appointment_id
     elif isinstance(payload.followUp, FollowUpWeeks):
