@@ -3,14 +3,14 @@
 import dayGridPlugin from "@fullcalendar/react/daygrid";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import listPlugin from "@fullcalendar/react/list";
-import FullCalendar, { CalendarController } from "@fullcalendar/react";
+import FullCalendar, { useCalendarController } from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/react/timegrid";
 import themePlugin from "@fullcalendar/react/themes/classic";
 import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/classic/theme.css";
 import "@fullcalendar/react/themes/classic/palette.css";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
 import { APP_TIMEZONE } from "@/lib/format";
@@ -61,9 +61,12 @@ export function AppointmentCalendar({
   focusAt?: string | null;
 }) {
   const router = useRouter();
-  // v7 replaced the ref/getApi handle with a controller instance passed as a
-  // prop. One per mount; the calendar attaches its api to it on mount.
-  const [controller] = useState(() => new CalendarController());
+  // v7 replaced the ref/getApi handle with a controller passed as a prop.
+  // Always build it with this hook, never `new CalendarController()`: the
+  // constructor's callback is typed optional but the calendar calls it
+  // unconditionally on mount, so a hand-built one throws. The callback also
+  // re-renders, which is what keeps `view` and the toolbar button state current.
+  const controller = useCalendarController();
 
   // Jump to the focused appointment's date, keeping whatever view the user
   // is in — moving the date is the ask, changing the view as well would be
