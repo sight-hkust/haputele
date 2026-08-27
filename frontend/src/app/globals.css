@@ -80,8 +80,8 @@
     color: var(--foreground);
   }
 
-  /* Honor user motion preferences. Continuous animations (rotating ring,
-     floating cards) collapse to nothing; entrance/transition feel snappy. */
+  /* Honor user motion preferences. Continuous animations (the login hero's
+     rotating ring) collapse to nothing; entrance/transition feel snappy. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
