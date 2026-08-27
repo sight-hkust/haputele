@@ -35,22 +35,6 @@ const SLOT_MAX_HOUR = 20;
 // find an already-mounted one without going through FullCalendar's api.
 const FOCUS_CLASS = "fc-haputele-focus";
 
-// Nearest ancestor that actually scrolls, found by behaviour rather than by
-// class name — FullCalendar v7's internal markup is hashed utility classes and
-// not a surface to depend on. Bounded by `root` so the walk can never reach
-// the page's own scroller and move the whole window instead of the grid.
-function scrollParentWithin(el: HTMLElement, root: HTMLElement): HTMLElement | null {
-  let node: HTMLElement | null = el.parentElement;
-  while (node && root.contains(node)) {
-    const overflowY = getComputedStyle(node).overflowY;
-    if (node.scrollHeight > node.clientHeight && (overflowY === "auto" || overflowY === "scroll")) {
-      return node;
-    }
-    node = node.parentElement;
-  }
-  return null;
-}
-
 type StatusBucket = "upcoming" | "live" | "done" | "cancelled";
 
 const STATUS_BUCKET: Record<AppointmentStatus, StatusBucket> = {
@@ -94,27 +78,27 @@ export function AppointmentCalendar({
   const controller = useCalendarController();
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // Put the focused block in the middle of the grid. Centring by scrollTop and
-  // letting the browser clamp to [0, scrollHeight - clientHeight] gives the
-  // early-morning "stick to the top" and late-evening "stick to the bottom"
-  // cases for free, with no special-casing.
+  // Put the focused block in the middle of the grid.
+  //
+  // scrollIntoView rather than locating the scroller and setting scrollTop: an
+  // earlier version walked up for an ancestor with overflow-y auto/scroll and
+  // found nothing, because v7 scrolls through its own scroller abstraction
+  // (`scrollers`, `scrollerSyncerClass`) and need not present as a plain
+  // overflow box. The browser already knows which container to move; asking it
+  // avoids depending on markup that is not a public surface. Pinning to the
+  // top before 08:00 and the bottom after 18:00 comes free from the browser
+  // clamping the scroll.
   const centreEvent = useCallback((el: HTMLElement) => {
-    const root = rootRef.current;
-    if (!root) return;
-    const scroller = scrollParentWithin(el, root);
-    if (!scroller) return;
-    const elRect = el.getBoundingClientRect();
-    const scRect = scroller.getBoundingClientRect();
-    // Rects, not offsetTop: offsetParent inside the grid is not the scroller.
-    const delta = elRect.top - scRect.top - (scroller.clientHeight - elRect.height) / 2;
-    scroller.scrollTo({
-      top: scroller.scrollTop + delta,
-      // globals.css's reduced-motion block only reaches CSS animations, so a
-      // JS-driven scroll has to check for itself.
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-    });
+    // scrollIntoView moves every scrollable ancestor, the document included,
+    // so remember where the page was and put it back — only the grid should
+    // move. That restore is why this is an instant scroll rather than a smooth
+    // one: a smooth scroll animates the document asynchronously, and a
+    // synchronous restore would be overwritten by the frames that follow it.
+    // A locate action reads fine as a jump, and reliably landing beats
+    // animating. It also makes the reduced-motion question moot.
+    const { scrollX, scrollY } = window;
+    el.scrollIntoView({ block: "center", behavior: "auto" });
+    window.scrollTo(scrollX, scrollY);
   }, []);
 
   // Jump to the focused appointment's date, keeping whatever view the user
