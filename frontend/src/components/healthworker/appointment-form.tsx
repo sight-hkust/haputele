@@ -71,7 +71,7 @@ export function AppointmentForm({
     watch,
     formState: { errors },
   } = useForm<Values>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as never,
     defaultValues: {
       patientId: defaultPatientId ?? (undefined as unknown as number),
       doctorId: defaultDoctorId ?? (undefined as unknown as number),
