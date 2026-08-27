@@ -10,7 +10,7 @@ import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/classic/theme.css";
 import "@fullcalendar/react/themes/classic/palette.css";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
 import { APP_TIMEZONE } from "@/lib/format";
@@ -76,6 +76,22 @@ export function AppointmentCalendar({
   // unconditionally on mount, so a hand-built one throws. The callback also
   // re-renders, which is what keeps `view` and the toolbar button state current.
   const controller = useCalendarController();
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Put the focused block in the middle of the grid. Ask the browser rather
+  // than hunting for the scroll container: v7 scrolls through its own
+  // abstraction and the container need not present as a native overflow box.
+  // The 07:00 and 18:00 cases need no special handling — the browser clamps.
+  const centreEvent = useCallback((el: HTMLElement) => {
+    // scrollIntoView moves every scrollable ancestor, the document included,
+    // so remember where the page was and put it back; only the grid should
+    // move. That restore is why this is instant rather than smooth — a smooth
+    // scroll animates the document over later frames and would overwrite it.
+    const { scrollX, scrollY } = window;
+    el.scrollIntoView({ block: "center", behavior: "auto" });
+    window.scrollTo(scrollX, scrollY);
+  }, []);
+
   // Jump to the focused appointment's date, keeping whatever view the user
   // is in — moving the date is the ask, changing the view as well would be
   // disorienting. `focusAt` rather than `focusId` so re-selecting the same
@@ -95,9 +111,16 @@ export function AppointmentCalendar({
     // Comparing instants is right across the APP_TIMEZONE boundary: active
     // start/end are absolute Dates for the range on screen.
     if (!view || at < view.activeStart || at >= view.activeEnd) {
+      // Off screen: navigate, and let eventDidMount centre it once the block
+      // for the new range mounts — it does not exist yet at this point.
       controller.gotoDate(focusAt);
+    } else {
+      // Already in view, so nothing remounts and eventDidMount will not fire.
+      // Centre the block that is already on the page.
+      const el = rootRef.current?.querySelector<HTMLElement>(`.${FOCUS_CLASS}`);
+      if (el) centreEvent(el);
     }
-  }, [controller, focusAt]);
+  }, [controller, focusAt, centreEvent]);
 
   const events = useMemo(() => {
     const apptEvents = appointments.map((a) => {
@@ -136,7 +159,10 @@ export function AppointmentCalendar({
   }, [appointments, availability]);
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele">
+    <div
+      ref={rootRef}
+      className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele"
+    >
       <style>{FC_CSS}</style>
       <FullCalendar
         controller={controller}
@@ -166,6 +192,11 @@ export function AppointmentCalendar({
         slotMinTime={`${String(SLOT_MIN_HOUR).padStart(2, "0")}:00:00`}
         slotMaxTime={`${String(SLOT_MAX_HOUR).padStart(2, "0")}:00:00`}
         scrollTime={`${String(SLOT_MIN_HOUR).padStart(2, "0")}:00:00`}
+        // Sets the position on first render only. Left resetting (the default)
+        // it re-snaps the grid to 07:00 on every date change, which overwrote
+        // the centring above — that is what defeated three earlier attempts.
+        // It also means paging weeks by hand keeps the hours you were reading.
+        scrollTimeReset={false}
         allDaySlot={false}
         // Keep 15-min blocks at readable height (2.6em ≈ 42px) — without a
         // floor, v7 packs the 52 slots into the container height.
@@ -179,6 +210,9 @@ export function AppointmentCalendar({
         eventClass={(info) =>
           focusId != null && info.event.id === String(focusId) ? FOCUS_CLASS : ""
         }
+        eventDidMount={(info) => {
+          if (focusId != null && info.event.id === String(focusId)) centreEvent(info.el);
+        }}
         dayHeaderClass="fc-haputele-day-header"
         listDayHeaderClass="fc-haputele-day-header"
         slotHeaderClass="fc-haputele-slot-header"
