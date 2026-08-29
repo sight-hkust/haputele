@@ -2,9 +2,10 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowDown, Inbox, Loader2, Plus, X } from "lucide-react";
+import { ArrowDown, CalendarClock, Inbox, Loader2, Plus, X } from "lucide-react";
 
 import { AppointmentForm } from "@/components/healthworker/appointment-form";
+import { AppointmentRow } from "@/components/healthworker/appointment-row";
 import { AppointmentCalendar } from "@/components/healthworker/appointment-calendar";
 import { CancelQueueEntryForm } from "@/components/healthworker/cancel-queue-entry-form";
 import { PatientContext } from "@/components/healthworker/patient-context";
@@ -26,8 +27,8 @@ import {
   useQueueList,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
-import { fullName } from "@/lib/format";
-import type { QueueEntry } from "@/types/api";
+import { appDayWindow, appToday, fullName } from "@/lib/format";
+import type { CalendarAppointment, QueueEntry } from "@/types/api";
 
 // Wide window: ±60 days. Healthworker calendar shows everything in their
 // rolling 4-month vicinity.
@@ -42,6 +43,10 @@ type BookingMode = { kind: "fresh" } | { kind: "from-queue"; entry: QueueEntry }
 // Queue card sub-states. The book sub-state is no longer here — booking is
 // handled by the booking card via mode switching, both visible at once.
 type QueuePanel = { kind: "list" } | { kind: "add" } | { kind: "cancel"; entry: QueueEntry };
+
+// Which list the rail's lower card is showing. Each keeps its own state while
+// hidden, so switching tabs never discards a half-filled queue form.
+type RailTab = "appointments" | "queue";
 
 export default function AppointmentsWorkspacePage() {
   return (
@@ -75,6 +80,22 @@ function Workspace() {
   // anything in the queue card.
   const [bookingMode, setBookingMode] = useState<BookingMode>({ kind: "fresh" });
   const [queuePanel, setQueuePanel] = useState<QueuePanel>({ kind: "list" });
+  const [railTab, setRailTab] = useState<RailTab>("appointments");
+
+  // Selecting a row in the appointments list rings that block and jumps the
+  // calendar to it. Deliberately not a navigation: the calendar already opens
+  // the detail page on click, so list = locate, calendar = open.
+  const [focused, setFocused] = useState<{ id: number; at: string } | null>(null);
+
+  // What's actually scheduled, soonest first. Anchored to the start of today
+  // rather than "now" so this morning's appointment is still listed while it
+  // is happening — that is exactly when staff go looking for it.
+  const upcoming = useMemo(() => {
+    const from = appDayWindow(appToday()).fromISO;
+    return (apptList.data ?? [])
+      .filter((a) => a.status !== "cancelled" && a.scheduledAt >= from)
+      .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
+  }, [apptList.data]);
 
   // When "Book this" fires from a queue row OR from the patient-context panel,
   // we want the booking card scrolled into view.
@@ -121,13 +142,20 @@ function Workspace() {
           ) : apptList.isLoading ? (
             <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
           ) : (
-            <AppointmentCalendar appointments={apptList.data ?? []} />
+            <AppointmentCalendar
+              appointments={apptList.data ?? []}
+              focusId={focused?.id ?? null}
+              focusAt={focused?.at ?? null}
+            />
           )}
         </div>
 
-        {/* Side rail — Booking card on top, Queue card below */}
-        <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-          <div ref={bookingCardRef}>
+        {/* Side rail — Booking card on top, tabbed list below.
+            Fixed height (not max-h) so the list below can flex into whatever
+            space the booking card leaves; overflow-y-auto stays as a safety
+            valve for the tall from-queue booking form. */}
+        <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto">
+          <div ref={bookingCardRef} className="lg:shrink-0">
             <BookingCard
               mode={bookingMode}
               setMode={setBookingMode}
@@ -137,7 +165,13 @@ function Workspace() {
               onQueueEntryBooked={() => queueQ.refetch()}
             />
           </div>
-          <QueueCard
+          <RailCard
+            tab={railTab}
+            setTab={setRailTab}
+            appointments={upcoming}
+            appointmentsLoading={apptList.isLoading}
+            focusedId={focused?.id ?? null}
+            onFocusAppointment={(a) => setFocused({ id: a.id, at: a.scheduledAt })}
             panel={queuePanel}
             setPanel={setQueuePanel}
             pending={pending}
@@ -155,9 +189,161 @@ function Workspace() {
   );
 }
 
-// ── Queue card ───────────────────────────────────────────────────────
+// ── Rail card: Appointments | Queue ──────────────────────────────────
+//
+// One card, two lists. Queue keeps its sub-panel state while hidden, so an
+// half-finished "Add to queue" form survives a look at the appointments tab.
 
-function QueueCard({
+function RailTabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-lg px-3 py-1.5 font-mono text-xs uppercase tracking-[0.12em] transition-colors ${
+        active
+          ? "bg-[var(--card)] text-[var(--accent)] shadow-sm"
+          : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function RailCard({
+  tab,
+  setTab,
+  appointments,
+  appointmentsLoading,
+  focusedId,
+  onFocusAppointment,
+  panel,
+  setPanel,
+  pending,
+  loading,
+  error,
+  refetch,
+  onBookEntry,
+  activeBookingEntryId,
+}: {
+  tab: RailTab;
+  setTab: (t: RailTab) => void;
+  appointments: CalendarAppointment[];
+  appointmentsLoading: boolean;
+  focusedId: number | null;
+  onFocusAppointment: (a: CalendarAppointment) => void;
+  panel: QueuePanel;
+  setPanel: (p: QueuePanel) => void;
+  pending: QueueEntry[];
+  loading: boolean;
+  error: ApiError | null | undefined;
+  refetch: () => void;
+  onBookEntry: (entry: QueueEntry) => void;
+  /** Highlight the row currently being booked in the booking card. */
+  activeBookingEntryId?: number;
+}) {
+  return (
+    <Card className="flex flex-col gap-3 p-4 lg:min-h-0 lg:flex-1">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-1 rounded-xl bg-[var(--muted)] p-1">
+          <RailTabButton active={tab === "appointments"} onClick={() => setTab("appointments")}>
+            Appointments
+          </RailTabButton>
+          <RailTabButton active={tab === "queue"} onClick={() => setTab("queue")}>
+            Queue
+          </RailTabButton>
+        </div>
+        {tab === "queue" && panel.kind === "list" && (
+          <Button size="sm" onClick={() => setPanel({ kind: "add" })}>
+            <Plus className="h-4 w-4" />
+            Add
+          </Button>
+        )}
+      </div>
+
+      <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        {tab === "appointments"
+          ? `${appointments.length} upcoming · soonest first`
+          : `${pending.length} pending · urgent first`}
+      </p>
+
+      {tab === "appointments" ? (
+        <AppointmentsPanel
+          appointments={appointments}
+          loading={appointmentsLoading}
+          focusedId={focusedId}
+          onFocus={onFocusAppointment}
+        />
+      ) : (
+        <QueuePanelBody
+          panel={panel}
+          setPanel={setPanel}
+          pending={pending}
+          loading={loading}
+          error={error}
+          refetch={refetch}
+          onBookEntry={onBookEntry}
+          activeBookingEntryId={activeBookingEntryId}
+        />
+      )}
+    </Card>
+  );
+}
+
+function AppointmentsPanel({
+  appointments,
+  loading,
+  focusedId,
+  onFocus,
+}: {
+  appointments: CalendarAppointment[];
+  loading: boolean;
+  focusedId: number | null;
+  onFocus: (a: CalendarAppointment) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 py-4 text-xs text-[var(--muted-foreground)]">
+        <Loader2 className="h-3 w-3 animate-spin" /> Loading…
+      </div>
+    );
+  }
+  if (appointments.length === 0) {
+    return (
+      <EmptyState
+        Icon={CalendarClock}
+        title="Nothing scheduled"
+        description="No appointments booked from today onwards."
+        className="py-6"
+      />
+    );
+  }
+  return (
+    <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:p-1">
+      {appointments.map((a) => (
+        <AppointmentRow
+          key={a.id}
+          appointment={a}
+          selected={focusedId === a.id}
+          onSelect={() => onFocus(a)}
+        />
+      ))}
+    </ul>
+  );
+}
+
+// The queue's own body, unchanged apart from losing the header the rail card
+// now owns.
+function QueuePanelBody({
   panel,
   setPanel,
   pending,
@@ -174,26 +360,10 @@ function QueueCard({
   error: ApiError | null | undefined;
   refetch: () => void;
   onBookEntry: (entry: QueueEntry) => void;
-  /** Highlight the row currently being booked in the booking card. */
   activeBookingEntryId?: number;
 }) {
   return (
-    <Card className="flex flex-col gap-3 p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display text-base tracking-[-0.01em]">Queue</h2>
-          <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            {pending.length} pending · urgent first
-          </p>
-        </div>
-        {panel.kind === "list" && (
-          <Button size="sm" onClick={() => setPanel({ kind: "add" })}>
-            <Plus className="h-4 w-4" />
-            Add
-          </Button>
-        )}
-      </div>
-
+    <>
       {panel.kind === "add" ? (
         <SubFrame title="Add to queue" onBack={() => setPanel({ kind: "list" })}>
           <QueueEntryForm
@@ -235,7 +405,7 @@ function QueueCard({
           className="py-6"
         />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:p-1">
           {pending.map((e) => (
             <div
               key={e.id}
@@ -255,7 +425,7 @@ function QueueCard({
           ))}
         </ul>
       )}
-    </Card>
+    </>
   );
 }
 

@@ -3,14 +3,14 @@
 import dayGridPlugin from "@fullcalendar/react/daygrid";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import listPlugin from "@fullcalendar/react/list";
-import FullCalendar from "@fullcalendar/react";
+import FullCalendar, { useCalendarController } from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/react/timegrid";
 import themePlugin from "@fullcalendar/react/themes/classic";
 import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/classic/theme.css";
 import "@fullcalendar/react/themes/classic/palette.css";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
 import { APP_TIMEZONE } from "@/lib/format";
@@ -26,6 +26,15 @@ import { APP_TIMEZONE } from "@/lib/format";
 //   live     = in_progress / awaiting_notes (meeting + write-up window)
 //   done     = completed
 //   cancelled is rendered muted/strikethrough rather than as a fourth color.
+// Grid bounds. SLOT_MIN_HOUR is both the `slotMinTime` prop below and the
+// floor the focus-scroll clamps to — they have to agree, so they share a
+// constant rather than repeating the literal.
+const SLOT_MIN_HOUR = 7;
+const SLOT_MAX_HOUR = 20;
+// The class eventClass hangs on the focused block, so the effect below can
+// find an already-mounted one without going through FullCalendar's api.
+const FOCUS_CLASS = "fc-haputele-focus";
+
 type StatusBucket = "upcoming" | "live" | "done" | "cancelled";
 
 const STATUS_BUCKET: Record<AppointmentStatus, StatusBucket> = {
@@ -49,12 +58,69 @@ export function AppointmentCalendar({
   appointments,
   availability,
   basePath = "/healthworker/appointments",
+  focusId,
+  focusAt,
 }: {
   appointments: CalendarAppointment[];
   availability?: Availability[];
   basePath?: string;
+  /** Appointment to ring, so a list selection is findable in the grid. */
+  focusId?: number | null;
+  /** Its scheduledAt — the calendar jumps here when this changes. */
+  focusAt?: string | null;
 }) {
   const router = useRouter();
+  // v7 replaced the ref/getApi handle with a controller passed as a prop.
+  // Always build it with this hook, never `new CalendarController()`: the
+  // constructor's callback is typed optional but the calendar calls it
+  // unconditionally on mount, so a hand-built one throws. The callback also
+  // re-renders, which is what keeps `view` and the toolbar button state current.
+  const controller = useCalendarController();
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Put the focused block in the middle of the grid. Ask the browser rather
+  // than hunting for the scroll container: v7 scrolls through its own
+  // abstraction and the container need not present as a native overflow box.
+  // The 07:00 and 18:00 cases need no special handling — the browser clamps.
+  const centreEvent = useCallback((el: HTMLElement) => {
+    // scrollIntoView moves every scrollable ancestor, the document included,
+    // so remember where the page was and put it back; only the grid should
+    // move. That restore is why this is instant rather than smooth — a smooth
+    // scroll animates the document over later frames and would overwrite it.
+    const { scrollX, scrollY } = window;
+    el.scrollIntoView({ block: "center", behavior: "auto" });
+    window.scrollTo(scrollX, scrollY);
+  }, []);
+
+  // Jump to the focused appointment's date, keeping whatever view the user
+  // is in — moving the date is the ask, changing the view as well would be
+  // disorienting. `focusAt` rather than `focusId` so re-selecting the same
+  // row after paging away still brings the grid back.
+  //
+  // Only the date moves. Scrolling the grid *down* to the appointment's time is
+  // deliberately absent — see the follow-up issue; three approaches to driving
+  // v7's scroll position failed, and it needs a browser to sort out.
+  useEffect(() => {
+    if (!focusAt) return;
+    const view = controller.view;
+    const at = new Date(focusAt);
+    // Only navigate when the appointment is genuinely off screen. gotoDate
+    // re-snaps the grid to scrollTime even when the date is unchanged
+    // (scrollTimeReset defaults true), so calling it for the week already
+    // shown reads as the calendar lurching to the top for no reason.
+    // Comparing instants is right across the APP_TIMEZONE boundary: active
+    // start/end are absolute Dates for the range on screen.
+    if (!view || at < view.activeStart || at >= view.activeEnd) {
+      // Off screen: navigate, and let eventDidMount centre it once the block
+      // for the new range mounts — it does not exist yet at this point.
+      controller.gotoDate(focusAt);
+    } else {
+      // Already in view, so nothing remounts and eventDidMount will not fire.
+      // Centre the block that is already on the page.
+      const el = rootRef.current?.querySelector<HTMLElement>(`.${FOCUS_CLASS}`);
+      if (el) centreEvent(el);
+    }
+  }, [controller, focusAt, centreEvent]);
 
   const events = useMemo(() => {
     const apptEvents = appointments.map((a) => {
@@ -93,9 +159,13 @@ export function AppointmentCalendar({
   }, [appointments, availability]);
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele">
+    <div
+      ref={rootRef}
+      className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele"
+    >
       <style>{FC_CSS}</style>
       <FullCalendar
+        controller={controller}
         plugins={[themePlugin, dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
         timeZone={APP_TIMEZONE}
         initialView="timeGridWeek"
@@ -119,9 +189,14 @@ export function AppointmentCalendar({
         // consistent. All-day strip hidden — appointments always have a time.
         slotDuration="00:15:00"
         slotHeaderInterval="01:00:00"
-        slotMinTime="07:00:00"
-        slotMaxTime="20:00:00"
-        scrollTime="07:00:00"
+        slotMinTime={`${String(SLOT_MIN_HOUR).padStart(2, "0")}:00:00`}
+        slotMaxTime={`${String(SLOT_MAX_HOUR).padStart(2, "0")}:00:00`}
+        scrollTime={`${String(SLOT_MIN_HOUR).padStart(2, "0")}:00:00`}
+        // Sets the position on first render only. Left resetting (the default)
+        // it re-snaps the grid to 07:00 on every date change, which overwrote
+        // the centring above — that is what defeated three earlier attempts.
+        // It also means paging weeks by hand keeps the hours you were reading.
+        scrollTimeReset={false}
         allDaySlot={false}
         // Keep 15-min blocks at readable height (2.6em ≈ 42px) — without a
         // floor, v7 packs the 52 slots into the container height.
@@ -132,6 +207,12 @@ export function AppointmentCalendar({
         buttonClass={(info) =>
           info.isSelected ? "fc-haputele-button fc-haputele-button-active" : "fc-haputele-button"
         }
+        eventClass={(info) =>
+          focusId != null && info.event.id === String(focusId) ? FOCUS_CLASS : ""
+        }
+        eventDidMount={(info) => {
+          if (focusId != null && info.event.id === String(focusId)) centreEvent(info.el);
+        }}
         dayHeaderClass="fc-haputele-day-header"
         listDayHeaderClass="fc-haputele-day-header"
         slotHeaderClass="fc-haputele-slot-header"
@@ -226,6 +307,15 @@ const FC_CSS = `
     animation: fc-haputele-pulse 1.8s ease-in-out infinite;
   }
   .fc-haputele .fc-bucket-cancelled { opacity: 0.6; }
+
+  /* Selected from the appointments list. Outline rather than a fill change so
+     the status bucket's own colour still reads. Wins over .fc-bucket-live's
+     pulse by sitting later in the sheet. */
+  .fc-haputele .fc-haputele-focus {
+    box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0, 82, 255, 0.3) !important;
+    animation: none !important;
+    z-index: 2;
+  }
 
   .fc-haputele-event {
     display: flex;
