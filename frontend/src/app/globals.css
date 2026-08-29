@@ -25,6 +25,39 @@
   --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
   --animate-fade-in-up: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 
+  /* Login hero. `orbit` spins the dashed ring and the icon carrier together;
+     `orbit-reverse` runs on each icon to cancel that spin so it stays upright.
+     Same duration on both, or the icons drift. These use the standalone
+     `rotate` property, not `transform`, so they compose with the positioning
+     transform each icon needs rather than overwriting it. */
+  --animate-orbit: orbit 60s linear infinite;
+  --animate-orbit-reverse: orbit-reverse 60s linear infinite;
+  --animate-breathe: breathe 6s ease-in-out infinite;
+
+  @keyframes orbit {
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  @keyframes orbit-reverse {
+    to {
+      rotate: -360deg;
+    }
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: scale(1.08);
+      opacity: 0.8;
+    }
+  }
+
   @keyframes pulse-soft {
     0%,
     100% {
@@ -80,8 +113,10 @@
     color: var(--foreground);
   }
 
-  /* Honor user motion preferences. Continuous animations (rotating ring,
-     floating cards) collapse to nothing; entrance/transition feel snappy. */
+  /* Honor user motion preferences. Continuous animations (the login hero's
+     rotating ring and orbiting icons) collapse to nothing; entrance/transition
+     feel snappy. This only reaches CSS animations — anything driven from JS by
+     framer-motion has to opt in separately via useReducedMotion(). */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
