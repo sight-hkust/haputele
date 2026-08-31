@@ -3,3 +3,8 @@
 # kernel looks for an interpreter literally named "/bin/sh\r" and the
 # container dies with "exec ./entrypoint.sh: no such file or directory".
 *.sh text eol=lf
+
+# systemd unit files are parsed literally: a CRLF checkout makes ExecStart point
+# at "/opt/haputele/backup.sh\r", which does not exist.
+*.service text eol=lf
+*.timer text eol=lf
