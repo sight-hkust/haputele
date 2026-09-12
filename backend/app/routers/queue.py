@@ -9,7 +9,7 @@ from ..dateutils import snap_to_monday
 from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import conflict, not_found, unprocessable
 from ..models import Appointment, Doctor, Patient, QueueEntry
-from ..routers.appointments import _reject_if_past, _slot_taken
+from ..routers.appointments import _reject_if_past, _slot_taken, claiming_doctor_slot
 from ..schemas import (
     AppointmentOut,
     QueueBookIn,
@@ -180,13 +180,17 @@ def book_queue_entry(qid: int, payload: QueueBookIn, db: Session = Depends(db_de
         scheduled_at=payload.scheduledAt,
         status="scheduled",
     )
-    db.add(appt)
-    db.flush()  # get appt.appointment_id without committing
+    # The flush is what trips the slot index here, not the commit — so the
+    # guard spans both. Appointment and entry share one transaction, so losing
+    # the race leaves the entry pending rather than booked against nothing.
+    with claiming_doctor_slot(db):
+        db.add(appt)
+        db.flush()  # get appt.appointment_id without committing
 
-    entry.status = "booked"
-    entry.appointment_id = appt.appointment_id
-    entry.booked_at = datetime.now(timezone.utc)
-    db.commit()
+        entry.status = "booked"
+        entry.appointment_id = appt.appointment_id
+        entry.booked_at = datetime.now(timezone.utc)
+        db.commit()
     db.refresh(entry)
     db.refresh(appt)
     return {

@@ -1,8 +1,10 @@
+from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Iterator, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import and_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..deps import CurrentUser, current_user, db_dep, require_role
@@ -102,6 +104,53 @@ def _reject_if_past(scheduled_at: datetime) -> None:
         )
 
 
+# The partial unique index from 0001_initial_schema — the only thing that
+# actually keeps two active appointments out of one doctor's slot.
+SLOT_UNIQUE_INDEX = "appointments_doctor_slot_unique"
+
+
+def _is_slot_conflict(exc: IntegrityError) -> bool:
+    """True when `exc` is that index refusing a duplicate slot.
+
+    psycopg reports the constraint by name on Postgres. Fall back to matching
+    the index name in the message text so a driver that leaves `diag` empty
+    degrades to a weaker check rather than mis-classifying the error.
+    """
+    orig = getattr(exc, "orig", None)
+    name = getattr(getattr(orig, "diag", None), "constraint_name", None)
+    if name:
+        return name == SLOT_UNIQUE_INDEX
+    return SLOT_UNIQUE_INDEX in str(orig)
+
+
+@contextmanager
+def claiming_doctor_slot(db: Session) -> Iterator[None]:
+    """Wrap writes that compete for a doctor's slot.
+
+    `_slot_taken` is a read-then-write check, so two concurrent bookings can
+    both clear it and race to the write. The index is what stops the second
+    row landing — but its refusal arrives as an IntegrityError, and unhandled
+    that is a 500 for the loser, where the pre-check would have given a clean
+    409. Same outcome for the caller either way; only the error differs.
+
+    This is a context manager rather than a commit wrapper because the write
+    that trips the index is not always the commit: the queue and follow-up
+    paths `flush()` first to read the new appointment's id, so the violation
+    surfaces there. Wrap the whole span from insert to commit.
+
+    Only this one constraint is translated. Any other IntegrityError is a real
+    bug and must keep its own identity — reporting it as a slot conflict would
+    send whoever debugs it looking in the wrong place.
+    """
+    try:
+        yield
+    except IntegrityError as exc:
+        db.rollback()
+        if _is_slot_conflict(exc):
+            raise conflict("doctor_slot_taken") from exc
+        raise
+
+
 @router.post("", response_model=AppointmentOut, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_role("healthworker"))])
 def create_appointment(payload: AppointmentCreate, db: Session = Depends(db_dep)) -> AppointmentOut:
@@ -122,7 +171,8 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(db_dep)
         status="scheduled",
     )
     db.add(appt)
-    db.commit()
+    with claiming_doctor_slot(db):
+        db.commit()
     db.refresh(appt)
     return AppointmentOut.model_validate(appt)
 
@@ -241,7 +291,8 @@ def update_appointment(appt_id: int, payload: AppointmentUpdate, db: Session = D
             raise conflict("doctor_slot_taken")
     appt.doctor_id = new_doctor
     appt.scheduled_at = new_time
-    db.commit()
+    with claiming_doctor_slot(db):
+        db.commit()
     db.refresh(appt)
     return AppointmentOut.model_validate(appt)
 
