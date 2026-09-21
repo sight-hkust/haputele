@@ -1,0 +1,19 @@
+# Fires haputele-backup.service nightly. Check it with:
+#   systemctl list-timers haputele-backup
+[Unit]
+Description=Nightly HapuTele Postgres backup
+Documentation=https://github.com/sight-hkust/haputele/issues/121
+
+[Timer]
+# 03:00 local time. The VM's timezone follows APP_TIMEZONE (Asia/Colombo), so
+# this lands in the quiet hours for the clinic rather than at a UTC boundary.
+# Dump filenames are still stamped in UTC — see backup.sh.
+OnCalendar=*-*-* 03:00:00
+# If the VM was down at 03:00 (reboot, redeploy, replacement), run as soon as it
+# comes back rather than silently skipping a night.
+Persistent=true
+# Nothing else contends for this VM, but avoid hammering R2 on the dot.
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

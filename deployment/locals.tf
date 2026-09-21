@@ -32,6 +32,15 @@ locals {
     S3_SECRET_ACCESS_KEY  = data.sops_file.secrets.data["cloudflare_r2.secret_access_key"]
     RESEND_API_KEY        = data.sops_file.secrets.data["resend.api_key"]
     RESEND_WEBHOOK_SECRET = var.resend_webhook_secret
+
+    # Backup credentials are a SEPARATE R2 token scoped to the backups bucket
+    # only — deliberately not the S3_* keys above. Those are handed to the api
+    # container, so an application compromise must not also be able to delete
+    # the backups (see backup.sh).
+    BACKUP_S3_ENDPOINT_URL      = data.sops_file.secrets.data["backup_r2.endpoint"]
+    BACKUP_S3_BUCKET            = data.sops_file.secrets.data["backup_r2.bucket_name"]
+    BACKUP_S3_ACCESS_KEY_ID     = data.sops_file.secrets.data["backup_r2.access_key_id"]
+    BACKUP_S3_SECRET_ACCESS_KEY = data.sops_file.secrets.data["backup_r2.secret_access_key"]
   }
 
   # Non-secret config. Exposed as the ansible_extra_vars output, passed to the
