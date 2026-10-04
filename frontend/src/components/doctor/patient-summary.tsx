@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Camera, ClipboardList, HeartPulse, MessageSquare, Pill } from "lucide-react";
+import { Activity, Camera, HeartPulse, MessageSquare, Pill } from "lucide-react";
 
+import { PatientSafetyStrip } from "@/components/clinical/patient-safety-strip";
 import { Card } from "@/components/primitives/card";
 import { ImagePreviewModal } from "@/components/primitives/image-preview-modal";
 import { explainError } from "@/lib/error-codes";
 import { diseaseLabel } from "@/lib/medical-codes";
-import { fmtAge, fmtDate } from "@/lib/format";
 import { useAttachmentImage } from "@/lib/use-api";
 import type { AttachmentMeta, Patient, Preconsult, Profile } from "@/types/api";
 
@@ -21,52 +21,28 @@ export function PatientSummary({
   profile,
   attachments,
   appointmentId,
+  showIdentity = true,
 }: {
   patient: Patient;
   preconsult: Preconsult | null;
   profile: Profile | null;
   attachments: AttachmentMeta[];
   appointmentId: number;
+  showIdentity?: boolean;
 }) {
-  const age = fmtAge(patient.dob);
   const complaint = preconsult?.primaryComplaint?.trim();
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card variant="elevated" className="p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-            Patient
-          </span>
-        </div>
-        <h2 className="font-display text-2xl tracking-[-0.01em]">
-          {patient.given} {patient.family}
-        </h2>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-          {[patient.gender, age, patient.dob ? `DOB ${fmtDate(patient.dob)}` : null]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-        {patient.nationalId && (
-          <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
-            NID · {patient.nationalId}
-          </p>
-        )}
-      </Card>
+    <div className="flex min-w-0 flex-col gap-4">
+      {showIdentity && <PatientSafetyStrip patient={patient} profile={profile} />}
 
-      {/* FEEDBACK §2: surface the HW's note about why the patient is here so
-          the doctor reads it before joining the call. Elevated card, top of
-          the column, distinct from vitals. */}
-      <Card variant="elevated" className="border-[var(--accent)]/30 bg-[var(--accent)]/[0.04] p-6">
+      <Card variant="elevated" className="border-[var(--accent)]/30 bg-[var(--accent)]/[0.04] p-4">
         <div className="mb-3 flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-            Primary complaint
-          </span>
+          <span className="text-sm font-semibold text-[var(--accent)]">Primary complaint</span>
         </div>
         {complaint ? (
-          <p className="whitespace-pre-line text-base font-medium leading-relaxed tracking-[-0.005em]">
+          <p className="whitespace-pre-line break-words text-base font-medium leading-relaxed tracking-[-0.005em]">
             {complaint}
           </p>
         ) : (
@@ -75,10 +51,10 @@ export function PatientSummary({
       </Card>
 
       {attachments.length > 0 && (
-        <Card className="p-6">
+        <Card className="p-4">
           <div className="mb-3 flex items-center gap-2">
             <Camera className="h-4 w-4 text-[var(--accent)]" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
+            <span className="text-sm font-semibold text-[var(--accent)]">
               Photos · {attachments.length}
             </span>
           </div>
@@ -90,12 +66,10 @@ export function PatientSummary({
         </Card>
       )}
 
-      <Card className="p-6">
+      <Card className="p-4">
         <div className="mb-4 flex items-center gap-2">
           <HeartPulse className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-            Preconsult vitals
-          </span>
+          <span className="text-sm font-semibold text-[var(--accent)]">Preconsult vitals</span>
         </div>
         {preconsult ? (
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -129,12 +103,10 @@ export function PatientSummary({
       </Card>
 
       {profile && (
-        <Card className="p-6">
+        <Card className="p-4">
           <div className="mb-4 flex items-center gap-2">
             <Activity className="h-4 w-4 text-[var(--accent)]" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--accent)]">
-              History at a glance
-            </span>
+            <span className="text-sm font-semibold text-[var(--accent)]">History at a glance</span>
           </div>
           <ProfileFacts profile={profile} />
         </Card>
@@ -199,9 +171,7 @@ function DoctorAttachmentThumb({
 function Vital({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <div>
-      <dt className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        {label}
-      </dt>
+      <dt className="text-sm text-[var(--muted-foreground)]">{label}</dt>
       <dd className="mt-1 text-sm font-semibold tracking-[-0.01em]">
         {value}
         {unit && <span className="ml-1 font-normal text-[var(--muted-foreground)]">{unit}</span>}
@@ -254,14 +224,12 @@ function ProfileFacts({ profile }: { profile: Profile }) {
     <div className="flex flex-col gap-4">
       {sections.map((s) => (
         <div key={s.title}>
-          <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            {s.title}
-          </div>
+          <div className="text-sm font-medium text-[var(--muted-foreground)]">{s.title}</div>
           <ul className="mt-1.5 flex flex-wrap gap-1.5">
             {s.items.map((it, i) => (
               <li
                 key={i}
-                className="rounded-md bg-[var(--muted)]/60 px-2 py-1 text-xs text-[var(--foreground)]"
+                className="min-w-0 max-w-full break-words rounded-md bg-[var(--muted)]/60 px-2 py-1 text-sm text-[var(--foreground)]"
               >
                 {it}
               </li>

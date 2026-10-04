@@ -40,6 +40,8 @@ const MESSAGES: Record<string, string> = {
   consultation_not_found: "Consultation not found.",
   not_your_appointment: "This appointment isn't assigned to you.",
   not_your_consultation: "This consultation isn't yours.",
+  medication_generic_name_required:
+    "Every medication needs a generic name before signing. Your partial prescription can still be saved as a draft.",
   doctor_profile_missing: "Your doctor profile is incomplete — contact an admin.",
   username_taken: "That username is already in use.",
   rubber_stamp_required: "Upload a rubber-stamp image for the doctor.",

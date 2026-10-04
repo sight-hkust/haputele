@@ -105,6 +105,7 @@ export function QueueEntryForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Source">
           <Select
+            aria-label="Source"
             value={source}
             onChange={(e) => setSource(e.target.value as "walk_in" | "screening")}
           >
@@ -113,13 +114,21 @@ export function QueueEntryForm({
           </Select>
         </Field>
         <Field label="Priority">
-          <Select value={priority} onChange={(e) => setPriority(e.target.value as QueuePriority)}>
+          <Select
+            aria-label="Priority"
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as QueuePriority)}
+          >
             <option value="routine">Routine</option>
             <option value="urgent">Urgent</option>
           </Select>
         </Field>
         <Field label="Preferred doctor (optional)">
-          <Select value={preferredDoctorId} onChange={(e) => setPreferredDoctorId(e.target.value)}>
+          <Select
+            aria-label="Preferred doctor (optional)"
+            value={preferredDoctorId}
+            onChange={(e) => setPreferredDoctorId(e.target.value)}
+          >
             <option value="">Any doctor</option>
             {(doctors.data ?? []).map((d) => (
               <option key={d.id} value={d.id}>
@@ -145,6 +154,7 @@ export function QueueEntryForm({
 
       <Field label="Notes">
         <Textarea
+          aria-label="Notes"
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

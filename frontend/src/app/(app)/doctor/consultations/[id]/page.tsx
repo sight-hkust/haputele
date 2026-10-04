@@ -4,11 +4,15 @@ import { useParams } from "next/navigation";
 
 import { ConsultationFlow } from "@/components/doctor/consultation-flow";
 import { PatientSummary } from "@/components/doctor/patient-summary";
+import { VisitHistoryPanel } from "@/components/doctor/visit-history";
+import { PatientSafetyStrip } from "@/components/clinical/patient-safety-strip";
 import { DoctorCallPanel } from "@/components/meeting/doctor-call-panel";
 import { BackLink } from "@/components/primitives/back-link";
+import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ApiErrorBanner } from "@/components/primitives/error-banner";
 import { useAppointment, useConsultation } from "@/lib/use-api";
+import { fmtTime } from "@/lib/format";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function ConsultationPage() {
@@ -51,38 +55,55 @@ export default function ConsultationPage() {
   const readOnly = consult.data.status === "completed";
 
   return (
-    <div className="mx-auto flex max-w-[110rem] flex-col gap-10 px-6 py-12">
+    <div className="mx-auto flex max-w-[96rem] flex-col gap-4 px-4 py-6 sm:px-6">
       <BackLink href={`/doctor/appointments/${apt.data.appointment.id}`}>
         Back to appointment
       </BackLink>
 
-      <div
-        className={
-          readOnly
-            ? "grid gap-8 lg:grid-cols-[1fr_0.4fr]"
-            : "grid gap-8 lg:grid-cols-[1.2fr_1.2fr_0.4fr]"
-        }
-      >
-        {!readOnly && (
-          <aside className="lg:sticky lg:top-8 lg:order-1 lg:h-[calc(100vh-8rem)] lg:self-start">
+      <div className="sticky top-16 z-20">
+        <PatientSafetyStrip patient={apt.data.patient} profile={apt.data.profile} />
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--muted-foreground)]">
+        <span>
+          {readOnly
+            ? "Signed consultation record"
+            : "Your task: document, prescribe, review and sign"}{" "}
+          · Updated {fmtTime(new Date(apt.dataUpdatedAt).toISOString())}
+        </span>
+        <Button variant="ghost" onClick={() => apt.refetch()} disabled={apt.isFetching}>
+          {apt.isFetching ? "Refreshing…" : "Refresh appointment"}
+        </Button>
+      </div>
+      {consult.error && <ApiErrorBanner error={consult.error} onRetry={() => consult.refetch()} />}
+      {apt.error && <ApiErrorBanner error={apt.error} onRetry={() => apt.refetch()} />}
+
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
+        <div className="flex min-w-0 flex-col gap-4">
+          {!readOnly && (
             <DoctorCallPanel
               appointmentId={apt.data.appointment.id}
               status={apt.data.appointment.status}
             />
-          </aside>
-        )}
-        <div className="flex flex-col gap-6 lg:order-2">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)] align-middle" />
-            {readOnly ? "Record · locked" : "Consultation · in progress"}
-          </span>
+          )}
+          <a
+            href="#patient-context"
+            className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--accent)] underline underline-offset-4 lg:hidden"
+          >
+            View patient context and previous visits
+          </a>
           <ConsultationFlow
             consultation={consult.data}
             appointmentId={apt.data.appointment.id}
             readOnly={readOnly}
           />
         </div>
-        <aside className="lg:sticky lg:top-24 lg:order-3 lg:self-start">
+        <aside id="patient-context" className="flex min-w-0 flex-col gap-4 scroll-mt-64">
+          {apt.data.patient && (
+            <VisitHistoryPanel
+              patientId={apt.data.patient.id}
+              excludeAppointmentId={apt.data.appointment.id}
+            />
+          )}
           {apt.data.patient && (
             <PatientSummary
               patient={apt.data.patient}
@@ -90,6 +111,7 @@ export default function ConsultationPage() {
               profile={apt.data.profile}
               attachments={apt.data.attachments ?? []}
               appointmentId={apt.data.appointment.id}
+              showIdentity={false}
             />
           )}
         </aside>

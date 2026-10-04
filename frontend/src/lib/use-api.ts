@@ -495,6 +495,8 @@ export function useAppointmentList(params: {
   );
   return useGeneratedQuery<CalendarAppointment[]>(generated, {
     queryKey: ["appointments", "list", params],
+    staleTime: 5_000,
+    refetchInterval: 10_000,
   });
 }
 
@@ -508,6 +510,12 @@ export function useAppointment(id: number | null) {
     enabled: !!id,
     refetchOnWindowFocus: true,
     staleTime: 5_000,
+    // Other staff advance this encounter in a separate browser session.
+    // Stop once the record is terminal; hidden tabs pause polling by default.
+    refetchInterval: (query) => {
+      const status = query.state.data?.appointment.status;
+      return status === "completed" || status === "cancelled" ? false : 5_000;
+    },
   });
 }
 
@@ -909,6 +917,8 @@ export function useQueueList(params: {
   );
   return useGeneratedQuery<QueueEntry[]>(generated, {
     queryKey: ["queue", "list", params],
+    staleTime: 5_000,
+    refetchInterval: 10_000,
   });
 }
 

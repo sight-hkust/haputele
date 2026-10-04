@@ -71,7 +71,7 @@ export const NeedsReconsent: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole("button", { name: "Record consent" })).toBeDisabled();
+    await expect(await canvas.findByRole("button", { name: "Record consent" })).toBeDisabled();
     await userEvent.click(canvas.getByRole("button", { name: "Re-record" }));
     const dialog = await within(canvasElement.ownerDocument.body).findByRole("dialog");
     await expect(within(dialog).getByRole("button", { name: "Patient agreed" })).toBeDisabled();
@@ -80,7 +80,9 @@ export const NeedsReconsent: Story = {
 export const SessionSignatureRequired: Story = {
   ...Scheduled,
   play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole("button", { name: "Record consent" }));
+    await userEvent.click(
+      await within(canvasElement).findByRole("button", { name: "Record consent" }),
+    );
     const dialog = await within(canvasElement.ownerDocument.body).findByRole("dialog");
     await expect(within(dialog).getByRole("button", { name: "Patient agreed" })).toBeDisabled();
     await expect(within(dialog).getByRole("button", { name: "Patient declined" })).toBeEnabled();
@@ -89,4 +91,28 @@ export const SessionSignatureRequired: Story = {
 export const PrescriptionLoadError: Story = {
   args: { data: detail("completed") },
   parameters: scenario({ appointmentStatus: "completed", error: true }),
+};
+export const ReadyButReconsentRequired: Story = {
+  args: { data: { ...detail("data_collection"), masterConsentStatus: "needs_reconsent" } },
+  parameters: scenario({ appointmentStatus: "data_collection", needsReconsent: true }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("button", { name: "Start meeting" })).toBeDisabled();
+    await userEvent.click(canvas.getByRole("button", { name: "Re-record" }));
+    const dialog = await within(canvasElement.ownerDocument.body).findByRole("dialog");
+    await expect(within(dialog).getByRole("button", { name: "Patient agreed" })).toBeDisabled();
+  },
+};
+export const CompletedPrescriptionDisclosure: Story = {
+  ...Completed,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("link", { name: "Open" });
+    const preview = canvas.getByTitle("Prescription for appointment 1");
+    await expect(preview).not.toBeVisible();
+    await userEvent.click(canvas.getByText("Preview signed prescription"));
+    await expect(preview).toBeVisible();
+    await userEvent.click(canvas.getByText("Preview signed prescription"));
+    await expect(preview).not.toBeVisible();
+  },
 };

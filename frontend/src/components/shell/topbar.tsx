@@ -6,6 +6,7 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/primitives/button";
 import { RoleBadge } from "@/components/shell/role-badge";
 import { ROLE_HOMES, useAuth } from "@/lib/auth";
+import { confirmPendingChanges } from "@/lib/use-unsaved-changes";
 
 export function Topbar() {
   const { session, logout } = useAuth();
@@ -31,9 +32,17 @@ export function Topbar() {
           <span className="hidden font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] md:inline">
             {session.username}
           </span>
-          <Button variant="ghost" size="sm" onClick={logout}>
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Sign out</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (confirmPendingChanges()) logout();
+            }}
+            aria-label="Sign out"
+            className="min-h-11 min-w-11"
+          >
+            <LogOut className="h-4 w-4" aria-hidden />
+            <span>Sign out</span>
           </Button>
         </div>
       </div>

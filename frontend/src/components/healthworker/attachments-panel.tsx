@@ -139,11 +139,11 @@ export function AttachmentsPanel({
           : "")
       }
     >
-      <div className="mb-4 flex items-start gap-3">
+      <div className="mb-4 grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
         <div className="rounded-xl bg-[var(--accent)]/10 p-2">
           <Camera className="h-5 w-5 text-[var(--accent)]" />
         </div>
-        <div className="flex-1">
+        <div className="min-w-0">
           <h3 className="text-lg font-semibold tracking-[-0.01em]">Photos for the doctor</h3>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             {readonly
@@ -152,30 +152,20 @@ export function AttachmentsPanel({
           </p>
         </div>
         {!readonly && (
-          <div className="flex shrink-0 gap-2">
+          <div className="col-span-2 flex flex-wrap gap-2 sm:col-start-2">
             <Button
               variant="secondary"
               onClick={() => setCameraOpen(true)}
               disabled={upload.isPending}
-              size="sm"
             >
               <Camera className="h-3.5 w-3.5" />
               Take photo
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setQrOpen(true)}
-              disabled={upload.isPending}
-              size="sm"
-            >
+            <Button variant="secondary" onClick={() => setQrOpen(true)} disabled={upload.isPending}>
               <Smartphone className="h-3.5 w-3.5" />
               Use phone
             </Button>
-            <Button
-              onClick={() => fileInput.current?.click()}
-              disabled={upload.isPending}
-              size="sm"
-            >
+            <Button onClick={() => fileInput.current?.click()} disabled={upload.isPending}>
               <Upload className="h-3.5 w-3.5" />
               {upload.isPending ? "Uploading…" : "Add photos"}
             </Button>
@@ -187,6 +177,7 @@ export function AttachmentsPanel({
         ref={fileInput}
         type="file"
         accept={ACCEPT}
+        aria-label="Upload patient photos"
         multiple
         className="sr-only"
         onChange={(e) => handleFiles(e.target.files)}

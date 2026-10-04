@@ -6,14 +6,15 @@ import { ExternalLink, FileSignature, Stethoscope } from "lucide-react";
 
 import { PatientSummary } from "@/components/doctor/patient-summary";
 import { VisitHistoryPanel } from "@/components/doctor/visit-history";
+import { PatientSafetyStrip } from "@/components/clinical/patient-safety-strip";
+import { FollowUpSummary } from "@/components/clinical/follow-up-summary";
 import { BackLink } from "@/components/primitives/back-link";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
-import { PageHeader } from "@/components/primitives/page-header";
 import { StatusBadge } from "@/components/primitives/status-badge";
 import { explainError } from "@/lib/error-codes";
-import { fmtDateTime } from "@/lib/format";
+import { fmtDateTime, fmtTime } from "@/lib/format";
 import { useAppointment, useCreateOrGetDraft } from "@/lib/use-api";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
@@ -25,7 +26,7 @@ export default function DoctorAppointmentDetail() {
   const apt = useAppointment(id);
   const draft = useCreateOrGetDraft();
 
-  if (apt.error) {
+  if (apt.error && !apt.data) {
     throwNotFoundIf404(apt.error);
     return (
       <div className="mx-auto max-w-5xl px-6 py-12">
@@ -49,35 +50,52 @@ export default function DoctorAppointmentDetail() {
   const canBeginConsult = ["in_progress", "awaiting_notes"].includes(appointment.status);
   const isCompleted = appointment.status === "completed";
 
-  const beginConsultation = () =>
-    draft.mutate(appointment.id, {
-      onSuccess: (res) => router.push(`/doctor/consultations/${res.consultationId}`),
-    });
-
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
-      <BackLink href="/doctor">Back to calendar</BackLink>
+    <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6">
+      <BackLink href="/doctor">Back to appointments</BackLink>
 
-      <PageHeader
-        label={`Appointment #${appointment.id}`}
-        title={patient ? `${patient.given} ${patient.family}` : "Patient"}
-        subtitle={fmtDateTime(appointment.scheduledAt)}
-        action={<StatusBadge status={appointment.status} />}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-[-0.01em]">
+            Appointment #{appointment.id}
+          </h1>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            {fmtDateTime(appointment.scheduledAt)}
+          </p>
+        </div>
+        <StatusBadge status={appointment.status} />
+      </div>
+      <PatientSafetyStrip patient={patient} profile={profile} />
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--muted-foreground)]">
+        <span>Updated {fmtTime(new Date(apt.dataUpdatedAt).toISOString())}</span>
+        <Button variant="ghost" onClick={() => apt.refetch()} disabled={apt.isFetching}>
+          {apt.isFetching ? "Refreshing…" : "Refresh status"}
+        </Button>
+      </div>
+      {apt.error && <ApiErrorBanner error={apt.error} onRetry={() => apt.refetch()} />}
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_0.6fr]">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
         {/* Main column — actions */}
-        <div className="flex flex-col gap-6 lg:order-1">
+        <div className="flex min-w-0 flex-col gap-4">
           {!canBeginConsult && !isCompleted && (
-            <Card className="p-6">
+            <Card className="p-4">
               <div className="flex items-start gap-3">
                 <Stethoscope className="mt-0.5 h-5 w-5 text-[var(--muted-foreground)]" />
                 <div>
                   <h3 className="text-base font-semibold tracking-[-0.01em]">
-                    Waiting on the healthworker
+                    {appointment.status === "cancelled"
+                      ? "Appointment cancelled"
+                      : appointment.status === "data_collection"
+                        ? "Ready — healthworker starts the call"
+                        : "Healthworker is preparing the patient"}
                   </h3>
                   <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                    The consultation flow opens once vitals are submitted and the meeting starts.
+                    {appointment.status === "cancelled"
+                      ? appointment.cancellationReason ||
+                        "No consultation can be started for this appointment."
+                      : appointment.status === "data_collection"
+                        ? "Consent and vitals are captured. The healthworker will start the meeting; this view updates automatically. Review the patient's context while you wait."
+                        : "The healthworker owns confirming consent and collecting vitals. Review the patient's context now; you can begin notes once they start the meeting."}
                   </p>
                 </div>
               </div>
@@ -85,15 +103,16 @@ export default function DoctorAppointmentDetail() {
           )}
 
           {canBeginConsult && (
-            <Card variant="elevated" className="p-8">
-              <h2 className="font-display text-2xl tracking-[-0.01em]">
+            <Card variant="elevated" className="p-4">
+              <h2 className="text-2xl font-semibold tracking-[-0.01em]">
                 {appointment.status === "awaiting_notes"
                   ? "Write up the consultation"
                   : "Open the consultation while you talk"}
               </h2>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                Three stages — notes, prescription, then review &amp; sign. Drafts persist between
-                stages so you can step away and come back.
+                {appointment.status === "awaiting_notes"
+                  ? "You own the next step: finish the notes, prescription and signature so the healthworker can deliver the prescription."
+                  : "Join the patient call and document the consultation. Save each stage before moving on."}
               </p>
 
               {draft.error && (
@@ -101,17 +120,32 @@ export default function DoctorAppointmentDetail() {
               )}
 
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button onClick={beginConsultation} disabled={draft.isPending}>
+                <Button
+                  onClick={() =>
+                    draft.mutate(appointment.id, {
+                      onSuccess: (res) =>
+                        router.push(`/doctor/consultations/${res.consultationId}`),
+                    })
+                  }
+                  disabled={draft.isPending}
+                >
                   <FileSignature className="h-4 w-4" />
-                  {draft.isPending ? "Opening…" : "Begin consultation"}
+                  {draft.isPending
+                    ? "Opening…"
+                    : consultation
+                      ? "Resume consultation"
+                      : "Begin consultation"}
                 </Button>
               </div>
             </Card>
           )}
 
           {isCompleted && consultation && (
-            <Card variant="elevated" className="p-8">
-              <h2 className="font-display text-2xl tracking-[-0.01em]">Consultation completed</h2>
+            <FollowUpSummary consultation={consultation} viewerRole="doctor" />
+          )}
+          {isCompleted && consultation && (
+            <Card variant="elevated" className="p-4">
+              <h2 className="text-2xl font-semibold tracking-[-0.01em]">Consultation completed</h2>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
                 Signed and locked. Open the record to review the diagnoses, prescription, and notes.
               </p>
@@ -128,7 +162,7 @@ export default function DoctorAppointmentDetail() {
         </div>
 
         {/* Sidebar — patient context */}
-        <aside className="flex flex-col gap-4 lg:order-2">
+        <aside className="flex min-w-0 flex-col gap-4">
           {patient ? (
             <>
               <PatientSummary
@@ -137,6 +171,7 @@ export default function DoctorAppointmentDetail() {
                 profile={profile}
                 attachments={attachments ?? []}
                 appointmentId={appointment.id}
+                showIdentity={false}
               />
               <VisitHistoryPanel patientId={patient.id} excludeAppointmentId={appointment.id} />
             </>

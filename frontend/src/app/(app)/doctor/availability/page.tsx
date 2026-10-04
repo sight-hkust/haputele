@@ -32,6 +32,7 @@ import {
   useDoctorAvailability,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 
 export default function DoctorAvailabilityPage() {
   const {
@@ -66,15 +67,23 @@ export default function DoctorAvailabilityPage() {
   const [cells, setCells] = useState<Set<CellKey>>(new Set());
   const [dirty, setDirty] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const { confirmLeave, markSaved } = useUnsavedChanges(dirty);
+  const saving = deleteRange.isPending || bulkCreate.isPending;
+  const changeWeek = (next: Date) => {
+    if (saving || next.getTime() === weekStart.getTime() || !confirmLeave()) return;
+    setDirty(false);
+    setCells(new Set());
+    setWeekStart(next);
+  };
 
   // Hydrate cells from server windows whenever the week changes / data lands.
   useEffect(() => {
-    if (list.data) {
+    if (list.data && !dirty) {
       setCells(windowsToCells(list.data, weekStart));
       setDirty(false);
       setSaveError(null);
     }
-  }, [list.data, weekStart]);
+  }, [list.data, weekStart, dirty]);
 
   const onChange = (next: Set<CellKey>) => {
     setCells(next);
@@ -91,6 +100,7 @@ export default function DoctorAvailabilityPage() {
         await bulkCreate.mutateAsync({ windows });
       }
       await list.refetch();
+      markSaved();
       setDirty(false);
     } catch (e: unknown) {
       const err = e as { error?: string; message?: string };
@@ -114,7 +124,6 @@ export default function DoctorAvailabilityPage() {
   }
 
   const weekLabel = `${format(weekStart, "d MMM")} – ${format(addDays(weekStart, 6), "d MMM yyyy")}`;
-  const saving = deleteRange.isPending || bulkCreate.isPending;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-8">
@@ -136,21 +145,24 @@ export default function DoctorAvailabilityPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setWeekStart((w) => addDays(w, -7))}
+                onClick={() => changeWeek(addDays(weekStart, -7))}
+                disabled={saving}
               >
                 ← Prev
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setWeekStart(startOfWeekLocal(new Date()))}
+                onClick={() => changeWeek(startOfWeekLocal(new Date()))}
+                disabled={saving}
               >
                 This week
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setWeekStart((w) => addDays(w, 7))}
+                onClick={() => changeWeek(addDays(weekStart, 7))}
+                disabled={saving}
               >
                 Next →
               </Button>
@@ -160,7 +172,7 @@ export default function DoctorAvailabilityPage() {
                 cells={cells}
                 disabled={dirty || cells.size === 0}
               />
-              <Button onClick={saveWeek} disabled={saving || !dirty}>
+              <Button onClick={saveWeek} disabled={saving || list.isLoading || !dirty}>
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -194,6 +206,7 @@ export default function DoctorAvailabilityPage() {
             weekStart={weekStart}
             cells={cells}
             bookedCells={bookedCells}
+            readOnly={saving || list.isLoading}
             onChange={onChange}
           />
         </CardContent>

@@ -9,6 +9,7 @@ import { Input, Label } from "@/components/primitives/input";
 import { Select, Textarea } from "@/components/primitives/select";
 import { DISEASE_OPTIONS, PHYSICAL_ACTIVITY_OPTIONS } from "@/lib/medical-codes";
 import { cn } from "@/lib/cn";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import type {
   AllergyEntry,
   DiseaseCode,
@@ -136,17 +137,37 @@ export function ProfileForm({
   errorMessage,
   onSubmit,
   onCancel,
+  onSaved,
 }: {
   initial: Profile | null;
   submitting: boolean;
   errorMessage?: string | null;
-  onSubmit: (req: ProfileRequest) => void;
+  onSubmit: (req: ProfileRequest) => unknown;
   onCancel?: () => void;
+  onSaved?: () => void;
 }) {
   const form = useForm<FormShape>({
     defaultValues: fromProfile(initial),
   });
-  const { register, handleSubmit, control } = form;
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isDirty, isSubmitting },
+  } = form;
+  const { confirmLeave, markSaved } = useUnsavedChanges(isDirty);
+  const saving = submitting || isSubmitting;
+
+  const save = handleSubmit(async (values) => {
+    try {
+      await onSubmit(toRequest(values));
+      markSaved();
+      form.reset(values);
+      onSaved?.();
+    } catch {
+      // The caller's mutation error is rendered above the retained form.
+    }
+  });
 
   const surgeries = useFieldArray({ control, name: "surgicalHistory" });
   const allergies = useFieldArray({ control, name: "allergies" });
@@ -154,7 +175,7 @@ export function ProfileForm({
   const others = useFieldArray({ control, name: "diseases.others" });
 
   return (
-    <form onSubmit={handleSubmit((v) => onSubmit(toRequest(v)))} className="flex flex-col gap-12">
+    <form onSubmit={save} className="flex flex-col gap-8">
       {errorMessage && <ErrorBanner>{errorMessage}</ErrorBanner>}
 
       {/* ── 1 · Disease history — checkboxes for the named codes ──────── */}
@@ -268,16 +289,52 @@ export function ProfileForm({
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor={`a-${i}-type`}>Type</Label>
-                <Select id={`a-${i}-type`} {...register(`allergies.${i}.type` as const)}>
+                <Select
+                  id={`a-${i}-type`}
+                  aria-invalid={!!errors.allergies?.[i]?.type}
+                  aria-describedby={errors.allergies?.[i]?.type ? `a-${i}-type-error` : undefined}
+                  {...register(`allergies.${i}.type` as const, {
+                    validate: (value, values) => {
+                      const row = values.allergies[i];
+                      return value ||
+                        !(row.name.trim() || row.medication.trim() || row.treatedWhere.trim())
+                        ? true
+                        : "Choose an allergy type before saving.";
+                    },
+                  })}
+                >
                   <option value="">Select…</option>
                   <option value="food">Food</option>
                   <option value="medication">Medication</option>
                   <option value="other">Other</option>
                 </Select>
+                {errors.allergies?.[i]?.type && (
+                  <p id={`a-${i}-type-error`} role="alert" className="text-sm text-red-700">
+                    {errors.allergies[i]?.type?.message}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor={`a-${i}-name`}>Allergen</Label>
-                <Input id={`a-${i}-name`} {...register(`allergies.${i}.name` as const)} />
+                <Input
+                  id={`a-${i}-name`}
+                  aria-invalid={!!errors.allergies?.[i]?.name}
+                  aria-describedby={errors.allergies?.[i]?.name ? `a-${i}-name-error` : undefined}
+                  {...register(`allergies.${i}.name` as const, {
+                    validate: (value, values) => {
+                      const row = values.allergies[i];
+                      return value.trim() ||
+                        !(row.type || row.medication.trim() || row.treatedWhere.trim())
+                        ? true
+                        : "Enter the allergen before saving.";
+                    },
+                  })}
+                />
+                {errors.allergies?.[i]?.name && (
+                  <p id={`a-${i}-name-error`} role="alert" className="text-sm text-red-700">
+                    {errors.allergies[i]?.name?.message}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor={`a-${i}-med`}>Reaction medication (if any)</Label>
@@ -305,7 +362,27 @@ export function ProfileForm({
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor={`em-${i}-d`}>Drug</Label>
-                <Input id={`em-${i}-d`} {...register(`medications.${i}.drug` as const)} />
+                <Input
+                  id={`em-${i}-d`}
+                  aria-invalid={!!errors.medications?.[i]?.drug}
+                  aria-describedby={
+                    errors.medications?.[i]?.drug ? `em-${i}-drug-error` : undefined
+                  }
+                  {...register(`medications.${i}.drug` as const, {
+                    validate: (value, values) => {
+                      const row = values.medications[i];
+                      return value.trim() ||
+                        !(row.dosage.trim() || row.frequency.trim() || row.notes.trim())
+                        ? true
+                        : "Enter the medication name before saving.";
+                    },
+                  })}
+                />
+                {errors.medications?.[i]?.drug && (
+                  <p id={`em-${i}-drug-error`} role="alert" className="text-sm text-red-700">
+                    {errors.medications[i]?.drug?.message}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor={`em-${i}-do`}>Dosage</Label>
@@ -388,14 +465,24 @@ export function ProfileForm({
         </div>
       </Section>
 
-      <div className="sticky bottom-4 flex items-center justify-end gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-lg backdrop-blur">
+      <div className="sticky bottom-4 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-lg backdrop-blur">
+        <p role="status" className="mr-auto text-sm text-[var(--muted-foreground)]">
+          {saving ? "Saving profile…" : isDirty ? "Unsaved changes" : "No unsaved changes"}
+        </p>
         {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              if (confirmLeave()) onCancel();
+            }}
+            disabled={saving}
+          >
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={submitting}>
-          {submitting ? "Saving…" : initial ? "Save profile" : "Create profile"}
+        <Button type="submit" disabled={saving}>
+          {saving ? "Saving…" : initial ? "Save profile" : "Create profile"}
         </Button>
       </div>
     </form>
@@ -421,7 +508,7 @@ function Section({
           <Icon className="h-5 w-5 text-[var(--accent)]" />
         </div>
         <div>
-          <h3 className="font-display text-xl tracking-[-0.01em]">{title}</h3>
+          <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
           {hint && <p className="mt-1 max-w-2xl text-sm text-[var(--muted-foreground)]">{hint}</p>}
         </div>
       </div>

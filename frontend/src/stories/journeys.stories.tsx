@@ -130,7 +130,9 @@ export const WriteSignAndQueueFollowUp: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
     await step("Begin the patient consultation and persist notes", async () => {
-      await userEvent.click(await canvas.findByRole("button", { name: "Begin consultation" }));
+      await userEvent.click(
+        await canvas.findByRole("button", { name: /^(Begin|Resume) consultation$/ }),
+      );
       const complaint = await canvas.findByLabelText("Primary complaint");
       await userEvent.clear(complaint);
       await userEvent.type(complaint, "Synthetic blood pressure follow-up");
@@ -146,8 +148,9 @@ export const WriteSignAndQueueFollowUp: Story = {
     });
     await step("Observe the completed appointment and locked clinical record", async () => {
       await canvas.findByRole("link", { name: "View record" });
+      await canvas.findByText(/Requested in 6 weeks/);
       await expect(
-        canvas.queryByRole("button", { name: "Begin consultation" }),
+        canvas.queryByRole("button", { name: /^(Begin|Resume) consultation$/ }),
       ).not.toBeInTheDocument();
     });
   },

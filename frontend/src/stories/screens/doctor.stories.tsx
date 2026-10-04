@@ -12,17 +12,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Calendar: Story = {
+export const TodayWorklist: Story = {
   args: { path: "/doctor" },
   parameters: scenario({ role: "doctor" }),
 };
-export const EmptyCalendar: Story = {
+export const EmptyWorklist: Story = {
   args: { path: "/doctor" },
   parameters: scenario({ role: "doctor", empty: true }),
 };
-export const CalendarError: Story = {
+export const WorklistError: Story = {
   args: { path: "/doctor" },
   parameters: scenario({ role: "doctor", error: true }),
+};
+export const ReadyPatientWorklist: Story = {
+  args: { path: "/doctor" },
+  parameters: scenario({ role: "doctor", appointmentStatus: "data_collection" }),
+};
+export const UnfinishedNotesWorklist: Story = {
+  args: { path: "/doctor" },
+  parameters: scenario({ role: "doctor", appointmentStatus: "awaiting_notes" }),
 };
 export const WaitingForHealthworker: Story = {
   args: { path: "/doctor/appointments/1" },

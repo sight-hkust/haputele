@@ -13,19 +13,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { AppointmentStatus, Availability, CalendarAppointment } from "@/types/api";
-import { APP_TIMEZONE } from "@/lib/format";
+import { APP_TIMEZONE, statusLabel } from "@/lib/format";
 
 // v7 resolves IANA tz names (e.g. "Asia/Hong_Kong") natively via Temporal
 // (temporal-polyfill), so no timezone plugin is needed — see CLAUDE.md Timezones.
 // The classic theme's palette is overridden below through --fc-classic-* vars.
 
-// The calendar collapses the 7-state §11 lifecycle into 3 visual buckets so
-// the grid reads at a glance. Modals still render the precise status via
-// StatusBadge for full fidelity.
-//   upcoming = scheduled / consent_pending / data_collection (HW prepping)
-//   live     = in_progress / awaiting_notes (meeting + write-up window)
-//   done     = completed
-//   cancelled is rendered muted/strikethrough rather than as a fourth color.
+// Color groups make the planning grid scannable; the exact lifecycle label
+// stays on every event so color never substitutes for clinical state.
 // Grid bounds. SLOT_MIN_HOUR is both the `slotMinTime` prop below and the
 // floor the focus-scroll clamps to — they have to agree, so they share a
 // constant rather than repeating the literal.
@@ -78,6 +73,10 @@ export function AppointmentCalendar({
   const controller = useCalendarController();
   const rootRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 640px)").matches) controller.changeView("timeGridDay");
+  }, [controller]);
+
   // Put the focused block in the middle of the grid. Ask the browser rather
   // than hunting for the scroll container: v7 scrolls through its own
   // abstraction and the container need not present as a native overflow box.
@@ -97,9 +96,6 @@ export function AppointmentCalendar({
   // disorienting. `focusAt` rather than `focusId` so re-selecting the same
   // row after paging away still brings the grid back.
   //
-  // Only the date moves. Scrolling the grid *down* to the appointment's time is
-  // deliberately absent — see the follow-up issue; three approaches to driving
-  // v7's scroll position failed, and it needs a browser to sort out.
   useEffect(() => {
     if (!focusAt) return;
     const view = controller.view;
@@ -161,7 +157,7 @@ export function AppointmentCalendar({
   return (
     <div
       ref={rootRef}
-      className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele"
+      className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-md fc-haputele"
     >
       <style>{FC_CSS}</style>
       <FullCalendar
@@ -178,7 +174,7 @@ export function AppointmentCalendar({
           timeGridDay: { text: "day" },
           listWeek: { text: "agenda" },
         }}
-        height="calc(100vh - 180px)"
+        height="max(32rem, calc(100dvh - 16rem))"
         events={events}
         // Appointments carry only `scheduledAt`, no end time. Render each as
         // a 15-minute block to match the slot grid (default would be 1h).
@@ -198,11 +194,12 @@ export function AppointmentCalendar({
         // It also means paging weeks by hand keeps the hours you were reading.
         scrollTimeReset={false}
         allDaySlot={false}
-        // Keep 15-min blocks at readable height (2.6em ≈ 42px) — without a
-        // floor, v7 packs the 52 slots into the container height.
-        slotMinHeight={42}
+        // Reserve space for time, patient identity and the exact lifecycle state.
+        slotMinHeight={64}
         // Styling hooks — the themed hooks carry our classes into the DOM so
         // FC_CSS never has to target FullCalendar's internal class names.
+        toolbarClass="fc-haputele-toolbar"
+        toolbarSectionClass="fc-haputele-toolbar-section"
         toolbarTitleClass="fc-haputele-title"
         buttonClass={(info) =>
           info.isSelected ? "fc-haputele-button fc-haputele-button-active" : "fc-haputele-button"
@@ -226,6 +223,9 @@ export function AppointmentCalendar({
           >
             {info.timeText && <span className="fc-haputele-event-time">{info.timeText}</span>}
             <span className="fc-haputele-event-title">{info.event.title}</span>
+            <span className="fc-haputele-event-status">
+              {statusLabel(String(info.event.extendedProps.status))}
+            </span>
           </div>
         )}
         eventClick={(info) => {
@@ -256,11 +256,29 @@ const FC_CSS = `
     --fc-classic-today: rgba(0, 82, 255, 0.03);
   }
 
+  .fc-haputele .fc-haputele-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .fc-haputele .fc-haputele-toolbar-section {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 640px) {
+    .fc-haputele .fc-haputele-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .fc-haputele .fc-haputele-toolbar-section {
+      justify-content: center;
+    }
+  }
+
   .fc-haputele .fc-haputele-title {
-    font-family: var(--font-calistoga), Georgia, serif;
-    font-weight: 400;
+    font-family: var(--font-inter), sans-serif;
+    font-weight: 600;
     letter-spacing: -0.01em;
-    font-size: 1.25rem;
+    font-size: 1.125rem;
   }
 
   .fc-haputele .fc-haputele-day-header,
@@ -280,7 +298,8 @@ const FC_CSS = `
     font-weight: 500;
     border-radius: 0.625rem !important;
     padding: 0.4rem 0.75rem !important;
-    transition: all 0.15s ease;
+    min-height: 44px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
   }
   .fc-haputele .fc-haputele-button:hover {
     border-color: rgba(0, 82, 255, 0.3) !important;
@@ -326,6 +345,7 @@ const FC_CSS = `
     line-height: 1.25;
   }
   .fc-haputele-event-list {
+    flex-wrap: wrap;
     flex-direction: row;
     align-items: baseline;
     gap: 6px;
@@ -335,6 +355,10 @@ const FC_CSS = `
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .fc-haputele-event-status { font-size: 0.875rem; }
+  @media (prefers-reduced-motion: reduce) {
+    .fc-haputele .fc-bucket-live { animation: none; }
   }
   .fc-haputele .fc-bucket-cancelled .fc-haputele-event-time,
   .fc-haputele .fc-bucket-cancelled .fc-haputele-event-title {

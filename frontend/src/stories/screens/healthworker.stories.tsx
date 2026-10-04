@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect, userEvent, within } from "storybook/test";
 import { Screen } from "../screen";
 import { scenario } from "../scenario";
+import { doctor as fixtureDoctor } from "../fixtures";
+import { doctorName } from "@/lib/format";
 
 const meta = {
   title: "Screens/Healthworker",
@@ -33,8 +36,29 @@ export const BookingFromQueue: Story = {
   parameters: scenario(),
 };
 export const BookingForPatient: Story = {
-  args: { path: "/healthworker/appointments/new?patientId=1" },
+  args: { path: "/healthworker/appointments?patientId=1" },
   parameters: scenario(),
+};
+export const PreserveWorkspaceDrafts: Story = {
+  args: { path: "/healthworker/appointments" },
+  parameters: scenario(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: /^Book appointment$/ }));
+    const doctor = await canvas.findByRole("combobox", { name: "Doctor" });
+    await canvas.findByRole("option", { name: doctorName(fixtureDoctor) });
+    await userEvent.selectOptions(doctor, "1");
+    await userEvent.click(canvas.getByRole("button", { name: "Hide booking" }));
+    await userEvent.click(canvas.getByRole("button", { name: /^Pending queue/ }));
+    await userEvent.click(canvas.getByRole("button", { name: "Add to queue" }));
+    const notes = canvas.getByPlaceholderText(/^What did the patient ask for/);
+    await userEvent.type(notes, "Patient requests a morning appointment");
+    await userEvent.click(canvas.getByRole("button", { name: "Today worklist" }));
+    await userEvent.click(canvas.getByRole("button", { name: /^Pending queue/ }));
+    await expect(notes).toHaveValue("Patient requests a morning appointment");
+    await userEvent.click(canvas.getByRole("button", { name: /^Book appointment$/ }));
+    await expect(doctor).toHaveValue("1");
+  },
 };
 export const PatientRoster: Story = {
   args: { path: "/healthworker/patients" },

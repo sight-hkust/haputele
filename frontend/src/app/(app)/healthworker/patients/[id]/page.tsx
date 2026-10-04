@@ -16,7 +16,8 @@ import { PatientForm } from "@/components/healthworker/patient-form";
 import { ProfileSummary } from "@/components/healthworker/profile-summary";
 import { useDeletePatient, usePatient, usePatientHistory, useUpdatePatient } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
-import { fmtAge, fmtDate, fmtDateTime, fullName } from "@/lib/format";
+import { displayDob } from "@/lib/dob-date";
+import { fmtAge, fmtDateTime, fullName } from "@/lib/format";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function PatientDetailPage() {
@@ -75,19 +76,32 @@ export default function PatientDetailPage() {
             .join(" · ") || undefined
         }
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link href={`/healthworker/appointments/new?patientId=${patient.id}`}>
               <Button variant="secondary" size="md">
                 <CalendarPlus className="h-4 w-4" />
                 Book
               </Button>
             </Link>
+            <Link
+              href={`/healthworker/patients/${patient.id}/profile`}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-medium hover:bg-[var(--muted)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+            >
+              <ClipboardList className="h-4 w-4" aria-hidden />
+              Patient intake
+            </Link>
             <Button variant="secondary" size="md" onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4" />
               Edit
             </Button>
-            <Button variant="ghost" size="md" onClick={() => setDeleteOpen(true)}>
-              <Trash2 className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => setDeleteOpen(true)}
+              aria-label={`Delete patient ${fullName(patient)}`}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              Delete
             </Button>
           </div>
         }
@@ -105,7 +119,7 @@ export default function PatientDetailPage() {
             </h2>
           </div>
           <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <Field label="Date of birth" value={fmtDate(patient.dob)} />
+            <Field label="Date of birth" value={displayDob(patient.dob) || "—"} />
             <Field label="Gender" value={patient.gender} />
             <Field label="National ID" value={patient.nationalId ?? "—"} mono />
             <Field label="Contact" value={patient.contact ?? "—"} />

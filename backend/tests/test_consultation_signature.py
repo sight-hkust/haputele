@@ -165,3 +165,28 @@ def test_saved_signature_change_does_not_mutate_completed(doctor_client, scenari
     _set_saved_signature(doctor_id, _PNG_B)
     after = _consultation_signature_bytes(cid)
     assert before == after == _PNG_A  # the signed consultation is immutable
+
+
+@pytest.mark.parametrize("generic_name", ["", "   "])
+def test_partial_medication_survives_draft_but_cannot_be_signed(doctor_client, scenario, generic_name):
+    _, cid = scenario
+    medication = {"genericName": generic_name, "dose": "500 mg", "frequency": "twice daily"}
+    saved = doctor_client.patch(
+        f"/consultations/{cid}", json={"medications": [medication]},
+        headers=_csrf(doctor_client),
+    )
+    assert saved.status_code == 200, saved.text
+    reopened = doctor_client.get(f"/consultations/{cid}")
+    assert reopened.status_code == 200, reopened.text
+    assert len(reopened.json()["medications"]) == 1
+    assert medication.items() <= reopened.json()["medications"][0].items()
+    submitted = doctor_client.post(
+        f"/consultations/{cid}/submit", json={"signature": _PNG_A_URL},
+        headers=_csrf(doctor_client),
+    )
+    assert submitted.status_code == 422, submitted.text
+    assert submitted.json()["detail"]["error"] == "medication_generic_name_required"
+    unchanged = doctor_client.get(f"/consultations/{cid}").json()
+    assert unchanged["status"] == "draft"
+    assert unchanged["signedAt"] is None
+    assert medication.items() <= unchanged["medications"][0].items()

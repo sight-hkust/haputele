@@ -1,11 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowDown, CalendarClock, Inbox, Loader2, Plus, X } from "lucide-react";
+import { ArrowDown, Inbox, Loader2, Plus, X } from "lucide-react";
 
 import { AppointmentForm } from "@/components/healthworker/appointment-form";
-import { AppointmentRow } from "@/components/healthworker/appointment-row";
+import { AppointmentWorklist } from "@/components/healthworker/appointment-worklist";
 import { AppointmentCalendar } from "@/components/healthworker/appointment-calendar";
 import { CancelQueueEntryForm } from "@/components/healthworker/cancel-queue-entry-form";
 import { PatientContext } from "@/components/healthworker/patient-context";
@@ -16,7 +16,6 @@ import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { EmptyState } from "@/components/primitives/empty-state";
 import { ApiErrorBanner } from "@/components/primitives/error-banner";
-import { PageHeader } from "@/components/primitives/page-header";
 import {
   useAppointmentList,
   useBookQueueEntry,
@@ -27,26 +26,12 @@ import {
   useQueueList,
 } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
-import { appDayWindow, appToday, fullName } from "@/lib/format";
-import type { CalendarAppointment, QueueEntry } from "@/types/api";
+import { fullName } from "@/lib/format";
+import type { QueueEntry } from "@/types/api";
 
-// Wide window: ±60 days. Healthworker calendar shows everything in their
-// rolling 4-month vicinity.
-const RANGE_DAYS = 60;
-
-// Booking card has two modes:
-//   - "fresh": HW picks patient + doctor + slot freely → POST /appointments
-//   - "from-queue": locked to the queue entry's patient, doctor + slot
-//     pre-filled, submit calls POST /queue/{qid}/book (atomic appt + entry)
 type BookingMode = { kind: "fresh" } | { kind: "from-queue"; entry: QueueEntry };
 
-// Queue card sub-states. The book sub-state is no longer here — booking is
-// handled by the booking card via mode switching, both visible at once.
 type QueuePanel = { kind: "list" } | { kind: "add" } | { kind: "cancel"; entry: QueueEntry };
-
-// Which list the rail's lower card is showing. Each keeps its own state while
-// hidden, so switching tabs never discards a half-filled queue form.
-type RailTab = "appointments" | "queue";
 
 export default function AppointmentsWorkspacePage() {
   return (
@@ -61,102 +46,194 @@ function Workspace() {
   const sp = useSearchParams();
   const initialPatientId = sp.get("patientId");
   const bookFromQueueParam = sp.get("bookFromQueue");
-
-  // Calendar window
-  const { from, to } = useMemo(() => {
-    const now = Date.now();
-    return {
-      from: new Date(now - RANGE_DAYS * 86_400_000).toISOString(),
-      to: new Date(now + RANGE_DAYS * 86_400_000).toISOString(),
-    };
-  }, []);
-  const apptList = useAppointmentList({ from, to });
-
+  // Keep overdue encounters reachable; planning is not the retrieval cutoff.
+  const apptList = useAppointmentList({});
   const queueQ = useQueueList({ status: "pending" });
-  const pending = queueQ.data ?? [];
-
-  // Booking card mode + queue card sub-state, both lifted to workspace level
-  // so "Book this" on a queue row can flip the booking card without losing
-  // anything in the queue card.
+  const [view, setView] = useState<"worklist" | "calendar" | "queue">("worklist");
   const [bookingMode, setBookingMode] = useState<BookingMode>({ kind: "fresh" });
   const [queuePanel, setQueuePanel] = useState<QueuePanel>({ kind: "list" });
-  const [railTab, setRailTab] = useState<RailTab>("appointments");
-
-  // Selecting a row in the appointments list rings that block and jumps the
-  // calendar to it. Deliberately not a navigation: the calendar already opens
-  // the detail page on click, so list = locate, calendar = open.
-  const [focused, setFocused] = useState<{ id: number; at: string } | null>(null);
-
-  // What's actually scheduled, soonest first. Anchored to the start of today
-  // rather than "now" so this morning's appointment is still listed while it
-  // is happening — that is exactly when staff go looking for it.
-  const upcoming = useMemo(() => {
-    const from = appDayWindow(appToday()).fromISO;
-    return (apptList.data ?? [])
-      .filter((a) => a.status !== "cancelled" && a.scheduledAt >= from)
-      .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
-  }, [apptList.data]);
-
-  // When "Book this" fires from a queue row OR from the patient-context panel,
-  // we want the booking card scrolled into view.
+  const [bookingOpened, setBookingOpened] = useState(!!initialPatientId || !!bookFromQueueParam);
+  const [bookingVisible, setBookingVisible] = useState(!!initialPatientId || !!bookFromQueueParam);
+  useEffect(() => {
+    if (initialPatientId) {
+      setBookingMode({ kind: "fresh" });
+      setBookingOpened(true);
+      setBookingVisible(true);
+    }
+  }, [initialPatientId]);
   const bookingCardRef = useRef<HTMLDivElement>(null);
   const focusBookingCard = (entry: QueueEntry) => {
     setBookingMode({ kind: "from-queue", entry });
-    requestAnimationFrame(() =>
-      bookingCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
-    );
+    setBookingOpened(true);
+    setBookingVisible(true);
+    requestAnimationFrame(() => bookingCardRef.current?.scrollIntoView({ block: "start" }));
   };
 
-  // Cross-page deep-link: /healthworker/queue's "Book" button forwards here
-  // with `?bookFromQueue=N`. Fetch the entry, then mount it into the booking
-  // card the same way an in-workspace click would. Consume the param once so
-  // user-driven mode changes afterwards aren't overwritten.
   const queueEntryQ = useQueueEntry(bookFromQueueParam ? Number(bookFromQueueParam) : null);
-  const [consumedQueueParam, setConsumedQueueParam] = useState(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: guarded one-shot deep-link consumer — focusBookingCard/router identities change per render and the consumedQueueParam flag makes refires no-ops.
+  const [consumedQueueParam, setConsumedQueueParam] = useState<string | null>(null);
   useEffect(() => {
-    if (!consumedQueueParam && queueEntryQ.data) {
-      focusBookingCard(queueEntryQ.data);
-      setConsumedQueueParam(true);
-      // Strip the param so a refresh doesn't keep re-entering from-queue mode.
-      router.replace("/healthworker/appointments");
+    if (bookFromQueueParam && consumedQueueParam !== bookFromQueueParam && queueEntryQ.data) {
+      setBookingMode({ kind: "from-queue", entry: queueEntryQ.data });
+      setBookingOpened(true);
+      setBookingVisible(true);
+      setConsumedQueueParam(bookFromQueueParam);
+      requestAnimationFrame(() => bookingCardRef.current?.scrollIntoView({ block: "start" }));
     }
-  }, [queueEntryQ.data, consumedQueueParam]);
+  }, [queueEntryQ.data, bookFromQueueParam, consumedQueueParam]);
 
   return (
-    <div className="mx-auto flex max-w-[110rem] flex-col gap-6 px-6 py-8">
-      <PageHeader
-        label="Workspace"
-        title="Calendar"
-        highlight="& queue."
-        subtitle="Calendar always visible. Pending queue and booking sit alongside — click 'Book this' on any queue entry to fill the booking card."
-      />
-
-      <Legend />
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_32rem]">
-        {/* Calendar (main) */}
-        <div className="min-w-0">
-          {apptList.error ? (
-            <ApiErrorBanner error={apptList.error} onRetry={() => apptList.refetch()} />
-          ) : apptList.isLoading ? (
-            <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
+    <div className="mx-auto flex max-w-[110rem] flex-col gap-4 px-4 py-6 sm:px-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Appointments</h1>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            Prepare today's patients and schedule those waiting.
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setBookingOpened(true);
+            setBookingVisible(!bookingVisible);
+          }}
+        >
+          {bookingVisible ? (
+            <X className="h-4 w-4" aria-hidden />
           ) : (
-            <AppointmentCalendar
-              appointments={apptList.data ?? []}
-              focusId={focused?.id ?? null}
-              focusAt={focused?.at ?? null}
-            />
+            <Plus className="h-4 w-4" aria-hidden />
+          )}
+          {bookingVisible ? "Hide booking" : "Book appointment"}
+        </Button>
+      </header>
+      <nav className="flex flex-wrap gap-2" aria-label="Appointment workspace views">
+        <Button
+          variant={view === "worklist" ? "primary" : "secondary"}
+          aria-pressed={view === "worklist"}
+          onClick={() => setView("worklist")}
+        >
+          Today worklist
+        </Button>
+        <Button
+          variant={view === "queue" ? "primary" : "secondary"}
+          aria-pressed={view === "queue"}
+          onClick={() => setView("queue")}
+        >
+          Pending queue
+          {queueQ.error
+            ? " · unavailable"
+            : queueQ.isLoading
+              ? " · loading"
+              : queueQ.data
+                ? ` (${queueQ.data.length})`
+                : ""}
+        </Button>
+        <Button
+          variant={view === "calendar" ? "primary" : "secondary"}
+          aria-pressed={view === "calendar"}
+          onClick={() => setView("calendar")}
+        >
+          Planning calendar
+        </Button>
+      </nav>
+      {bookFromQueueParam && !queueEntryQ.data && (
+        <div>
+          <ApiErrorBanner error={queueEntryQ.error} onRetry={() => queueEntryQ.refetch()} />
+          {queueEntryQ.isLoading && (
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Loading queue entry for booking…
+            </p>
           )}
         </div>
-
-        {/* Side rail — Booking card on top, tabbed list below.
-            Fixed height (not max-h) so the list below can flex into whatever
-            space the booking card leaves; overflow-y-auto stays as a safety
-            valve for the tall from-queue booking form. */}
-        <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto">
-          <div ref={bookingCardRef} className="lg:shrink-0">
+      )}
+      <div
+        className={`grid min-w-0 gap-4 ${bookingVisible ? "xl:grid-cols-[minmax(0,1fr)_28rem]" : ""}`}
+      >
+        <div className="min-w-0">
+          <div hidden={view !== "worklist"}>
+            <AppointmentWorklist
+              appointments={apptList.data}
+              loading={apptList.isLoading}
+              fetching={apptList.isFetching}
+              error={apptList.error}
+              updatedAt={apptList.dataUpdatedAt}
+              onRefresh={() => apptList.refetch()}
+              viewerRole="healthworker"
+            />
+          </div>
+          <div hidden={view !== "queue"}>
+            <Card className="flex flex-col gap-4 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold">Pending queue</h2>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    disabled={queueQ.isFetching}
+                    onClick={() => queueQ.refetch()}
+                  >
+                    {queueQ.isFetching ? "Refreshing…" : "Refresh"}
+                  </Button>
+                  {queuePanel.kind === "list" && (
+                    <Button onClick={() => setQueuePanel({ kind: "add" })}>
+                      <Plus className="h-4 w-4" aria-hidden />
+                      Add to queue
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm text-[var(--muted-foreground)]" role="status">
+                {queueQ.error
+                  ? queueQ.data
+                    ? "Refresh failed · showing last loaded queue"
+                    : "Queue unavailable"
+                  : queueQ.isLoading
+                    ? "Loading queue…"
+                    : `${queueQ.data?.length ?? "—"} pending · urgent first`}
+              </p>
+              <QueuePanelBody
+                panel={queuePanel}
+                setPanel={setQueuePanel}
+                pending={queueQ.data ?? []}
+                loading={queueQ.isLoading}
+                error={queueQ.error}
+                hasData={queueQ.data !== undefined}
+                refetch={() => queueQ.refetch()}
+                onBookEntry={focusBookingCard}
+              />
+            </Card>
+          </div>
+          {view === "calendar" && (
+            <section className="flex min-w-0 flex-col gap-3" aria-label="Planning calendar">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-[var(--muted-foreground)]">
+                  Plan by day, week, month or agenda.
+                  {apptList.error && apptList.data ? " Showing last loaded appointments." : ""}
+                </p>
+                <Button
+                  variant="secondary"
+                  disabled={apptList.isFetching}
+                  onClick={() => apptList.refetch()}
+                >
+                  {apptList.isFetching ? "Refreshing…" : "Refresh"}
+                </Button>
+              </div>
+              <ApiErrorBanner error={apptList.error} onRetry={() => apptList.refetch()} />
+              {apptList.isLoading && !apptList.data ? (
+                <Card className="p-4 text-sm text-[var(--muted-foreground)]">
+                  Loading appointments…
+                </Card>
+              ) : apptList.data ? (
+                <AppointmentCalendar appointments={apptList.data} />
+              ) : null}
+            </section>
+          )}
+        </div>
+        <div
+          ref={bookingCardRef}
+          hidden={!bookingVisible}
+          className="order-first min-w-0 xl:order-last"
+        >
+          {bookingOpened && (!bookFromQueueParam || consumedQueueParam === bookFromQueueParam) && (
             <BookingCard
+              key={initialPatientId ?? "fresh"}
               mode={bookingMode}
               setMode={setBookingMode}
               initialPatientId={initialPatientId ? Number(initialPatientId) : undefined}
@@ -164,206 +241,35 @@ function Workspace() {
               onBookQueueEntry={focusBookingCard}
               onQueueEntryBooked={() => queueQ.refetch()}
             />
-          </div>
-          <RailCard
-            tab={railTab}
-            setTab={setRailTab}
-            appointments={upcoming}
-            appointmentsLoading={apptList.isLoading}
-            focusedId={focused?.id ?? null}
-            onFocusAppointment={(a) => setFocused({ id: a.id, at: a.scheduledAt })}
-            panel={queuePanel}
-            setPanel={setQueuePanel}
-            pending={pending}
-            loading={queueQ.isLoading}
-            error={queueQ.error}
-            refetch={() => queueQ.refetch()}
-            onBookEntry={focusBookingCard}
-            activeBookingEntryId={
-              bookingMode.kind === "from-queue" ? bookingMode.entry.id : undefined
-            }
-          />
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ── Rail card: Appointments | Queue ──────────────────────────────────
-//
-// One card, two lists. Queue keeps its sub-panel state while hidden, so an
-// half-finished "Add to queue" form survives a look at the appointments tab.
-
-function RailTabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-lg px-3 py-1.5 font-mono text-xs uppercase tracking-[0.12em] transition-colors ${
-        active
-          ? "bg-[var(--card)] text-[var(--accent)] shadow-sm"
-          : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function RailCard({
-  tab,
-  setTab,
-  appointments,
-  appointmentsLoading,
-  focusedId,
-  onFocusAppointment,
-  panel,
-  setPanel,
-  pending,
-  loading,
-  error,
-  refetch,
-  onBookEntry,
-  activeBookingEntryId,
-}: {
-  tab: RailTab;
-  setTab: (t: RailTab) => void;
-  appointments: CalendarAppointment[];
-  appointmentsLoading: boolean;
-  focusedId: number | null;
-  onFocusAppointment: (a: CalendarAppointment) => void;
-  panel: QueuePanel;
-  setPanel: (p: QueuePanel) => void;
-  pending: QueueEntry[];
-  loading: boolean;
-  error: ApiError | null | undefined;
-  refetch: () => void;
-  onBookEntry: (entry: QueueEntry) => void;
-  /** Highlight the row currently being booked in the booking card. */
-  activeBookingEntryId?: number;
-}) {
-  return (
-    <Card className="flex flex-col gap-3 p-4 lg:min-h-0 lg:flex-1">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex gap-1 rounded-xl bg-[var(--muted)] p-1">
-          <RailTabButton active={tab === "appointments"} onClick={() => setTab("appointments")}>
-            Appointments
-          </RailTabButton>
-          <RailTabButton active={tab === "queue"} onClick={() => setTab("queue")}>
-            Queue
-          </RailTabButton>
-        </div>
-        {tab === "queue" && panel.kind === "list" && (
-          <Button size="sm" onClick={() => setPanel({ kind: "add" })}>
-            <Plus className="h-4 w-4" />
-            Add
-          </Button>
-        )}
-      </div>
-
-      <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        {tab === "appointments"
-          ? `${appointments.length} upcoming · soonest first`
-          : `${pending.length} pending · urgent first`}
-      </p>
-
-      {tab === "appointments" ? (
-        <AppointmentsPanel
-          appointments={appointments}
-          loading={appointmentsLoading}
-          focusedId={focusedId}
-          onFocus={onFocusAppointment}
-        />
-      ) : (
-        <QueuePanelBody
-          panel={panel}
-          setPanel={setPanel}
-          pending={pending}
-          loading={loading}
-          error={error}
-          refetch={refetch}
-          onBookEntry={onBookEntry}
-          activeBookingEntryId={activeBookingEntryId}
-        />
-      )}
-    </Card>
-  );
-}
-
-function AppointmentsPanel({
-  appointments,
-  loading,
-  focusedId,
-  onFocus,
-}: {
-  appointments: CalendarAppointment[];
-  loading: boolean;
-  focusedId: number | null;
-  onFocus: (a: CalendarAppointment) => void;
-}) {
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 py-4 text-xs text-[var(--muted-foreground)]">
-        <Loader2 className="h-3 w-3 animate-spin" /> Loading…
-      </div>
-    );
-  }
-  if (appointments.length === 0) {
-    return (
-      <EmptyState
-        Icon={CalendarClock}
-        title="Nothing scheduled"
-        description="No appointments booked from today onwards."
-        className="py-6"
-      />
-    );
-  }
-  return (
-    <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:p-1">
-      {appointments.map((a) => (
-        <AppointmentRow
-          key={a.id}
-          appointment={a}
-          selected={focusedId === a.id}
-          onSelect={() => onFocus(a)}
-        />
-      ))}
-    </ul>
-  );
-}
-
-// The queue's own body, unchanged apart from losing the header the rail card
-// now owns.
 function QueuePanelBody({
   panel,
   setPanel,
   pending,
   loading,
   error,
+  hasData,
   refetch,
   onBookEntry,
-  activeBookingEntryId,
 }: {
   panel: QueuePanel;
   setPanel: (p: QueuePanel) => void;
   pending: QueueEntry[];
   loading: boolean;
   error: ApiError | null | undefined;
+  hasData: boolean;
   refetch: () => void;
   onBookEntry: (entry: QueueEntry) => void;
-  activeBookingEntryId?: number;
 }) {
   return (
     <>
+      <ApiErrorBanner error={error} onRetry={refetch} />
       {panel.kind === "add" ? (
         <SubFrame title="Add to queue" onBack={() => setPanel({ kind: "list" })}>
           <QueueEntryForm
@@ -385,12 +291,14 @@ function QueuePanelBody({
             onClose={() => setPanel({ kind: "list" })}
           />
         </SubFrame>
-      ) : error ? (
-        <ApiErrorBanner error={error} onRetry={refetch} />
-      ) : loading ? (
-        <div className="flex items-center gap-2 py-4 text-xs text-[var(--muted-foreground)]">
-          <Loader2 className="h-3 w-3 animate-spin" /> Loading…
+      ) : error && !hasData ? null : loading && !hasData ? (
+        <div className="flex items-center gap-2 py-4 text-sm text-[var(--muted-foreground)]">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
         </div>
+      ) : pending.length === 0 && error ? (
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Refresh to confirm the queue's current state.
+        </p>
       ) : pending.length === 0 ? (
         <EmptyState
           Icon={Inbox}
@@ -405,23 +313,15 @@ function QueuePanelBody({
           className="py-6"
         />
       ) : (
-        <ul className="flex flex-col gap-2 lg:min-h-[12rem] lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:p-1">
+        <ul className="flex flex-col gap-2">
           {pending.map((e) => (
-            <div
+            <QueueRow
               key={e.id}
-              className={
-                activeBookingEntryId === e.id
-                  ? "rounded-2xl ring-2 ring-[var(--accent)] ring-offset-1"
-                  : ""
-              }
-            >
-              <QueueRow
-                entry={e}
-                compact
-                onBook={() => onBookEntry(e)}
-                onCancel={() => setPanel({ kind: "cancel", entry: e })}
-              />
-            </div>
+              entry={e}
+              compact
+              onBook={() => onBookEntry(e)}
+              onCancel={() => setPanel({ kind: "cancel", entry: e })}
+            />
           ))}
         </ul>
       )}
@@ -501,7 +401,7 @@ function BookingCard({
   return (
     <Card className="flex flex-col gap-3 p-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-base tracking-[-0.01em]">
+        <h2 className="text-lg font-semibold">
           {mode.kind === "from-queue" ? "Book queue entry" : "Book appointment"}
         </h2>
       </div>
@@ -526,6 +426,10 @@ function BookingCard({
         </div>
       )}
 
+      <ApiErrorBanner error={doctors.error} onRetry={() => doctors.refetch()} />
+      {doctors.isLoading && (
+        <p className="text-sm text-[var(--muted-foreground)]">Loading doctors…</p>
+      )}
       <AppointmentForm
         key={formKey}
         doctors={doctors.data ?? []}
@@ -570,29 +474,6 @@ function SubFrame({
         </Button>
       </div>
       {children}
-    </div>
-  );
-}
-
-// ── Calendar legend ──────────────────────────────────────────────────
-
-function Legend() {
-  // The calendar collapses the 7 backend statuses into 3 buckets (plus a
-  // muted cancelled). Modals still surface the precise status.
-  const items: Array<{ key: string; label: string; swatch: string }> = [
-    { key: "upcoming", label: "Upcoming", swatch: "bg-slate-200" },
-    { key: "live", label: "Live", swatch: "bg-[var(--accent)]" },
-    { key: "done", label: "Done", swatch: "bg-emerald-200" },
-    { key: "cancelled", label: "Cancelled", swatch: "bg-slate-100 line-through text-slate-400" },
-  ];
-  return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-[var(--muted-foreground)]">
-      {items.map((it) => (
-        <span key={it.key} className="inline-flex items-center gap-2">
-          <span className={`h-2 w-3 rounded-sm ${it.swatch}`} />
-          <span className="font-mono uppercase tracking-[0.12em]">{it.label}</span>
-        </span>
-      ))}
     </div>
   );
 }

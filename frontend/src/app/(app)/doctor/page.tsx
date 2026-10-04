@@ -1,69 +1,78 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState } from "react";
 
 import { AppointmentCalendar } from "@/components/healthworker/appointment-calendar";
+import { AppointmentWorklist } from "@/components/healthworker/appointment-worklist";
+import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { ApiErrorBanner } from "@/components/primitives/error-banner";
-import { PageHeader } from "@/components/primitives/page-header";
-import { useAppointmentList, useCurrentDoctor } from "@/lib/use-api";
+import { useAppointmentList } from "@/lib/use-api";
 
-const RANGE_DAYS = 60;
-
-export default function DoctorCalendar() {
-  const { doctor } = useCurrentDoctor();
-  // Memoize so the query key is stable across renders — otherwise `new Date()`
-  // produces a fresh ISO string each pass and react-query never settles.
-  const { from, to } = useMemo(() => {
-    const now = Date.now();
-    return {
-      from: new Date(now - RANGE_DAYS * 86_400_000).toISOString(),
-      to: new Date(now + RANGE_DAYS * 86_400_000).toISOString(),
-    };
-  }, []);
-  // Server scopes to JWT subject when role=doctor — no doctorId param needed.
-  const list = useAppointmentList({ from, to });
+export default function DoctorWorklistPage() {
+  const [view, setView] = useState<"worklist" | "calendar">("worklist");
+  // No date cutoff: an unfinished encounter must remain reachable even after
+  // it falls outside the planning calendar's current week.
+  const list = useAppointmentList({});
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
-      <PageHeader
-        label="Today"
-        title={`Welcome,`}
-        highlight={doctor ? `Dr. ${doctor.familyName}.` : "Doctor."}
-        subtitle="Your appointments only — the server filters everyone else's away. Click any event to open the patient and start the consultation."
-        pulseLabel
-      />
-
-      <Legend />
-
-      {list.error ? (
-        <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
-      ) : list.isLoading ? (
-        <Card className="p-8 text-center text-sm text-[var(--muted-foreground)]">Loading…</Card>
-      ) : (
-        <AppointmentCalendar appointments={list.data ?? []} basePath="/doctor/appointments" />
+    <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Appointments</h1>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            Ready patients, active encounters and unfinished notes.
+          </p>
+        </div>
+        <fieldset className="flex flex-wrap gap-2" aria-label="Appointment workspace views">
+          <Button
+            variant={view === "worklist" ? "primary" : "secondary"}
+            aria-pressed={view === "worklist"}
+            onClick={() => setView("worklist")}
+          >
+            Worklist
+          </Button>
+          <Button
+            variant={view === "calendar" ? "primary" : "secondary"}
+            aria-pressed={view === "calendar"}
+            onClick={() => setView("calendar")}
+          >
+            Planning calendar
+          </Button>
+        </fieldset>
+      </header>
+      <div hidden={view !== "worklist"}>
+        <AppointmentWorklist
+          appointments={list.data}
+          loading={list.isLoading}
+          fetching={list.isFetching}
+          error={list.error}
+          updatedAt={list.dataUpdatedAt}
+          onRefresh={() => list.refetch()}
+          viewerRole="doctor"
+        />
+      </div>
+      {view === "calendar" && (
+        <section className="flex min-w-0 flex-col gap-3" aria-label="Planning calendar">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Plan by day, week, month or agenda.
+              {list.error && list.data ? " Showing last loaded appointments." : ""}
+            </p>
+            <Button variant="secondary" disabled={list.isFetching} onClick={() => list.refetch()}>
+              {list.isFetching ? "Refreshing…" : "Refresh"}
+            </Button>
+          </div>
+          <ApiErrorBanner error={list.error} onRetry={() => list.refetch()} />
+          {list.isLoading && !list.data ? (
+            <Card className="p-4 text-sm text-[var(--muted-foreground)]">
+              Loading appointments…
+            </Card>
+          ) : list.data ? (
+            <AppointmentCalendar appointments={list.data} basePath="/doctor/appointments" />
+          ) : null}
+        </section>
       )}
-    </div>
-  );
-}
-
-function Legend() {
-  // The calendar collapses the 7 backend statuses into 3 buckets (plus a
-  // muted cancelled). Modals still surface the precise status.
-  const items = [
-    { key: "upcoming", label: "Upcoming", swatch: "bg-slate-200" },
-    { key: "live", label: "Live", swatch: "bg-[var(--accent)]" },
-    { key: "done", label: "Done", swatch: "bg-emerald-200" },
-    { key: "cancelled", label: "Cancelled", swatch: "bg-slate-100 line-through text-slate-400" },
-  ];
-  return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-[var(--muted-foreground)]">
-      {items.map((it) => (
-        <span key={it.key} className="inline-flex items-center gap-2">
-          <span className={`h-2 w-3 rounded-sm ${it.swatch}`} />
-          <span className="font-mono uppercase tracking-[0.12em]">{it.label}</span>
-        </span>
-      ))}
     </div>
   );
 }

@@ -57,9 +57,9 @@ All paths below are real App Router routes. Dynamic numeric IDs reject malformed
 | `/doctor-onboarding/[token]` | Full new profile or password-only rotation; expired/consumed link and submission result |
 | `/capture/[token]` | Public token-authenticated phone camera, JPEG capture, upload/retake and permission/expiry errors |
 | `/healthworker` | Server redirect to appointments |
-| `/healthworker/appointments` | Calendar, always-visible booking card, appointment rail, pending queue, focus, patient/queue context |
+| `/healthworker/appointments` | Today/unfinished worklists, pending queue, planning calendar and on-demand booking with patient/queue deep links |
 | `/healthworker/appointments/new` | Redirect to workspace, preserving optional `patientId` |
-| `/healthworker/appointments/[id]` | Consent/vitals/photo/meeting/cancellation cockpit; completed prescription PDF |
+| `/healthworker/appointments/[id]` | Patient identity/allergies, stage-specific consent/vitals/meeting actions, prescription delivery and follow-up receipt |
 | `/healthworker/patients` | Debounced search, roster, pagination, registration link, empty/no-match/loading/retry |
 | `/healthworker/patients/new` | Signed master consent then demographic registration; decline exits without registration |
 | `/healthworker/patients/[id]` | Demographics, profile summary, appointment history, book/edit/soft-delete |
@@ -71,9 +71,9 @@ All paths below are real App Router routes. Dynamic numeric IDs reject malformed
 | `/admin/doctors/new` | Email invite or manual complete doctor creation |
 | `/admin/doctors/[id]` | Profile/stamp/signature editing; approve/reject/reinvite/reapply/purge/deactivate/reactivate; audit metadata |
 | `/admin/healthworkers` | Scoped operating-account roster, search, creation and management panels |
-| `/doctor` | Own appointment calendar and identity greeting |
-| `/doctor/appointments/[id]` | Waiting/ready/completed state; patient context, prior visits, begin consultation or locked record |
-| `/doctor/consultations/[id]` | Three-stage notes/prescription/review editor; draft persistence, signing and follow-up; live call panel or locked review |
+| `/doctor` | Today/unfinished worklists with direct encounter actions and a separate planning calendar |
+| `/doctor/appointments/[id]` | Specific preparation owner/status, patient context, prior visits, begin/resume consultation or locked record and follow-up receipt |
+| `/doctor/consultations/[id]` | Patient safety strip, notes/prescription/review editor, retained partial drafts, guarded navigation, adaptive call panel and accessible history |
 | `/doctor/availability` | Own weekly availability planner with save and pattern copy |
 | `/doctor/profile` | Practice contact/qualifications/address/institute, stamp, saved signature; identity fields read-only |
 | `/sysadmin` | Own operator profile/password plus institute identity/timezones/master consent version |
@@ -125,6 +125,8 @@ Sources: `components/doctors/new-doctor-surface.tsx`, `components/admin/{doctor-
 
 Consent statement and real pointer/touch/stylus signature precede demographics; an empty pad cannot continue. Decline returns to roster. Registration requires DOB (manual DD/MM/YYYY or calendar, no future date), names and gender, with language, National ID, contact, address and screening reference. Existing legacy records may lack DOB and expose correction. Patient search is debounced with 50-row pagination; no records and no matches differ. Edit and soft-delete preserve history. Intake supports named/other conditions, surgery rows, allergy type/name/treatment, existing drug/dosage/frequency, smoking/alcohol/betel-areca, occupation/activity. Repeaters add/remove entries. Profile summary and appointment history have real empty states.
 
+Consent supports drawing or uploading an image of the patient's actual signature. Resizing, rotation and device-pixel-ratio changes preserve the artifact; the exported PNG remains bounded to 200 KiB. Uploads use the existing crop editor, not a typed attestation. Registration and medical intake warn before discarding unsaved work. An incomplete allergy or existing-medication row blocks saving with an inline error rather than silently disappearing.
+
 Sources: patient routes, `components/healthworker/{patient-form,profile-form,profile-summary,patient-picker}.tsx`, `routers/patients.py`. Storybook: Clinical / Patients, all patient screens, **Register Patient With Consent**.
 
 ### Healthworker: manage backlog and book care
@@ -135,7 +137,8 @@ Sources: patient routes, `components/healthworker/{patient-form,profile-form,pro
 - Preferred doctor, target week and notes are optional. Duplicate pending entries produce a confirmation view; force is explicit. Cancel records optional reason.
 - Queue booking locks patient, pre-fills doctor/target date and atomically creates an appointment while marking the queue entry booked. Workspace accepts `?bookFromQueue=`; patient booking accepts `?patientId=`.
 - Fresh booking chooses registered patient, active doctor and a 15-minute slot. Patient context exposes existing appointments/pending entries to avoid accidental duplication.
-- Calendar provides day/week/month/agenda views and focused rows. Availability bands are advisory, not a booking requirement. Custom outside-availability booking warns; booked/elapsed slots are unavailable. UTC transport is separate from clinic-local wall-clock entry.
+- Today is the default operational view. Worklist rows show exact lifecycle status and the role's next action; unfinished encounters remain accessible beyond today. Booking opens on demand, and switching workspace views preserves local booking/queue forms. Failed requests never become a reliable zero count or empty schedule.
+- The planning calendar retains day/week/month/agenda views and defaults to day on narrow screens. Availability bands are advisory, not a booking requirement. Custom outside-availability booking warns; booked/elapsed slots are unavailable. UTC transport is separate from clinic-local wall-clock entry.
 
 Sources: queue/appointment routes, `components/healthworker/{appointment-form,appointment-calendar,patient-context,queue-entry-form,queue-book-form,queue-row}.tsx`, `components/doctor/doctor-slot-picker.tsx`, `routers/{queue,appointments,availability}.py`. Storybook: Clinical / Queue and Booking; workspace screens; **Book Pending Queue Entry**.
 
@@ -153,7 +156,7 @@ The seven-state lifecycle is displayed by the real `StatusBadge` and mirrored by
 | `completed` | Locked consultation, signed prescription PDF preview/open/download; no cancel/edit |
 | `cancelled` | Reason displayed; terminal/locked; no reopen |
 
-Master consent is always visible and version-sensitive. Vitals include height/weight/BP/pulse/temperature with field-level validation and derived summary. Photo intake accepts JPEG/PNG/WebP via file picker, drag/drop, camera or phone QR; staging supports preview/rotation, sequential upload, caption edit/delete and lightbox. Cancellation can optionally requeue with doctor/week/priority/notes. Ending meeting manually or signed LiveKit room-finished webhook advances to awaiting notes. Closing a local call modal is not the same as ending the appointment.
+The appointment's next action leads the page. Saved consent and vitals collapse into a preparation record after the call starts; completed encounters lead with prescription delivery and follow-up instead of disabled forms. Master consent remains version-sensitive and blocks starting a meeting when renewal is required. Vitals include height/weight/BP/pulse/temperature with field-level validation and derived summary. Photo intake accepts JPEG/PNG/WebP via file picker, drag/drop, camera or phone QR; staging supports preview/rotation, sequential upload, caption edit/delete and lightbox. Cancellation can optionally requeue with doctor/week/priority/notes. Ending the meeting manually or through a signed LiveKit room-finished webhook advances to awaiting notes. Closing a local call view does not end the appointment.
 
 Sources: `components/healthworker/{cockpit,vitals-form,attachments-panel}.tsx`, `components/meeting`, `routers/{appointments,preconsult,attachments,livekit_webhook}.py`. Storybook: seven cockpit/screen states, consent gates, attachment variants, meeting-unavailable behavior.
 
@@ -161,12 +164,14 @@ Sources: `components/healthworker/{cockpit,vitals-form,attachments-panel}.tsx`, 
 
 **Story:** As the assigned doctor, I can review patient context, persist partial clinical notes, and produce a locked signed consultation with the appropriate follow-up.
 
-1. Own calendar → appointment; wait for healthworker readiness. Review complaint/vitals, health profile, photos and previous visits.
-2. Begin/get draft during live/awaiting-notes state. Consultation route may include a LiveKit call panel.
+1. Open a patient from the daily worklist. Specific status text identifies whether the healthworker is collecting consent/vitals or the doctor owns documentation.
+2. Begin or resume a draft during live/awaiting-notes state. Patient name, date-only DOB, identifier and allergy status remain above the editor; previous visits and clinical context are available without leaving it. The video panel can collapse and does not reserve an empty column after the call.
 3. Notes → prescription → review. Notes capture complaint/onset/symptoms/observations. Structured prescription includes diagnoses, generic/trade names, dose/frequency/duration/instructions, labs and referrals.
-4. Stage changes persist drafts; failed save prevents advancement. Blank untouched rows are dropped; nonempty medication without a generic name blocks signing.
-5. Use saved signature or draw a one-off. Choose no follow-up, a concrete appointment, or recommendation in 1–52 weeks (quick presets available).
-6. Submit locks consultation/appointment and atomically creates the optional follow-up appointment or queue entry. Completed records are read-only; signed PDF and daily exports become available.
+4. Explicit Save draft and forward stage changes persist clinical content; failed saves retain input and prevent advancement. Entirely untouched rows are omitted, but partial medication rows survive reopening. Both UI and server block signing a medication without a generic name. Unsaved navigation/sign-out offers stay/discard; refresh/close uses browser protection. No draft PHI is written to browser storage.
+5. Use a saved signature or draw a one-off. Choose no follow-up, an exact appointment, or a recommendation in 1–52 weeks. The review describes the selected consequence. Follow-up and drawn signatures are submit-only under the existing API; Save draft does not claim to persist them, and exit protection remains active.
+6. Submit locks the consultation/appointment and atomically creates the optional follow-up appointment or queue entry. Both roles see a persisted follow-up receipt. Healthworkers see the actual queue booking state and action; doctors are told when current queue status is unavailable to their role.
+
+Open nonterminal appointment views poll every five seconds, and appointment/queue lists every ten seconds while visible. Terminal encounter polling stops. Refresh controls and timestamps remain available. Background errors retain the last loaded clinical view with a warning instead of unmounting edited forms.
 
 Sources: doctor routes, `components/doctor/{consultation-flow,consultation-editors,consultation-review,consultation-stepper,patient-summary,visit-history}.tsx`, `routers/consultations.py`, `pdf.py`. Storybook: Clinical / Consultation, doctor screen variants, **Write Sign And Queue Follow Up**.
 
@@ -174,7 +179,7 @@ Sources: doctor routes, `components/doctor/{consultation-flow,consultation-edito
 
 **Story:** As a doctor or healthworker, I can paint a weekly clinic pattern, save it and copy it into future weeks.
 
-WeekGrid is seven days, 07:00–20:00, 30-minute cells; pointer-drag rectangles paint/erase, past dates are disabled, and booked cells are hatched without forbidding availability edits. Save replaces a visible week through range delete plus bulk create. Copy supports 1/2/4/8/12 future weeks and requires saved current state. Doctor can mutate only own windows; healthworker selects a doctor. Availability does not enforce booking times. Missing doctor, no active doctors, loading/query/save errors and dirty states are represented.
+WeekGrid is seven days, 07:00–20:00, with 30-minute cells. Pointer drag paints/erases; keyboard arrows move a roving focus and Enter/Space toggle a slot. Date-aware accessible names and disabled past cells accompany 44px day/start/end interval controls for touch entry. Dirty week/doctor switches and navigation ask before discarding edits. Save replaces a visible week through range delete plus bulk create. Copy supports 1/2/4/8/12 future weeks and requires saved current state. Doctor can mutate only own windows; healthworker selects a doctor. Booked cells are hatched, and availability remains advisory rather than enforcing booking times. Save/copy are still separate backend requests, not an atomic replacement transaction.
 
 Sources: availability pages, `components/doctor/{week-grid,availability-grid-utils,doctor-slot-picker}`, `routers/availability.py`. Storybook: Clinical / Availability and both planner screens.
 
@@ -182,7 +187,7 @@ Sources: availability pages, `components/doctor/{week-grid,availability-grid-uti
 
 **Story:** As a healthworker, I can open/download a completed signed prescription and export the day's completed consultations for medication pickup.
 
-The cockpit streams `/appointments/{id}/summary.pdf` into an object URL and offers preview/open/download/retry. Exports convert a selected Sri Lanka day to UTC bounds; the server includes completed appointments only, limits range width, and returns real XLSX or a ZIP of signed PDFs plus manifest. Storybook downloads contain valid synthetic PDF/XLSX/ZIP files labelled nonclinical; they do not reproduce server formatting/filtering.
+Completed encounters put Open/Download and the follow-up receipt above the collapsed preparation record. The cockpit streams `/appointments/{id}/summary.pdf` into an object URL and offers an optional preview plus retry. Exports convert a selected Sri Lanka day to UTC bounds; the server includes completed appointments only, limits range width, and returns real XLSX or a ZIP of signed PDFs plus manifest. Storybook downloads contain valid synthetic PDF/XLSX/ZIP files labelled nonclinical; they do not reproduce server formatting/filtering.
 
 Sources: exports page, cockpit prescription viewer, `routers/{summary,exports}.py`, `pdf.py`. Storybook: completed cockpit/screen and export success/error surfaces.
 
@@ -205,6 +210,8 @@ Sources: `components/primitives/{camera-capture-modal,qr-capture-modal}.tsx`, `c
 ## Shared UI foundations
 
 All real primitive modules have Storybook entries: Button sizes/variants/states; Input/Label/password reveal/numeric behavior; native Select/Textarea; DatePicker day/week/min/max/keyboard; Card family; seven StatusBadges; ErrorBanner/ApiErrorBanner curated errors/reference/retry; EmptyState; PageHeader; BackLink; SectionLabel; CapsLockHint; explicit-close Modal; image preview; camera/QR capture; patient/doctor signature canvases and signature input. Shell stories cover Topbar, four RoleBadges, version visibility and login hero graphic. The existing Inter/Calistoga/JetBrains Mono faces and Tailwind semantic tokens are preserved and self-hosted in Storybook.
+
+Clinical working pages use compact Inter headings and 16px panels while retaining the existing brand, colors and subtle shadows. Shared patient identity/allergy and follow-up components keep encounter context consistent. Native dialogs provide focus containment, naming, focus return and dirty-dismiss protection. Role navigation wraps visibly on phones, identifies the current page and labels sign-out. DOB display uses the date-only helper rather than timestamp timezone conversion.
 
 ## Server-only capabilities and constraints
 

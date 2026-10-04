@@ -327,6 +327,7 @@ export function DoctorSlotPicker({
             ariaLabel="Choose another appointment date"
           />
           <Select
+            aria-label="Appointment time"
             value={customTime}
             onChange={(e) => setCustomTime(e.target.value)}
             disabled={!customDate}

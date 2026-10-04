@@ -31,13 +31,13 @@ npx biome check src/stories .storybook
 
 ## Catalog
 
-The integrated catalog contains 314 canvas stories, 50 interaction plays and 54 documentation entries:
+The integrated catalog contains 328 canvas stories, 59 interaction plays and 54 documentation entries:
 
 - **Start here:** usage, architecture, complete route/feature map, role stories, backend-only capabilities and implementation gaps.
 - **Journeys / End to end:** initialize clinic; sign in/search/open patient; signed-consent registration; atomic queue booking; consultation draft/review/sign/follow-up; invite doctor; approve application; update institute identity.
 - **Screens / Public:** root routing, login/denials, setup, new/rotation/expired onboarding, phone capture/expiry, not-found.
-- **Screens / Healthworker:** booking workspace/deep links/loading/empty/error; patients/intake; queue; availability; exports; seven appointment lifecycle states and expired master consent.
-- **Screens / Doctor:** calendar/readiness; appointment context; draft/live-panel/locked consultation; availability; practice profile.
+- **Screens / Healthworker:** daily worklist, on-demand booking/deep links, retained workspace drafts, loading/empty/error; patients/intake; queue; availability; exports; seven appointment lifecycle states and expired master consent.
+- **Screens / Doctor:** daily worklist/planning calendar/readiness; patient safety context; draft/live-panel/locked consultation; availability; practice profile.
 - **Screens / Administration:** invites/roster/errors/approval/setup/rejection, healthworker accounts, system settings, mixed roster and invite/manual doctor creation.
 - **Clinical:** demographic/intake/profile/picker/context; vitals/photos; forms/list/calendar/cockpit; queue intake/duplicate confirmation/booking/cancel; patient review/history; 15-minute slot selection; 30-minute week painting; all structured consultation editors/review/sign/follow-up states; doctor stamp upload/crop/rotation/transparency; video availability and unconfigured-service error.
 - **Primitives, Shell and Marketing:** real controls/variants, calendar keyboard/bounds, error/retry/reference, loading/empty, dialogs, image/camera/QR, signature canvases/input, four-role chrome, version states and login graphic.
@@ -67,9 +67,11 @@ Dates use the real clock. Current-day fixture appointments remain visible in cal
 
 ## Verification and limits
 
-Verified against the built static site: **314/314 canvas stories rendered and all 50 interaction plays completed without story/play exceptions or unimplemented API operations**. TypeScript and the scoped Biome check passed. Desktop booking-workspace and 390 px patient-record previews were inspected; the mobile record had no document horizontal overflow and used the original Calistoga display face. Both export buttons produced browser downloads; the XLSX sheet and ZIP/PDF contents were inspected and contained only labelled synthetic data.
+The clinical UX verification exercised **all 59 actual interaction plays on the live preview**, including all eight end-to-end journeys. Coverage includes incomplete intake validation, partial prescription save/reopen/correction, unsaved exit protection, submit-only follow-up warnings, preserved booking drafts, dialog focus/dirty dismissal, signature resize/upload and keyboard/interval availability editing.
 
-`npm run build-storybook` completed successfully. Vite reports client-directive/sourcemap and large-chunk warnings when bundling the incumbent application and generated API layer; these are not suppressed. No backend tests, real provider calls, security/transaction verification or full accessibility-compliance audit were performed.
+Settled desktop, tablet and 390px previews were inspected for worklists, consultation, consent, completed prescription and availability. The reported mobile photo-header overflow and unnamed queue/time controls were corrected and reverified. DOB stayed identical in America/Los_Angeles and Pacific/Auckland browser zones. This was not a rerun of every noninteractive canvas or a full accessibility-compliance audit.
+
+TypeScript, scoped Biome, production Next build and Storybook build passed. Vite still reports client-directive/sourcemap and large-chunk warnings; they are not suppressed. Six consultation backend tests passed against isolated PostgreSQL/object storage, including partial-medication draft preservation and signing rejection. A separate real Next/API synthetic encounter verified draft reopening, native browser Back/sign-out protection, cross-role meeting/notes/completion polling, follow-up queue creation and prescription loading. That smoke did not connect a real video room or send email.
 
 - **Video:** no usable LiveKit token is issued and no clinical room is contacted. Start/join uses the real `livekit_not_configured` error; fixture lifecycle states are UI examples, not a performed call.
 - **Email:** invite/approval records are synthetic. No Resend delivery, provider callback or suppression is tested.
@@ -77,6 +79,6 @@ Verified against the built static site: **314/314 canvas stories rendered and al
 - **Camera/phone:** deterministic denied/unsupported/no-device/expired states are included. Success requires camera hardware/permissions and a real reachable backend for companion-phone transfer. Preview tokens are inert.
 - **Downloads:** real UI handlers create browser downloads from valid synthetic PDF/XLSX/ZIP blobs. Their content is explicitly nonclinical; production PDF formatting, export filtering and manifests require server integration verification.
 - **Security/transactions:** MSW is not a database or security implementation. Server ACLs, cookie/CSRF enforcement, row locks, uniqueness, audit trails and atomic transactions remain backend responsibilities.
-- **Accessibility:** the addon reports the incumbent UI. Existing modal focus-trap and unlabeled-field limitations are preserved, not represented as passing compliance.
+- **Accessibility:** shared dialogs now use native focus containment and dirty-dismiss confirmation; availability supports keyboard and interval entry, and the reviewed queue/time controls have accessible names. The addon remains a diagnostic tool, not a compliance certification.
 
 Primary integration references: [Storybook Next.js/Vite](https://storybook.js.org/docs/get-started/frameworks/nextjs-vite), [MSW Storybook addon CSF3 integration](https://github.com/mswjs/msw-storybook-addon#csf-30). Storybook 10.6.1 and MSW addon 3.0.3 are pinned in the lockfile.

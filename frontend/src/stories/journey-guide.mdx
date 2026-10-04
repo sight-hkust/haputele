@@ -24,8 +24,8 @@ Open **Journeys → End to end**. Play functions use the actual forms, hooks and
 ## Inspect a feature or state
 
 - **Screens / Public:** setup, login, doctor onboarding/rotation/expiry, phone capture/expiry and not-found.
-- **Screens / Healthworker:** booking workspace and its deep links, patient roster/registration/record/intake, queue, availability, exports, and all seven appointment states.
-- **Screens / Doctor:** own calendar, readiness, live/call boundary, draft/locked consultations, availability and practice profile.
+- **Screens / Healthworker:** Today worklist, on-demand booking and its deep links, patient roster/registration/record/intake, queue, availability, exports, and all seven appointment states.
+- **Screens / Doctor:** Today/unfinished worklists, planning calendar, readiness, live/call boundary, draft/locked consultations, availability and practice profile.
 - **Screens / Administration:** doctor approval/setup/rejection, invite/manual creation, healthworker roster, mixed operator roster and system configuration.
 - **Clinical:** focused patient/intake/vitals/photos, booking/calendar, queue, consultation editors/review/follow-up/signing, slot selection and week painting.
 - **Primitives:** controls, calendar keyboard/boundary states, status/error/loading/empty treatments, modals, camera/QR and signatures.
@@ -36,6 +36,8 @@ Use Docs for prop contracts and limitations, Controls for supported inputs, and 
 ## Reset and dates
 
 Reload or select another story before replaying a mutation journey. Synthetic API data lives only in that story's browser memory. Dates are relative to the current clinic day; calendars, elapsed slot restrictions and past-day painting use the real clock. Booking deep links and links between screens remain inside the same scenario. Primitive component links use Storybook's normal router action mocks.
+
+Clinical regression stories cover interrupted notes, partial medications, incomplete intake, preserved booking drafts, keyboard availability, modal focus, signature resizing and signature uploads. Follow-up choices and one-off signatures are saved only when signing; the editor labels that distinction and protects unsaved exits.
 
 ## Boundaries, not fake integration proof
 

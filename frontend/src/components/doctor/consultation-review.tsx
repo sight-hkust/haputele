@@ -1,30 +1,33 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { ConsultationFormShape } from "@/components/doctor/consultation-editors";
 import { diagnosisLabel } from "@/lib/medical-codes";
 
-// Read-only summary of every section. Inverted-section treatment per the design
-// system spec ("dark inverted section for moments that deserve spotlight
-// emphasis") — this is the doctor's last look before signing.
-export function ConsultationReview({ values }: { values: ConsultationFormShape }) {
+// Structured clinical record, shared by the pre-sign review and locked receipt.
+export function ConsultationReview({
+  values,
+  followUp,
+  locked = false,
+}: {
+  values: ConsultationFormShape;
+  followUp?: ReactNode;
+  locked?: boolean;
+}) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[var(--foreground)] p-8 text-white">
-      <div className="absolute inset-0 dot-pattern-dark opacity-60" aria-hidden />
-      <div
-        className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--accent)]/15 blur-[80px]"
-        aria-hidden
-      />
-      <div className="relative flex flex-col gap-8">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 text-[var(--foreground)] shadow-sm sm:p-6">
+      <div className="flex flex-col gap-6">
         <div>
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-white/60">
-            Final review
+          <span className="text-sm font-medium text-[var(--accent)]">
+            {locked ? "Signed consultation" : "Final review"}
           </span>
-          <h2 className="mt-2 font-display text-3xl tracking-[-0.02em]">
-            Confirm the consultation record.
+          <h2 className="mt-1 text-2xl font-semibold tracking-[-0.02em]">
+            {locked ? "Consultation record" : "Confirm the consultation record"}
           </h2>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/70">
-            Once signed and submitted, the record is locked. The §1.7 prescription PDF will be
-            available immediately to the healthworker.
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--muted-foreground)]">
+            {locked
+              ? "This signed record is locked. The prescription is available to the healthworker."
+              : "Signing locks this record and makes the prescription available to the healthworker."}
           </p>
         </div>
 
@@ -41,7 +44,10 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
           ) : (
             <ul className="flex flex-wrap gap-2">
               {values.diagnoses.map((d, i) => (
-                <li key={i} className="rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium">
+                <li
+                  key={i}
+                  className="rounded-md bg-[var(--muted)] px-3 py-1.5 text-sm font-medium"
+                >
                   {d.code === "others" && d.text ? d.text : diagnosisLabel(d.code as never)}
                 </li>
               ))}
@@ -53,20 +59,26 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
           {values.medications.length === 0 ? (
             <ReviewEmpty>None.</ReviewEmpty>
           ) : (
-            <ul className="flex flex-col divide-y divide-white/10">
+            <ul className="flex flex-col divide-y divide-[var(--border)]">
               {values.medications.map((m, i) => (
                 <li key={i} className="py-3 first:pt-0">
                   <div className="text-base font-semibold tracking-[-0.01em]">
-                    {m.genericName || <span className="text-rose-300">⚠ generic name missing</span>}
+                    {m.genericName || (
+                      <span className="text-amber-700">Generic name required before signing</span>
+                    )}
                     {m.tradeName && (
-                      <span className="ml-2 font-normal text-white/60">({m.tradeName})</span>
+                      <span className="ml-2 font-normal text-[var(--muted-foreground)]">
+                        ({m.tradeName})
+                      </span>
                     )}
                   </div>
-                  <div className="mt-0.5 text-sm text-white/70">
+                  <div className="mt-1 text-sm text-[var(--muted-foreground)]">
                     {[m.dose, m.frequency, m.duration].filter(Boolean).join(" · ") || "—"}
                   </div>
                   {m.instructions && (
-                    <div className="mt-1 text-xs text-white/60">{m.instructions}</div>
+                    <div className="mt-1 text-sm text-[var(--muted-foreground)]">
+                      {m.instructions}
+                    </div>
                   )}
                 </li>
               ))}
@@ -85,7 +97,9 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
                     <li key={i} className="text-sm">
                       <span className="font-medium">{l.testName || "—"}</span>
                       {l.instructions && (
-                        <span className="ml-2 text-white/60">· {l.instructions}</span>
+                        <span className="ml-2 text-[var(--muted-foreground)]">
+                          · {l.instructions}
+                        </span>
                       )}
                     </li>
                   ))}
@@ -101,7 +115,9 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
                     <li key={i} className="text-sm">
                       <span className="font-medium">{r.specialistOrDepartment || "—"}</span>
                       {r.instructions && (
-                        <span className="ml-2 text-white/60">· {r.instructions}</span>
+                        <span className="ml-2 text-[var(--muted-foreground)]">
+                          · {r.instructions}
+                        </span>
                       )}
                     </li>
                   ))}
@@ -110,6 +126,8 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
             </ReviewBlock>
           </div>
         )}
+
+        {followUp && <ReviewBlock title="Follow-up">{followUp}</ReviewBlock>}
       </div>
     </div>
   );
@@ -118,7 +136,7 @@ export function ConsultationReview({ values }: { values: ConsultationFormShape }
 function ReviewBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 font-mono text-xs uppercase tracking-[0.15em] text-white/60">{title}</h3>
+      <h3 className="mb-3 text-base font-semibold">{title}</h3>
       {children}
     </section>
   );
@@ -128,12 +146,12 @@ function ReviewKv({ k, v }: { k: string; v?: string | null }) {
   if (!v?.trim()) return null;
   return (
     <div className="mb-2 last:mb-0">
-      <span className="font-mono text-xs uppercase tracking-[0.12em] text-white/50">{k}</span>
-      <p className="mt-0.5 text-sm leading-relaxed text-white/90">{v}</p>
+      <span className="text-sm font-medium text-[var(--muted-foreground)]">{k}</span>
+      <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{v}</p>
     </div>
   );
 }
 
 function ReviewEmpty({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm italic text-white/50">{children}</p>;
+  return <p className="text-sm text-[var(--muted-foreground)]">{children}</p>;
 }

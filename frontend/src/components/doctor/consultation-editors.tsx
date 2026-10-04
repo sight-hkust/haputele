@@ -3,6 +3,7 @@
 import { Plus, X } from "lucide-react";
 import {
   useFieldArray,
+  useWatch,
   type Control,
   type UseFormRegister,
   type UseFormWatch,
@@ -78,7 +79,12 @@ export function DiagnosesEditor({
           <RepeaterRow key={field.id} onRemove={() => remove(i)}>
             <div className={requiresText ? "grid gap-3 sm:grid-cols-2" : ""}>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`dx-${i}-code`}>Diagnosis</Label>
+                <Label
+                  className="font-sans text-sm normal-case tracking-normal"
+                  htmlFor={`dx-${i}-code`}
+                >
+                  Diagnosis
+                </Label>
                 <Select id={`dx-${i}-code`} {...register(`diagnoses.${i}.code`)}>
                   <option value="">Select…</option>
                   {DIAGNOSIS_OPTIONS.map((opt) => (
@@ -90,7 +96,12 @@ export function DiagnosesEditor({
               </div>
               {requiresText && (
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`dx-${i}-text`}>Specify</Label>
+                  <Label
+                    className="font-sans text-sm normal-case tracking-normal"
+                    htmlFor={`dx-${i}-text`}
+                  >
+                    Specify
+                  </Label>
                   <Input
                     id={`dx-${i}-text`}
                     {...register(`diagnoses.${i}.text`)}
@@ -107,8 +118,7 @@ export function DiagnosesEditor({
 }
 
 // ── Medications ──────────────────────────────────────────────────────
-// Per §1.7, generic name is mandatory. We render it as required and let zod
-// catch missing values at the submit boundary.
+// Generic names are required at signing, not while saving a partial draft.
 export function MedicationsEditor({
   control,
   register,
@@ -117,10 +127,11 @@ export function MedicationsEditor({
   register: UseFormRegister<ConsultationFormShape>;
 }) {
   const { fields, append, remove } = useFieldArray({ control, name: "medications" });
+  const medications = useWatch({ control, name: "medications" });
   return (
     <Repeater
       title="Prescription"
-      hint="Generic name is mandatory (§1.7). Trade name appears as supplementary text on the printed Rx."
+      hint="A generic name is required before signing. Partial medication details can be saved as a draft; a trade name is supplementary."
       onAdd={() =>
         append({
           genericName: "",
@@ -134,50 +145,61 @@ export function MedicationsEditor({
       addLabel="Add medication"
       empty={fields.length === 0}
     >
-      {fields.map((field, i) => (
-        <RepeaterRow key={field.id} onRemove={() => remove(i)}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Generic name *" htmlFor={`m-${i}-g`} full>
-              <Input
-                id={`m-${i}-g`}
-                {...register(`medications.${i}.genericName` as const)}
-                aria-invalid={false}
-              />
-            </Field>
-            <Field label="Trade name" htmlFor={`m-${i}-t`}>
-              <Input id={`m-${i}-t`} {...register(`medications.${i}.tradeName` as const)} />
-            </Field>
-            <Field label="Dose" htmlFor={`m-${i}-d`}>
-              <Input
-                id={`m-${i}-d`}
-                {...register(`medications.${i}.dose` as const)}
-                placeholder="e.g. 500 mg"
-              />
-            </Field>
-            <Field label="Frequency" htmlFor={`m-${i}-f`}>
-              <Input
-                id={`m-${i}-f`}
-                {...register(`medications.${i}.frequency` as const)}
-                placeholder="e.g. twice daily"
-              />
-            </Field>
-            <Field label="Duration" htmlFor={`m-${i}-du`}>
-              <Input
-                id={`m-${i}-du`}
-                {...register(`medications.${i}.duration` as const)}
-                placeholder="e.g. 7 days"
-              />
-            </Field>
-            <Field label="Instructions / notes" htmlFor={`m-${i}-i`} full>
-              <Textarea
-                id={`m-${i}-i`}
-                rows={2}
-                {...register(`medications.${i}.instructions` as const)}
-              />
-            </Field>
-          </div>
-        </RepeaterRow>
-      ))}
+      {fields.map((field, i) => {
+        const row = medications?.[i];
+        const missingName =
+          !!row && !row.genericName?.trim() && Object.values(row).some((value) => value?.trim());
+        return (
+          <RepeaterRow key={field.id} onRemove={() => remove(i)}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Generic name *" htmlFor={`m-${i}-g`} full>
+                <Input
+                  id={`m-${i}-g`}
+                  {...register(`medications.${i}.genericName` as const)}
+                  aria-invalid={missingName}
+                  aria-describedby={missingName ? `m-${i}-name-warning` : undefined}
+                />
+                {missingName && (
+                  <p id={`m-${i}-name-warning`} className="text-sm text-amber-700">
+                    Add the generic name before signing. These partial details can still be saved.
+                  </p>
+                )}
+              </Field>
+              <Field label="Trade name" htmlFor={`m-${i}-t`}>
+                <Input id={`m-${i}-t`} {...register(`medications.${i}.tradeName` as const)} />
+              </Field>
+              <Field label="Dose" htmlFor={`m-${i}-d`}>
+                <Input
+                  id={`m-${i}-d`}
+                  {...register(`medications.${i}.dose` as const)}
+                  placeholder="e.g. 500 mg"
+                />
+              </Field>
+              <Field label="Frequency" htmlFor={`m-${i}-f`}>
+                <Input
+                  id={`m-${i}-f`}
+                  {...register(`medications.${i}.frequency` as const)}
+                  placeholder="e.g. twice daily"
+                />
+              </Field>
+              <Field label="Duration" htmlFor={`m-${i}-du`}>
+                <Input
+                  id={`m-${i}-du`}
+                  {...register(`medications.${i}.duration` as const)}
+                  placeholder="e.g. 7 days"
+                />
+              </Field>
+              <Field label="Instructions / notes" htmlFor={`m-${i}-i`} full>
+                <Textarea
+                  id={`m-${i}-i`}
+                  rows={2}
+                  {...register(`medications.${i}.instructions` as const)}
+                />
+              </Field>
+            </div>
+          </RepeaterRow>
+        );
+      })}
     </Repeater>
   );
 }
@@ -267,12 +289,12 @@ function Repeater({
 }) {
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex items-end justify-between">
-        <div>
-          <h3 className="font-display text-xl tracking-[-0.01em]">{title}</h3>
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
+        <div className="min-w-0">
+          <h3 className="text-xl font-semibold tracking-[-0.01em]">{title}</h3>
           {hint && <p className="mt-1 text-sm text-[var(--muted-foreground)]">{hint}</p>}
         </div>
-        <Button type="button" size="sm" variant="secondary" onClick={onAdd}>
+        <Button type="button" variant="secondary" onClick={onAdd} className="shrink-0">
           <Plus className="h-3.5 w-3.5" />
           {addLabel}
         </Button>
@@ -290,15 +312,17 @@ function Repeater({
 
 function RepeaterRow({ onRemove, children }: { onRemove: () => void; children: React.ReactNode }) {
   return (
-    <div className="relative rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 p-4 pr-12">
-      <button
-        type="button"
-        aria-label="Remove"
-        onClick={onRemove}
-        className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-rose-600"
-      >
-        <X className="h-4 w-4" />
-      </button>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 p-4">
+      <div className="mb-3 flex justify-end">
+        <button
+          type="button"
+          aria-label="Remove"
+          onClick={onRemove}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
       {children}
     </div>
   );
@@ -317,7 +341,9 @@ function Field({
 }) {
   return (
     <div className={`flex flex-col gap-2 ${full ? "sm:col-span-2" : ""}`}>
-      <Label htmlFor={htmlFor}>{label}</Label>
+      <Label className="font-sans text-sm normal-case tracking-normal" htmlFor={htmlFor}>
+        {label}
+      </Label>
       {children}
     </div>
   );

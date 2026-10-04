@@ -14,10 +14,12 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { FollowUpSummary } from "@/components/clinical/follow-up-summary";
+import { PatientSafetyStrip } from "@/components/clinical/patient-safety-strip";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
 import { DatePicker } from "@/components/primitives/date-picker";
-import { ErrorBanner } from "@/components/primitives/error-banner";
+import { ApiErrorBanner, ErrorBanner } from "@/components/primitives/error-banner";
 import { Modal } from "@/components/primitives/modal";
 import { Textarea } from "@/components/primitives/select";
 import { StatusBadge } from "@/components/primitives/status-badge";
@@ -57,93 +59,85 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
   const sessionConsentQ = useGetSessionConsent(aptId);
   const sessionConsent = sessionConsentQ.data ?? null;
   const sessionConsented = !!(sessionConsent?.agreed && !sessionConsent.revokedAt);
-  // Distinguish "not consented" from "still loading the consent status" — a
-  // consent_pending appointment always already has consent, so we mustn't flash
-  // the "record consent first" notice before the query resolves. (The status is
-  // named for the step it enters, not the one just finished; `statusLabel` in
-  // lib/format.ts is what keeps that off the badge.)
-  const sessionConsentResolved = !sessionConsentQ.isPending;
+  // Failed initial lookup is unknown, not an absent consent record.
+  const sessionConsentResolved = sessionConsentQ.isSuccess || sessionConsentQ.dataUpdatedAt > 0;
+
+  const preparing = PRE_MEETING_STATES.has(appointment.status);
+  const needsMasterConsent = masterConsentStatus !== "ok";
+  const needsSessionConsent = preparing && sessionConsentResolved && !sessionConsented;
+  const needsVitals = appointment.status === "consent_pending";
+  const masterGate = (
+    <MasterConsentGate
+      status={masterConsentStatus}
+      patientId={appointment.patientId}
+      patientName={patient ? `${patient.given} ${patient.family}` : ""}
+      masterIsRevocable={!!patient?.masterConsentId}
+    />
+  );
+  const vitals = (
+    <VitalsStep
+      appointmentId={aptId}
+      editable={
+        appointment.status === "consent_pending" || appointment.status === "data_collection"
+      }
+      sessionConsented={sessionConsented}
+      sessionConsentResolved={sessionConsentResolved}
+      preconsult={preconsult}
+      currentStatus={appointment.status}
+    />
+  );
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Master-consent gate — always shown so it's never out of sight. */}
-      <MasterConsentGate
-        status={masterConsentStatus}
-        patientId={appointment.patientId}
-        patientName={patient ? `${patient.given} ${patient.family}` : ""}
-        masterIsRevocable={!!patient?.masterConsentId}
-      />
-
-      {/* Session consent — surfaces during pre-meeting states; collapses once captured */}
-      {PRE_MEETING_STATES.has(appointment.status) && (
-        <SessionConsentStep
-          appointmentId={aptId}
-          consented={sessionConsented}
-          consentTime={sessionConsent?.capturedAt ?? null}
-          masterAvailable={masterConsentStatus === "ok"}
-        />
+    <div className="flex min-w-0 flex-col gap-4">
+      {preparing && needsMasterConsent && masterGate}
+      {sessionConsentQ.error && (
+        <ApiErrorBanner error={sessionConsentQ.error} onRetry={() => sessionConsentQ.refetch()} />
       )}
+      {preparing && !sessionConsentResolved && (
+        <Card className="p-4 text-sm text-[var(--muted-foreground)]">
+          Checking the patient's session consent…
+        </Card>
+      )}
+      {needsSessionConsent && (
+        <SessionConsentStep appointmentId={aptId} masterAvailable={!needsMasterConsent} />
+      )}
+      {needsVitals && !needsSessionConsent && sessionConsentResolved && vitals}
 
-      {/* Vitals — editable in consent_pending / data_collection; read-only after */}
-      <VitalsStep
+      <MeetingStep
         appointmentId={aptId}
-        editable={
-          appointment.status === "consent_pending" || appointment.status === "data_collection"
-        }
-        sessionConsented={sessionConsented}
-        sessionConsentResolved={sessionConsentResolved}
-        preconsult={preconsult}
-        currentStatus={appointment.status}
+        status={appointment.status}
+        canStart={!needsMasterConsent && sessionConsented && !!preconsult}
       />
 
-      {/* Photo attachments — FEEDBACK §3. Available pre-meeting through awaiting_notes. */}
-      <AttachmentsPanel appointmentId={aptId} status={appointment.status} />
-
-      {/* Meeting — start in data_collection, end in in_progress */}
-      <MeetingStep appointmentId={aptId} status={appointment.status} />
-
-      {/* Awaiting-doctor banner */}
       {appointment.status === "awaiting_notes" && (
-        <Card variant="elevated" className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="rounded-xl bg-violet-100 p-2">
-              <FileText className="h-5 w-5 text-violet-700" />
-            </div>
+        <Card variant="elevated" className="p-4">
+          <div className="flex items-start gap-3">
+            <FileText className="mt-0.5 h-5 w-5 shrink-0 text-[var(--accent)]" />
             <div>
-              <h3 className="text-lg font-semibold tracking-[-0.01em]">
-                Awaiting doctor&rsquo;s notes
-              </h3>
-              <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
-                The meeting has ended. The assigned doctor is writing up the consultation. The
-                prescription will be available here once they sign and submit.
+              <h3 className="text-xl font-semibold">Doctor owns the next step</h3>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                The call is finished. The assigned doctor must finish and sign the consultation.
+                Your next task is to deliver the prescription and confirm follow-up once it appears
+                here. This view checks for updates automatically.
               </p>
             </div>
           </div>
         </Card>
       )}
 
-      {/* Prescription PDF — completed only */}
       {appointment.status === "completed" && consultation && (
-        <PrescriptionViewer appointmentId={aptId} />
+        <>
+          <PrescriptionViewer appointmentId={aptId} />
+          <FollowUpSummary consultation={consultation} viewerRole="healthworker" />
+        </>
       )}
 
-      {/* Cancel — anywhere except completed/cancelled */}
-      {appointment.status !== "completed" && appointment.status !== "cancelled" && (
-        <CancelAction
-          appointmentId={aptId}
-          status={appointment.status}
-          doctorId={appointment.doctorId}
-          scheduledAt={appointment.scheduledAt}
-        />
-      )}
-
-      {/* Cancelled banner */}
       {appointment.status === "cancelled" && (
-        <Card className="border-rose-200 bg-rose-50/40 p-6">
+        <Card className="border-rose-200 bg-rose-50/40 p-4">
           <div className="flex items-start gap-3">
-            <XCircle className="mt-0.5 h-5 w-5 text-rose-600" />
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
             <div>
-              <h3 className="text-lg font-semibold tracking-[-0.01em]">Appointment cancelled</h3>
+              <h3 className="text-xl font-semibold">Appointment cancelled</h3>
               {appointment.cancellationReason && (
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">
                   Reason: {appointment.cancellationReason}
@@ -152,6 +146,41 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
             </div>
           </div>
         </Card>
+      )}
+
+      <details className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--muted)]/20">
+        <summary className="cursor-pointer p-4 text-sm font-semibold">
+          {preparing
+            ? "Preparation · saved consent and vitals"
+            : "Preparation record · consent and vitals"}
+        </summary>
+        <div className="flex min-w-0 flex-col gap-3 px-4 pb-4">
+          {(!preparing || !needsMasterConsent) && masterGate}
+          {!needsSessionConsent && sessionConsentResolved && (
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold">Session consent</h3>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                {sessionConsented
+                  ? `Patient consented${sessionConsent?.capturedAt ? ` · ${fmtDateTime(sessionConsent.capturedAt)}` : ""}`
+                  : sessionConsent?.revokedAt
+                    ? "Consent revoked."
+                    : "No active session consent recorded."}
+              </p>
+            </Card>
+          )}
+          {!needsVitals && vitals}
+        </div>
+      </details>
+
+      <AttachmentsPanel appointmentId={aptId} status={appointment.status} />
+
+      {appointment.status !== "completed" && appointment.status !== "cancelled" && (
+        <CancelAction
+          appointmentId={aptId}
+          status={appointment.status}
+          doctorId={appointment.doctorId}
+          scheduledAt={appointment.scheduledAt}
+        />
       )}
     </div>
   );
@@ -257,13 +286,9 @@ function MasterConsentGate({
 
 function SessionConsentStep({
   appointmentId,
-  consented,
-  consentTime,
   masterAvailable,
 }: {
   appointmentId: number;
-  consented: boolean;
-  consentTime: string | null;
   masterAvailable: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -283,36 +308,14 @@ function SessionConsentStep({
     recordConsent.mutate({ agreed: true, signatureImage: sig }, { onSuccess: closeAndReset });
   };
 
-  const submitDeclined = () => {
-    recordConsent.mutate({ agreed: false }, { onSuccess: closeAndReset });
-  };
-
-  if (consented) {
-    return (
-      <Card className="p-5">
-        <div className="flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <div className="flex-1">
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Session consent
-            </span>
-            <p className="text-sm font-medium">
-              Patient consented{consentTime ? ` at ${fmtTime(consentTime)}` : ""}
-            </p>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <>
-      <Card variant="elevated" className="p-6">
-        <div className="flex items-start gap-4">
-          <div className="rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] p-2 shadow-accent">
-            <ShieldCheck className="h-5 w-5 text-white" />
+      <Card variant="elevated" className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-[var(--accent)]/10 p-2">
+            <ShieldCheck className="h-5 w-5 text-[var(--accent)]" />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold tracking-[-0.01em]">Capture session consent</h3>
             <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
               Read the consent statement to the patient and capture their signature before entering
@@ -350,7 +353,11 @@ function SessionConsentStep({
           <ErrorBanner className="mt-3">{explainError(recordConsent.error.error)}</ErrorBanner>
         )}
         <div className="mt-4 flex justify-end gap-2">
-          <Button variant="secondary" onClick={submitDeclined} disabled={recordConsent.isPending}>
+          <Button
+            variant="secondary"
+            onClick={() => recordConsent.mutate({ agreed: false }, { onSuccess: closeAndReset })}
+            disabled={recordConsent.isPending}
+          >
             Patient declined
           </Button>
           <Button onClick={submitAgreed} disabled={recordConsent.isPending || signatureEmpty}>
@@ -410,12 +417,55 @@ function VitalsStep({
 
   if (currentStatus === "cancelled") return null;
 
-  const showLockedNotice = !editable && !!preconsult;
+  if (!editable) {
+    return (
+      <Card className="p-4">
+        <h3 className="text-base font-semibold">Saved preconsult vitals</h3>
+        {preconsult ? (
+          <>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              Captured {fmtDateTime(preconsult.submittedAt)} · Read-only after the meeting starts.
+            </p>
+            <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {[
+                ["Height", preconsult.height != null ? `${preconsult.height} cm` : "Not recorded"],
+                ["Weight", preconsult.weight != null ? `${preconsult.weight} kg` : "Not recorded"],
+                [
+                  "Blood pressure",
+                  preconsult.sysBp != null && preconsult.diaBp != null
+                    ? `${preconsult.sysBp}/${preconsult.diaBp} mmHg`
+                    : "Not recorded",
+                ],
+                ["Pulse", preconsult.pulse != null ? `${preconsult.pulse} bpm` : "Not recorded"],
+                [
+                  "Temperature",
+                  preconsult.temperature != null
+                    ? `${Number(preconsult.temperature).toFixed(1)} °C`
+                    : "Not recorded",
+                ],
+              ].map(([label, value]) => (
+                <div key={label} className="min-w-0">
+                  <dt className="text-sm text-[var(--muted-foreground)]">{label}</dt>
+                  <dd className="mt-1 text-sm font-medium">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 whitespace-pre-line break-words text-sm">
+              <span className="font-semibold">Primary complaint: </span>
+              {preconsult.primaryComplaint || "Not recorded"}
+            </p>
+          </>
+        ) : (
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">No vitals recorded.</p>
+        )}
+      </Card>
+    );
+  }
   // Only once we know consent is genuinely absent — not merely still loading.
   const showWaitNotice = editable && sessionConsentResolved && !sessionConsented;
 
   return (
-    <Card variant="elevated" className="p-6">
+    <Card variant="elevated" className="p-4">
       <div className="mb-4 flex items-start gap-3">
         <div className="rounded-xl bg-[var(--accent)]/10 p-2">
           <HeartPulse className="h-5 w-5 text-[var(--accent)]" />
@@ -423,13 +473,11 @@ function VitalsStep({
         <div>
           <h3 className="text-lg font-semibold tracking-[-0.01em]">Preconsult vitals</h3>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            {showLockedNotice
-              ? "Locked — the meeting has started or already concluded."
-              : showWaitNotice
-                ? "Session consent is needed before vitals can be entered."
-                : preconsult
-                  ? "Update before the meeting starts."
-                  : "Capture height, weight, BP, pulse, temperature."}
+            {showWaitNotice
+              ? "Session consent is needed before vitals can be entered."
+              : preconsult
+                ? "Update before the meeting starts."
+                : "Capture height, weight, BP, pulse, temperature."}
           </p>
         </div>
       </div>
@@ -439,12 +487,6 @@ function VitalsStep({
       {showWaitNotice && (
         <ErrorBanner tone="amber" className="mb-4">
           Record the patient&rsquo;s session consent above before entering vitals.
-        </ErrorBanner>
-      )}
-      {showLockedNotice && (
-        <ErrorBanner tone="amber" className="mb-4">
-          These vitals are locked — the meeting has started or concluded, so they can no longer be
-          edited.
         </ErrorBanner>
       )}
       {savedAt && (
@@ -469,7 +511,15 @@ function VitalsStep({
   );
 }
 
-function MeetingStep({ appointmentId, status }: { appointmentId: number; status: string }) {
+function MeetingStep({
+  appointmentId,
+  status,
+  canStart,
+}: {
+  appointmentId: number;
+  status: string;
+  canStart: boolean;
+}) {
   const startMeeting = useStartMeeting(appointmentId);
   const endMeeting = useEndMeeting(appointmentId);
   const meetingToken = useMeetingToken(appointmentId);
@@ -477,44 +527,43 @@ function MeetingStep({ appointmentId, status }: { appointmentId: number; status:
 
   if (status !== "data_collection" && status !== "in_progress") return null;
 
-  const handleStart = () =>
-    startMeeting.mutate(undefined, {
-      onSuccess: (res) => setCreds({ token: res.token, serverUrl: res.serverUrl }),
-    });
-
-  const handleReopen = () =>
-    meetingToken.mutate(undefined, {
-      onSuccess: (res) => setCreds({ token: res.token, serverUrl: res.serverUrl }),
-    });
-
   const apiError = (startMeeting.error ??
     endMeeting.error ??
     meetingToken.error) as ApiError | null;
 
   return (
     <>
-      <Card variant="elevated" className="p-6">
-        <div className="flex items-start gap-4">
-          <div className="rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] p-2 shadow-accent">
+      <Card variant="elevated" className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-[var(--accent)]/10 p-2">
             {status === "in_progress" ? (
-              <PhoneOff className="h-5 w-5 text-white" />
+              <PhoneOff className="h-5 w-5 text-[var(--accent)]" />
             ) : (
-              <PlayCircle className="h-5 w-5 text-white" />
+              <PlayCircle className="h-5 w-5 text-[var(--accent)]" />
             )}
           </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold tracking-[-0.01em]">
-              {status === "in_progress" ? "Meeting in progress" : "Start the meeting"}
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xl font-semibold tracking-[-0.01em]">
+              {status === "in_progress" ? "Live with the patient" : "Ready to meet the doctor"}
             </h3>
             <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
               {status === "in_progress"
-                ? "End the meeting once the doctor signals they're done. Marks the appointment ready for notes."
-                : "Opens the consultation video call and moves the appointment to “in progress”."}
+                ? "You own the call handoff: join the patient, then end the meeting when the doctor is finished. The doctor will complete and sign the notes."
+                : canStart
+                  ? "Consent and vitals are saved. Start the patient call; the doctor can then join and begin the consultation."
+                  : "Confirm active master and session consent and saved vitals before starting."}
             </p>
             {apiError && <ErrorBanner className="mt-3">{explainError(apiError.error)}</ErrorBanner>}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {status === "data_collection" && (
-                <Button onClick={handleStart} disabled={startMeeting.isPending}>
+                <Button
+                  onClick={() =>
+                    startMeeting.mutate(undefined, {
+                      onSuccess: (res) => setCreds({ token: res.token, serverUrl: res.serverUrl }),
+                    })
+                  }
+                  disabled={startMeeting.isPending || !canStart}
+                >
                   <PlayCircle className="h-4 w-4" />
                   {startMeeting.isPending ? "Starting…" : "Start meeting"}
                 </Button>
@@ -523,7 +572,12 @@ function MeetingStep({ appointmentId, status }: { appointmentId: number; status:
                 <>
                   <Button
                     variant="secondary"
-                    onClick={handleReopen}
+                    onClick={() =>
+                      meetingToken.mutate(undefined, {
+                        onSuccess: (res) =>
+                          setCreds({ token: res.token, serverUrl: res.serverUrl }),
+                      })
+                    }
                     disabled={meetingToken.isPending || !!creds}
                   >
                     <PlayCircle className="h-4 w-4" />
@@ -563,6 +617,8 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
   // on unmount) — usePrescriptionPdf would keep the blob in the cache.
   // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is a retry trigger — bumping it re-runs the fetch without being read in the body.
   useEffect(() => {
+    setError(null);
+    setUrl(null);
     let revoked = false;
     let createdUrl: string | null = null;
     (async () => {
@@ -616,15 +672,15 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
 
   return (
     <Card variant="elevated" className="overflow-hidden">
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] p-4">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-emerald-100 p-2">
             <FileText className="h-5 w-5 text-emerald-700" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold tracking-[-0.01em]">Prescription</h3>
-            <p className="text-xs text-[var(--muted-foreground)]">
-              Signed and locked. §1.7 compliant.
+            <h3 className="text-xl font-semibold tracking-[-0.01em]">Deliver the prescription</h3>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              Open or download the signed prescription for the patient, then confirm follow-up.
             </p>
           </div>
         </div>
@@ -635,7 +691,7 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-9 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-medium hover:border-[var(--accent)]/30 hover:bg-[var(--muted)]/60"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-medium hover:border-[var(--accent)]/30 hover:bg-[var(--muted)]/60"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Open
@@ -643,7 +699,7 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
               <a
                 href={url}
                 download={`prescription-${appointmentId}.pdf`}
-                className="inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] px-4 text-sm font-medium text-white shadow-sm hover:shadow-accent-lg"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-sm font-medium text-[var(--accent-foreground)] shadow-sm hover:brightness-110"
               >
                 Download
               </a>
@@ -661,11 +717,16 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
             </Button>
           </div>
         ) : url ? (
-          <iframe
-            src={url}
-            className="h-[680px] w-full"
-            title={`Prescription for appointment ${appointmentId}`}
-          />
+          <details>
+            <summary className="cursor-pointer p-4 text-sm font-medium">
+              Preview signed prescription
+            </summary>
+            <iframe
+              src={url}
+              className="h-[480px] w-full sm:h-[680px]"
+              title={`Prescription for appointment ${appointmentId}`}
+            />
+          </details>
         ) : (
           <div className="p-8 text-center text-sm text-[var(--muted-foreground)]">
             Loading prescription…
@@ -834,26 +895,22 @@ export function CockpitHeader({
   data: AppointmentDetail;
   doctorName: string;
 }) {
-  const { appointment, patient } = data;
+  const { appointment, patient, profile } = data;
   return (
-    <Card className="p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+    <div className="flex min-w-0 flex-col gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-[-0.01em]">
             Appointment #{appointment.id}
-          </span>
-          <h2 className="mt-1 font-display text-2xl tracking-[-0.01em]">
-            {patient ? `${patient.given} ${patient.family}` : "Patient"}
-          </h2>
-          {/* This line is how a health worker confirms the right doctor was picked (#59),
-             so it reads as a second-level heading rather than a grey subtitle. */}
-          <p className="mt-1 text-xl font-bold text-[var(--foreground)]">{doctorName}</p>
-          <p className="mt-2 font-mono text-xs text-[var(--muted-foreground)]">
-            Scheduled · {fmtDateTime(appointment.scheduledAt)}
+          </h1>
+          <p className="mt-1 break-words text-base font-medium">{doctorName}</p>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            {fmtDateTime(appointment.scheduledAt)}
           </p>
         </div>
         <StatusBadge status={appointment.status} className="self-start" />
       </div>
-    </Card>
+      <PatientSafetyStrip patient={patient} profile={profile} />
+    </div>
   );
 }

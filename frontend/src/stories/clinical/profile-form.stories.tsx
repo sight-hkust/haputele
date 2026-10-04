@@ -41,6 +41,34 @@ export const AddUnlistedCondition: Story = {
     );
   },
 };
+export const IncompleteClinicalRows: Story = {
+  args: { initial: null },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Add allergy" }));
+    await userEvent.type(canvas.getByLabelText("Allergen"), "Latex");
+    await userEvent.click(canvas.getByRole("button", { name: "Add medication" }));
+    await userEvent.type(canvas.getByLabelText("Dosage"), "5 mg");
+    await userEvent.click(canvas.getByRole("button", { name: "Create profile" }));
+    await canvas.findByText("Choose an allergy type before saving.");
+    await canvas.findByText("Enter the medication name before saving.");
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+    await expect(canvas.getByLabelText("Allergen")).toHaveValue("Latex");
+    await expect(canvas.getByLabelText("Dosage")).toHaveValue("5 mg");
+
+    await userEvent.selectOptions(canvas.getByLabelText("Type"), "other");
+    await userEvent.type(canvas.getByLabelText("Drug"), "Amlodipine");
+    await userEvent.click(canvas.getByRole("button", { name: "Create profile" }));
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          allergies: [expect.objectContaining({ type: "other", name: "Latex" })],
+          medications: [expect.objectContaining({ drug: "Amlodipine", dosage: "5 mg" })],
+        }),
+      ),
+    );
+  },
+};
 export const Saving: Story = { args: { submitting: true } };
 export const SaveError: Story = {
   args: { errorMessage: "The profile could not be saved. Please try again." },
