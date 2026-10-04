@@ -1,0 +1,10 @@
+:root {
+  --font-inter: "Inter";
+  --font-calistoga: "Calistoga";
+  --font-jetbrains: "JetBrains Mono";
+}
+
+/* Match the production root layout without requesting Google fonts at runtime. */
+body {
+  margin: 0;
+}
