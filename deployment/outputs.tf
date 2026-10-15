@@ -1,5 +1,9 @@
+# The static IP, not aws_lightsail_instance.public_ip_address: the latter can
+# still report the old dynamic address until the attachment settles, and it
+# changes on every rebuild. This is the address to point DNS at — it's stable.
 output "vm_public_ip" {
-  value = aws_lightsail_instance.debian_vm.public_ip_address
+  value      = aws_lightsail_static_ip.vm.ip_address
+  depends_on = [aws_lightsail_static_ip_attachment.vm]
 }
 
 output "public_url" {
