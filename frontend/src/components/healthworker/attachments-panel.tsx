@@ -144,7 +144,7 @@ export function AttachmentsPanel({
           <Camera className="h-5 w-5 text-[var(--accent)]" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold tracking-[-0.01em]">Photos for the doctor</h3>
+          <h3 className="text-section-heading">Photos for the doctor</h3>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             {readonly
               ? "Locked — the appointment has ended."
@@ -362,7 +362,7 @@ function AttachmentThumb({
             }}
             disabled={remove.isPending}
             className={
-              "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] transition-colors " +
+              "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium transition-colors " +
               (confirming
                 ? "bg-rose-600 text-white"
                 : "text-[var(--muted-foreground)] hover:bg-rose-50 hover:text-rose-700")

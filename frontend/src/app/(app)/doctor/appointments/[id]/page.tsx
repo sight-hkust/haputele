@@ -56,10 +56,8 @@ export default function DoctorAppointmentDetail() {
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.01em]">
-            Appointment #{appointment.id}
-          </h1>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+          <h1 className="text-page-heading">Appointment #{appointment.id}</h1>
+          <p className="mt-1 text-sm tabular-nums text-[var(--muted-foreground)]">
             {fmtDateTime(appointment.scheduledAt)}
           </p>
         </div>
@@ -82,7 +80,7 @@ export default function DoctorAppointmentDetail() {
               <div className="flex items-start gap-3">
                 <Stethoscope className="mt-0.5 h-5 w-5 text-[var(--muted-foreground)]" />
                 <div>
-                  <h3 className="text-base font-semibold tracking-[-0.01em]">
+                  <h3 className="text-section-heading">
                     {appointment.status === "cancelled"
                       ? "Appointment cancelled"
                       : appointment.status === "data_collection"
@@ -104,7 +102,7 @@ export default function DoctorAppointmentDetail() {
 
           {canBeginConsult && (
             <Card variant="elevated" className="p-4">
-              <h2 className="text-2xl font-semibold tracking-[-0.01em]">
+              <h2 className="text-section-heading">
                 {appointment.status === "awaiting_notes"
                   ? "Write up the consultation"
                   : "Open the consultation while you talk"}
@@ -145,7 +143,7 @@ export default function DoctorAppointmentDetail() {
           )}
           {isCompleted && consultation && (
             <Card variant="elevated" className="p-4">
-              <h2 className="text-2xl font-semibold tracking-[-0.01em]">Consultation completed</h2>
+              <h2 className="text-section-heading">Consultation completed</h2>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
                 Signed and locked. Open the record to review the diagnoses, prescription, and notes.
               </p>

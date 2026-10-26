@@ -49,12 +49,12 @@ export function AppointmentRow({
         >
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="font-semibold tabular-nums">{fmtTime(scheduledAt)}</span>
-            <span className="text-sm text-[var(--muted-foreground)]">
+            <span className="text-sm tabular-nums text-[var(--muted-foreground)]">
               {fmtDate(scheduledAt, "EEE d MMM yyyy")}
             </span>
           </div>
-          <div className="break-words text-base font-semibold">{patientName}</div>
-          <p className="text-sm text-[var(--muted-foreground)]">
+          <div className="break-words text-clinical-value font-semibold">{patientName}</div>
+          <p className="text-sm tabular-nums text-[var(--muted-foreground)]">
             Patient #{appointment.patientId} · Appointment #{id}
             {role === "healthworker" ? ` · ${doctorName}` : ""}
           </p>

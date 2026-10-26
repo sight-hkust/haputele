@@ -140,8 +140,7 @@ export default function HealthworkerAvailabilityPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-8">
       <PageHeader
         label="Availability"
-        title="Manage doctor"
-        highlight="availability"
+        title="Manage doctor availability"
         subtitle="Set or adjust a doctor's reachable windows on their behalf. Drag across cells to paint, drag again over filled cells to erase. This is an advisory reference for booking — bookings outside these windows are still allowed."
       />
 
@@ -315,7 +314,7 @@ function CopyWeekButton({
                 type="button"
                 onClick={() => setCount(n)}
                 className={
-                  "rounded-xl border px-3 py-1.5 text-xs font-medium transition-all " +
+                  "rounded-xl border px-3 py-1.5 text-xs font-medium tabular-nums transition-all " +
                   (count === n
                     ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
                     : "border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--accent)]/30")

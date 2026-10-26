@@ -42,7 +42,7 @@ export default function RegisterPatientPage() {
         <p className="text-sm font-medium text-[var(--muted-foreground)]">
           {step === "consent" ? "Step 1 of 2 · Consent" : "Step 2 of 2 · Patient details"}
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight">Register patient</h1>
+        <h1 className="text-page-heading">Register patient</h1>
         <p className="text-sm text-[var(--muted-foreground)]">
           {step === "consent"
             ? "Read the master consent to the patient. Capture their actual signature only if they agree."
@@ -57,11 +57,11 @@ export default function RegisterPatientPage() {
               <div className="rounded-lg bg-[var(--accent)]/10 p-2">
                 <ShieldCheck className="h-5 w-5 text-[var(--accent)]" aria-hidden />
               </div>
-              <h2 className="text-xl font-semibold tracking-tight">Master consent</h2>
+              <h2 className="text-section-heading">Master consent</h2>
             </div>
           </div>
           <div className="flex flex-col gap-6 p-4 sm:p-6">
-            <p className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-5 text-sm leading-relaxed text-[var(--muted-foreground)]">
+            <p className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-5 text-clinical-value text-[var(--muted-foreground)]">
               {MASTER_CONSENT_BODY}
             </p>
             <SignaturePad ref={padRef} onChange={setSignatureEmpty} label="Patient signature" />
@@ -90,9 +90,7 @@ export default function RegisterPatientPage() {
         <Card variant="elevated" className="p-4 sm:p-6">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-emerald-700">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            <span className="font-mono text-xs uppercase tracking-[0.12em]">
-              Master consent + signature captured
-            </span>
+            <span className="text-xs">Master consent + signature captured</span>
           </div>
 
           {create.error && create.error.error === "national_id_taken" && (

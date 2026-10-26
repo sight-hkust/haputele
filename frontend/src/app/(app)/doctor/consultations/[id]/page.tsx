@@ -68,7 +68,8 @@ export default function ConsultationPage() {
           {readOnly
             ? "Signed consultation record"
             : "Your task: document, prescribe, review and sign"}{" "}
-          · Updated {fmtTime(new Date(apt.dataUpdatedAt).toISOString())}
+          · Updated{" "}
+          <span className="tabular-nums">{fmtTime(new Date(apt.dataUpdatedAt).toISOString())}</span>
         </span>
         <Button variant="ghost" onClick={() => apt.refetch()} disabled={apt.isFetching}>
           {apt.isFetching ? "Refreshing…" : "Refresh appointment"}

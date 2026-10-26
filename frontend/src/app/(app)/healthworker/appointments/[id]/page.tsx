@@ -42,7 +42,9 @@ export default function AppointmentDetailPage() {
             doctorName={doctor ? doctorName(doctor) : `Doctor #${apt.data.appointment.doctorId}`}
           />
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--muted-foreground)]">
-            <span>Updated {fmtTime(new Date(apt.dataUpdatedAt).toISOString())}</span>
+            <span className="tabular-nums">
+              Updated {fmtTime(new Date(apt.dataUpdatedAt).toISOString())}
+            </span>
             <Button variant="ghost" onClick={() => apt.refetch()} disabled={apt.isFetching}>
               {apt.isFetching ? "Refreshing…" : "Refresh status"}
             </Button>

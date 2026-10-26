@@ -192,7 +192,7 @@ export const SignaturePad = forwardRef<SignaturePadHandle, Props>(function Signa
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-semibold">{label}</span>
+        <span className="text-field-label">{label}</span>
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"

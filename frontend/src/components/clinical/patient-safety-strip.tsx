@@ -18,7 +18,7 @@ export function PatientSafetyStrip({
     <Card className="min-w-0 p-4" aria-label="Patient identity and allergy safety">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
-          <h2 className="break-words text-xl font-semibold tracking-[-0.01em]">
+          <h2 className="break-words text-page-heading">
             {patient ? `${patient.given} ${patient.family}` : "Patient identity unavailable"}
           </h2>
           <p className="mt-1 break-words text-sm text-[var(--muted-foreground)]">

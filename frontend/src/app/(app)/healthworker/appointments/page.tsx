@@ -85,7 +85,7 @@ function Workspace() {
     <div className="mx-auto flex max-w-[110rem] flex-col gap-4 px-4 py-6 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Appointments</h1>
+          <h1 className="text-page-heading">Appointments</h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             Prepare today's patients and schedule those waiting.
           </p>
@@ -162,7 +162,7 @@ function Workspace() {
           <div hidden={view !== "queue"}>
             <Card className="flex flex-col gap-4 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">Pending queue</h2>
+                <h2 className="text-section-heading">Pending queue</h2>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     variant="secondary"
@@ -401,7 +401,7 @@ function BookingCard({
   return (
     <Card className="flex flex-col gap-3 p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-section-heading">
           {mode.kind === "from-queue" ? "Book queue entry" : "Book appointment"}
         </h2>
       </div>
@@ -409,7 +409,7 @@ function BookingCard({
       {mode.kind === "from-queue" && (
         <div className="flex items-start justify-between gap-2 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-3 py-2 text-xs">
           <div>
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+            <div className="text-xs tabular-nums text-[var(--accent)]">
               Booking from queue · #{mode.entry.id}
             </div>
             <div className="mt-0.5 font-medium">{queuePatientLabel}</div>
@@ -465,10 +465,8 @@ function SubFrame({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          {title}
-        </h3>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-section-heading text-[var(--muted-foreground)]">{title}</h3>
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowDown className="h-4 w-4 rotate-90" /> Back
         </Button>

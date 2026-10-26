@@ -218,13 +218,13 @@ export function WeekGrid({
           <div
             key={d.index}
             className={cn(
-              "px-1 pb-2 text-center font-mono text-xs uppercase tracking-[0.12em]",
+              "px-1 pb-2 text-center text-xs",
               d.isToday ? "text-[var(--accent)]" : "text-[var(--muted-foreground)]",
               d.isPast && "opacity-40",
             )}
           >
             <div>{format(d.date, "EEE")}</div>
-            <div className="text-base font-display tracking-[-0.01em] text-[var(--foreground)]">
+            <div className="text-clinical-value font-semibold tabular-nums text-[var(--foreground)]">
               {format(d.date, "d")}
             </div>
           </div>
@@ -282,7 +282,7 @@ function FragmentRow({
     <>
       <div
         className={cn(
-          "pr-2 text-right font-mono text-xs tabular-nums",
+          "pr-2 text-right text-xs tabular-nums",
           onHourBoundary ? "text-[var(--muted-foreground)]" : "text-[var(--muted-foreground)]/40",
         )}
         style={{ height: 22 }}

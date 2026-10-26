@@ -200,9 +200,7 @@ export function ProfileForm({
         {/* Other conditions — repeater so multiple unlisted conditions can be captured. */}
         <div className="mt-6 flex items-end justify-between">
           <div>
-            <h4 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Other conditions
-            </h4>
+            <h4 className="text-field-label text-[var(--muted-foreground)]">Other conditions</h4>
             <p className="mt-1 text-xs text-[var(--muted-foreground)]">
               Anything not on the list. Add one row per condition.
             </p>
@@ -508,7 +506,7 @@ function Section({
           <Icon className="h-5 w-5 text-[var(--accent)]" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+          <h3 className="text-section-heading">{title}</h3>
           {hint && <p className="mt-1 max-w-2xl text-sm text-[var(--muted-foreground)]">{hint}</p>}
         </div>
       </div>
@@ -534,14 +532,14 @@ function RepeaterSection({
 }) {
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex items-end justify-between">
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl bg-[var(--accent)]/10 p-2">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="shrink-0 rounded-xl bg-[var(--accent)]/10 p-2">
             <Icon className="h-5 w-5 text-[var(--accent)]" />
           </div>
-          <h3 className="font-display text-xl tracking-[-0.01em]">{title}</h3>
+          <h3 className="break-words text-section-heading">{title}</h3>
         </div>
-        <Button type="button" size="sm" variant="secondary" onClick={onAdd}>
+        <Button type="button" variant="secondary" onClick={onAdd}>
           <Plus className="h-3.5 w-3.5" />
           {addLabel}
         </Button>

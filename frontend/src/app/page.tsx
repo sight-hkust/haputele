@@ -47,9 +47,7 @@ export default function Index() {
 
   return (
     <main className="flex min-h-screen items-center justify-center">
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        Loading…
-      </span>
+      <span className="text-sm text-[var(--muted-foreground)]">Loading…</span>
     </main>
   );
 }

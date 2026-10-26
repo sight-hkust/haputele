@@ -42,7 +42,7 @@ export function PatientSummary({
           <span className="text-sm font-semibold text-[var(--accent)]">Primary complaint</span>
         </div>
         {complaint ? (
-          <p className="whitespace-pre-line break-words text-base font-medium leading-relaxed tracking-[-0.005em]">
+          <p className="whitespace-pre-line break-words text-clinical-value font-medium">
             {complaint}
           </p>
         ) : (
@@ -54,7 +54,7 @@ export function PatientSummary({
         <Card className="p-4">
           <div className="mb-3 flex items-center gap-2">
             <Camera className="h-4 w-4 text-[var(--accent)]" />
-            <span className="text-sm font-semibold text-[var(--accent)]">
+            <span className="text-sm font-semibold tabular-nums text-[var(--accent)]">
               Photos · {attachments.length}
             </span>
           </div>
@@ -149,7 +149,7 @@ function DoctorAttachmentThumb({
           />
         </>
       ) : error ? (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-[10px] text-rose-600">
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-rose-600">
           <span>{explainError(error.error)}</span>
           <button
             type="button"
@@ -160,7 +160,7 @@ function DoctorAttachmentThumb({
           </button>
         </div>
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-[10px] text-[var(--muted-foreground)]">
+        <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted-foreground)]">
           …
         </div>
       )}
@@ -172,7 +172,7 @@ function Vital({ label, value, unit }: { label: string; value: string; unit?: st
   return (
     <div>
       <dt className="text-sm text-[var(--muted-foreground)]">{label}</dt>
-      <dd className="mt-1 text-sm font-semibold tracking-[-0.01em]">
+      <dd className="mt-1 text-clinical-value font-semibold tabular-nums">
         {value}
         {unit && <span className="ml-1 font-normal text-[var(--muted-foreground)]">{unit}</span>}
       </dd>

@@ -19,7 +19,7 @@ export default function DoctorWorklistPage() {
     <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Appointments</h1>
+          <h1 className="text-page-heading">Appointments</h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             Ready patients, active encounters and unfinished notes.
           </p>

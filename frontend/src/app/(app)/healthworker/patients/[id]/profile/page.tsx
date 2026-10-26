@@ -44,7 +44,7 @@ export default function PatientProfilePage() {
 
       <PatientSafetyStrip patient={patient} profile={profile} />
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Medical intake</h1>
+        <h1 className="text-page-heading">Medical intake</h1>
         <p className="text-sm text-[var(--muted-foreground)]">
           Record the history, allergies, and current medicines the doctor needs for this patient.
         </p>

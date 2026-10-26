@@ -55,7 +55,7 @@ export type CreatableRole = OperatingAccountRole | "doctor";
  * role column and filter are worth showing at all. They are NOT the
  * security boundary — the API is. */
 export type AccountsSurfaceProps = {
-  header: { label: string; title: string; highlight: string; subtitle: string };
+  header: { label: string; title: string; subtitle: string };
   /** Roles this caller may create, in display order. */
   creatableRoles: CreatableRole[];
   addButtonLabel: string;
@@ -168,12 +168,7 @@ export function AccountsSurface({
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <PageHeader
-          label={header.label}
-          title={header.title}
-          highlight={header.highlight}
-          subtitle={header.subtitle}
-        />
+        <PageHeader label={header.label} title={header.title} subtitle={header.subtitle} />
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" />
           {addButtonLabel}
@@ -312,7 +307,7 @@ export function AccountsSurface({
           </Card>
 
           {data && rows.length > 0 ? (
-            <p className="text-xs text-[var(--muted-foreground)]">
+            <p className="text-xs tabular-nums text-[var(--muted-foreground)]">
               Showing {rows.length} of {accounts.length}{" "}
               {accounts.length === 1 ? "account" : "accounts"}.
             </p>
@@ -356,10 +351,8 @@ function StatChip({
   return (
     <div className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-2">
       <span className={cn("h-1.5 w-1.5 rounded-full", dot)} aria-hidden />
-      <span className="font-display text-lg leading-none tracking-[-0.01em]">{value}</span>
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        {label}
-      </span>
+      <span className="text-section-heading tabular-nums">{value}</span>
+      <span className="text-xs text-[var(--muted-foreground)]">{label}</span>
     </div>
   );
 }
@@ -383,7 +376,7 @@ function SortableTh({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="group inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+        className="group inline-flex items-center gap-1.5 text-field-label text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
       >
         {label}
         {isActive ? (
@@ -402,7 +395,7 @@ function SortableTh({
 
 function RoleBadge({ role }: { role: AccountRole }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+    <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--muted)]/50 px-2.5 py-0.5 text-xs font-medium text-[var(--muted-foreground)]">
       {ROLE_LABEL[role]}
     </span>
   );
@@ -412,7 +405,7 @@ function StatePill({ active, label }: { active: boolean; label: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em]",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
         active
           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
           : "border-rose-200 bg-rose-50 text-rose-700",

@@ -11,7 +11,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Shared uppercase mono section pill with accent dot. Pulse is an explicit opt-in for live workflow labels.",
+          "Sentence-case context label with a small accent dot. Pulse is an explicit opt-in for live workflow labels.",
       },
     },
   },

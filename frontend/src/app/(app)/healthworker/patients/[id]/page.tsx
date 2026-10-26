@@ -114,20 +114,18 @@ export default function PatientDetailPage() {
         <Card variant="elevated" className="p-8">
           <div className="mb-6 flex items-center gap-2">
             <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-              Demographics
-            </h2>
+            <h2 className="text-section-heading text-[var(--accent)]">Demographics</h2>
           </div>
           <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
             <Field label="Date of birth" value={displayDob(patient.dob) || "—"} />
             <Field label="Gender" value={patient.gender} />
-            <Field label="National ID" value={patient.nationalId ?? "—"} mono />
+            <Field label="National ID" value={patient.nationalId ?? "—"} />
             <Field label="Contact" value={patient.contact ?? "—"} />
             <Field
               label="Preferred language"
               value={patient.language ? patient.language.toUpperCase() : "—"}
             />
-            <Field label="Screening ref" value={patient.screeningRef ?? "—"} mono />
+            <Field label="Screening ref" value={patient.screeningRef ?? "—"} />
             <Field className="sm:col-span-2" label="Address" value={patient.address ?? "—"} />
           </dl>
         </Card>
@@ -136,9 +134,7 @@ export default function PatientDetailPage() {
         <Card className="p-8">
           <div className="mb-5 flex items-center gap-2">
             <History className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-              Appointment history
-            </h2>
+            <h2 className="text-section-heading text-[var(--accent)]">Appointment history</h2>
           </div>
           {historyQ.isLoading ? (
             <p className="text-sm text-[var(--muted-foreground)]">Loading…</p>
@@ -152,8 +148,8 @@ export default function PatientDetailPage() {
                     href={`/healthworker/appointments/${a.id}`}
                     className="block rounded-lg px-2 py-3 transition-colors hover:bg-[var(--muted)]/40"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
                         {fmtDateTime(a.scheduledAt)}
                       </span>
                       <StatusBadge status={a.status} />
@@ -219,20 +215,16 @@ export default function PatientDetailPage() {
 function Field({
   label,
   value,
-  mono,
   className,
 }: {
   label: string;
   value: React.ReactNode;
-  mono?: boolean;
   className?: string;
 }) {
   return (
     <div className={className}>
-      <dt className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        {label}
-      </dt>
-      <dd className={mono ? "mt-1 font-mono text-sm" : "mt-1 text-sm"}>{value}</dd>
+      <dt className="text-field-label text-[var(--muted-foreground)]">{label}</dt>
+      <dd className="mt-1 break-words text-clinical-value">{value}</dd>
     </div>
   );
 }

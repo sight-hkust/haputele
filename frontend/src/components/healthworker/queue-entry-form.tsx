@@ -229,7 +229,7 @@ function DuplicateConfirm({
                     ? "Screening"
                     : "Follow-up"}
               </span>
-              <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+              <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
                 #{e.id} · {e.priority}
               </span>
             </div>

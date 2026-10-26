@@ -66,7 +66,7 @@ export function AppointmentWorklist({
     <Card className="flex min-w-0 flex-col gap-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Patient worklist</h2>
+          <h2 className="text-section-heading">Patient worklist</h2>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]" role="status">
             {error
               ? hasData
@@ -97,6 +97,7 @@ export function AppointmentWorklist({
           <Button
             key={key}
             variant={view === key ? "primary" : "secondary"}
+            className="tabular-nums"
             aria-pressed={view === key}
             onClick={() => setView(key)}
           >
@@ -116,7 +117,7 @@ export function AppointmentWorklist({
               aria-label={view === "today" ? "Today's appointments" : "Appointments"}
             >
               {view === "today" && (
-                <h3 className="text-sm font-semibold">
+                <h3 className="text-field-label tabular-nums">
                   Today · {fmtDate(`${today}T12:00:00`, "EEE d MMM")}
                 </h3>
               )}
@@ -146,7 +147,7 @@ export function AppointmentWorklist({
           )}
           {view === "today" && groups.overdue.length > 0 && (
             <section className="flex flex-col gap-3" aria-label="Overdue unfinished appointments">
-              <h3 className="text-sm font-semibold text-amber-800">
+              <h3 className="text-field-label tabular-nums text-amber-800">
                 Overdue unfinished encounters · {groups.overdue.length}
                 {error ? " last loaded" : ""}
               </h3>

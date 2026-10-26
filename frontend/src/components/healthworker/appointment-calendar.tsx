@@ -244,6 +244,7 @@ export function AppointmentCalendar({
 // class hooks wired up in the component above.
 const FC_CSS = `
   .fc-haputele {
+    font-family: var(--font-sans);
     --fc-classic-background: var(--card);
     --fc-classic-border: var(--border);
     --fc-classic-strong-border: #cbd5e1;
@@ -275,18 +276,21 @@ const FC_CSS = `
   }
 
   .fc-haputele .fc-haputele-title {
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-sans);
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: normal;
     font-size: 1.125rem;
+    line-height: 1.5rem;
   }
 
   .fc-haputele .fc-haputele-day-header,
   .fc-haputele .fc-haputele-slot-header {
-    font-family: var(--font-jetbrains), monospace;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: normal;
     color: var(--muted-foreground);
   }
 
@@ -350,13 +354,20 @@ const FC_CSS = `
     align-items: baseline;
     gap: 6px;
   }
-  .fc-haputele-event-time { font-weight: 600; }
+  .fc-haputele-event-time {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
   .fc-haputele-event-title {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .fc-haputele-event-status { font-size: 0.875rem; }
+  .fc-haputele-event-status {
+    font-size: 0.875rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   @media (prefers-reduced-motion: reduce) {
     .fc-haputele .fc-bucket-live { animation: none; }
   }

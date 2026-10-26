@@ -9,9 +9,6 @@ import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
-import "@fontsource/calistoga/400.css";
-import "@fontsource/jetbrains-mono/400.css";
-import "@fontsource/jetbrains-mono/500.css";
 import "./preview.css";
 
 const loadMsw = mswLoader(async () => {
@@ -24,6 +21,8 @@ const loadMsw = mswLoader(async () => {
   });
   return worker;
 });
+// This is a render identity, not a security token. LAN HTTP previews must work too.
+let scenarioRevision = 0;
 const preview: Preview = {
   tags: ["autodocs"],
   loaders: [
@@ -42,7 +41,7 @@ const preview: Preview = {
           msw: { handlers: [...handlers, ...createHandlers(context.parameters.haputele)] },
         },
       });
-      return { scenarioKey: crypto.randomUUID() };
+      return { scenarioKey: ++scenarioRevision };
     },
   ],
   parameters: {

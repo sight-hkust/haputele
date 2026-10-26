@@ -17,6 +17,14 @@ Default URL: http://localhost:6006. If that port is occupied:
 npm run storybook -- --port 6016
 ```
 
+To expose it on the network:
+
+```bash
+npm run storybook -- --host 0.0.0.0 --port 6016 --ci
+```
+
+Open `http://<server-ip>:6016/` from another device. Verify a clinical story, not only the manager's HTTP response. Plain network HTTP does not expose `crypto.randomUUID`, so scenario resets use a render counter rather than a security token. All eight interactive journeys were verified over non-local HTTP.
+
 No API, Postgres, object store, LiveKit, Resend credentials or `.env` file is required. Storybook forcibly uses the same-origin `/api` prefix and MSW intercepts it; a configured production `NEXT_PUBLIC_API_URL` is not used. The generated worker in `frontend/public/mockServiceWorker.js` is registered only by the Storybook preview, not the application.
 
 ## Build
@@ -27,7 +35,7 @@ npm run typecheck
 npx biome check src/stories .storybook
 ```
 
-`frontend/storybook-static/` is a portable static site and is gitignored. Serve it over localhost or HTTPS, not `file://`: service workers require a secure context. Host it at the origin root, matching the worker and application's root-relative paths. No production frontend/server build or API generation is required to build Storybook.
+`frontend/storybook-static/` is a portable static site and is gitignored. Serve it over HTTP or HTTPS, not `file://`, at the origin root to match application paths. API previews work on plain network HTTP as well as localhost; browser features such as camera access still require a secure context. No production frontend/server build or API generation is required to build Storybook.
 
 ## Catalog
 
@@ -72,6 +80,10 @@ The clinical UX verification exercised **all 59 actual interaction plays on the 
 Settled desktop, tablet and 390px previews were inspected for worklists, consultation, consent, completed prescription and availability. The reported mobile photo-header overflow and unnamed queue/time controls were corrected and reverified. DOB stayed identical in America/Los_Angeles and Pacific/Auckland browser zones. This was not a rerun of every noninteractive canvas or a full accessibility-compliance audit.
 
 TypeScript, scoped Biome, production Next build and Storybook build passed. Vite still reports client-directive/sourcemap and large-chunk warnings; they are not suppressed. Six consultation backend tests passed against isolated PostgreSQL/object storage, including partial-medication draft preservation and signing rejection. A separate real Next/API synthetic encounter verified draft reopening, native browser Back/sign-out protection, cross-role meeting/notes/completion polling, follow-up queue creation and prescription loading. That smoke did not connect a real video room or send email.
+
+The single-family typography pass reran all 59 interaction plays over non-local HTTP with no play failures. The clinical preview loaded only Inter; computed labels were 14px and editable clinical text 16px. Brand lettering is SVG artwork, and Sinhala/Tamil sample input rendered through local fallback fonts. Independent visual checks covered clinical, administrative and public screens at 320px, 390px, 1024px and 1440px, plus 720px desktop-zoom-equivalent reflow. Small booking-time chips and a narrow intake-header overflow were corrected and reverified. Accessibility reporter warnings remain in 18 stories; passing interaction plays are not accessibility certification.
+
+Exploratory 195 CSSpx layouts still overflow in authenticated navigation and some action groups. That is below the 320 CSSpx reflow reference used here, and halving a phone viewport does not reproduce mobile pinch zoom; this pass does not establish support for either case.
 
 - **Video:** no usable LiveKit token is issued and no clinical room is contacted. Start/join uses the real `livekit_not_configured` error; fixture lifecycle states are UI examples, not a performed call.
 - **Email:** invite/approval records are synthetic. No Resend delivery, provider callback or suppression is tested.

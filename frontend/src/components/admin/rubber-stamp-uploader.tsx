@@ -118,9 +118,7 @@ export function RubberStampUploader({
             />
           </button>
           <div className="flex-1">
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-              Stamp captured
-            </div>
+            <div className="text-sm font-medium text-emerald-600">Stamp captured</div>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
               Reproduced on every prescription PDF.
             </p>
@@ -177,10 +175,10 @@ export function RubberStampUploader({
               <Stamp className="h-5 w-5" />
             </div>
             <div className="text-center">
-              <div className="text-sm font-semibold tracking-[-0.01em]">
+              <div className="text-sm font-semibold">
                 {isDragging ? "Drop image to upload" : "Upload rubber stamp"}
               </div>
-              <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+              <div className="mt-0.5 text-xs text-[var(--muted-foreground)]">
                 Drag &amp; drop or click · PNG or JPEG · &lt; 1 MB · crop &amp; remove background
                 after upload
               </div>

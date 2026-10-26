@@ -91,7 +91,7 @@ export function DoctorCallPanel({ appointmentId, status }: Props) {
           <Video className="h-5 w-5 text-[var(--accent)]" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold tracking-[-0.01em]">
+          <h3 className="text-sm font-semibold">
             {canJoin ? "Live call available" : "Healthworker preparing the visit"}
           </h3>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">

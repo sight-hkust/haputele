@@ -329,7 +329,7 @@ export function ConsultationFlow({
         <fieldset disabled={finishing} className="flex min-w-0 flex-col gap-6">
           {stage === "notes" && (
             <Card variant="elevated" className="p-4 sm:p-6">
-              <h2 className="mb-2 text-2xl font-semibold tracking-[-0.01em]">Consultation notes</h2>
+              <h2 className="mb-2 text-section-heading">Consultation notes</h2>
               <p className="mb-6 text-sm text-[var(--muted-foreground)]">
                 Capture the patient&rsquo;s complaint and your observations from the call.
               </p>
@@ -413,10 +413,7 @@ export function ConsultationFlow({
 
                   {followUpChoice === "weeks" && (
                     <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4">
-                      <Label
-                        className="font-sans text-sm normal-case tracking-normal"
-                        htmlFor="follow-up-weeks"
-                      >
+                      <Label className="text-field-label" htmlFor="follow-up-weeks">
                         Recommend follow-up in weeks
                       </Label>
                       <div className="flex flex-wrap gap-2">
@@ -637,7 +634,7 @@ function FollowUpOption({
       >
         <Icon className="h-4 w-4" />
       </div>
-      <div className="text-sm font-semibold tracking-[-0.01em]">{title}</div>
+      <div className="text-sm font-semibold">{title}</div>
       <div className="text-sm text-[var(--muted-foreground)]">{description}</div>
     </button>
   );
@@ -649,7 +646,7 @@ function CompletedNotice({ signedAt }: { signedAt: string | null }) {
       <CheckCircle2 className="h-5 w-5 text-emerald-700" />
       <div>
         <div className="text-sm font-medium text-emerald-700">Locked & signed</div>
-        <div className="text-sm font-semibold tracking-[-0.01em]">
+        <div className="text-sm font-semibold">
           Submitted {signedAt ? fmtRelative(signedAt) : "earlier"}.
         </div>
       </div>

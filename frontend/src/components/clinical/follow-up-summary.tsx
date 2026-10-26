@@ -26,13 +26,13 @@ export function FollowUpSummary({
 
   return (
     <Card className="min-w-0 p-4" aria-label="Follow-up receipt">
-      <h3 className="text-lg font-semibold">Follow-up</h3>
+      <h3 className="text-section-heading">Follow-up</h3>
       <div className="mt-2 space-y-2 text-sm">
         {followUpAppointmentId ? (
           <BookedFollowUp appointmentId={followUpAppointmentId} viewerRole={role} />
         ) : followUpWeeks ? (
           <>
-            <p className="font-medium">
+            <p className="text-clinical-value font-medium tabular-nums">
               Requested in {followUpWeeks} {followUpWeeks === 1 ? "week" : "weeks"}
               {followUpDate ? ` · ${fmtTargetWeek(followUpDate)}` : ""}.
             </p>
@@ -75,7 +75,7 @@ function BookedFollowUp({
     <div className="space-y-2">
       {linked ? (
         <>
-          <p className="font-medium">
+          <p className="text-clinical-value font-medium tabular-nums">
             {fmtDateTime(linked.scheduledAt)} ·{" "}
             {doctor ? doctorName(doctor) : `Doctor #${linked.doctorId}`}
           </p>

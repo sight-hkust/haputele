@@ -21,7 +21,7 @@ export function ConsultationReview({
           <span className="text-sm font-medium text-[var(--accent)]">
             {locked ? "Signed consultation" : "Final review"}
           </span>
-          <h2 className="mt-1 text-2xl font-semibold tracking-[-0.02em]">
+          <h2 className="mt-1 text-section-heading">
             {locked ? "Consultation record" : "Confirm the consultation record"}
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--muted-foreground)]">
@@ -62,7 +62,7 @@ export function ConsultationReview({
             <ul className="flex flex-col divide-y divide-[var(--border)]">
               {values.medications.map((m, i) => (
                 <li key={i} className="py-3 first:pt-0">
-                  <div className="text-base font-semibold tracking-[-0.01em]">
+                  <div className="text-clinical-value font-semibold">
                     {m.genericName || (
                       <span className="text-amber-700">Generic name required before signing</span>
                     )}
@@ -72,11 +72,11 @@ export function ConsultationReview({
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 text-sm text-[var(--muted-foreground)]">
+                  <div className="mt-1 text-clinical-value tabular-nums text-[var(--muted-foreground)]">
                     {[m.dose, m.frequency, m.duration].filter(Boolean).join(" · ") || "—"}
                   </div>
                   {m.instructions && (
-                    <div className="mt-1 text-sm text-[var(--muted-foreground)]">
+                    <div className="mt-1 text-clinical-value text-[var(--muted-foreground)]">
                       {m.instructions}
                     </div>
                   )}
@@ -136,7 +136,7 @@ export function ConsultationReview({
 function ReviewBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 text-base font-semibold">{title}</h3>
+      <h3 className="mb-3 text-section-heading tabular-nums">{title}</h3>
       {children}
     </section>
   );
@@ -146,8 +146,8 @@ function ReviewKv({ k, v }: { k: string; v?: string | null }) {
   if (!v?.trim()) return null;
   return (
     <div className="mb-2 last:mb-0">
-      <span className="text-sm font-medium text-[var(--muted-foreground)]">{k}</span>
-      <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{v}</p>
+      <span className="text-field-label text-[var(--muted-foreground)]">{k}</span>
+      <p className="mt-1 whitespace-pre-wrap break-words text-clinical-value">{v}</p>
     </div>
   );
 }

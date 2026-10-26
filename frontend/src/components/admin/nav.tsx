@@ -68,7 +68,7 @@ export function AdminNav() {
               {badge && pending > 0 && (
                 <span
                   title={`${pending} awaiting approval`}
-                  className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1.5 py-0.5 font-mono text-xs text-sky-700"
+                  className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1.5 py-0.5 text-xs tabular-nums text-sky-700"
                 >
                   {pending}
                 </span>

@@ -222,9 +222,7 @@ function MasterConsentGate({
         <div className="flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <div className="flex-1">
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Master consent
-            </span>
+            <span className="text-field-label text-[var(--muted-foreground)]">Master consent</span>
             <p className="text-sm font-medium">Active for {patientName || "this patient"}</p>
           </div>
         </div>
@@ -238,7 +236,7 @@ function MasterConsentGate({
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
           <div className="flex-1">
-            <h3 className="text-base font-semibold tracking-[-0.01em] text-amber-900">
+            <h3 className="text-clinical-value font-semibold text-amber-900">
               Master consent needs to be re-recorded
             </h3>
             <p className="mt-1 text-sm text-amber-800/80">
@@ -316,7 +314,7 @@ function SessionConsentStep({
             <ShieldCheck className="h-5 w-5 text-[var(--accent)]" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-semibold tracking-[-0.01em]">Capture session consent</h3>
+            <h3 className="text-section-heading">Capture session consent</h3>
             <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
               Read the consent statement to the patient and capture their signature before entering
               vitals.
@@ -326,7 +324,7 @@ function SessionConsentStep({
                 Record consent
               </Button>
               {!masterAvailable && (
-                <span className="self-center font-mono text-xs uppercase tracking-[0.12em] text-amber-700">
+                <span className="self-center text-xs font-medium text-amber-700">
                   Master consent required first
                 </span>
               )}
@@ -420,10 +418,10 @@ function VitalsStep({
   if (!editable) {
     return (
       <Card className="p-4">
-        <h3 className="text-base font-semibold">Saved preconsult vitals</h3>
+        <h3 className="text-section-heading">Saved preconsult vitals</h3>
         {preconsult ? (
           <>
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            <p className="mt-1 text-sm tabular-nums text-[var(--muted-foreground)]">
               Captured {fmtDateTime(preconsult.submittedAt)} · Read-only after the meeting starts.
             </p>
             <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -446,11 +444,11 @@ function VitalsStep({
               ].map(([label, value]) => (
                 <div key={label} className="min-w-0">
                   <dt className="text-sm text-[var(--muted-foreground)]">{label}</dt>
-                  <dd className="mt-1 text-sm font-medium">{value}</dd>
+                  <dd className="mt-1 text-clinical-value font-medium tabular-nums">{value}</dd>
                 </div>
               ))}
             </dl>
-            <p className="mt-3 whitespace-pre-line break-words text-sm">
+            <p className="mt-3 whitespace-pre-line break-words text-clinical-value">
               <span className="font-semibold">Primary complaint: </span>
               {preconsult.primaryComplaint || "Not recorded"}
             </p>
@@ -471,7 +469,7 @@ function VitalsStep({
           <HeartPulse className="h-5 w-5 text-[var(--accent)]" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold tracking-[-0.01em]">Preconsult vitals</h3>
+          <h3 className="text-section-heading">Preconsult vitals</h3>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             {showWaitNotice
               ? "Session consent is needed before vitals can be entered."
@@ -495,7 +493,7 @@ function VitalsStep({
           className="mb-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Vitals saved at {savedAt}.</span>
+          <span className="tabular-nums">Vitals saved at {savedAt}.</span>
         </div>
       )}
 
@@ -543,7 +541,7 @@ function MeetingStep({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-xl font-semibold tracking-[-0.01em]">
+            <h3 className="text-section-heading">
               {status === "in_progress" ? "Live with the patient" : "Ready to meet the doctor"}
             </h3>
             <p className="mt-1.5 text-sm text-[var(--muted-foreground)]">
@@ -678,7 +676,7 @@ function PrescriptionViewer({ appointmentId }: { appointmentId: number }) {
             <FileText className="h-5 w-5 text-emerald-700" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold tracking-[-0.01em]">Deliver the prescription</h3>
+            <h3 className="text-section-heading">Deliver the prescription</h3>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
               Open or download the signed prescription for the patient, then confirm follow-up.
             </p>
@@ -784,7 +782,7 @@ function CancelAction({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
+          className="text-xs font-medium text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
         >
           Cancel this appointment
         </button>
@@ -802,7 +800,7 @@ function CancelAction({
         <div className="flex flex-col gap-3">
           <label
             htmlFor="queue-cancel-reason"
-            className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]"
+            className="text-field-label text-[var(--muted-foreground)]"
           >
             Reason (optional)
           </label>
@@ -827,20 +825,18 @@ function CancelAction({
             <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
-                  <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-                    Priority
-                  </span>
+                  <span className="text-field-label text-[var(--muted-foreground)]">Priority</span>
                   <select
                     value={rqPriority}
                     onChange={(e) => setRqPriority(e.target.value as "routine" | "urgent")}
-                    className="h-10 rounded-lg border border-[var(--border)] bg-transparent px-3 text-sm"
+                    className="h-10 rounded-lg border border-[var(--border)] bg-transparent px-3 text-clinical-value"
                   >
                     <option value="routine">Routine</option>
                     <option value="urgent">Urgent</option>
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                  <span className="text-field-label text-[var(--muted-foreground)]">
                     Target week
                   </span>
                   <DatePicker
@@ -900,9 +896,7 @@ export function CockpitHeader({
     <div className="flex min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-[-0.01em]">
-            Appointment #{appointment.id}
-          </h1>
+          <h1 className="text-page-heading tabular-nums">Appointment #{appointment.id}</h1>
           <p className="mt-1 break-words text-base font-medium">{doctorName}</p>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             {fmtDateTime(appointment.scheduledAt)}

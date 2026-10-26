@@ -79,10 +79,7 @@ export function DiagnosesEditor({
           <RepeaterRow key={field.id} onRemove={() => remove(i)}>
             <div className={requiresText ? "grid gap-3 sm:grid-cols-2" : ""}>
               <div className="flex flex-col gap-2">
-                <Label
-                  className="font-sans text-sm normal-case tracking-normal"
-                  htmlFor={`dx-${i}-code`}
-                >
+                <Label className="text-field-label" htmlFor={`dx-${i}-code`}>
                   Diagnosis
                 </Label>
                 <Select id={`dx-${i}-code`} {...register(`diagnoses.${i}.code`)}>
@@ -96,10 +93,7 @@ export function DiagnosesEditor({
               </div>
               {requiresText && (
                 <div className="flex flex-col gap-2">
-                  <Label
-                    className="font-sans text-sm normal-case tracking-normal"
-                    htmlFor={`dx-${i}-text`}
-                  >
+                  <Label className="text-field-label" htmlFor={`dx-${i}-text`}>
                     Specify
                   </Label>
                   <Input
@@ -171,6 +165,7 @@ export function MedicationsEditor({
               <Field label="Dose" htmlFor={`m-${i}-d`}>
                 <Input
                   id={`m-${i}-d`}
+                  className="tabular-nums"
                   {...register(`medications.${i}.dose` as const)}
                   placeholder="e.g. 500 mg"
                 />
@@ -178,6 +173,7 @@ export function MedicationsEditor({
               <Field label="Frequency" htmlFor={`m-${i}-f`}>
                 <Input
                   id={`m-${i}-f`}
+                  className="tabular-nums"
                   {...register(`medications.${i}.frequency` as const)}
                   placeholder="e.g. twice daily"
                 />
@@ -185,6 +181,7 @@ export function MedicationsEditor({
               <Field label="Duration" htmlFor={`m-${i}-du`}>
                 <Input
                   id={`m-${i}-du`}
+                  className="tabular-nums"
                   {...register(`medications.${i}.duration` as const)}
                   placeholder="e.g. 7 days"
                 />
@@ -291,7 +288,7 @@ function Repeater({
     <section className="flex flex-col gap-4">
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
         <div className="min-w-0">
-          <h3 className="text-xl font-semibold tracking-[-0.01em]">{title}</h3>
+          <h3 className="text-section-heading">{title}</h3>
           {hint && <p className="mt-1 text-sm text-[var(--muted-foreground)]">{hint}</p>}
         </div>
         <Button type="button" variant="secondary" onClick={onAdd} className="shrink-0">
@@ -341,9 +338,7 @@ function Field({
 }) {
   return (
     <div className={`flex flex-col gap-2 ${full ? "sm:col-span-2" : ""}`}>
-      <Label className="font-sans text-sm normal-case tracking-normal" htmlFor={htmlFor}>
-        {label}
-      </Label>
+      <Label htmlFor={htmlFor}>{label}</Label>
       {children}
     </div>
   );

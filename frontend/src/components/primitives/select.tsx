@@ -6,7 +6,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
     <select
       ref={ref}
       className={cn(
-        "flex h-12 w-full appearance-none rounded-xl border border-[var(--border)] bg-transparent px-4 pr-9 text-sm",
+        "flex h-12 w-full appearance-none rounded-xl border border-[var(--border)] bg-transparent px-4 pr-9 text-clinical-value",
         "text-[var(--foreground)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:border-transparent",
         "disabled:cursor-not-allowed disabled:opacity-50",
@@ -36,7 +36,7 @@ export const Textarea = forwardRef<
     rows={rows}
     autoComplete={autoComplete}
     className={cn(
-      "flex w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm",
+      "flex w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-3 text-clinical-value",
       "text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:border-transparent",
       "disabled:cursor-not-allowed disabled:opacity-50",
