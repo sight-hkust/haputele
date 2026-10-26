@@ -9,19 +9,15 @@ import { fadeInUp, staggerTight } from "@/lib/motion";
 
 export type PhaseFeature = { Icon: LucideIcon; title: string; description: string };
 
-// Reusable post-login landing while phases 2–4 are in flight. Shows the design
-// system's bones (section label, gradient headline, asymmetric grid, hover lift)
-// so what ships next slots into a coherent shell.
+// Legacy phase overview using the shared clinical heading hierarchy.
 export function PhasePlaceholder({
   phaseLabel,
   title,
-  highlight,
   subtitle,
   features,
 }: {
   phaseLabel: string;
   title: string;
-  highlight: string;
   subtitle: string;
   features: PhaseFeature[];
 }) {
@@ -42,11 +38,8 @@ export function PhasePlaceholder({
         <SectionLabel pulse>{phaseLabel}</SectionLabel>
       </motion.div>
 
-      <motion.h1
-        variants={fadeInUp}
-        className="mt-6 max-w-3xl font-display text-[2.5rem] leading-[1.08] tracking-[-0.02em] sm:text-[3.25rem]"
-      >
-        {title} <span className="gradient-text">{highlight}</span>
+      <motion.h1 variants={fadeInUp} className="mt-6 max-w-3xl text-page-heading">
+        {title}
       </motion.h1>
 
       <motion.p
@@ -72,7 +65,7 @@ export function PhasePlaceholder({
                     {f.description}
                   </p>
                 </div>
-                <div className="mt-auto flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                <div className="mt-auto flex items-center gap-1.5 text-sm text-[var(--muted-foreground)]">
                   Coming soon
                   <ArrowUpRight className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>

@@ -56,8 +56,7 @@ export function NewDoctorSurface({
 
       <PageHeader
         label="New doctor"
-        title="Add a"
-        highlight="doctor account."
+        title="Add a doctor account."
         subtitle="Invite the doctor by email so they can fill out their own profile, or create the account manually if you've got all the §1.7 information already."
       />
 
@@ -134,7 +133,7 @@ export function InvitePanel({
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       {showHeading && (
         <div className="flex flex-col gap-1">
-          <h2 className="font-display text-2xl tracking-[-0.01em]">Invite a doctor by email</h2>
+          <h2 className="text-section-heading">Invite a doctor by email</h2>
           <p className="text-sm text-[var(--muted-foreground)]">
             They&rsquo;ll receive a link to set up their account. Once they submit their profile
             you&rsquo;ll be able to review and approve from the doctor&rsquo;s page.
@@ -283,7 +282,7 @@ function ModeCard({
         <span className="flex items-center gap-2 text-sm font-semibold">
           {title}
           {recommended && (
-            <span className="rounded-full bg-[var(--accent)]/10 px-2 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
+            <span className="rounded-full bg-[var(--accent)]/10 px-2 py-0.5 text-xs font-medium text-[var(--accent)]">
               Recommended
             </span>
           )}

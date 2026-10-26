@@ -74,8 +74,7 @@ export default function ExportsPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-12">
       <PageHeader
         label="Exports"
-        title="Daily prescription"
-        highlight="exports."
+        title="Daily prescription exports."
         subtitle="Pick a date and pull the medication-pickup spreadsheet or a zip of every signed prescription PDF for that day. Only completed appointments are included."
       />
 
@@ -89,7 +88,7 @@ export default function ExportsPage() {
             max={appToday(EXPORT_TIMEZONE)}
             ariaLabel="Choose export date"
           />
-          <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+          <p className="text-xs text-[var(--muted-foreground)]">
             Sri Lanka time · {EXPORT_TIMEZONE}
           </p>
         </div>
@@ -146,7 +145,7 @@ function DownloadCard({
           <Icon className="h-5 w-5" strokeWidth={1.75} />
         </div>
         <div>
-          <h3 className="text-lg font-semibold tracking-[-0.01em]">{title}</h3>
+          <h3 className="text-section-heading">{title}</h3>
           <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">
             {description}
           </p>

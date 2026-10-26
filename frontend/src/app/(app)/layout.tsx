@@ -45,12 +45,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
         <div role="alert" className="flex flex-col gap-2">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            Connection problem
-          </span>
-          <h1 className="font-display text-4xl tracking-[-0.02em]">
-            Couldn&apos;t reach the server
-          </h1>
+          <span className="text-sm text-[var(--muted-foreground)]">Connection problem</span>
+          <h1 className="text-page-heading">Couldn&apos;t reach the server</h1>
           <p className="max-w-md text-[var(--muted-foreground)]">
             This page couldn&apos;t verify your session because the server didn&apos;t respond. Your
             session is unaffected — check your connection and try again.
@@ -67,9 +63,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (loading || !session || roleMismatch) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Loading…
-        </span>
+        <span className="text-sm text-[var(--muted-foreground)]">Loading…</span>
       </main>
     );
   }

@@ -236,9 +236,9 @@ export default function CapturePage() {
     return (
       <Centered>
         <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
-          <h1 className="text-lg font-semibold">Link not active</h1>
-          <p className="mt-2 text-sm text-[var(--muted-foreground)]">{state.reason}</p>
-          <p className="mt-4 text-xs text-[var(--muted-foreground)]">
+          <h1 className="text-page-heading">Link not active</h1>
+          <p className="mt-2 text-clinical-value text-[var(--muted-foreground)]">{state.reason}</p>
+          <p className="mt-4 text-sm text-[var(--muted-foreground)]">
             Ask the person at the computer to show a fresh QR code, then scan again.
           </p>
         </div>
@@ -256,8 +256,8 @@ export default function CapturePage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
             <Check className="h-6 w-6" />
           </div>
-          <h1 className="mt-3 text-lg font-semibold">Photo sent</h1>
-          <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+          <h1 className="mt-3 text-page-heading">Photo sent</h1>
+          <p className="mt-2 text-clinical-value text-[var(--muted-foreground)]">
             {isStamp
               ? "It's on its way to the computer — you can put the phone down now."
               : "It's now on the computer. Take more if you need to."}
@@ -276,7 +276,7 @@ export default function CapturePage() {
   // mode === "ready"
   return (
     <div className="flex min-h-[100dvh] flex-col bg-black">
-      <div className="px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-2 text-center text-sm text-white/80">
+      <div className="px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-2 text-center text-clinical-value text-white/80">
         {isStamp ? "Take a clear photo of the rubber stamp" : "Take a photo for the doctor"}
       </div>
 

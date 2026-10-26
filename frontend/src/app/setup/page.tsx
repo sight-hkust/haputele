@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, KeyRound, Plus, ServerCog, Trash2, Users } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/primitives/button";
 import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
@@ -118,28 +119,19 @@ function SetupWizard() {
             </SectionLabel>
           </motion.div>
 
-          <motion.h1
-            variants={fadeInUp}
-            className="font-display text-[2.75rem] leading-[1.05] tracking-[-0.02em] sm:text-5xl lg:text-[3.75rem]"
-          >
+          <motion.h1 variants={fadeInUp} className="text-page-heading">
             {stage === "token" ? (
-              <>
-                Welcome to <span className="gradient-text">HapuTele</span>.
-              </>
+              <>Welcome to HapuTele.</>
             ) : stage === "configure" ? (
-              <>
-                Configure your <span className="gradient-text">clinic</span>.
-              </>
+              <>Configure your clinic.</>
             ) : (
-              <>
-                Add your <span className="gradient-text">team</span>.
-              </>
+              <>Add your team.</>
             )}
           </motion.h1>
 
           <motion.p
             variants={fadeInUp}
-            className="max-w-lg text-base leading-relaxed text-[var(--muted-foreground)] sm:text-lg"
+            className="max-w-lg text-clinical-value text-[var(--muted-foreground)]"
           >
             {stage === "token"
               ? "Paste the one-time setup token printed when the api container started. Find it in the container logs or at /data/setup-token inside the api container."
@@ -873,9 +865,7 @@ function TimezoneOptions({ zones, current }: { zones: string[]; current: string 
 function FieldGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-4 rounded-2xl border border-[var(--border)] bg-[var(--muted)]/30 p-5">
-      <legend className="px-2 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        {title}
-      </legend>
+      <legend className="px-2 text-section-heading text-[var(--muted-foreground)]">{title}</legend>
       {children}
     </fieldset>
   );
@@ -907,13 +897,8 @@ function BrandStrip() {
   return (
     <div className="absolute inset-x-0 top-0 z-10 px-6 py-6 sm:px-8">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] shadow-accent">
-            <span className="font-display text-lg leading-none text-white">H</span>
-          </div>
-          <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
-        </div>
-        <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+        <BrandLogo />
+        <span className="hidden text-xs text-[var(--muted-foreground)] sm:block">
           First-run setup
         </span>
       </div>
@@ -943,7 +928,7 @@ function SetupHeroGraphic({ stage }: { stage: Stage }) {
             )}
           </div>
           <div>
-            <p className="font-display text-xl tracking-[-0.01em]">
+            <p className="text-section-heading">
               {stage === "token"
                 ? "Bring the token"
                 : stage === "configure"

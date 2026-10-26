@@ -225,7 +225,7 @@ const Vital = forwardRef<
       step={step ?? "1"}
       disabled={disabled}
       aria-invalid={!!error}
-      className={error ? "border-rose-300 focus-visible:ring-rose-400" : undefined}
+      className={`tabular-nums ${error ? "border-rose-300 focus-visible:ring-rose-400" : ""}`}
       {...rest}
     />
     <FieldError message={error} />

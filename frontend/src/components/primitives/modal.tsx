@@ -1,16 +1,16 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { X } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 
 import { Button } from "@/components/primitives/button";
 import { cn } from "@/lib/cn";
 
-// Lightweight modal — backdrop fade + content scale-in. No focus trap library;
-// for forms-with-submit-button this is fine. Closes ONLY via the X button (or an
-// explicit in-content action) — a backdrop click or Esc no longer dismisses it,
-// so half-typed forms aren't lost to a stray click outside the box.
+// Native modal dialogs provide focus containment, focus restoration and nested
+// top-layer ordering. Backdrop clicks deliberately do not dismiss forms.
+let openDialogs = 0;
+let previousOverflow = "";
 export function Modal({
   open,
   onClose,
@@ -18,6 +18,7 @@ export function Modal({
   description,
   children,
   className,
+  dirty = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -25,60 +26,110 @@ export function Modal({
   description?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Non-input edits, such as cropping or drawing, needing discard confirmation. */
+  dirty?: boolean;
 }) {
-  // Lock body scroll while open. Esc intentionally does not close — see header.
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const editedRef = useRef(false);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  const titleId = useId();
+  const descriptionId = useId();
+
   useEffect(() => {
-    if (!open) return;
-    document.body.style.overflow = "hidden";
+    const dialog = dialogRef.current;
+    if (!open || !dialog) return;
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    editedRef.current = false;
+    if (openDialogs++ === 0) {
+      previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    }
+    dialog.showModal();
+    // Start at the heading, not a destructive action or a field midway down.
+    dialog.querySelector<HTMLElement>("[data-modal-heading]")?.focus();
     return () => {
-      document.body.style.overflow = "";
+      dialog.close();
+      if (--openDialogs === 0) document.body.style.overflow = previousOverflow;
+      if (trigger?.isConnected) trigger.focus();
     };
   }, [open]);
 
+  const requestClose = () => {
+    if (
+      (dirty || editedRef.current) &&
+      !window.confirm("Discard the unsaved changes in this dialog?")
+    )
+      return;
+    closeRef.current();
+  };
+
   return (
-    <AnimatePresence>
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={title ? titleId : undefined}
+      aria-label={title ? undefined : "Dialog"}
+      aria-describedby={description ? descriptionId : undefined}
+      onCancel={(event) => {
+        event.preventDefault();
+        requestClose();
+      }}
+      onInputCapture={() => {
+        editedRef.current = true;
+      }}
+      onChangeCapture={() => {
+        editedRef.current = true;
+      }}
+      onPointerDownCapture={(event) => {
+        if (event.target instanceof HTMLCanvasElement) editedRef.current = true;
+      }}
+      className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden border-0 bg-transparent p-4 backdrop:bg-[var(--foreground)]/30 backdrop:backdrop-blur-sm sm:p-8"
+    >
       {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/30 p-4 backdrop-blur-sm sm:p-8"
-          role="dialog"
-          aria-modal
-        >
+        <div className="flex h-full items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 12, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
-              "relative flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl",
+              "relative flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-xl",
               className,
             )}
           >
             <div className="absolute right-3 top-3">
-              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={requestClose}
+                aria-label="Close dialog"
+                className="min-h-11 min-w-11"
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            {(title || description) && (
-              <div className="flex shrink-0 flex-col gap-1.5 p-6 pb-3">
-                {title && <h2 className="font-display text-xl tracking-[-0.01em]">{title}</h2>}
-                {description && (
-                  <p className="text-sm text-[var(--muted-foreground)]">{description}</p>
+            <div className="flex shrink-0 flex-col gap-1.5 p-6 pb-3 pr-16">
+              <h2
+                id={titleId}
+                data-modal-heading
+                tabIndex={-1}
+                className={cn(
+                  "text-xl font-semibold tracking-[-0.01em] outline-none",
+                  !title && "sr-only",
                 )}
-              </div>
-            )}
-            {/* Only the body scrolls; the header above stays pinned so the title and the
-                close button remain reachable. Without this the panel had no height bound
-                at all, so tall content (the rubber-stamp editor worst of all) ran off both
-                ends of the viewport with body scroll locked — nothing could reach the save
-                button. Mirrors image-preview / camera-capture / qr-capture modals. */}
-            <div className="flex-1 overflow-y-auto p-6 pt-3">{children}</div>
+              >
+                {title ?? "Dialog"}
+              </h2>
+              {description && (
+                <p id={descriptionId} className="text-sm text-[var(--muted-foreground)]">
+                  {description}
+                </p>
+              )}
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-6 pt-3">{children}</div>
           </motion.div>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </dialog>
   );
 }

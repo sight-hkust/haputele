@@ -46,8 +46,7 @@ export default function QueuePage() {
     <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-8">
       <PageHeader
         label="Queue"
-        title="Full"
-        highlight="queue."
+        title="Full queue."
         subtitle="Filter, inspect, and audit. Booking happens in the appointments workspace — clicking 'Book' on any entry forwards there with the entry pre-loaded."
         action={
           <Button onClick={() => setAddOpen(true)}>
@@ -86,7 +85,7 @@ export default function QueuePage() {
             </Select>
           </Filter>
         </div>
-        <p className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <p className="text-xs text-[var(--muted-foreground)]">
           Sort: urgent first → soonest target week → longest waiting
         </p>
       </div>
@@ -168,9 +167,7 @@ export default function QueuePage() {
 function Filter({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        {label}
-      </span>
+      <span className="text-field-label text-[var(--muted-foreground)]">{label}</span>
       {children}
     </div>
   );

@@ -45,12 +45,12 @@ export function PatientPicker({
     return (
       <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3">
         <div className="text-sm">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            For patient
-          </span>
-          <div className="mt-1 font-medium">
+          <span className="text-field-label text-[var(--muted-foreground)]">For patient</span>
+          <div className="mt-1 text-clinical-value font-medium">
             {fullName(picked)}{" "}
-            <span className="font-mono text-xs text-[var(--muted-foreground)]">· #{picked.id}</span>
+            <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
+              · #{picked.id}
+            </span>
           </div>
         </div>
         <button
@@ -60,7 +60,7 @@ export function PatientPicker({
             setQuery("");
             setOpen(false);
           }}
-          className="inline-flex items-center gap-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--muted-foreground)] underline-offset-4 transition-colors hover:text-rose-600 hover:underline"
         >
           <X className="h-3 w-3" />
           Change
@@ -115,7 +115,7 @@ export function PatientPicker({
                     className="flex w-full items-center justify-between px-4 py-2 text-left text-sm transition-colors hover:bg-[var(--muted)]/60"
                   >
                     <span className="font-medium">{fullName(p)}</span>
-                    <span className="font-mono text-xs text-[var(--muted-foreground)]">
+                    <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
                       {p.nationalId ? `NID ${p.nationalId}` : `#${p.id}`}
                     </span>
                   </button>

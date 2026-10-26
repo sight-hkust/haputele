@@ -37,8 +37,7 @@ export default function PatientListPage() {
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
       <PageHeader
         label="Patients"
-        title="Patient"
-        highlight="roster."
+        title="Patient roster."
         subtitle="Search by name or national ID. Click any patient to view their record."
         action={
           <Link href="/healthworker/patients/new">
@@ -87,7 +86,7 @@ export default function PatientListPage() {
       ) : (
         <>
           <Card className="overflow-hidden p-0">
-            <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-4 border-b border-[var(--border)] bg-[var(--muted)]/30 px-6 py-3 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)] gap-4 break-words border-b border-[var(--border)] bg-[var(--muted)]/30 px-6 py-3 text-field-label text-[var(--muted-foreground)]">
               <span>Name</span>
               <span>National ID</span>
               <span>Contact</span>
@@ -99,21 +98,21 @@ export default function PatientListPage() {
                   <button
                     type="button"
                     onClick={() => router.push(`/healthworker/patients/${p.id}`)}
-                    className="grid w-full grid-cols-[1.4fr_1fr_1fr_0.8fr] items-center gap-4 px-6 py-4 text-left transition-colors hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/60 focus-visible:outline-none"
+                    className="grid w-full grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)] items-center gap-4 px-6 py-4 text-left transition-colors hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/60 focus-visible:outline-none"
                   >
-                    <div>
-                      <div className="text-sm font-semibold tracking-[-0.01em]">{fullName(p)}</div>
-                      <div className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                    <div className="min-w-0 break-words">
+                      <div className="text-sm font-semibold">{fullName(p)}</div>
+                      <div className="text-xs tabular-nums text-[var(--muted-foreground)]">
                         ID #{p.id} · {p.gender}
                       </div>
                     </div>
-                    <span className="font-mono text-xs text-[var(--muted-foreground)]">
+                    <span className="min-w-0 break-words text-sm tabular-nums text-[var(--muted-foreground)]">
                       {p.nationalId ?? "—"}
                     </span>
-                    <span className="text-sm text-[var(--muted-foreground)]">
+                    <span className="min-w-0 break-words text-sm text-[var(--muted-foreground)]">
                       {p.contact ?? "—"}
                     </span>
-                    <span className="text-right font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                    <span className="min-w-0 break-words text-right text-xs tabular-nums text-[var(--muted-foreground)]">
                       {fmtRelative(p.createdAt)}
                     </span>
                   </button>
@@ -149,9 +148,7 @@ function Pagination({
         <ChevronLeft className="h-4 w-4" />
         Prev
       </Button>
-      <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        Page {page}
-      </span>
+      <span className="text-xs tabular-nums text-[var(--muted-foreground)]">Page {page}</span>
       <Button variant="secondary" size="sm" disabled={!hasNext} onClick={() => onChange(page + 1)}>
         Next
         <ChevronRight className="h-4 w-4" />

@@ -28,7 +28,7 @@ export function EmptyState({
         </div>
       )}
       <div className="flex flex-col gap-1.5">
-        <h3 className="font-display text-xl tracking-[-0.01em]">{title}</h3>
+        <h3 className="text-section-heading">{title}</h3>
         {description && (
           <p className="max-w-md text-sm text-[var(--muted-foreground)]">{description}</p>
         )}

@@ -78,9 +78,7 @@ export function StatusBadge({ status, className }: { status: string; className?:
         className={cn("h-1.5 w-1.5 rounded-full", style.dot, style.pulse && "animate-pulse-soft")}
         aria-hidden
       />
-      <span className={cn("font-mono text-xs uppercase tracking-[0.12em]", style.text)}>
-        {statusLabel(status)}
-      </span>
+      <span className={cn("text-field-label", style.text)}>{statusLabel(status)}</span>
     </span>
   );
 }

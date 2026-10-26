@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/primitives/button";
 import { CapsLockHint } from "@/components/primitives/caps-lock-hint";
 import { Input, Label } from "@/components/primitives/input";
@@ -113,9 +114,7 @@ function LoginScreen() {
   if (!setupLoaded || uninitialized) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Loading…
-        </span>
+        <span className="text-sm text-[var(--muted-foreground)]">Loading…</span>
       </main>
     );
   }
@@ -131,13 +130,8 @@ function LoginScreen() {
       {/* Brand strip */}
       <div className="absolute inset-x-0 top-0 z-10 px-6 py-6 sm:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] shadow-accent">
-              <span className="font-display text-lg leading-none text-white">H</span>
-            </div>
-            <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
-          </div>
-          <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+          <BrandLogo />
+          <span className="hidden text-xs text-[var(--muted-foreground)] sm:block">
             Telemedicine · Sri Lanka
           </span>
         </div>
@@ -155,28 +149,13 @@ function LoginScreen() {
             <SectionLabel pulse>Secure portal · ready</SectionLabel>
           </motion.div>
 
-          <motion.h1
-            variants={fadeInUp}
-            className="font-display text-[2.75rem] leading-[1.05] tracking-[-0.02em] sm:text-6xl lg:text-[4.5rem]"
-          >
-            Welcome back to{" "}
-            <span className="relative inline-block">
-              <span className="gradient-text">HapuTele</span>
-              <span
-                aria-hidden
-                className="absolute -bottom-1 left-0 h-3 w-full rounded-sm md:h-4"
-                style={{
-                  background:
-                    "linear-gradient(to right, rgba(0, 82, 255, 0.18), rgba(77, 124, 255, 0.10))",
-                }}
-              />
-            </span>
-            .
+          <motion.h1 variants={fadeInUp} className="text-page-heading">
+            Welcome back to HapuTele.
           </motion.h1>
 
           <motion.p
             variants={fadeInUp}
-            className="max-w-md text-base leading-relaxed text-[var(--muted-foreground)] sm:text-lg"
+            className="max-w-md text-clinical-value text-[var(--muted-foreground)]"
           >
             Sign in to continue your work.
           </motion.p>

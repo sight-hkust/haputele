@@ -139,7 +139,7 @@ export function MeetingRoom({ token, serverUrl, onLeave }: Props) {
           className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-black/90 px-6 text-center text-white"
         >
           <div className="flex flex-col gap-1.5">
-            <h3 className="text-lg font-semibold tracking-[-0.01em]">{fatal.title}</h3>
+            <h3 className="text-section-heading">{fatal.title}</h3>
             <p className="max-w-sm text-sm leading-relaxed text-white/70">
               {fatal.detail ??
                 "Check your connection and try again. If it keeps failing, contact your administrator."}

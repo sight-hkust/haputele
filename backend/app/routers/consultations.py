@@ -137,6 +137,10 @@ def submit_consultation(cid: int, payload: ConsultationSubmitIn, db: Session = D
     c, appt = _own_consultation(db, cid, user)
     if c.status != "draft":
         raise conflict("consultation_locked")
+    # Partial medication rows are valid drafts, but cannot become a signed
+    # prescription without a generic name (§1.7).
+    if any(not medication.get("genericName", "").strip() for medication in c.medications or []):
+        raise unprocessable("medication_generic_name_required")
     # §1.7 makes the patient's age mandatory on the prescription, and age is
     # derived from dob — so a patient without one can't be prescribed for.
     # Caught here rather than at PDF-render time because this is the last

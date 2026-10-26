@@ -1,0 +1,8 @@
+:root {
+  --font-inter: "Inter";
+}
+
+/* Match the production root layout without requesting Google fonts at runtime. */
+body {
+  margin: 0;
+}

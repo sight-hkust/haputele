@@ -107,9 +107,7 @@ export function SignatureInput({
             />
           </div>
           <div className="flex-1">
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-              Signature ready
-            </div>
+            <div className="text-sm font-medium text-emerald-600">Signature ready</div>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
               Applied automatically when you finalise a consultation.
             </p>
@@ -172,10 +170,10 @@ export function SignatureInput({
             <Upload className="h-5 w-5" />
           </div>
           <div className="text-center">
-            <div className="text-sm font-semibold tracking-[-0.01em]">
+            <div className="text-sm font-semibold">
               {isDragging ? "Drop image to upload" : "Upload signature"}
             </div>
-            <div className="mt-0.5 font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <div className="mt-0.5 text-xs text-[var(--muted-foreground)]">
               Drag &amp; drop or click · PNG or JPEG · crop &amp; remove background after upload
             </div>
           </div>

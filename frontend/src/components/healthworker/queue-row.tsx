@@ -47,13 +47,13 @@ export function QueueRow({
       <Card className={compact ? "p-3" : "p-4"}>
         <div className="flex flex-wrap items-center gap-2">
           <div
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] ${meta.tone}`}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${meta.tone}`}
           >
             <Icon className="h-3 w-3" />
             {meta.label}
           </div>
           {entry.priority === "urgent" && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] text-rose-700">
+            <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700">
               <AlertOctagon className="h-3 w-3" />
               Urgent
             </span>
@@ -61,7 +61,7 @@ export function QueueRow({
           {!compact && (
             <span
               className={
-                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-xs uppercase tracking-[0.12em] " +
+                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium " +
                 (entry.status === "pending"
                   ? "border border-amber-200 bg-amber-50 text-amber-800"
                   : entry.status === "booked"
@@ -72,7 +72,7 @@ export function QueueRow({
               {entry.status}
             </span>
           )}
-          <span className="ml-auto font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+          <span className="ml-auto text-xs tabular-nums text-[var(--muted-foreground)]">
             #{entry.id} · {fmtRelative(entry.createdAt)}
           </span>
         </div>
@@ -82,7 +82,7 @@ export function QueueRow({
         >
           <Link
             href={`/healthworker/patients/${entry.patientId}`}
-            className={`font-semibold tracking-[-0.01em] hover:text-[var(--accent)] hover:underline ${compact ? "text-sm" : "text-base"}`}
+            className={`font-semibold hover:text-[var(--accent)] hover:underline ${compact ? "text-sm" : "text-clinical-value"}`}
           >
             {patient.data?.patient ? fullName(patient.data.patient) : `Patient #${entry.patientId}`}
           </Link>

@@ -167,7 +167,7 @@ export default function DoctorProfilePage() {
           <ReadOnly label="Name" value={`${doctor.givenName} ${doctor.familyName}`} />
           <ReadOnly label="Email" value={doctor.email} />
           <ReadOnly label="SLMC registration number" value={doctor.slmcRegistrationNumber} />
-          <ReadOnly label="Username" value={doctor.username} mono />
+          <ReadOnly label="Username" value={doctor.username} />
         </CardContent>
       </Card>
 
@@ -233,7 +233,7 @@ export default function DoctorProfilePage() {
         </CardHeader>
         <CardContent>
           {showSavedSignature ? (
-            <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
               <div className="flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-white">
                 <img
                   src={`${MY_SIGNATURE_URL}?v=${sigVersion}`}
@@ -241,10 +241,8 @@ export default function DoctorProfilePage() {
                   className="max-h-full max-w-full object-contain"
                 />
               </div>
-              <div className="flex-1">
-                <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-                  Signature on file
-                </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-field-label text-emerald-600">Signature on file</div>
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">
                   Applied automatically when you finalise a consultation.
                 </p>
@@ -303,13 +301,11 @@ export default function DoctorProfilePage() {
   );
 }
 
-function ReadOnly({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function ReadOnly({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <Label>{label}</Label>
-      <div
-        className={`rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm ${mono ? "font-mono" : ""}`}
-      >
+      <div className="break-words rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-clinical-value">
         {value}
       </div>
     </div>

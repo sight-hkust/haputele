@@ -132,10 +132,8 @@ export function AppointmentForm({
 
       {hidePatientPicker && patientLabel ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm">
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-            For patient
-          </span>
-          <div className="mt-1 font-medium">{patientLabel}</div>
+          <span className="text-field-label text-[var(--muted-foreground)]">For patient</span>
+          <div className="mt-1 text-clinical-value font-medium">{patientLabel}</div>
         </div>
       ) : (
         <div className="flex flex-col gap-2">

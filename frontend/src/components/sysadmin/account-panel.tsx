@@ -71,8 +71,8 @@ export function AccountPanel({
       >
         <header className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div className="min-w-0">
-            <h2 className="truncate font-display text-lg tracking-[-0.01em]">{account.username}</h2>
-            <p className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+            <h2 className="truncate text-section-heading">{account.username}</h2>
+            <p className="text-xs text-[var(--muted-foreground)]">
               {ROLE_LABEL[account.role]} account
             </p>
           </div>
@@ -337,7 +337,7 @@ function DoctorBody({ doctorId }: { doctorId: number }) {
                   {reissue.isPending ? "Sending…" : "Re-send invite"}
                 </Button>
                 {inviteJustSent && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
                     <CheckCircle2 className="h-3 w-3" />
                     Sent
                   </span>

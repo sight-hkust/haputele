@@ -257,7 +257,7 @@ export function DoctorForm({
           {errorMissingFields && errorMissingFields.length > 0 && (
             <ul className="mt-2 list-disc pl-5">
               {errorMissingFields.map((f) => (
-                <li key={f} className="font-mono text-xs">
+                <li key={f} className="text-xs">
                   {f}
                 </li>
               ))}
@@ -323,7 +323,7 @@ export function DoctorForm({
           ) : (
             <div className="flex flex-col gap-2">
               <Label>Username</Label>
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 font-mono text-sm">
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-clinical-value">
                 {initial?.username}
               </div>
             </div>
@@ -483,9 +483,7 @@ export function DoctorForm({
               return (
                 <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
                   <div className="flex-1">
-                    <div className="font-mono text-xs uppercase tracking-[0.15em] text-emerald-600">
-                      Signature on file
-                    </div>
+                    <div className="text-sm font-medium text-emerald-600">Signature on file</div>
                     <p className="mt-1 text-sm text-[var(--muted-foreground)]">
                       The doctor has a saved default e-signature.
                     </p>
@@ -578,7 +576,7 @@ function Section({
           <Icon className="h-5 w-5 text-[var(--accent)]" />
         </div>
         <div>
-          <h3 className="font-display text-xl tracking-[-0.01em]">{title}</h3>
+          <h3 className="text-section-heading">{title}</h3>
           {hint && <p className="mt-1 max-w-2xl text-sm text-[var(--muted-foreground)]">{hint}</p>}
         </div>
       </div>
