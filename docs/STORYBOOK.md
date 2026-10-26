@@ -39,7 +39,7 @@ npx biome check src/stories .storybook
 
 ## Catalog
 
-The integrated catalog contains 328 canvas stories, 59 interaction plays and 54 documentation entries:
+The integrated catalog contains 341 canvas stories, 72 interaction plays and 55 documentation entries:
 
 - **Start here:** usage, architecture, complete route/feature map, role stories, backend-only capabilities and implementation gaps.
 - **Journeys / End to end:** initialize clinic; sign in/search/open patient; signed-consent registration; atomic queue booking; consultation draft/review/sign/follow-up; invite doctor; approve application; update institute identity.
@@ -84,6 +84,8 @@ TypeScript, scoped Biome, production Next build and Storybook build passed. Vite
 The single-family typography pass reran all 59 interaction plays over non-local HTTP with no play failures. The clinical preview loaded only Inter; computed labels were 14px and editable clinical text 16px. Brand lettering is SVG artwork, and Sinhala/Tamil sample input rendered through local fallback fonts. Independent visual checks covered clinical, administrative and public screens at 320px, 390px, 1024px and 1440px, plus 720px desktop-zoom-equivalent reflow. Small booking-time chips and a narrow intake-header overflow were corrected and reverified. Accessibility reporter warnings remain in 18 stories; passing interaction plays are not accessibility certification.
 
 Exploratory 195 CSSpx layouts still overflow in authenticated navigation and some action groups. That is below the 320 CSSpx reflow reference used here, and halving a phone viewport does not reproduce mobile pinch zoom; this pass does not establish support for either case.
+
+The independent shipping-review corrections added regression plays for delayed profile/vitals saves and retry, calendar-only DOB dismissal, exact multi-entry Back/Forward restoration, no-op exit rearming, native fragment entries, delayed explicit Cancel, consent-renewal readiness, and focused-field visibility. All 72 actual plays passed, with navigation rerun after its final corrections; both terminal state and error channels were checked. Production Next.js routing was separately exercised through a temporary synthetic-API proxy: Back/Forward Stay restored exact routes and retained edits, saved Back added no sentinel, native Back/sign-out protected dirty work, a failed profile save retained entries for retry, a fragment followed by Back preserved protection, and a held server-component Cancel transition prompted once. This proves the router integration, not backend transaction or provider behavior.
 
 - **Video:** no usable LiveKit token is issued and no clinical room is contacted. Start/join uses the real `livekit_not_configured` error; fixture lifecycle states are UI examples, not a performed call.
 - **Email:** invite/approval records are synthetic. No Resend delivery, provider callback or suppression is tested.

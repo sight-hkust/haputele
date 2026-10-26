@@ -65,7 +65,6 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
   const preparing = PRE_MEETING_STATES.has(appointment.status);
   const needsMasterConsent = masterConsentStatus !== "ok";
   const needsSessionConsent = preparing && sessionConsentResolved && !sessionConsented;
-  const needsVitals = appointment.status === "consent_pending";
   const masterGate = (
     <MasterConsentGate
       status={masterConsentStatus}
@@ -101,7 +100,7 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
       {needsSessionConsent && (
         <SessionConsentStep appointmentId={aptId} masterAvailable={!needsMasterConsent} />
       )}
-      {needsVitals && !needsSessionConsent && sessionConsentResolved && vitals}
+      {preparing && !needsSessionConsent && sessionConsentResolved && vitals}
 
       <MeetingStep
         appointmentId={aptId}
@@ -168,7 +167,7 @@ export function AppointmentCockpit({ data }: { data: AppointmentDetail }) {
               </p>
             </Card>
           )}
-          {!needsVitals && vitals}
+          {!preparing && vitals}
         </div>
       </details>
 

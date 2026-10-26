@@ -137,6 +137,7 @@ export function ProfileForm({
   errorMessage,
   onSubmit,
   onCancel,
+  cancelHref,
   onSaved,
 }: {
   initial: Profile | null;
@@ -144,6 +145,7 @@ export function ProfileForm({
   errorMessage?: string | null;
   onSubmit: (req: ProfileRequest) => unknown;
   onCancel?: () => void;
+  cancelHref?: string;
   onSaved?: () => void;
 }) {
   const form = useForm<FormShape>({
@@ -175,314 +177,316 @@ export function ProfileForm({
   const others = useFieldArray({ control, name: "diseases.others" });
 
   return (
-    <form onSubmit={save} className="flex flex-col gap-8">
-      {errorMessage && <ErrorBanner>{errorMessage}</ErrorBanner>}
+    <form onSubmit={save} aria-busy={saving}>
+      <fieldset disabled={saving} className="flex min-w-0 flex-col gap-8">
+        {errorMessage && <ErrorBanner>{errorMessage}</ErrorBanner>}
 
-      {/* ── 1 · Disease history — checkboxes for the named codes ──────── */}
-      <Section
-        Icon={ClipboardList}
-        title="Disease history"
-        hint="Tick everything that applies. Use the “Other conditions” section below for anything not listed — add as many as you need."
-      >
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {NAMED_DISEASE_OPTIONS.map((opt) => (
-            <CheckboxRow key={opt.code} htmlFor={`disease-${opt.code}`} label={opt.label}>
-              <input
-                id={`disease-${opt.code}`}
-                type="checkbox"
-                className="h-4 w-4 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)]"
-                {...register(`diseases.selected.${opt.code as NamedDiseaseCode}` as const)}
-              />
-            </CheckboxRow>
-          ))}
-        </div>
-
-        {/* Other conditions — repeater so multiple unlisted conditions can be captured. */}
-        <div className="mt-6 flex items-end justify-between">
-          <div>
-            <h4 className="text-field-label text-[var(--muted-foreground)]">Other conditions</h4>
-            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-              Anything not on the list. Add one row per condition.
-            </p>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={() => others.append({ text: "" })}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add other
-          </Button>
-        </div>
-        {others.fields.length === 0 ? (
-          <p className="mt-3 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-4 py-4 text-center text-sm text-[var(--muted-foreground)]">
-            No other conditions.
-          </p>
-        ) : (
-          <div className="mt-3 flex flex-col gap-2">
-            {others.fields.map((f, i) => (
-              <div
-                key={f.id}
-                className="relative rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 py-3 pl-4 pr-12"
-              >
-                <Input
-                  aria-label={`Other condition ${i + 1}`}
-                  placeholder="e.g. Crohn disease"
-                  {...register(`diseases.others.${i}.text` as const)}
+        {/* ── 1 · Disease history — checkboxes for the named codes ──────── */}
+        <Section
+          Icon={ClipboardList}
+          title="Disease history"
+          hint="Tick everything that applies. Use the “Other conditions” section below for anything not listed — add as many as you need."
+        >
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {NAMED_DISEASE_OPTIONS.map((opt) => (
+              <CheckboxRow key={opt.code} htmlFor={`disease-${opt.code}`} label={opt.label}>
+                <input
+                  id={`disease-${opt.code}`}
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                  {...register(`diseases.selected.${opt.code as NamedDiseaseCode}` as const)}
                 />
-                <button
-                  type="button"
-                  aria-label="Remove"
-                  onClick={() => others.remove(i)}
-                  className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-rose-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+              </CheckboxRow>
             ))}
           </div>
-        )}
-      </Section>
 
-      {/* ── 2 · Surgical history (repeater) ────────────────────────────── */}
-      <RepeaterSection
-        Icon={Stethoscope}
-        title="Surgical history"
-        addLabel="Add surgery"
-        empty={surgeries.fields.length === 0}
-        onAdd={() => surgeries.append({ description: "" })}
-      >
-        {surgeries.fields.map((f, i) => (
-          <RepeaterRow key={f.id} onRemove={() => surgeries.remove(i)}>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`s-${i}`}>Description</Label>
-              <Input
-                id={`s-${i}`}
-                {...register(`surgicalHistory.${i}.description` as const)}
-                placeholder="e.g. Appendectomy, 2018"
-              />
+          {/* Other conditions — repeater so multiple unlisted conditions can be captured. */}
+          <div className="mt-6 flex items-end justify-between">
+            <div>
+              <h4 className="text-field-label text-[var(--muted-foreground)]">Other conditions</h4>
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                Anything not on the list. Add one row per condition.
+              </p>
             </div>
-          </RepeaterRow>
-        ))}
-      </RepeaterSection>
-
-      {/* ── 3 · Allergies (repeater) ───────────────────────────────────── */}
-      <RepeaterSection
-        Icon={AlertCircle}
-        title="Allergies"
-        addLabel="Add allergy"
-        empty={allergies.fields.length === 0}
-        onAdd={() =>
-          allergies.append({
-            type: "" as AllergyEntry["type"] | "",
-            name: "",
-            medication: "",
-            treatedWhere: "",
-          })
-        }
-      >
-        {allergies.fields.map((f, i) => (
-          <RepeaterRow key={f.id} onRemove={() => allergies.remove(i)}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`a-${i}-type`}>Type</Label>
-                <Select
-                  id={`a-${i}-type`}
-                  aria-invalid={!!errors.allergies?.[i]?.type}
-                  aria-describedby={errors.allergies?.[i]?.type ? `a-${i}-type-error` : undefined}
-                  {...register(`allergies.${i}.type` as const, {
-                    validate: (value, values) => {
-                      const row = values.allergies[i];
-                      return value ||
-                        !(row.name.trim() || row.medication.trim() || row.treatedWhere.trim())
-                        ? true
-                        : "Choose an allergy type before saving.";
-                    },
-                  })}
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => others.append({ text: "" })}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add other
+            </Button>
+          </div>
+          {others.fields.length === 0 ? (
+            <p className="mt-3 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)]/30 px-4 py-4 text-center text-sm text-[var(--muted-foreground)]">
+              No other conditions.
+            </p>
+          ) : (
+            <div className="mt-3 flex flex-col gap-2">
+              {others.fields.map((f, i) => (
+                <div
+                  key={f.id}
+                  className="relative rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 py-3 pl-4 pr-12"
                 >
-                  <option value="">Select…</option>
-                  <option value="food">Food</option>
-                  <option value="medication">Medication</option>
-                  <option value="other">Other</option>
-                </Select>
-                {errors.allergies?.[i]?.type && (
-                  <p id={`a-${i}-type-error`} role="alert" className="text-sm text-red-700">
-                    {errors.allergies[i]?.type?.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`a-${i}-name`}>Allergen</Label>
-                <Input
-                  id={`a-${i}-name`}
-                  aria-invalid={!!errors.allergies?.[i]?.name}
-                  aria-describedby={errors.allergies?.[i]?.name ? `a-${i}-name-error` : undefined}
-                  {...register(`allergies.${i}.name` as const, {
-                    validate: (value, values) => {
-                      const row = values.allergies[i];
-                      return value.trim() ||
-                        !(row.type || row.medication.trim() || row.treatedWhere.trim())
-                        ? true
-                        : "Enter the allergen before saving.";
-                    },
-                  })}
-                />
-                {errors.allergies?.[i]?.name && (
-                  <p id={`a-${i}-name-error`} role="alert" className="text-sm text-red-700">
-                    {errors.allergies[i]?.name?.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`a-${i}-med`}>Reaction medication (if any)</Label>
-                <Input id={`a-${i}-med`} {...register(`allergies.${i}.medication` as const)} />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`a-${i}-tw`}>Treated where</Label>
-                <Input id={`a-${i}-tw`} {...register(`allergies.${i}.treatedWhere` as const)} />
-              </div>
+                  <Input
+                    aria-label={`Other condition ${i + 1}`}
+                    placeholder="e.g. Crohn disease"
+                    {...register(`diseases.others.${i}.text` as const)}
+                  />
+                  <button
+                    type="button"
+                    aria-label="Remove"
+                    onClick={() => others.remove(i)}
+                    className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-rose-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
             </div>
-          </RepeaterRow>
-        ))}
-      </RepeaterSection>
+          )}
+        </Section>
 
-      {/* ── 4 · Existing medications (repeater) ────────────────────────── */}
-      <RepeaterSection
-        Icon={Pill}
-        title="Existing medications"
-        addLabel="Add medication"
-        empty={meds.fields.length === 0}
-        onAdd={() => meds.append({ drug: "", dosage: "", frequency: "", notes: "" })}
-      >
-        {meds.fields.map((f, i) => (
-          <RepeaterRow key={f.id} onRemove={() => meds.remove(i)}>
-            <div className="grid gap-3 sm:grid-cols-2">
+        {/* ── 2 · Surgical history (repeater) ────────────────────────────── */}
+        <RepeaterSection
+          Icon={Stethoscope}
+          title="Surgical history"
+          addLabel="Add surgery"
+          empty={surgeries.fields.length === 0}
+          onAdd={() => surgeries.append({ description: "" })}
+        >
+          {surgeries.fields.map((f, i) => (
+            <RepeaterRow key={f.id} onRemove={() => surgeries.remove(i)}>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`em-${i}-d`}>Drug</Label>
+                <Label htmlFor={`s-${i}`}>Description</Label>
                 <Input
-                  id={`em-${i}-d`}
-                  aria-invalid={!!errors.medications?.[i]?.drug}
-                  aria-describedby={
-                    errors.medications?.[i]?.drug ? `em-${i}-drug-error` : undefined
-                  }
-                  {...register(`medications.${i}.drug` as const, {
-                    validate: (value, values) => {
-                      const row = values.medications[i];
-                      return value.trim() ||
-                        !(row.dosage.trim() || row.frequency.trim() || row.notes.trim())
-                        ? true
-                        : "Enter the medication name before saving.";
-                    },
-                  })}
-                />
-                {errors.medications?.[i]?.drug && (
-                  <p id={`em-${i}-drug-error`} role="alert" className="text-sm text-red-700">
-                    {errors.medications[i]?.drug?.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`em-${i}-do`}>Dosage</Label>
-                <Input
-                  id={`em-${i}-do`}
-                  {...register(`medications.${i}.dosage` as const)}
-                  placeholder="e.g. 5 mg"
+                  id={`s-${i}`}
+                  {...register(`surgicalHistory.${i}.description` as const)}
+                  placeholder="e.g. Appendectomy, 2018"
                 />
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`em-${i}-f`}>Frequency</Label>
-                <Input
-                  id={`em-${i}-f`}
-                  {...register(`medications.${i}.frequency` as const)}
-                  placeholder="e.g. once daily"
-                />
+            </RepeaterRow>
+          ))}
+        </RepeaterSection>
+
+        {/* ── 3 · Allergies (repeater) ───────────────────────────────────── */}
+        <RepeaterSection
+          Icon={AlertCircle}
+          title="Allergies"
+          addLabel="Add allergy"
+          empty={allergies.fields.length === 0}
+          onAdd={() =>
+            allergies.append({
+              type: "" as AllergyEntry["type"] | "",
+              name: "",
+              medication: "",
+              treatedWhere: "",
+            })
+          }
+        >
+          {allergies.fields.map((f, i) => (
+            <RepeaterRow key={f.id} onRemove={() => allergies.remove(i)}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`a-${i}-type`}>Type</Label>
+                  <Select
+                    id={`a-${i}-type`}
+                    aria-invalid={!!errors.allergies?.[i]?.type}
+                    aria-describedby={errors.allergies?.[i]?.type ? `a-${i}-type-error` : undefined}
+                    {...register(`allergies.${i}.type` as const, {
+                      validate: (value, values) => {
+                        const row = values.allergies[i];
+                        return value ||
+                          !(row.name.trim() || row.medication.trim() || row.treatedWhere.trim())
+                          ? true
+                          : "Choose an allergy type before saving.";
+                      },
+                    })}
+                  >
+                    <option value="">Select…</option>
+                    <option value="food">Food</option>
+                    <option value="medication">Medication</option>
+                    <option value="other">Other</option>
+                  </Select>
+                  {errors.allergies?.[i]?.type && (
+                    <p id={`a-${i}-type-error`} role="alert" className="text-sm text-red-700">
+                      {errors.allergies[i]?.type?.message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`a-${i}-name`}>Allergen</Label>
+                  <Input
+                    id={`a-${i}-name`}
+                    aria-invalid={!!errors.allergies?.[i]?.name}
+                    aria-describedby={errors.allergies?.[i]?.name ? `a-${i}-name-error` : undefined}
+                    {...register(`allergies.${i}.name` as const, {
+                      validate: (value, values) => {
+                        const row = values.allergies[i];
+                        return value.trim() ||
+                          !(row.type || row.medication.trim() || row.treatedWhere.trim())
+                          ? true
+                          : "Enter the allergen before saving.";
+                      },
+                    })}
+                  />
+                  {errors.allergies?.[i]?.name && (
+                    <p id={`a-${i}-name-error`} role="alert" className="text-sm text-red-700">
+                      {errors.allergies[i]?.name?.message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`a-${i}-med`}>Reaction medication (if any)</Label>
+                  <Input id={`a-${i}-med`} {...register(`allergies.${i}.medication` as const)} />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`a-${i}-tw`}>Treated where</Label>
+                  <Input id={`a-${i}-tw`} {...register(`allergies.${i}.treatedWhere` as const)} />
+                </div>
               </div>
-              <div className="flex flex-col gap-2 sm:col-span-2">
-                <Label htmlFor={`em-${i}-n`}>Notes</Label>
-                <Textarea
-                  id={`em-${i}-n`}
-                  rows={2}
-                  {...register(`medications.${i}.notes` as const)}
-                />
+            </RepeaterRow>
+          ))}
+        </RepeaterSection>
+
+        {/* ── 4 · Existing medications (repeater) ────────────────────────── */}
+        <RepeaterSection
+          Icon={Pill}
+          title="Existing medications"
+          addLabel="Add medication"
+          empty={meds.fields.length === 0}
+          onAdd={() => meds.append({ drug: "", dosage: "", frequency: "", notes: "" })}
+        >
+          {meds.fields.map((f, i) => (
+            <RepeaterRow key={f.id} onRemove={() => meds.remove(i)}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`em-${i}-d`}>Drug</Label>
+                  <Input
+                    id={`em-${i}-d`}
+                    aria-invalid={!!errors.medications?.[i]?.drug}
+                    aria-describedby={
+                      errors.medications?.[i]?.drug ? `em-${i}-drug-error` : undefined
+                    }
+                    {...register(`medications.${i}.drug` as const, {
+                      validate: (value, values) => {
+                        const row = values.medications[i];
+                        return value.trim() ||
+                          !(row.dosage.trim() || row.frequency.trim() || row.notes.trim())
+                          ? true
+                          : "Enter the medication name before saving.";
+                      },
+                    })}
+                  />
+                  {errors.medications?.[i]?.drug && (
+                    <p id={`em-${i}-drug-error`} role="alert" className="text-sm text-red-700">
+                      {errors.medications[i]?.drug?.message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`em-${i}-do`}>Dosage</Label>
+                  <Input
+                    id={`em-${i}-do`}
+                    {...register(`medications.${i}.dosage` as const)}
+                    placeholder="e.g. 5 mg"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`em-${i}-f`}>Frequency</Label>
+                  <Input
+                    id={`em-${i}-f`}
+                    {...register(`medications.${i}.frequency` as const)}
+                    placeholder="e.g. once daily"
+                  />
+                </div>
+                <div className="flex flex-col gap-2 sm:col-span-2">
+                  <Label htmlFor={`em-${i}-n`}>Notes</Label>
+                  <Textarea
+                    id={`em-${i}-n`}
+                    rows={2}
+                    {...register(`medications.${i}.notes` as const)}
+                  />
+                </div>
               </div>
+            </RepeaterRow>
+          ))}
+        </RepeaterSection>
+
+        {/* ── 5 · Lifestyle ──────────────────────────────────────────────── */}
+        <Section Icon={Activity} title="Lifestyle & social history">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ls-smoking">Smoking</Label>
+              <Select id="ls-smoking" {...register("lifestyle.smoking")}>
+                <option value="">Not specified</option>
+                <option value="never">Never</option>
+                <option value="current">Currently smokes</option>
+                <option value="prior">Prior smoker</option>
+              </Select>
             </div>
-          </RepeaterRow>
-        ))}
-      </RepeaterSection>
-
-      {/* ── 5 · Lifestyle ──────────────────────────────────────────────── */}
-      <Section Icon={Activity} title="Lifestyle & social history">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-smoking">Smoking</Label>
-            <Select id="ls-smoking" {...register("lifestyle.smoking")}>
-              <option value="">Not specified</option>
-              <option value="never">Never</option>
-              <option value="current">Currently smokes</option>
-              <option value="prior">Prior smoker</option>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-alcohol">Alcohol</Label>
-            <Select id="ls-alcohol" {...register("lifestyle.alcohol")}>
-              <option value="">Not specified</option>
-              <option value="none">None</option>
-              <option value="occasional">Occasional</option>
-              <option value="regular">Regular</option>
-            </Select>
-          </div>
-          {/* One control for the quid as a whole — betel leaf and areca nut are
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ls-alcohol">Alcohol</Label>
+              <Select id="ls-alcohol" {...register("lifestyle.alcohol")}>
+                <option value="">Not specified</option>
+                <option value="none">None</option>
+                <option value="occasional">Occasional</option>
+                <option value="regular">Regular</option>
+              </Select>
+            </div>
+            {/* One control for the quid as a whole — betel leaf and areca nut are
               chewed together far more often than separately, so the label names
               both rather than splitting them into two fields nobody fills in
               consistently. */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-betel">Betel leaf / areca nut</Label>
-            <Select id="ls-betel" {...register("lifestyle.betelAreca")}>
-              <option value="">Not specified</option>
-              <option value="never">Never</option>
-              <option value="current">Currently chews</option>
-              <option value="prior">Prior use</option>
-            </Select>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ls-betel">Betel leaf / areca nut</Label>
+              <Select id="ls-betel" {...register("lifestyle.betelAreca")}>
+                <option value="">Not specified</option>
+                <option value="never">Never</option>
+                <option value="current">Currently chews</option>
+                <option value="prior">Prior use</option>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ls-job">Occupation</Label>
+              <Input id="ls-job" {...register("lifestyle.occupation")} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ls-pa">Physical activity</Label>
+              <Select id="ls-pa" {...register("lifestyle.physicalActivity")}>
+                <option value="">Not specified</option>
+                {PHYSICAL_ACTIVITY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-job">Occupation</Label>
-            <Input id="ls-job" {...register("lifestyle.occupation")} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="ls-pa">Physical activity</Label>
-            <Select id="ls-pa" {...register("lifestyle.physicalActivity")}>
-              <option value="">Not specified</option>
-              {PHYSICAL_ACTIVITY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-        </div>
-      </Section>
+        </Section>
 
-      <div className="sticky bottom-4 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-lg backdrop-blur">
-        <p role="status" className="mr-auto text-sm text-[var(--muted-foreground)]">
-          {saving ? "Saving profile…" : isDirty ? "Unsaved changes" : "No unsaved changes"}
-        </p>
-        {onCancel && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => {
-              if (confirmLeave()) onCancel();
-            }}
-            disabled={saving}
-          >
-            Cancel
+        <div className="sticky bottom-4 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-lg backdrop-blur">
+          <p role="status" className="mr-auto text-sm text-[var(--muted-foreground)]">
+            {saving ? "Saving profile…" : isDirty ? "Unsaved changes" : "No unsaved changes"}
+          </p>
+          {onCancel && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                if (confirmLeave(cancelHref)) onCancel();
+              }}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving…" : initial ? "Save profile" : "Create profile"}
           </Button>
-        )}
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving…" : initial ? "Save profile" : "Create profile"}
-        </Button>
-      </div>
+        </div>
+      </fieldset>
     </form>
   );
 }

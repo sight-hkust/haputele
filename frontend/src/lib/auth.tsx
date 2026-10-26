@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import "./unsaved-navigation";
 
 import { ApiError, api } from "./api";
 

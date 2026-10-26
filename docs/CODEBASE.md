@@ -127,6 +127,8 @@ Consent statement and real pointer/touch/stylus signature precede demographics; 
 
 Consent supports drawing or uploading an image of the patient's actual signature. Resizing, rotation and device-pixel-ratio changes preserve the artifact; the exported PNG remains bounded to 200 KiB. Uploads use the existing crop editor, not a typed attestation. Registration and medical intake warn before discarding unsaved work. An incomplete allergy or existing-medication row blocks saving with an inline error rather than silently disappearing.
 
+Profile and vitals forms lock their fields and add/remove actions while a save is pending. A failed save unlocks the same retained entries for correction/retry. The edit-patient dialog receives actual form dirtiness, including calendar-only DOB changes: Escape, close and Cancel require an explicit discard, while a successful save closes directly.
+
 Sources: patient routes, `components/healthworker/{patient-form,profile-form,profile-summary,patient-picker}.tsx`, `routers/patients.py`. Storybook: Clinical / Patients, all patient screens, **Register Patient With Consent**.
 
 ### Healthworker: manage backlog and book care
@@ -158,6 +160,8 @@ The seven-state lifecycle is displayed by the real `StatusBadge` and mirrored by
 
 The appointment's next action leads the page. Saved consent and vitals collapse into a preparation record after the call starts; completed encounters lead with prescription delivery and follow-up instead of disabled forms. Master consent remains version-sensitive and blocks starting a meeting when renewal is required. Vitals include height/weight/BP/pulse/temperature with field-level validation and derived summary. Photo intake accepts JPEG/PNG/WebP via file picker, drag/drop, camera or phone QR; staging supports preview/rotation, sequential upload, caption edit/delete and lightbox. Cancellation can optionally requeue with doctor/week/priority/notes. Ending the meeting manually or through a signed LiveKit room-finished webhook advances to awaiting notes. Closing a local call view does not end the appointment.
 
+The vitals editor stays mounted and visible through `consent_pending → data_collection`; saving the first measurements does not relocate the form. It moves into the preparation record only once preparation ends. Doctor readiness checks the current master-consent gate before claiming the patient is ready.
+
 Sources: `components/healthworker/{cockpit,vitals-form,attachments-panel}.tsx`, `components/meeting`, `routers/{appointments,preconsult,attachments,livekit_webhook}.py`. Storybook: seven cockpit/screen states, consent gates, attachment variants, meeting-unavailable behavior.
 
 ### Doctor: review, write, sign and follow up
@@ -172,6 +176,10 @@ Sources: `components/healthworker/{cockpit,vitals-form,attachments-panel}.tsx`, 
 6. Submit locks the consultation/appointment and atomically creates the optional follow-up appointment or queue entry. Both roles see a persisted follow-up receipt. Healthworkers see the actual queue booking state and action; doctors are told when current queue status is unavailable to their role.
 
 Open nonterminal appointment views poll every five seconds, and appointment/queue lists every ten seconds while visible. Terminal encounter polling stops. Refresh controls and timestamps remain available. Background errors retain the last loaded clinical view with a warning instead of unmounting edited forms.
+
+Unsaved-navigation permission belongs to one departure attempt and is revoked by subsequent edits/interactions or a cancelled/completed navigation. Explicit router-based exits pass their destination so a slow transition reuses one confirmation without authorizing unrelated navigation. `AuthProvider` initializes opaque document-local history positions before app navigation, preserving Next's history state. Native fragment links keep the same tracking realm and route state. In browsers without the Navigation API, rejecting a tracked multi-entry Back or Forward restores the exact position before Next processes it. No duplicate history sentinels or patient data are stored. Legacy native same-document entries created before initialization have no observable traversal distance; the guard does not guess a restoration, while cross-document exits still use `beforeunload`.
+
+Consultation focus scrolling reserves the measured patient-strip and action-bar heights. On short viewports the patient strip becomes static rather than leaving too little room for a multiline field. Resize and route cleanup update/restore the document scroll padding.
 
 Sources: doctor routes, `components/doctor/{consultation-flow,consultation-editors,consultation-review,consultation-stepper,patient-summary,visit-history}.tsx`, `routers/consultations.py`, `pdf.py`. Storybook: Clinical / Consultation, doctor screen variants, **Write Sign And Queue Follow Up**.
 

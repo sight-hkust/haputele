@@ -30,6 +30,7 @@ export default function PatientDetailPage() {
   const del = useDeletePatient();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [editDirty, setEditDirty] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (patientQ.isLoading) {
@@ -58,6 +59,15 @@ export default function PatientDetailPage() {
   const profile = patientQ.data.profile;
   const age = fmtAge(patient.dob);
   const apts = historyQ.data?.appointments ?? [];
+  const closeEdit = () => {
+    setEditOpen(false);
+    setEditDirty(false);
+  };
+  const cancelEdit = () => {
+    if (update.isPending) return;
+    if (editDirty && !window.confirm("Discard the unsaved changes in this dialog?")) return;
+    closeEdit();
+  };
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
@@ -90,7 +100,12 @@ export default function PatientDetailPage() {
               <ClipboardList className="h-4 w-4" aria-hidden />
               Patient intake
             </Link>
-            <Button variant="secondary" size="md" onClick={() => setEditOpen(true)}>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setEditOpen(true)}
+              aria-label="Edit patient demographics"
+            >
               <Pencil className="h-4 w-4" />
               Edit
             </Button>
@@ -165,7 +180,8 @@ export default function PatientDetailPage() {
       {/* Edit modal */}
       <Modal
         open={editOpen}
-        onClose={() => !update.isPending && setEditOpen(false)}
+        onClose={() => !update.isPending && closeEdit()}
+        dirty={editDirty}
         title="Edit patient"
         className="max-w-3xl"
       >
@@ -173,13 +189,14 @@ export default function PatientDetailPage() {
           mode="update"
           initial={patient}
           submitting={update.isPending}
+          onDirtyChange={setEditDirty}
           errorMessage={update.error ? explainError(update.error.error) : null}
           submitLabel="Save changes"
           onSubmit={(s) => {
             if (s.mode !== "update") return;
-            update.mutate(s.payload, { onSuccess: () => setEditOpen(false) });
+            update.mutate(s.payload, { onSuccess: closeEdit });
           }}
-          onCancel={() => setEditOpen(false)}
+          onCancel={cancelEdit}
         />
       </Modal>
 

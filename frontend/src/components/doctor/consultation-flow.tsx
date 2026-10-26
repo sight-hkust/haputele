@@ -509,7 +509,10 @@ export function ConsultationFlow({
           {submit.error && <ErrorBanner>{explainError(submit.error.error)}</ErrorBanner>}
 
           {/* Footer — back / save / next / submit */}
-          <div className="sticky bottom-4 z-10 flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-sm backdrop-blur">
+          <div
+            data-consultation-actions
+            className="sticky bottom-4 z-10 flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-4 shadow-sm backdrop-blur"
+          >
             <p
               role="status"
               aria-live="polite"

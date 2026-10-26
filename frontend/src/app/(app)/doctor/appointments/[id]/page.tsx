@@ -42,13 +42,22 @@ export default function DoctorAppointmentDetail() {
     );
   }
 
-  const { appointment, patient, profile, preconsult, consultation, attachments } = apt.data;
+  const {
+    appointment,
+    patient,
+    profile,
+    preconsult,
+    consultation,
+    attachments,
+    masterConsentStatus,
+  } = apt.data;
 
   // Doctors can begin consultation in in_progress (alongside the meeting) or
   // awaiting_notes (after the call). Pre-meeting states aren't actionable for
   // the doctor — meeting hasn't been started by the healthworker yet.
   const canBeginConsult = ["in_progress", "awaiting_notes"].includes(appointment.status);
   const isCompleted = appointment.status === "completed";
+  const needsConsentRenewal = masterConsentStatus !== "ok";
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6">
@@ -83,17 +92,21 @@ export default function DoctorAppointmentDetail() {
                   <h3 className="text-section-heading">
                     {appointment.status === "cancelled"
                       ? "Appointment cancelled"
-                      : appointment.status === "data_collection"
-                        ? "Ready — healthworker starts the call"
-                        : "Healthworker is preparing the patient"}
+                      : needsConsentRenewal
+                        ? "Healthworker must renew patient consent"
+                        : appointment.status === "data_collection" && preconsult
+                          ? "Ready — healthworker starts the call"
+                          : "Healthworker is preparing the patient"}
                   </h3>
                   <p className="mt-1 text-sm text-[var(--muted-foreground)]">
                     {appointment.status === "cancelled"
                       ? appointment.cancellationReason ||
                         "No consultation can be started for this appointment."
-                      : appointment.status === "data_collection"
-                        ? "Consent and vitals are captured. The healthworker will start the meeting; this view updates automatically. Review the patient's context while you wait."
-                        : "The healthworker owns confirming consent and collecting vitals. Review the patient's context now; you can begin notes once they start the meeting."}
+                      : needsConsentRenewal
+                        ? "The patient's master consent needs renewal. The healthworker must record consent before starting the meeting; this view updates automatically."
+                        : appointment.status === "data_collection" && preconsult
+                          ? "Consent and vitals are captured. The healthworker will start the meeting; this view updates automatically. Review the patient's context while you wait."
+                          : "The healthworker owns confirming consent and collecting vitals. Review the patient's context now; you can begin notes once they start the meeting."}
                   </p>
                 </div>
               </div>

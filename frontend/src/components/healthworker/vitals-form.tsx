@@ -106,93 +106,95 @@ export function VitalsForm({
   });
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-5">
-      {errorMessage && <ErrorBanner>{errorMessage}</ErrorBanner>}
+    <form onSubmit={submit} noValidate aria-busy={submitting}>
+      <fieldset disabled={disabled || submitting} className="flex min-w-0 flex-col gap-5">
+        {errorMessage && <ErrorBanner>{errorMessage}</ErrorBanner>}
 
-      {/* FEEDBACK §2: doctors need the *reason* for the visit before the call.
+        {/* FEEDBACK §2: doctors need the *reason* for the visit before the call.
           Free-text, prominent, top of the form so the HW captures it first. */}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="primaryComplaint">Primary complaint</Label>
-        <Textarea
-          id="primaryComplaint"
-          rows={3}
-          placeholder="Why is the patient here today? e.g. cough for 3 days, infected wound on right hand…"
-          disabled={disabled}
-          aria-invalid={!!errors.primaryComplaint}
-          {...register("primaryComplaint", {
-            maxLength: {
-              value: PRIMARY_COMPLAINT_MAX,
-              message: `Keep the complaint under ${PRIMARY_COMPLAINT_MAX} characters.`,
-            },
-          })}
-        />
-        {errors.primaryComplaint && <FieldError message={errors.primaryComplaint.message} />}
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Vital
-          label="Height (cm)"
-          id="height"
-          disabled={disabled}
-          error={errors.height?.message}
-          {...register("height", rule("height"))}
-        />
-        <Vital
-          label="Weight (kg)"
-          id="weight"
-          disabled={disabled}
-          error={errors.weight?.message}
-          {...register("weight", rule("weight"))}
-        />
-        <Vital
-          label="Pulse (bpm)"
-          id="pulse"
-          disabled={disabled}
-          error={errors.pulse?.message}
-          {...register("pulse", rule("pulse"))}
-        />
-        <Vital
-          label="Systolic BP (mmHg)"
-          id="sysBp"
-          disabled={disabled}
-          error={errors.sysBp?.message}
-          {...register("sysBp", {
-            ...rule("sysBp"),
-            // Re-check the pair when systolic changes so a now-valid ordering
-            // clears the diastolic error (and vice-versa).
-            onBlur: () => {
-              if (getValues("diaBp").trim()) void trigger("diaBp");
-            },
-          })}
-        />
-        <Vital
-          label="Diastolic BP (mmHg)"
-          id="diaBp"
-          disabled={disabled}
-          error={errors.diaBp?.message}
-          {...register("diaBp", {
-            validate: (value: string) =>
-              validateVital("diaBp", value) ??
-              validateBloodPressurePair(getValues("sysBp"), value) ??
-              true,
-          })}
-        />
-        <Vital
-          label="Temperature (°C)"
-          id="temperature"
-          step="0.1"
-          disabled={disabled}
-          error={errors.temperature?.message}
-          {...register("temperature", rule("temperature"))}
-        />
-      </div>
-      {!disabled && (
-        <div className="flex justify-end">
-          <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving…" : initial ? "Update vitals" : "Save vitals"}
-          </Button>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="primaryComplaint">Primary complaint</Label>
+          <Textarea
+            id="primaryComplaint"
+            rows={3}
+            placeholder="Why is the patient here today? e.g. cough for 3 days, infected wound on right hand…"
+            disabled={disabled}
+            aria-invalid={!!errors.primaryComplaint}
+            {...register("primaryComplaint", {
+              maxLength: {
+                value: PRIMARY_COMPLAINT_MAX,
+                message: `Keep the complaint under ${PRIMARY_COMPLAINT_MAX} characters.`,
+              },
+            })}
+          />
+          {errors.primaryComplaint && <FieldError message={errors.primaryComplaint.message} />}
         </div>
-      )}
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Vital
+            label="Height (cm)"
+            id="height"
+            disabled={disabled}
+            error={errors.height?.message}
+            {...register("height", rule("height"))}
+          />
+          <Vital
+            label="Weight (kg)"
+            id="weight"
+            disabled={disabled}
+            error={errors.weight?.message}
+            {...register("weight", rule("weight"))}
+          />
+          <Vital
+            label="Pulse (bpm)"
+            id="pulse"
+            disabled={disabled}
+            error={errors.pulse?.message}
+            {...register("pulse", rule("pulse"))}
+          />
+          <Vital
+            label="Systolic BP (mmHg)"
+            id="sysBp"
+            disabled={disabled}
+            error={errors.sysBp?.message}
+            {...register("sysBp", {
+              ...rule("sysBp"),
+              // Re-check the pair when systolic changes so a now-valid ordering
+              // clears the diastolic error (and vice-versa).
+              onBlur: () => {
+                if (getValues("diaBp").trim()) void trigger("diaBp");
+              },
+            })}
+          />
+          <Vital
+            label="Diastolic BP (mmHg)"
+            id="diaBp"
+            disabled={disabled}
+            error={errors.diaBp?.message}
+            {...register("diaBp", {
+              validate: (value: string) =>
+                validateVital("diaBp", value) ??
+                validateBloodPressurePair(getValues("sysBp"), value) ??
+                true,
+            })}
+          />
+          <Vital
+            label="Temperature (°C)"
+            id="temperature"
+            step="0.1"
+            disabled={disabled}
+            error={errors.temperature?.message}
+            {...register("temperature", rule("temperature"))}
+          />
+        </div>
+        {!disabled && (
+          <div className="flex justify-end">
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : initial ? "Update vitals" : "Save vitals"}
+            </Button>
+          </div>
+        )}
+      </fieldset>
     </form>
   );
 }

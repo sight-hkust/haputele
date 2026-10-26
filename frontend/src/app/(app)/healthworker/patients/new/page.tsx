@@ -30,7 +30,7 @@ export default function RegisterPatientPage() {
     "This patient has not been registered. Discard the captured signature and entered details, or Cancel to continue registration.",
   );
   const leave = () => {
-    if (confirmLeave()) router.push("/healthworker/patients");
+    if (confirmLeave("/healthworker/patients")) router.push("/healthworker/patients");
   };
 
   return (

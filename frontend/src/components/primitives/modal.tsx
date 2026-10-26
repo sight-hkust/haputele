@@ -18,7 +18,7 @@ export function Modal({
   description,
   children,
   className,
-  dirty = false,
+  dirty,
 }: {
   open: boolean;
   onClose: () => void;
@@ -26,7 +26,7 @@ export function Modal({
   description?: ReactNode;
   children: ReactNode;
   className?: string;
-  /** Non-input edits, such as cropping or drawing, needing discard confirmation. */
+  /** Controlled form dirtiness; when omitted, captured input/canvas edits are used. */
   dirty?: boolean;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -57,7 +57,7 @@ export function Modal({
 
   const requestClose = () => {
     if (
-      (dirty || editedRef.current) &&
+      (dirty ?? editedRef.current) &&
       !window.confirm("Discard the unsaved changes in this dialog?")
     )
       return;

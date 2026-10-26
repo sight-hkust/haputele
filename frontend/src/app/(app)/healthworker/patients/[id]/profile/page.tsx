@@ -59,6 +59,7 @@ export default function PatientProfilePage() {
           submitting={upsert.isPending}
           errorMessage={upsert.error ? explainError(upsert.error.error) : null}
           onCancel={() => router.push(`/healthworker/patients/${patient.id}`)}
+          cancelHref={`/healthworker/patients/${patient.id}`}
           onSubmit={(req) => upsert.mutateAsync(req)}
           onSaved={() => router.push(`/healthworker/patients/${patient.id}`)}
         />

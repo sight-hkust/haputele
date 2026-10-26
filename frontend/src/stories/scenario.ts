@@ -70,7 +70,10 @@ export function createHandlers(options: ScenarioOptions = {}) {
         options.appointmentStatus === "completed" ? ("completed" as const) : ("draft" as const),
       signedAt: options.appointmentStatus === "completed" ? fixtures.timestamp : null,
     },
-    preconsult: options.appointmentStatus === "scheduled" ? null : fixtures.preconsult,
+    preconsult:
+      options.appointmentStatus === "scheduled" || options.appointmentStatus === "consent_pending"
+        ? null
+        : fixtures.preconsult,
     sessionConsent:
       options.sessionConsent === false || options.appointmentStatus === "scheduled"
         ? null

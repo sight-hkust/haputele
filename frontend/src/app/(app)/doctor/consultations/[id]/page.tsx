@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 
 import { ConsultationFlow } from "@/components/doctor/consultation-flow";
@@ -21,6 +22,47 @@ export default function ConsultationPage() {
   const consult = useConsultation(cid);
   // Pull appointment via the consultation's appointmentId once we have it.
   const apt = useAppointment(consult.data?.appointmentId ?? null);
+  const safetyRef = useRef<HTMLDivElement>(null);
+  const ready = !!consult.data && !!apt.data;
+  const readOnly = consult.data?.status === "completed";
+
+  useEffect(() => {
+    if (!ready || !safetyRef.current) return;
+    const safety = safetyRef.current;
+    const root = document.documentElement;
+    const actions = readOnly
+      ? null
+      : document.querySelector<HTMLElement>("[data-consultation-actions]");
+    const previousTop = root.style.scrollPaddingTop;
+    const previousBottom = root.style.scrollPaddingBottom;
+    // Native keyboard focus scrolling must account for both sticky regions,
+    // including wrapped names, warnings and action labels on narrow screens.
+    const updateClearance = () => {
+      const top = Number.parseFloat(getComputedStyle(safety).top) || 0;
+      const safetyHeight = safety.getBoundingClientRect().height;
+      const bottom = actions ? actions.getBoundingClientRect().height + 32 : 16;
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      // On short screens (including the on-screen keyboard), leave enough
+      // space for a multiline field and its label rather than pinning context.
+      const sticky = viewportHeight - top - safetyHeight - bottom - 16 >= 160;
+      safety.style.position = sticky ? "sticky" : "static";
+      root.style.scrollPaddingTop = `${top + (sticky ? safetyHeight : 0) + 16}px`;
+      root.style.scrollPaddingBottom = `${bottom}px`;
+    };
+    const observer = new ResizeObserver(updateClearance);
+    observer.observe(safety);
+    if (actions) observer.observe(actions);
+    updateClearance();
+    window.addEventListener("resize", updateClearance);
+    window.visualViewport?.addEventListener("resize", updateClearance);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateClearance);
+      window.visualViewport?.removeEventListener("resize", updateClearance);
+      root.style.scrollPaddingTop = previousTop;
+      root.style.scrollPaddingBottom = previousBottom;
+    };
+  }, [ready, readOnly]);
 
   // Hard-fail only when there's nothing to show. The consultation query
   // refetches on every window focus (staleTime 0), so a transient refetch
@@ -52,15 +94,13 @@ export default function ConsultationPage() {
     );
   }
 
-  const readOnly = consult.data.status === "completed";
-
   return (
     <div className="mx-auto flex max-w-[96rem] flex-col gap-4 px-4 py-6 sm:px-6">
       <BackLink href={`/doctor/appointments/${apt.data.appointment.id}`}>
         Back to appointment
       </BackLink>
 
-      <div className="sticky top-16 z-20">
+      <div ref={safetyRef} className="sticky top-16 z-20">
         <PatientSafetyStrip patient={apt.data.patient} profile={apt.data.profile} />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--muted-foreground)]">
