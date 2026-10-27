@@ -183,6 +183,24 @@ cd frontend && npm run generate:api   # exports the OpenAPI spec from the app, t
 
 CI runs the same command: PRs fail if the committed client drifted, and a push to `main` that somehow lands stale gets an automated "regenerate API client" PR to merge.
 
+### Product walkthrough and Storybook
+
+The source-backed [codebase walkthrough](docs/CODEBASE.md) maps the architecture,
+all implemented features, routes, roles, and user journeys. The
+[Storybook guide](docs/STORYBOOK.md) documents the runnable UI catalog and its
+integration limits:
+
+```bash
+cd frontend
+npm run storybook          # localhost:6006; add -- --port 6016 if occupied
+npm run build-storybook    # portable static site in frontend/storybook-static/
+```
+
+Storybook renders real screens/components with isolated synthetic API responses;
+no backend services or clinical records are required. Start with **Start here**
+and **Journeys / End to end**, then inspect role screens and clinical/primitive
+states. Production behavior and API clients are unchanged.
+
 ## Project layout
 
 ```
