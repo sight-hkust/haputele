@@ -9,9 +9,10 @@ an already-signed consultation.
 from __future__ import annotations
 
 import base64
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
+from sqlalchemy import select
 
 from app.database import SessionLocal
 from app.models import Account, Appointment, Consultation, Doctor, Patient
@@ -190,3 +191,75 @@ def test_partial_medication_survives_draft_but_cannot_be_signed(doctor_client, s
     assert unchanged["status"] == "draft"
     assert unchanged["signedAt"] is None
     assert medication.items() <= unchanged["medications"][0].items()
+
+
+def test_follow_up_slot_collision_leaves_draft_unsigned_and_retryable(
+    doctor_client, scenario, monkeypatch
+):
+    doctor_id, cid = scenario
+    occupied_at = datetime.now(timezone.utc) + timedelta(days=7)
+    retry_at = occupied_at + timedelta(hours=1)
+    with SessionLocal() as db:
+        consultation = db.get(Consultation, cid)
+        appointment_id = consultation.appointment_id
+        appointment = db.get(Appointment, appointment_id)
+        occupied = Appointment(
+            patient_id=appointment.patient_id,
+            doctor_id=doctor_id,
+            scheduled_at=occupied_at,
+            status="scheduled",
+        )
+        db.add(occupied)
+        db.commit()
+        occupied_id = occupied.appointment_id
+
+    saved = doctor_client.patch(
+        f"/consultations/{cid}", json={"notes": {"complaint": "Persistent headache"}},
+        headers=_csrf(doctor_client),
+    )
+    assert saved.status_code == 200, saved.text
+
+    # Bypass only the optimistic check: the real database index rejects the
+    # insert at flush, exactly as it does when another request wins the race.
+    with monkeypatch.context() as race:
+        race.setattr("app.routers.consultations._slot_taken", lambda *args, **kwargs: False)
+        rejected = doctor_client.post(
+            f"/consultations/{cid}/submit",
+            json={
+                "signature": _PNG_A_URL,
+                "followUp": {"kind": "appointment", "scheduledAt": occupied_at.isoformat()},
+            },
+            headers=_csrf(doctor_client),
+        )
+    assert rejected.status_code == 409, rejected.text
+    assert rejected.json()["detail"]["error"] == "doctor_slot_taken"
+    reopened = doctor_client.get(f"/consultations/{cid}")
+    assert reopened.status_code == 200, reopened.text
+    assert reopened.json() == saved.json()
+    with SessionLocal() as db:
+        assert db.get(Consultation, cid).signature_key is None
+        assert db.get(Appointment, appointment_id).status == "in_progress"
+        active_ids = set(db.scalars(select(Appointment.appointment_id).where(
+            Appointment.doctor_id == doctor_id,
+            Appointment.status != "cancelled",
+        )))
+        assert active_ids == {appointment_id, occupied_id}
+
+    retried = doctor_client.post(
+        f"/consultations/{cid}/submit",
+        json={
+            "signature": _PNG_A_URL,
+            "followUp": {"kind": "appointment", "scheduledAt": retry_at.isoformat()},
+        },
+        headers=_csrf(doctor_client),
+    )
+    assert retried.status_code == 200, retried.text
+    result = retried.json()
+    assert result["consultation"]["status"] == "completed"
+    assert result["consultation"]["signedAt"] is not None
+    assert result["consultation"]["notes"]["complaint"] == "Persistent headache"
+    assert result["appointment"]["status"] == "completed"
+    follow_up = result["followUpAppointment"]
+    assert result["consultation"]["followUpAppointmentId"] == follow_up["id"]
+    assert datetime.fromisoformat(follow_up["scheduledAt"].replace("Z", "+00:00")) == retry_at
+    assert _consultation_signature_bytes(cid) == _PNG_A
