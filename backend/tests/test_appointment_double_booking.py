@@ -218,9 +218,8 @@ def test_queue_book_returns_409_and_leaves_the_entry_pending(
 
 # ── The helper's discrimination ───────────────────────────────────────
 #
-# Every slot-claiming write runs inside claiming_doctor_slot, including the
-# consultation follow-up path, whose API-level setup is disproportionate to
-# what it would add over these.
+# The consultation follow-up API rollback and retry regression lives in
+# test_consultation_signature.py, alongside the signature/draft fixtures.
 
 class _Diag:
     def __init__(self, constraint_name: str | None) -> None:
