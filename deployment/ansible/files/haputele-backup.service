@@ -1,0 +1,19 @@
+# Nightly Postgres backup. Triggered by haputele-backup.timer; run by hand with
+# `systemctl start haputele-backup.service`. Output goes to the journal —
+# `journalctl -u haputele-backup` for history, `-f` to follow a manual run.
+[Unit]
+Description=HapuTele Postgres backup to R2
+Documentation=https://github.com/sight-hkust/haputele/issues/121
+# The script talks to the db container, so there is nothing to do until Docker
+# is up. On a reboot this holds the run until the stack can actually answer.
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/haputele/backup.sh
+# The dump is a plaintext copy of every patient record; keep it to root.
+User=root
+UMask=0077
+# A backup that hangs must not sit holding a transaction snapshot forever.
+TimeoutStartSec=30min
