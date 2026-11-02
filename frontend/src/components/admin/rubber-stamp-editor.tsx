@@ -140,7 +140,7 @@ export function RubberStampEditor({
                 Rotate right
               </Button>
               {totalRotation !== 0 && (
-                <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+                <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
                   {formatAngle(totalRotation)}°
                 </span>
               )}
@@ -149,12 +149,12 @@ export function RubberStampEditor({
               <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
                 <span>Fine angle (straighten)</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono">{fine.toFixed(1)}°</span>
+                  <span className="tabular-nums">{fine.toFixed(1)}°</span>
                   {fine !== 0 && (
                     <button
                       type="button"
                       onClick={() => setFine(0)}
-                      className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)] hover:underline"
+                      className="text-xs font-medium text-[var(--accent)] hover:underline"
                     >
                       Reset
                     </button>
@@ -176,9 +176,7 @@ export function RubberStampEditor({
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Preview
-            </div>
+            <div className="text-field-label text-[var(--muted-foreground)]">Preview</div>
             <div
               className="flex h-32 items-center justify-center rounded-xl border border-[var(--border)] p-2"
               style={{
@@ -206,7 +204,7 @@ export function RubberStampEditor({
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
                 <span>Threshold</span>
-                <span className="font-mono">{threshold}</span>
+                <span className="tabular-nums">{threshold}</span>
               </div>
               <input
                 type="range"

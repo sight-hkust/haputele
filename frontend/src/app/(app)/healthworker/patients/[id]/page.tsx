@@ -16,7 +16,8 @@ import { PatientForm } from "@/components/healthworker/patient-form";
 import { ProfileSummary } from "@/components/healthworker/profile-summary";
 import { useDeletePatient, usePatient, usePatientHistory, useUpdatePatient } from "@/lib/use-api";
 import { explainError } from "@/lib/error-codes";
-import { fmtAge, fmtDate, fmtDateTime, fullName } from "@/lib/format";
+import { displayDob } from "@/lib/dob-date";
+import { fmtAge, fmtDateTime, fullName } from "@/lib/format";
 import { parseIdParam, throwNotFoundIf404 } from "@/lib/not-found";
 
 export default function PatientDetailPage() {
@@ -29,6 +30,7 @@ export default function PatientDetailPage() {
   const del = useDeletePatient();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [editDirty, setEditDirty] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (patientQ.isLoading) {
@@ -57,6 +59,15 @@ export default function PatientDetailPage() {
   const profile = patientQ.data.profile;
   const age = fmtAge(patient.dob);
   const apts = historyQ.data?.appointments ?? [];
+  const closeEdit = () => {
+    setEditOpen(false);
+    setEditDirty(false);
+  };
+  const cancelEdit = () => {
+    if (update.isPending) return;
+    if (editDirty && !window.confirm("Discard the unsaved changes in this dialog?")) return;
+    closeEdit();
+  };
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12">
@@ -75,19 +86,37 @@ export default function PatientDetailPage() {
             .join(" · ") || undefined
         }
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link href={`/healthworker/appointments/new?patientId=${patient.id}`}>
               <Button variant="secondary" size="md">
                 <CalendarPlus className="h-4 w-4" />
                 Book
               </Button>
             </Link>
-            <Button variant="secondary" size="md" onClick={() => setEditOpen(true)}>
+            <Link
+              href={`/healthworker/patients/${patient.id}/profile`}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-medium hover:bg-[var(--muted)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+            >
+              <ClipboardList className="h-4 w-4" aria-hidden />
+              Patient intake
+            </Link>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setEditOpen(true)}
+              aria-label="Edit patient demographics"
+            >
               <Pencil className="h-4 w-4" />
               Edit
             </Button>
-            <Button variant="ghost" size="md" onClick={() => setDeleteOpen(true)}>
-              <Trash2 className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => setDeleteOpen(true)}
+              aria-label={`Delete patient ${fullName(patient)}`}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              Delete
             </Button>
           </div>
         }
@@ -100,20 +129,18 @@ export default function PatientDetailPage() {
         <Card variant="elevated" className="p-8">
           <div className="mb-6 flex items-center gap-2">
             <ClipboardList className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-              Demographics
-            </h2>
+            <h2 className="text-section-heading text-[var(--accent)]">Demographics</h2>
           </div>
           <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <Field label="Date of birth" value={fmtDate(patient.dob)} />
+            <Field label="Date of birth" value={displayDob(patient.dob) || "—"} />
             <Field label="Gender" value={patient.gender} />
-            <Field label="National ID" value={patient.nationalId ?? "—"} mono />
+            <Field label="National ID" value={patient.nationalId ?? "—"} />
             <Field label="Contact" value={patient.contact ?? "—"} />
             <Field
               label="Preferred language"
               value={patient.language ? patient.language.toUpperCase() : "—"}
             />
-            <Field label="Screening ref" value={patient.screeningRef ?? "—"} mono />
+            <Field label="Screening ref" value={patient.screeningRef ?? "—"} />
             <Field className="sm:col-span-2" label="Address" value={patient.address ?? "—"} />
           </dl>
         </Card>
@@ -122,9 +149,7 @@ export default function PatientDetailPage() {
         <Card className="p-8">
           <div className="mb-5 flex items-center gap-2">
             <History className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
-              Appointment history
-            </h2>
+            <h2 className="text-section-heading text-[var(--accent)]">Appointment history</h2>
           </div>
           {historyQ.isLoading ? (
             <p className="text-sm text-[var(--muted-foreground)]">Loading…</p>
@@ -138,8 +163,8 @@ export default function PatientDetailPage() {
                     href={`/healthworker/appointments/${a.id}`}
                     className="block rounded-lg px-2 py-3 transition-colors hover:bg-[var(--muted)]/40"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
                         {fmtDateTime(a.scheduledAt)}
                       </span>
                       <StatusBadge status={a.status} />
@@ -155,7 +180,8 @@ export default function PatientDetailPage() {
       {/* Edit modal */}
       <Modal
         open={editOpen}
-        onClose={() => !update.isPending && setEditOpen(false)}
+        onClose={() => !update.isPending && closeEdit()}
+        dirty={editDirty}
         title="Edit patient"
         className="max-w-3xl"
       >
@@ -163,13 +189,14 @@ export default function PatientDetailPage() {
           mode="update"
           initial={patient}
           submitting={update.isPending}
+          onDirtyChange={setEditDirty}
           errorMessage={update.error ? explainError(update.error.error) : null}
           submitLabel="Save changes"
           onSubmit={(s) => {
             if (s.mode !== "update") return;
-            update.mutate(s.payload, { onSuccess: () => setEditOpen(false) });
+            update.mutate(s.payload, { onSuccess: closeEdit });
           }}
-          onCancel={() => setEditOpen(false)}
+          onCancel={cancelEdit}
         />
       </Modal>
 
@@ -205,20 +232,16 @@ export default function PatientDetailPage() {
 function Field({
   label,
   value,
-  mono,
   className,
 }: {
   label: string;
   value: React.ReactNode;
-  mono?: boolean;
   className?: string;
 }) {
   return (
     <div className={className}>
-      <dt className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-        {label}
-      </dt>
-      <dd className={mono ? "mt-1 font-mono text-sm" : "mt-1 text-sm"}>{value}</dd>
+      <dt className="text-field-label text-[var(--muted-foreground)]">{label}</dt>
+      <dd className="mt-1 break-words text-clinical-value">{value}</dd>
     </div>
   );
 }

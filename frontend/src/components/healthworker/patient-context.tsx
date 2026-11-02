@@ -46,9 +46,7 @@ export function PatientContext({
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-3">
-      <p className="font-mono text-xs uppercase tracking-[0.15em] text-amber-800">
-        This patient already has
-      </p>
+      <p className="text-field-label text-amber-800">This patient already has</p>
 
       {upcoming.length > 0 && (
         <div className="flex flex-col gap-1.5">
@@ -64,7 +62,7 @@ export function PatientContext({
                 >
                   <Clock className="h-3 w-3" />
                   {fmtDateTime(a.scheduledAt)} · {a.doctorName}
-                  <span className="font-mono uppercase tracking-[0.1em] text-xs text-amber-700">
+                  <span className="text-xs font-medium text-amber-700">
                     ({statusLabel(a.status)})
                   </span>
                 </Link>
@@ -76,7 +74,7 @@ export function PatientContext({
 
       {pending.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <p className="text-xs font-semibold text-amber-900">
+          <p className="text-xs font-semibold tabular-nums text-amber-900">
             {pending.length} pending queue entr{pending.length === 1 ? "y" : "ies"}
           </p>
           <ul className="flex flex-col gap-1.5">
@@ -87,12 +85,18 @@ export function PatientContext({
               >
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                    <span className="font-medium capitalize">{e.source.replace("_", "-")}</span>
+                    <span className="font-medium">
+                      {e.source === "walk_in"
+                        ? "Walk-in"
+                        : e.source === "screening"
+                          ? "Screening"
+                          : "Follow-up"}
+                    </span>
                     {e.priority === "urgent" && (
-                      <span className="font-mono text-xs uppercase text-rose-600">urgent</span>
+                      <span className="text-xs font-medium text-rose-600">Urgent</span>
                     )}
                     {e.targetDate && (
-                      <span className="text-amber-800/80">
+                      <span className="tabular-nums text-amber-800/80">
                         {fmtTargetWeek(e.targetDate).toLowerCase()}
                       </span>
                     )}

@@ -10,8 +10,7 @@ export default function AdminHealthworkersPage() {
     <AccountsSurface
       header={{
         label: "Admin",
-        title: "Health worker",
-        highlight: "accounts.",
+        title: "Health worker accounts.",
         subtitle:
           "Create health worker accounts and manage them — rename, reset a password, disable, or delete. Click a row to open it. Doctors are managed from the Doctors page.",
       }}

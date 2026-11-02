@@ -15,15 +15,62 @@
   --color-card: var(--card);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-calistoga), Georgia, serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-sans:
+    var(--font-inter), "Nirmala UI", "Noto Sans Sinhala", "Noto Sans Tamil", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  --text-page-heading: 1.5rem;
+  --text-page-heading--line-height: 2rem;
+  --text-page-heading--font-weight: 600;
+  --text-page-heading--letter-spacing: -0.01em;
+  --text-section-heading: 1.125rem;
+  --text-section-heading--line-height: 1.5rem;
+  --text-section-heading--font-weight: 600;
+  --text-field-label: 0.875rem;
+  --text-field-label--line-height: 1.25rem;
+  --text-field-label--font-weight: 500;
+  --text-field-label--letter-spacing: normal;
+  --text-clinical-value: 1rem;
+  --text-clinical-value--line-height: 1.5rem;
 
   --shadow-accent: 0 4px 14px rgba(0, 82, 255, 0.25);
   --shadow-accent-lg: 0 8px 24px rgba(0, 82, 255, 0.35);
 
   --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
   --animate-fade-in-up: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  /* Login hero. `orbit` spins the dashed ring and the icon carrier together;
+     `orbit-reverse` runs on each icon to cancel that spin so it stays upright.
+     Same duration on both, or the icons drift. These use the standalone
+     `rotate` property, not `transform`, so they compose with the positioning
+     transform each icon needs rather than overwriting it. */
+  --animate-orbit: orbit 60s linear infinite;
+  --animate-orbit-reverse: orbit-reverse 60s linear infinite;
+  --animate-breathe: breathe 6s ease-in-out infinite;
+
+  @keyframes orbit {
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  @keyframes orbit-reverse {
+    to {
+      rotate: -360deg;
+    }
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: scale(1.08);
+      opacity: 0.8;
+    }
+  }
 
   @keyframes pulse-soft {
     0%,
@@ -80,8 +127,10 @@
     color: var(--foreground);
   }
 
-  /* Honor user motion preferences. Continuous animations (rotating ring,
-     floating cards) collapse to nothing; entrance/transition feel snappy. */
+  /* Honor user motion preferences. Continuous animations (the login hero's
+     rotating ring and orbiting icons) collapse to nothing; entrance/transition
+     feel snappy. This only reaches CSS animations — anything driven from JS by
+     framer-motion has to opt in separately via useReducedMotion(). */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

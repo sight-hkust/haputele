@@ -7,8 +7,7 @@ export default function SysadminAccountsPage() {
     <AccountsSurface
       header={{
         label: "Sys-admin",
-        title: "Account",
-        highlight: "management.",
+        title: "Account management.",
         subtitle:
           "Every account except your own — admins and healthworkers fully, doctors via the shared doctor tools. Click a row to manage it. (Manage your own ops account from the System page.)",
       }}

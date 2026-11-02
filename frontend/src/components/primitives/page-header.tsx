@@ -6,19 +6,16 @@ import type { ReactNode } from "react";
 import { SectionLabel } from "@/components/primitives/section-label";
 import { fadeInUp, staggerTight } from "@/lib/motion";
 
-// Consistent page-header treatment — section label, gradient-highlighted title,
-// optional subtitle, optional action slot. Keeps every screen on-design.
+// Task-first heading with optional context, supporting text and an action.
 export function PageHeader({
   label,
   title,
-  highlight,
   subtitle,
   action,
   pulseLabel = false,
 }: {
   label?: string;
   title: ReactNode;
-  highlight?: string;
   subtitle?: ReactNode;
   action?: ReactNode;
   pulseLabel?: boolean;
@@ -28,25 +25,16 @@ export function PageHeader({
       initial="hidden"
       animate="visible"
       variants={staggerTight}
-      className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
+      className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-2">
         {label && (
           <motion.div variants={fadeInUp}>
             <SectionLabel pulse={pulseLabel}>{label}</SectionLabel>
           </motion.div>
         )}
-        <motion.h1
-          variants={fadeInUp}
-          className="font-display text-[2rem] leading-[1.08] tracking-[-0.02em] sm:text-[2.75rem]"
-        >
+        <motion.h1 variants={fadeInUp} className="text-page-heading text-balance">
           {title}
-          {highlight && (
-            <>
-              {" "}
-              <span className="gradient-text">{highlight}</span>
-            </>
-          )}
         </motion.h1>
         {subtitle && (
           <motion.p

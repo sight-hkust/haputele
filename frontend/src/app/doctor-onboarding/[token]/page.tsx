@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { DoctorForm, type DoctorFormPayload } from "@/components/admin/doctor-form";
 import { Button } from "@/components/primitives/button";
 import { Card } from "@/components/primitives/card";
@@ -81,13 +82,8 @@ export default function DoctorOnboardingPage() {
 
       <div className="absolute inset-x-0 top-0 z-10 px-6 py-6 sm:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] shadow-accent">
-              <span className="font-display text-lg leading-none text-white">H</span>
-            </div>
-            <span className="font-display text-xl tracking-[-0.01em]">HapuTele</span>
-          </div>
-          <span className="hidden font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)] sm:block">
+          <BrandLogo />
+          <span className="hidden text-xs text-[var(--muted-foreground)] sm:block">
             Practitioner onboarding
           </span>
         </div>
@@ -143,11 +139,7 @@ export default function DoctorOnboardingPage() {
  * ────────────────────────────────────────────────────────────────── */
 
 function LoadingPanel() {
-  return (
-    <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-      Checking your invitation…
-    </span>
-  );
+  return <span className="text-sm text-[var(--muted-foreground)]">Checking your invitation…</span>;
 }
 
 function InvalidPanel({ reason }: { reason: string }) {
@@ -165,9 +157,7 @@ function InvalidPanel({ reason }: { reason: string }) {
       </motion.div>
       <motion.div variants={fadeInUp} className="flex items-start gap-3">
         <AlertCircle className="mt-1 h-6 w-6 flex-shrink-0 text-rose-600" />
-        <h1 className="font-display text-3xl leading-tight tracking-[-0.02em] sm:text-4xl">
-          This link can&rsquo;t be used.
-        </h1>
+        <h1 className="text-page-heading">This link can&rsquo;t be used.</h1>
       </motion.div>
       <motion.p
         variants={fadeIn}
@@ -207,9 +197,7 @@ function SuccessPanel({
       </motion.div>
       <motion.div variants={fadeInUp} className="flex items-start gap-3">
         <CheckCircle2 className="mt-1 h-6 w-6 flex-shrink-0 text-emerald-600" />
-        <h1 className="font-display text-3xl leading-tight tracking-[-0.02em] sm:text-4xl">
-          {title}
-        </h1>
+        <h1 className="text-page-heading">{title}</h1>
       </motion.div>
       <motion.p
         variants={fadeIn}
@@ -288,11 +276,8 @@ function RotationPanel({
         <SectionLabel pulse>Invite verified</SectionLabel>
       </motion.div>
 
-      <motion.h1
-        variants={fadeInUp}
-        className="font-display text-[2.5rem] leading-[1.05] tracking-[-0.02em] sm:text-5xl"
-      >
-        Welcome, <span className="gradient-text">Dr. {peek.familyName ?? ""}</span>.
+      <motion.h1 variants={fadeInUp} className="text-page-heading">
+        Welcome, Dr. {peek.familyName ?? ""}.
       </motion.h1>
 
       <motion.p
@@ -454,18 +439,11 @@ function NewDoctorPanel({
         <SectionLabel pulse>Invite verified</SectionLabel>
       </motion.div>
 
-      <motion.h1
-        variants={fadeInUp}
-        className="font-display text-[2.5rem] leading-[1.05] tracking-[-0.02em] sm:text-5xl"
-      >
+      <motion.h1 variants={fadeInUp} className="text-page-heading">
         {peek.familyName ? (
-          <>
-            Welcome, <span className="gradient-text">Dr. {peek.familyName}</span>.
-          </>
+          <>Welcome, Dr. {peek.familyName}.</>
         ) : (
-          <>
-            Set up your <span className="gradient-text">HapuTele</span> account.
-          </>
+          <>Set up your HapuTele account.</>
         )}
       </motion.h1>
 
@@ -480,14 +458,12 @@ function NewDoctorPanel({
 
       {/* Email is fixed by the invite — show read-only for clarity. */}
       <motion.div variants={fadeInUp}>
-        <Card className="flex items-center justify-between gap-3 border-[var(--accent)]/20 bg-[var(--accent)]/[0.04] p-4">
-          <div>
-            <div className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              Invitation email
-            </div>
-            <div className="mt-1 text-sm">{peek.email}</div>
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-[var(--accent)]/20 bg-[var(--accent)]/[0.04] p-4">
+          <div className="min-w-0">
+            <div className="text-field-label text-[var(--muted-foreground)]">Invitation email</div>
+            <div className="mt-1 break-words text-clinical-value">{peek.email}</div>
           </div>
-          <span className="rounded-full bg-[var(--accent)]/10 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
+          <span className="rounded-full bg-[var(--accent)]/10 px-2.5 py-1 text-xs text-[var(--accent)]">
             Locked
           </span>
         </Card>

@@ -123,14 +123,14 @@ export const SignatureCanvas = forwardRef<
           style={{ touchAction: "none" }}
         />
         {!hasInk && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]/60">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-[var(--muted-foreground)]/60">
             Sign here
           </div>
         )}
       </div>
       <div className="flex items-center justify-between text-xs">
         <span
-          className={`font-mono uppercase tracking-[0.12em] ${hasInk ? "text-emerald-600" : "text-[var(--muted-foreground)]"}`}
+          className={`font-medium ${hasInk ? "text-emerald-600" : "text-[var(--muted-foreground)]"}`}
         >
           {hasInk ? "Signed" : "Not signed yet"}
         </span>

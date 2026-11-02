@@ -32,19 +32,24 @@ export default function GlobalError({
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <span
             style={{
-              fontFamily: "ui-monospace, monospace",
               fontSize: 12,
-              textTransform: "uppercase",
-              letterSpacing: "0.15em",
               color: "#6b7280",
             }}
           >
             Error
           </span>
-          <h1 style={{ margin: 0, fontSize: 36, fontWeight: 600, letterSpacing: "-0.02em" }}>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: 24,
+              lineHeight: "32px",
+              fontWeight: 600,
+              letterSpacing: "-0.01em",
+            }}
+          >
             Application error
           </h1>
-          <p style={{ margin: 0, maxWidth: 420, color: "#6b7280", fontSize: 14, lineHeight: 1.6 }}>
+          <p style={{ margin: 0, maxWidth: 420, color: "#6b7280", fontSize: 16, lineHeight: 1.5 }}>
             The app failed to start. Your data is safe — reloading usually fixes it. If it keeps
             happening, contact your administrator.
           </p>
@@ -53,7 +58,6 @@ export default function GlobalError({
               margin: "8px auto 0",
               maxWidth: 420,
               wordBreak: "break-word",
-              fontFamily: "ui-monospace, monospace",
               fontSize: 12,
               color: "#6b7280",
               border: "1px solid #e5e7eb",
@@ -62,7 +66,12 @@ export default function GlobalError({
             }}
           >
             {error.message || "Unknown error"}
-            {error.digest && <span style={{ opacity: 0.7 }}> · {error.digest}</span>}
+            {error.digest && (
+              <span style={{ fontFamily: "ui-monospace, monospace", opacity: 0.7 }}>
+                {" "}
+                · {error.digest}
+              </span>
+            )}
           </p>
         </div>
         <button
@@ -74,6 +83,7 @@ export default function GlobalError({
             borderRadius: 12,
             border: "1px solid #e5e7eb",
             backgroundColor: "#ffffff",
+            fontFamily: "inherit",
             fontSize: 14,
             fontWeight: 500,
             cursor: "pointer",

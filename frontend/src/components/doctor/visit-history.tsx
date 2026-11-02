@@ -40,7 +40,7 @@ export function VisitHistoryPanel({
       >
         <div className="flex items-center gap-2">
           <History className="h-4 w-4 text-[var(--accent)]" />
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--accent)]">
+          <span className="text-field-label tabular-nums text-[var(--accent)]">
             Previous visits {items.length > 0 ? `· ${items.length}` : ""}
           </span>
         </div>
@@ -84,7 +84,7 @@ function VisitItem({ item }: { item: HistoryConsultationItem }) {
   return (
     <li className="rounded-xl border border-[var(--border)] p-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
           {fmtDate(item.date)}
         </span>
       </div>

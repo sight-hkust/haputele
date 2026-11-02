@@ -19,9 +19,7 @@ export function RoleBadge({ role, className }: { role: Role; className?: string 
       )}
     >
       <Icon className="h-3.5 w-3.5 text-[var(--accent)]" />
-      <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--foreground)]">
-        {label}
-      </span>
+      <span className="text-field-label text-[var(--foreground)]">{label}</span>
     </span>
   );
 }
