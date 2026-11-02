@@ -238,7 +238,7 @@ export function DatePicker({
               onChange={(event) =>
                 setVisibleMonth(new Date(Number(event.target.value), visibleMonth.getMonth(), 1))
               }
-              className="h-9 rounded-lg border border-transparent bg-transparent px-2 font-mono text-sm tabular-nums focus-visible:border-[var(--accent)] focus-visible:outline-none"
+              className="h-9 rounded-lg border border-transparent bg-transparent px-2 text-sm tabular-nums focus-visible:border-[var(--accent)] focus-visible:outline-none"
             >
               {years.map((year) => (
                 <option key={year} value={year}>
@@ -266,7 +266,7 @@ export function DatePicker({
                   key={day}
                   role="columnheader"
                   aria-label={day}
-                  className="py-1 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]"
+                  className="py-1 text-center text-sm text-[var(--muted-foreground)]"
                 >
                   {day}
                 </span>

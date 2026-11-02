@@ -120,7 +120,7 @@ export default function DoctorDetailPage() {
 
       {/* Audit line — when the submission came in, who acted on it, and a
           link back to a prior rejected attempt if this is a reapplication. */}
-      <div className="-mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-[var(--muted-foreground)]">
+      <div className="-mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs tabular-nums text-[var(--muted-foreground)]">
         {d.submittedAt && <span>Submitted {fmtDateTime(d.submittedAt)}</span>}
         {d.approvedAt && (
           <span>
@@ -209,7 +209,7 @@ export default function DoctorDetailPage() {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {reapplyJustSent && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700">
                   <CheckCircle2 className="h-3 w-3" />
                   Sent
                 </span>
@@ -267,7 +267,7 @@ export default function DoctorDetailPage() {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {inviteJustSent && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs uppercase tracking-[0.12em] text-emerald-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700">
                   <CheckCircle2 className="h-3 w-3" />
                   Sent
                 </span>

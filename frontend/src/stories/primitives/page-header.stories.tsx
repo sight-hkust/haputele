@@ -9,8 +9,7 @@ const meta = {
   tags: ["autodocs"],
   args: {
     label: "Healthworker",
-    title: "Your",
-    highlight: "appointments",
+    title: "Your appointments",
     subtitle: "Schedule consultations and prepare patient details.",
     pulseLabel: false,
   },
@@ -23,7 +22,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Production animated header composition: SectionLabel, display heading, optional gradient highlight, subtitle and action slot. Layout stacks on smaller viewports.",
+          "Task heading with a readable context label, supporting text and an optional action. Uses the shared sans-serif heading scale and stacks on smaller viewports.",
       },
     },
   },
@@ -36,5 +35,5 @@ export const WithAction: Story = {
 };
 export const LiveLabel: Story = { args: { label: "Consultation in progress", pulseLabel: true } };
 export const Minimal: Story = {
-  args: { label: undefined, title: "Patient profile", highlight: undefined, subtitle: undefined },
+  args: { label: undefined, title: "Patient profile", subtitle: undefined },
 };

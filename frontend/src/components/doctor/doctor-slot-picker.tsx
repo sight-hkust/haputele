@@ -243,8 +243,8 @@ export function DoctorSlotPicker({
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="flex min-w-[10rem] flex-col items-center">
-          <span className="text-sm font-semibold tracking-[-0.01em]">{weekLabel}</span>
-          <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+          <span className="text-sm font-semibold">{weekLabel}</span>
+          <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
             {weekRangeLabel}
           </span>
         </div>
@@ -266,7 +266,7 @@ export function DoctorSlotPicker({
 
       {/* Chip grid ────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+        <span className="text-field-label text-[var(--muted-foreground)]">
           Open slots that week (15-min)
         </span>
         {loading ? (
@@ -279,7 +279,7 @@ export function DoctorSlotPicker({
               const slots = slotsByDay.get(d.ymd) ?? [];
               return (
                 <div key={d.ymd} className="grid grid-cols-[6.5rem_1fr] items-baseline gap-3">
-                  <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                  <span className="text-xs tabular-nums text-[var(--muted-foreground)]">
                     {d.label}
                   </span>
                   {slots.length === 0 ? (
@@ -287,23 +287,25 @@ export function DoctorSlotPicker({
                       {declaredDays.has(d.ymd) ? "No slots remaining" : "No declared availability"}
                     </span>
                   ) : (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {slots.map((slot) => {
                         const isSelected = valueAsMs === slot.getTime();
                         return (
-                          <button
+                          <Button
                             key={slot.getTime()}
                             type="button"
+                            variant="secondary"
+                            aria-pressed={isSelected}
                             onClick={() => pickSlot(slot)}
                             className={cn(
-                              "rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums transition-all",
+                              "rounded-lg px-3 tabular-nums",
                               isSelected
-                                ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]"
-                                : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-400",
+                                ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)] hover:border-[var(--accent)] hover:bg-[var(--accent)]"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-400 hover:bg-emerald-50",
                             )}
                           >
                             {formatInTimeZone(slot, APP_TIMEZONE, "HH:mm")}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -327,6 +329,7 @@ export function DoctorSlotPicker({
             ariaLabel="Choose another appointment date"
           />
           <Select
+            aria-label="Appointment time"
             value={customTime}
             onChange={(e) => setCustomTime(e.target.value)}
             disabled={!customDate}

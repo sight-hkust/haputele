@@ -16,7 +16,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "The real Input paired with the shared uppercase Label. Password fields own their reveal toggle; number inputs reject exponent and signed-number keys.",
+          "The real Input with 16px editable text and a shared 14px sentence-case Label. Password fields own their reveal toggle; number inputs reject exponent and signed-number keys.",
       },
     },
   },

@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -68,6 +69,7 @@ export function PatientForm({
   errorMessage,
   onSubmit,
   onCancel,
+  onDirtyChange,
   submitLabel = "Save patient",
 }: {
   initial?: Patient | null;
@@ -76,6 +78,7 @@ export function PatientForm({
   errorMessage?: string | null;
   onSubmit: (s: PatientFormSubmit) => void;
   onCancel?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
   submitLabel?: string;
 }) {
   const {
@@ -84,7 +87,7 @@ export function PatientForm({
     setValue,
     trigger,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(mode === "create" ? createSchema : baseSchema) as never,
     defaultValues: {
@@ -99,6 +102,10 @@ export function PatientForm({
       address: initial?.address ?? "",
     },
   });
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const submit = handleSubmit((v) => {
     const dob = parseDob(v.dob);

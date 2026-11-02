@@ -70,7 +70,10 @@ export function createHandlers(options: ScenarioOptions = {}) {
         options.appointmentStatus === "completed" ? ("completed" as const) : ("draft" as const),
       signedAt: options.appointmentStatus === "completed" ? fixtures.timestamp : null,
     },
-    preconsult: options.appointmentStatus === "scheduled" ? null : fixtures.preconsult,
+    preconsult:
+      options.appointmentStatus === "scheduled" || options.appointmentStatus === "consent_pending"
+        ? null
+        : fixtures.preconsult,
     sessionConsent:
       options.sessionConsent === false || options.appointmentStatus === "scheduled"
         ? null
@@ -612,13 +615,28 @@ export function createHandlers(options: ScenarioOptions = {}) {
               scheduledAt: followUp.scheduledAt ?? fixtures.scheduledAt,
             };
             state.appointments.push(followUpAppointment);
+            state.consultation.followUpAppointmentId = followUpAppointment.id;
+            state.consultation.followUpDate = followUpAppointment.scheduledAt.slice(0, 10);
+            state.consultation.followUpWeeks = null;
             return json({ consultation: state.consultation, appointment, followUpAppointment });
           }
           if (followUp?.kind === "weeks") {
+            const weeks = followUp.weeks ?? 4;
+            const target = new Date(state.consultation.signedAt);
+            target.setUTCDate(target.getUTCDate() + weeks * 7 - ((target.getUTCDay() + 6) % 7));
+            const targetDate = target.toISOString().slice(0, 10);
+            state.consultation.followUpWeeks = weeks;
+            state.consultation.followUpDate = targetDate;
+            state.consultation.followUpAppointmentId = null;
             const followUpQueueEntry = {
               ...fixtures.queueEntry,
               id: state.queue.length + 1,
               source: "follow_up" as const,
+              patientId: appointment?.patientId ?? fixtures.patient.id,
+              preferredDoctorId: appointment?.doctorId ?? fixtures.doctor.id,
+              targetDate,
+              notes: null,
+              sourceMeta: { sourceConsultationId: state.consultation.id, followUpWeeks: weeks },
             };
             state.queue.push(followUpQueueEntry);
             return json({ consultation: state.consultation, appointment, followUpQueueEntry });

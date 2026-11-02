@@ -29,9 +29,7 @@ export default function RouteError({
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-          Loading…
-        </span>
+        <span className="text-sm text-[var(--muted-foreground)]">Loading…</span>
       </main>
     );
   }
@@ -39,13 +37,10 @@ export default function RouteError({
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
       <div className="flex flex-col gap-2">
-        <span
-          role="alert"
-          className="font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]"
-        >
+        <span role="alert" className="text-sm text-[var(--muted-foreground)]">
           Error
         </span>
-        <h1 className="font-display text-4xl tracking-[-0.02em] sm:text-5xl">Something broke</h1>
+        <h1 className="text-page-heading">Something broke</h1>
         <p className="max-w-md text-[var(--muted-foreground)]">
           An unexpected error occurred while rendering this page. Your data is safe — try again, or
           head back and re-open the page.
@@ -53,9 +48,9 @@ export default function RouteError({
         {/* Ops handle: the message plus the digest Next assigns for prod
             stack matching. Safe to show — it's an internal tool and the
             message came from our own code, not user input. */}
-        <p className="mx-auto mt-2 max-w-md break-words rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2 font-mono text-xs text-[var(--muted-foreground)]">
+        <p className="mx-auto mt-2 max-w-md break-words rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2 text-xs text-[var(--muted-foreground)]">
           {error.message || "Unknown error"}
-          {error.digest && <span className="opacity-70"> · {error.digest}</span>}
+          {error.digest && <span className="font-mono opacity-70"> · {error.digest}</span>}
         </p>
       </div>
       <div className="flex items-center gap-3">

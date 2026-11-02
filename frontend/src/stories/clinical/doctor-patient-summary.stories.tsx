@@ -28,3 +28,6 @@ export const LegacyDemographics: Story = {
 export const AttachmentFailure: Story = {
   parameters: scenario({ role: "doctor", path: "/doctor/appointments/1", error: true }),
 };
+export const UnrecordedAllergies: Story = {
+  args: { profile: { ...profile, allergies: [] } },
+};

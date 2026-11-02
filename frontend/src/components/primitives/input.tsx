@@ -27,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           onKeyDown?.(event);
         }}
         className={cn(
-          "flex h-12 w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-2 text-sm",
+          "flex h-12 w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-2 text-clinical-value",
           "text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/60",
           "transition-all duration-200",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:border-transparent",
@@ -75,10 +75,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelHTMLAttributes<HTMLLabelE
     // biome-ignore lint/a11y/noLabelWithoutControl: callers associate the control via htmlFor forwarded in props
     <label
       ref={ref}
-      className={cn(
-        "font-mono text-xs uppercase tracking-[0.15em] text-[var(--muted-foreground)]",
-        className,
-      )}
+      className={cn("text-field-label text-[var(--foreground)]", className)}
       {...props}
     />
   ),

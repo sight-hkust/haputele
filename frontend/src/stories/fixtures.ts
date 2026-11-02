@@ -115,6 +115,7 @@ export const consultation: Consultation = {
   signedAt: null,
   followUpWeeks: null,
   followUpDate: null,
+  followUpAppointmentId: null,
 };
 export const consent: Consent = {
   id: 1,

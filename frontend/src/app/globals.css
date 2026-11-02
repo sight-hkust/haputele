@@ -15,9 +15,23 @@
   --color-card: var(--card);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-calistoga), Georgia, serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-sans:
+    var(--font-inter), "Nirmala UI", "Noto Sans Sinhala", "Noto Sans Tamil", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  --text-page-heading: 1.5rem;
+  --text-page-heading--line-height: 2rem;
+  --text-page-heading--font-weight: 600;
+  --text-page-heading--letter-spacing: -0.01em;
+  --text-section-heading: 1.125rem;
+  --text-section-heading--line-height: 1.5rem;
+  --text-section-heading--font-weight: 600;
+  --text-field-label: 0.875rem;
+  --text-field-label--line-height: 1.25rem;
+  --text-field-label--font-weight: 500;
+  --text-field-label--letter-spacing: normal;
+  --text-clinical-value: 1rem;
+  --text-clinical-value--line-height: 1.5rem;
 
   --shadow-accent: 0 4px 14px rgba(0, 82, 255, 0.25);
   --shadow-accent-lg: 0 8px 24px rgba(0, 82, 255, 0.35);
