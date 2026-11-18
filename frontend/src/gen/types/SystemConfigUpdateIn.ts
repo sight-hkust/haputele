@@ -11,4 +11,6 @@ export type SystemConfigUpdateIn = {
     appTimezone?: (string | null) | undefined;
     exportTimezone?: (string | null) | undefined;
     masterConsentVersion?: (string | null) | undefined;
+    publicSupportEmail?: (string | null) | undefined;
+    publicSupportPhone?: (string | null) | undefined;
 };

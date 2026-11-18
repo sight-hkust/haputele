@@ -1,3 +1,4 @@
+export { accountSupportAuthAccountSupportGet } from './accountSupportAuthAccountSupportGet'
 export { approveDoctorDoctorsDoctorIdApprovePost } from './approveDoctorDoctorsDoctorIdApprovePost'
 export { bookQueueEntryQueueQidBookPost } from './bookQueueEntryQueueQidBookPost'
 export { cancelAppointmentAppointmentsApptIdCancelPost } from './cancelAppointmentAppointmentsApptIdCancelPost'

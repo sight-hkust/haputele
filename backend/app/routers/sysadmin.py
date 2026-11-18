@@ -12,10 +12,11 @@ delete) used to live here too. It moved to `routers/accounts.py`, which
 serves both administrative roles and derives what each may touch from the
 caller's role. This module keeps only what is genuinely sys-admin-only.
 """
+import re
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from sqlalchemy.orm import Session
 
@@ -64,6 +65,8 @@ def system_config(_: CurrentUser = Depends(require_role("sys-admin"))) -> dict:
         "instituteAddressLines": cfg.institute_address_lines,
         "instituteContactPhone": cfg.institute_contact_phone,
         "instituteContactEmail": cfg.institute_contact_email,
+        "publicSupportEmail": cfg.public_support_email,
+        "publicSupportPhone": cfg.public_support_phone,
         "appTimezone": cfg.app_timezone,
         "exportTimezone": cfg.export_timezone,
         "masterConsentVersion": cfg.master_consent_version,
@@ -80,6 +83,20 @@ class SystemConfigUpdateIn(BaseModel):
     appTimezone: str | None = None
     exportTimezone: str | None = None
     masterConsentVersion: str | None = None
+    publicSupportEmail: EmailStr | None = None
+    publicSupportPhone: str | None = Field(default=None, max_length=32)
+
+    @field_validator("publicSupportEmail", "publicSupportPhone", mode="before")
+    @classmethod
+    def clean_public_contact(cls, value):
+        return _clean(value) if isinstance(value, str) else value
+
+    @field_validator("publicSupportPhone")
+    @classmethod
+    def validate_public_phone(cls, value: str | None) -> str | None:
+        if value is not None and not re.fullmatch(r"\+?[0-9]{5,15}", re.sub(r"[ ().-]", "", value)):
+            raise unprocessable("invalid_support_phone")
+        return value
 
 
 def _valid_timezone(tz: str | None) -> bool:
@@ -111,6 +128,10 @@ def update_system_config(
         if tz_key in fields and not _valid_timezone(fields[tz_key]):
             raise unprocessable("invalid_timezone")
 
+    if "publicSupportEmail" in fields:
+        row.public_support_email = payload.publicSupportEmail
+    if "publicSupportPhone" in fields:
+        row.public_support_phone = payload.publicSupportPhone
     if "instituteName" in fields:
         row.institute_name = _clean(payload.instituteName)
     if "instituteAddressLines" in fields:
@@ -136,6 +157,8 @@ def update_system_config(
         "instituteAddressLines": row.institute_address_lines,
         "instituteContactPhone": row.institute_contact_phone,
         "instituteContactEmail": row.institute_contact_email,
+        "publicSupportEmail": row.public_support_email,
+        "publicSupportPhone": row.public_support_phone,
         "appTimezone": row.app_timezone,
         "exportTimezone": row.export_timezone,
         "masterConsentVersion": row.master_consent_version,

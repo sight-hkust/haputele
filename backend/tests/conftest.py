@@ -189,6 +189,7 @@ def _wipe_setup_state():
             "  initialized_at = NULL, institute_name = NULL, "
             "  institute_address_lines = NULL, institute_contact_phone = NULL, "
             "  institute_contact_email = NULL, app_timezone = NULL, "
+            "  public_support_email = NULL, public_support_phone = NULL, "
             "  export_timezone = NULL, master_consent_version = NULL, "
             "  updated_at = NOW() "
             "WHERE id = 1"

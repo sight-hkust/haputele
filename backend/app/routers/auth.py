@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..deps import CurrentUser, current_user, db_dep, require_role
 from ..errors import forbidden, unauthorized, unprocessable
-from ..models import Account, Doctor
+from ..models import Account, Doctor, SystemConfig
 from ..schemas import LoginIn, LoginOut, MeOut
 from ..security import (
     clear_session_cookies,
@@ -90,6 +90,21 @@ def logout(
 @router.get("/me", response_model=MeOut)
 def me(user: CurrentUser = Depends(current_user)) -> MeOut:
     return MeOut(username=user.username, role=user.role)
+
+
+class PublicAccountSupport(BaseModel):
+    email: str | None
+    phone: str | None
+
+
+@router.get("/account-support", response_model=PublicAccountSupport)
+def account_support(response: Response, db: Session = Depends(db_dep)) -> PublicAccountSupport:
+    response.headers["Cache-Control"] = "no-store"
+    email, phone = db.execute(
+        select(SystemConfig.public_support_email, SystemConfig.public_support_phone)
+        .where(SystemConfig.id == 1)
+    ).one()
+    return PublicAccountSupport(email=email, phone=phone)
 
 
 class PasswordRecoveryRequest(BaseModel):

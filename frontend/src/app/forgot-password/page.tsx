@@ -6,11 +6,13 @@ import { type FormEvent, useEffect, useState } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/primitives/button";
 import { Input, Label } from "@/components/primitives/input";
+import type { PublicAccountSupport } from "@/gen/types/PublicAccountSupport";
 import { ApiError, api } from "@/lib/api";
 import { newPasswordError, PASSWORD_LENGTH_HINT } from "@/lib/credentials";
 import { explainError } from "@/lib/error-codes";
 
 export default function ForgotPasswordPage() {
+  const [support, setSupport] = useState<PublicAccountSupport | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +24,23 @@ export default function ForgotPasswordPage() {
   useEffect(() => {
     setToken(new URLSearchParams(window.location.hash.slice(1)).get("token") || "");
   }, []);
+
+  useEffect(() => {
+    if (token !== "") return;
+    const abort = new AbortController();
+    api<PublicAccountSupport>("/auth/account-support", {
+      signal: abort.signal,
+      cache: "no-store",
+      skipAuthRedirect: true,
+    })
+      .then((data) => {
+        if (!abort.signal.aborted) setSupport(data);
+      })
+      .catch(() => {
+        /* Role-specific assistance remains available offline. */
+      });
+    return () => abort.abort();
+  }, [token]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -117,6 +136,28 @@ export default function ForgotPasswordPage() {
           <h2 id="recovery-help" className="font-semibold">
             No verified email or can’t access your inbox?
           </h2>
+          {(support?.email || support?.phone) && (
+            <div className="space-y-1">
+              <h3 className="font-medium">Contact clinic account support</h3>
+              {support.email && (
+                <p>
+                  <a
+                    href={`mailto:${encodeURIComponent(support.email).replace("%40", "@")}`}
+                    className="break-all underline"
+                  >
+                    {support.email}
+                  </a>
+                </p>
+              )}
+              {support.phone && (
+                <p>
+                  <a href={`tel:${support.phone.replace(/[ ().-]/g, "")}`} className="underline">
+                    {support.phone}
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
           <dl className="grid gap-2">
             <div>
               <dt className="font-medium">Health worker or doctor</dt>

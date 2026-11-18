@@ -5,6 +5,8 @@ import { PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/credentials";
 
 const MESSAGES: Record<string, string> = {
   incorrect_current_password: "Your current password was incorrect.",
+  invalid_support_phone:
+    "Enter a phone number with 5 to 15 digits, including the country code if needed.",
   invalid_recovery_link:
     "This reset link has expired or has already been used. Request a fresh link from the sign-in page.",
   password_too_long: "Choose a shorter password (up to 72 bytes).",
