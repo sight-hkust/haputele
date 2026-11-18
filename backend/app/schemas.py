@@ -1129,8 +1129,6 @@ class SystemConfigOut(BaseModel):
     instituteName: str | None
     instituteAddressLines: list[str] | None
     instituteContactPhone: str | None
-    publicSupportEmail: str | None
-    publicSupportPhone: str | None
     instituteContactEmail: str | None
     appTimezone: str | None
     exportTimezone: str | None

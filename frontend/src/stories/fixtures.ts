@@ -196,8 +196,6 @@ export const systemConfig: SystemConfig = {
   instituteAddressLines: ["Demo clinic", "Haputale, Sri Lanka"],
   instituteContactPhone: "0700000000",
   instituteContactEmail: "clinic@example.test",
-  publicSupportPhone: null,
-  publicSupportEmail: null,
   appTimezone: "Asia/Colombo",
   exportTimezone: "Asia/Colombo",
   masterConsentVersion: "demo-v1",

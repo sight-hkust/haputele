@@ -34,8 +34,6 @@ class LiveConfig:
     app_timezone: str | None
     export_timezone: str | None
     master_consent_version: str | None
-    public_support_email: str | None = None
-    public_support_phone: str | None = None
 
     @property
     def is_initialized(self) -> bool:
@@ -72,8 +70,6 @@ def _from_row(row: SystemConfig | None) -> LiveConfig:
         app_timezone=row.app_timezone,
         export_timezone=row.export_timezone,
         master_consent_version=row.master_consent_version,
-        public_support_email=row.public_support_email,
-        public_support_phone=row.public_support_phone,
     )
 
 

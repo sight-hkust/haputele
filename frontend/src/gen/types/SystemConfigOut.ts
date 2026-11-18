@@ -12,8 +12,6 @@ export type SystemConfigOut = {
     instituteName: (string | null);
     instituteAddressLines: (string[] | null);
     instituteContactPhone: (string | null);
-    publicSupportEmail: (string | null);
-    publicSupportPhone: (string | null);
     instituteContactEmail: (string | null);
     appTimezone: (string | null);
     exportTimezone: (string | null);

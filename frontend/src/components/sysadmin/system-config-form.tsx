@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
@@ -64,9 +64,6 @@ export function SystemConfigForm({ config }: { config: SystemConfig }) {
   const [addressText, setAddressText] = useState(addrToText(config.instituteAddressLines));
   const [phone, setPhone] = useState(config.instituteContactPhone ?? "");
   const [email, setEmail] = useState(config.instituteContactEmail ?? "");
-  const [supportEmail, setSupportEmail] = useState(config.publicSupportEmail ?? "");
-  const [supportPhone, setSupportPhone] = useState(config.publicSupportPhone ?? "");
-  const supportEmailInput = useRef<HTMLInputElement>(null);
   const [appTz, setAppTz] = useState(config.appTimezone ?? "");
   const [exportTz, setExportTz] = useState(config.exportTimezone ?? "");
   const [consentVersion, setConsentVersion] = useState(config.masterConsentVersion ?? "");
@@ -76,14 +73,11 @@ export function SystemConfigForm({ config }: { config: SystemConfig }) {
     addressText !== addrToText(config.instituteAddressLines) ||
     phone !== (config.instituteContactPhone ?? "") ||
     email !== (config.instituteContactEmail ?? "") ||
-    supportEmail !== (config.publicSupportEmail ?? "") ||
-    supportPhone !== (config.publicSupportPhone ?? "") ||
     appTz !== (config.appTimezone ?? "") ||
     exportTz !== (config.exportTimezone ?? "") ||
     consentVersion !== (config.masterConsentVersion ?? "");
 
   function handleSave() {
-    if (supportEmailInput.current && !supportEmailInput.current.reportValidity()) return;
     setDone(false);
     // Trim free-text fields so a stray space can't drift the saved identity
     // away from what the setup wizard stores (it trims the same fields).
@@ -95,12 +89,6 @@ export function SystemConfigForm({ config }: { config: SystemConfig }) {
         instituteAddressLines: textToAddr(addressText),
         instituteContactPhone: phone.trim() || null,
         instituteContactEmail: email.trim() || null,
-        ...(supportEmail !== (config.publicSupportEmail ?? "") && {
-          publicSupportEmail: supportEmail.trim() || null,
-        }),
-        ...(supportPhone !== (config.publicSupportPhone ?? "") && {
-          publicSupportPhone: supportPhone.trim() || null,
-        }),
         appTimezone: appTz || null,
         exportTimezone: exportTz || null,
         masterConsentVersion: consentVersion.trim() || null,
@@ -141,31 +129,6 @@ export function SystemConfigForm({ config }: { config: SystemConfig }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="e.g. contact@clinic.lk"
-          />
-        </Field>
-      </Section>
-
-      <Section title="Public account support">
-        <Hint>
-          Anyone on the Forgot password page can see the contacts you enter here. Use a shared
-          clinic inbox or support line. Clear a field and save to remove it.
-        </Hint>
-        <Field label="Public support email">
-          <Input
-            aria-label="Public support email"
-            type="email"
-            ref={supportEmailInput}
-            value={supportEmail}
-            onChange={(e) => setSupportEmail(e.target.value)}
-          />
-        </Field>
-        <Field label="Public support phone">
-          <Input
-            aria-label="Public support phone"
-            type="tel"
-            maxLength={32}
-            value={supportPhone}
-            onChange={(e) => setSupportPhone(e.target.value)}
           />
         </Field>
       </Section>

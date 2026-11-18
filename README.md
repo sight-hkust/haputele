@@ -66,8 +66,6 @@ An admin gets no reach over `admin` or `sys-admin` rows — not create, not rese
 
 Use **Forgot password?** on the shared sign-in page. Doctors with verified account email can request a link that lasts 15 minutes. Health workers and doctors without a verified mailbox can contact the clinic administrator, clinic administrators can contact the system administrator, and system administrators can contact the authorized deployment operator. The email includes their sign-in username. Signed-in doctors can use **My profile → Change password** and confirm their current password. A password change signs the doctor out on every device and invalidates older recovery and setup links.
 
-The system administrator can publish a shared support email and phone under **System → Public account support**. Both fields start empty. Clearing a field removes it from the public recovery page. Private institute and staff contact fields remain separate.
-
 Migration 0019 leaves legacy email addresses unverified. For a doctor who has never completed an emailed setup link since the upgrade, or whose profile email has changed, confirm the address with the doctor and reissue their existing setup invitation as an administrator. Successful redemption verifies the mailbox. Self-service recovery requires an active, approved doctor and exactly one eligible account for that address. Configure the existing Resend credentials and `FRONTEND_BASE_URL` for delivery.
 
 ### Common operations

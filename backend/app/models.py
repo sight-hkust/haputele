@@ -276,8 +276,6 @@ class SystemConfig(Base):
     institute_address_lines: Mapped[list | None] = mapped_column(JSONB)
     institute_contact_phone: Mapped[str | None] = mapped_column(Text)
     institute_contact_email: Mapped[str | None] = mapped_column(Text)
-    public_support_email: Mapped[str | None] = mapped_column(Text)
-    public_support_phone: Mapped[str | None] = mapped_column(Text)
     app_timezone: Mapped[str | None] = mapped_column(Text)
     export_timezone: Mapped[str | None] = mapped_column(Text)
     master_consent_version: Mapped[str | None] = mapped_column(Text)
