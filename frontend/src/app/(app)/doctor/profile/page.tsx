@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Loader2, PenLine, Save } from "lucide-react";
 
 import { Button } from "@/components/primitives/button";
@@ -143,6 +144,10 @@ export default function DoctorProfilePage() {
           </Button>
         }
       />
+
+      <Link href="/doctor/change-password" className="self-start text-sm underline">
+        Change password
+      </Link>
 
       {update.isError && (
         <ErrorBanner>

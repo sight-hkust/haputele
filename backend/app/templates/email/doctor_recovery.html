@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block heading %}Reset your HapuTele password{% endblock %}
+{% block body %}
+<p>Your sign-in username is <strong>{{ username }}</strong>.</p>
+<p><a href="{{ link }}">Choose a new password</a> within 15 minutes. If you didn't request a reset, you can ignore this email.</p>
+{% endblock %}

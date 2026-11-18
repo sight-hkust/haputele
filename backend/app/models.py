@@ -24,6 +24,9 @@ class Account(Base):
     username: Mapped[str] = mapped_column(String(255), primary_key=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(20), nullable=False)
+    credential_version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    reset_digest: Mapped[str | None] = mapped_column(String(64))
+    reset_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Set by the sys-admin (ops super user) to soft-disable an operating
     # account. NULL = active; a non-NULL timestamp blocks /auth/login with
     # `account_disabled`. We soft-disable rather than delete because the
@@ -47,6 +50,7 @@ class Doctor(Base):
     family_name: Mapped[str] = mapped_column(String(255), nullable=False)
     contact: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
+    verified_email: Mapped[str | None] = mapped_column(String(255))
     slmc_registration_number: Mapped[str] = mapped_column(String(50), nullable=False)
     qualifications: Mapped[str] = mapped_column(Text, nullable=False)
     practitioner_address: Mapped[str] = mapped_column(Text, nullable=False)

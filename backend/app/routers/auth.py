@@ -1,20 +1,25 @@
-from fastapi import APIRouter, Depends, Response
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
+from pydantic import BaseModel, Field
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from ..config import settings
-from ..deps import CurrentUser, current_user, db_dep
-from ..errors import forbidden, unauthorized
+from ..deps import CurrentUser, current_user, db_dep, require_role
+from ..errors import forbidden, unauthorized, unprocessable
 from ..models import Account, Doctor
 from ..schemas import LoginIn, LoginOut, MeOut
 from ..security import (
     clear_session_cookies,
     create_token,
     generate_csrf_token,
+    hash_password,
     set_session_cookies,
     verify_password,
 )
+
+from ..services import password_recovery as recovery
+from ..services.credentials import NewPassword
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -58,7 +63,7 @@ def login(
             if doctor.approved_at is None:
                 raise forbidden("account_pending_approval")
 
-    token, expires = create_token(account.username, account.role)
+    token, expires = create_token(account.username, account.role, account.credential_version)
     set_session_cookies(
         response,
         session_token=token,
@@ -85,3 +90,50 @@ def logout(
 @router.get("/me", response_model=MeOut)
 def me(user: CurrentUser = Depends(current_user)) -> MeOut:
     return MeOut(username=user.username, role=user.role)
+
+
+class DoctorRecoveryRequest(BaseModel):
+    email: str = Field(min_length=1, max_length=255)
+
+
+class DoctorRecoveryReset(BaseModel):
+    token: str = Field(min_length=1, max_length=128)
+    password: NewPassword
+
+
+@router.post("/doctor-recovery/request", status_code=202, response_class=Response)
+def request_doctor_recovery(
+    body: DoctorRecoveryRequest, request: Request, tasks: BackgroundTasks
+) -> Response:
+    if recovery.allow_request(request.client.host if request.client else "unknown"):
+        tasks.add_task(recovery.send_recovery, body.email)
+    return Response(status_code=202)
+
+
+@router.post("/doctor-recovery/reset", status_code=204, response_class=Response)
+def reset_doctor_password(body: DoctorRecoveryReset, db: Session = Depends(db_dep)) -> Response:
+    recovery.reset_password(db, body.token, body.password)
+    return Response(status_code=204)
+
+
+class DoctorPasswordChange(BaseModel):
+    currentPassword: str = Field(min_length=1, max_length=1024)
+    newPassword: NewPassword
+
+
+@router.post("/doctor-password/change", status_code=204, response_class=Response)
+def change_doctor_password(
+    body: DoctorPasswordChange,
+    user: CurrentUser = Depends(require_role("doctor")),
+    db: Session = Depends(db_dep),
+) -> Response:
+    account = db.get(Account, user.username, with_for_update=True)
+    if not account or not verify_password(body.currentPassword, account.password):
+        raise unprocessable("incorrect_current_password")
+    if len(body.newPassword.encode()) > 72:
+        raise unprocessable("password_too_long")
+    account.password = hash_password(body.newPassword)
+    db.commit()
+    response = Response(status_code=204)
+    clear_session_cookies(response)
+    return response

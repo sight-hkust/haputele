@@ -4,6 +4,10 @@
 import { PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/credentials";
 
 const MESSAGES: Record<string, string> = {
+  incorrect_current_password: "Your current password was incorrect.",
+  invalid_recovery_link:
+    "This reset link has expired or has already been used. Request a fresh link from the sign-in page.",
+  password_too_long: "Choose a shorter password (up to 72 bytes).",
   invalid_credentials: "Incorrect username or password. Try again.",
   master_consent_required:
     "This patient has no active master consent — capture a fresh consent before continuing.",
