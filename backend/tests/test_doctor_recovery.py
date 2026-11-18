@@ -22,16 +22,18 @@ def verified(doctor):
 def request_link(client, doctor, captured):
     assert (
         client.post(
-            "/auth/doctor-recovery/request", json={"email": doctor.email.upper()}
+            "/auth/password-recovery/request", json={"email": doctor.email.upper()}
         ).status_code
         == 202
     )
-    return captured[-1][1]["context"]["link"].split("#token=")[1]
+    link = captured[-1][1]["context"]["link"]
+    assert link.startswith("http://testserver/forgot-password#token=")
+    return link.split("#token=")[1]
 
 
 def redeem(client, token):
     return client.post(
-        "/auth/doctor-recovery/reset", json={"token": token, "password": "Replacement passphrase"}
+        "/auth/password-recovery/reset", json={"token": token, "password": "Replacement passphrase"}
     )
 
 
@@ -78,7 +80,7 @@ def test_indistinguishable_ineligible_requests(
         elif condition == "disabled":
             db.get(Account, doctor.username).disabled_at = datetime.now(timezone.utc)
         db.commit()
-    res = client.post("/auth/doctor-recovery/request", json={"email": address})
+    res = client.post("/auth/password-recovery/request", json={"email": address})
     assert (res.status_code, res.content, captured_emails) == (202, b"", [])
 
 
@@ -146,7 +148,7 @@ def test_signed_in_change_invalidates_reset(client, seeded_doctor, email_env, ca
 
 
 def test_missing_token_redacts_password(client, initialized_system):
-    response = client.post("/auth/doctor-recovery/reset", json={"password": "SENSITIVE-PASSWORD"})
+    response = client.post("/auth/password-recovery/reset", json={"password": "SENSITIVE-PASSWORD"})
     assert response.status_code == 422
     assert "SENSITIVE-PASSWORD" not in response.text
 
@@ -156,9 +158,26 @@ def test_suppressed_delivery_clears_link(client, seeded_doctor, email_env, monke
     monkeypatch.setattr(password_recovery, "send_templated", lambda *a, **kw: None)
     assert (
         client.post(
-            "/auth/doctor-recovery/request", json={"email": seeded_doctor.email}
+            "/auth/password-recovery/request", json={"email": seeded_doctor.email}
         ).status_code
         == 202
     )
     with SessionLocal() as db:
         assert db.get(Account, seeded_doctor.username).reset_digest is None
+
+
+def test_previous_recovery_routes_still_accept_a_link(
+    client, seeded_doctor, captured_emails, email_env
+):
+    verified(seeded_doctor)
+    assert (
+        client.post(
+            "/auth/doctor-recovery/request", json={"email": seeded_doctor.email}
+        ).status_code
+        == 202
+    )
+    token = captured_emails[-1][1]["context"]["link"].split("#token=")[1]
+    response = client.post(
+        "/auth/doctor-recovery/reset", json={"token": token, "password": "Another valid passphrase"}
+    )
+    assert response.status_code == 204

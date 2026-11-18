@@ -80,7 +80,7 @@ def send_recovery(address: str) -> None:
         username = account.username
         db.commit()
         # The fragment stays out of proxy, server and referrer logs.
-        link = f"{settings.FRONTEND_BASE_URL.rstrip('/')}/doctor-recovery#token={token}"
+        link = f"{settings.FRONTEND_BASE_URL.rstrip('/')}/forgot-password#token={token}"
         try:
             message_id = send_templated(
                 db,

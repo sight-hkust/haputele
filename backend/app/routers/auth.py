@@ -92,26 +92,32 @@ def me(user: CurrentUser = Depends(current_user)) -> MeOut:
     return MeOut(username=user.username, role=user.role)
 
 
-class DoctorRecoveryRequest(BaseModel):
+class PasswordRecoveryRequest(BaseModel):
     email: str = Field(min_length=1, max_length=255)
 
 
-class DoctorRecoveryReset(BaseModel):
+class PasswordRecoveryReset(BaseModel):
     token: str = Field(min_length=1, max_length=128)
     password: NewPassword
 
 
-@router.post("/doctor-recovery/request", status_code=202, response_class=Response)
-def request_doctor_recovery(
-    body: DoctorRecoveryRequest, request: Request, tasks: BackgroundTasks
+@router.post(
+    "/doctor-recovery/request", status_code=202, response_class=Response, include_in_schema=False
+)
+@router.post("/password-recovery/request", status_code=202, response_class=Response)
+def request_password_recovery(
+    body: PasswordRecoveryRequest, request: Request, tasks: BackgroundTasks
 ) -> Response:
     if recovery.allow_request(request.client.host if request.client else "unknown"):
         tasks.add_task(recovery.send_recovery, body.email)
     return Response(status_code=202)
 
 
-@router.post("/doctor-recovery/reset", status_code=204, response_class=Response)
-def reset_doctor_password(body: DoctorRecoveryReset, db: Session = Depends(db_dep)) -> Response:
+@router.post(
+    "/doctor-recovery/reset", status_code=204, response_class=Response, include_in_schema=False
+)
+@router.post("/password-recovery/reset", status_code=204, response_class=Response)
+def reset_password_by_email(body: PasswordRecoveryReset, db: Session = Depends(db_dep)) -> Response:
     recovery.reset_password(db, body.token, body.password)
     return Response(status_code=204)
 

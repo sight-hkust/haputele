@@ -190,8 +190,8 @@ function LoginScreen() {
                 required
                 {...passwordCaps.capsLockProps}
               />
-              <Link href="/doctor-recovery" className="self-start text-sm underline">
-                Forgot your doctor password?
+              <Link href="/forgot-password" className="self-start text-sm underline">
+                Forgot password?
               </Link>
               <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
             </div>

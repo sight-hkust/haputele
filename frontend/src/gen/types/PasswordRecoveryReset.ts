@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-export type DoctorRecoveryRequest = {
+export type PasswordRecoveryReset = {
     /**
      * @minLength 1
-     * @maxLength 255
+     * @maxLength 128
      * @type string
     */
-    email: string;
+    token: string;
+    password: string;
 };
