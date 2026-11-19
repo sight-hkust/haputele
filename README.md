@@ -26,6 +26,18 @@ Once the containers are up:
 
 `?full=true` switches `/health` to a readiness probe: Postgres (`SELECT 1`), the object store (`head_bucket`), and LiveKit (TCP reachability of `LIVEKIT_URL`; empty URL → `not_configured`, which is not a failure) are checked concurrently. Every check is hard-bounded at ~2s and the whole probe is capped at 3s — a hung check is abandoned and reported as `timed out`, so the response can never stall. The response gains a `dependencies` block where each probed entry carries its measured `latency_ms`; error entries carry the exception class name only (internal endpoints stay out of the unauthenticated body; full detail goes to the api logs). Any failing configured dependency → `status: "degraded"` + `503`. Results are single-flight and cached for ~2s, so hammering the probe does not multiply connections to the backing services.
 
+### Test video calls locally with Docker LiveKit
+
+From the repo root, run `./scripts/local-livekit` to build and start the development stack with LiveKit. Open the app at `http://localhost:3000` (or your configured `FRONTEND_PORT`). The launcher uses Docker Compose 2.24.4+ and Python 3. It reads the current IPv4 address of `en0` on macOS. On Linux or a Mac using another interface, supply its address explicitly, for example `HAPUTELE_MEDIA_IP=192.168.1.25 ./scripts/local-livekit`. Run the launcher again after changing networks so Compose updates the published media ports and advertised address.
+
+The browser reaches signaling through `ws://livekit.localhost:7880` on loopback. The same hostname resolves to the LiveKit service inside Compose. Media uses the host’s LAN address on UDP 7882 or TCP 7881. Keep `rtc.enable_loopback_candidate: false`. In the two-browser Docker Desktop test, signaling succeeded with loopback candidates while media checks received zero replies. Advertising the LAN address, publishing media there, and excluding the container loopback candidate produced two-way audio and video on both the release and main builds.
+
+1. Use two browser profiles on the same computer. Sign in as a nurse and a doctor, and use a fresh test appointment with consent and vitals recorded.
+2. Start the meeting as the nurse. Open the consultation and join as the doctor. Verify each side receives the other’s sound and moving video. Use headphones. In Chrome, `chrome://webrtc-internals` shows the selected candidate pair and incoming audio packets and decoded video frames.
+3. If joining fails, run `./scripts/local-livekit logs --tail 100 livekit` and check the advertised IP against the current LAN address. The LiveKit check at `/health?full=true` verifies TCP reachability to signaling. Media requires a call. After an aborted join, the local webhook can move the appointment to `awaiting_notes` when the empty room closes, hiding Rejoin. Use a fresh appointment for the retry.
+
+Use `./scripts/local-livekit down` to stop the stack and keep its volumes. The local override supplies development signing keys and configures room webhooks automatically. Production uses its own deployment configuration.
+
 ### First-run setup
 
 Until `/setup/initialize` succeeds, the API is **uninitialized**: every non-`/health`, non-`/setup/*`, non-`/docs|/redoc|/openapi.json` route returns `409 setup_required`. On a fresh `docker compose up` (empty volumes), the api container prints a banner to stdout with a one-time setup token, and also writes it to `/data/setup-token` inside the container:
@@ -117,7 +129,6 @@ Notable env vars (full schema and inline comments in `.env.example`):
 | `MASTER_CONSENT_VERSION` | First-run prefill default for the setup wizard. Runtime value lives in `system_config.master_consent_version` after init; this env var is **not** consulted at request time post-init. |
 | `APP_TIMEZONE` | First-run prefill default for the setup wizard, plus Postgres `TZ` and container clocks. Runtime display zone lives in `system_config.app_timezone` after init. |
 | `LIVEKIT_URL` / `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` | Video transport. If any is empty, `POST /appointments/{id}/meeting-token` fails closed with `422 livekit_not_configured`. The same `LIVEKIT_API_SECRET` verifies the signed webhook callbacks at `POST /livekit/webhook`. |
-| `LIVEKIT_NODE_IP` | IP advertised to browsers as the WebRTC ICE candidate (only relevant to a self-hosted LiveKit container; ignored when `LIVEKIT_URL` points at LiveKit Cloud). |
 | `S3_ENDPOINT_URL` / `S3_REGION` / `S3_BUCKET` | Object storage target. In dev `S3_ENDPOINT_URL` points at the in-compose `rustfs` service (`http://rustfs:9000`); leave it **empty** for real AWS S3 so boto3 hits the regional endpoint. |
 | `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | Object-store credentials. Dev defaults are `rustfsadmin`/`rustfsadmin` (the rustfs container's keys); set real values in prod. |
 | `S3_FORCE_PATH_STYLE` | Must be `true` for rustfs / minio / most non-AWS endpoints; set `false` for AWS S3. |

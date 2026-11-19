@@ -53,19 +53,7 @@ services:
       retries: 20
       start_period: 10s
 
-  # Local self-hosted LiveKit is disabled — using LiveKit Cloud instead (see
-  # LIVEKIT_URL in .env). Re-enable this block to switch back to self-hosted.
-  # livekit:
-  #   image: livekit/livekit-server:latest
-  #   restart: unless-stopped
-  #   command: --dev --bind 0.0.0.0
-  #   environment:
-  #     LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:-devsecret-must-be-at-least-32-chars-long}"
-  #     NODE_IP: ${LIVEKIT_NODE_IP:-127.0.0.1}
-  #   ports:
-  #     - "7880:7880"
-  #     - "7881:7881"
-  #     - "7882:7882/udp"
+  # For local Docker video calls, run scripts/local-livekit (see README).
 
   api:
     build:

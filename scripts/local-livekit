@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+
+# Use the physical interface on macOS, even when a VPN owns the default route.
+# Compose also interpolates port bindings for commands that only inspect or
+# stop existing containers. These commands can run while the host is offline.
+case "${1:-}" in
+    down|stop|logs|ps)
+        export HAPUTELE_MEDIA_IP=127.0.0.1
+        exec docker compose -f docker-compose.yml -f compose.livekit.yml "$@"
+        ;;
+esac
+
+if [ -z "${HAPUTELE_MEDIA_IP:-}" ]; then
+    HAPUTELE_MEDIA_IP=$(ipconfig getifaddr en0 2>/dev/null || true)
+fi
+if ! python3 - "${HAPUTELE_MEDIA_IP:-}" <<'PY'
+import ipaddress
+import sys
+
+try:
+    ip = ipaddress.IPv4Address(sys.argv[1])
+except ValueError:
+    sys.exit(1)
+sys.exit(1 if ip.is_loopback or ip.is_unspecified or ip.is_multicast else 0)
+PY
+then
+    echo "Set HAPUTELE_MEDIA_IP to the IPv4 address of your active Wi-Fi or Ethernet interface." >&2
+    exit 1
+fi
+export HAPUTELE_MEDIA_IP
+if [ "$#" -eq 0 ]; then
+    set -- up -d --build
+fi
+exec docker compose -f docker-compose.yml -f compose.livekit.yml "$@"
