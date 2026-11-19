@@ -87,7 +87,7 @@ async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONR
     return JSONResponse(status_code=exc.status_code, content={"detail": body}, headers=headers)
 
 
-_SECRET_FIELD_NAMES = frozenset({"password", "passwordConfirm", "newPassword"})
+_SECRET_FIELD_NAMES = frozenset({"password", "passwordConfirm", "currentPassword", "newPassword", "token"})
 
 
 def _redact_secret_inputs(errors: list) -> list:

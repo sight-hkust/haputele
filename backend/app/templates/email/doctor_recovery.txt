@@ -1,0 +1,6 @@
+Your HapuTele sign-in username is {{ username }}.
+
+Choose a new password within 15 minutes:
+{{ link }}
+
+If you didn't request a reset, you can ignore this email.

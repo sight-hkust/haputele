@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from typing import Annotated
 
+import jwt
 from fastapi import Depends, Header, Request, Security
 from fastapi.security import APIKeyCookie
 from sqlalchemy.orm import Session
 
 from .database import get_db
 from .errors import forbidden, unauthorized
+from .models import Account
 from .security import (
     CSRF_COOKIE_NAME,
     CSRF_HEADER_NAME,
@@ -53,6 +55,7 @@ def _verify_csrf_for_unsafe(request: Request, header_value: str | None) -> None:
 def current_user(
     request: Request,
     token: Annotated[str | None, Security(_session_cookie)],
+    db: Annotated[Session, Depends(get_db)],
     csrf_token: Annotated[str | None, Header(alias=CSRF_HEADER_NAME)] = None,
 ) -> CurrentUser:
     if not token:
@@ -67,6 +70,11 @@ def current_user(
     role = payload.get("role")
     if not sub or not role:
         raise unauthorized("invalid_token")
+    if role == "doctor":
+        account = db.get(Account, sub)
+        if (account is None or account.role != role or account.disabled_at is not None
+                or account.credential_version != payload.get("cv", 0)):
+            raise unauthorized("invalid_token")
     _verify_csrf_for_unsafe(request, csrf_token)
     return CurrentUser(username=sub, role=role)
 

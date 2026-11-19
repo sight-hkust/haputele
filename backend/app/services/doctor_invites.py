@@ -62,7 +62,7 @@ def issue_rotation(db: Session, *, doctor_id: int) -> tuple[DoctorInvite, str]:
     the caller can reference its id in logs. Any prior live invites for
     this doctor are revoked so only the newest link works.
     """
-    doctor = db.get(Doctor, doctor_id)
+    doctor = db.get(Doctor, doctor_id, with_for_update=True)
     if doctor is None:
         raise not_found("doctor_not_found")
 
@@ -264,16 +264,23 @@ def consume_rotation(db: Session, *, raw_token: str, new_password: str) -> Docto
     if invite.doctor_id is None:
         # The token belongs to a new-doctor invite; call consume_new_doctor.
         raise unprocessable("wrong_invite_mode")
-    doctor = db.get(Doctor, invite.doctor_id)
+    doctor = db.get(Doctor, invite.doctor_id, with_for_update=True)
     if doctor is None:
         # Invite outlived the doctor row (cascaded delete should have
         # caught this, but defensive in case of admin races).
         raise not_found("doctor_not_found")
 
-    account = db.get(Account, doctor.username)
+    account = db.get(Account, doctor.username, with_for_update=True)
+    # A reset or reissue may have revoked this invite while we waited.
+    db.refresh(invite, with_for_update=True)
+    if invite.consumed_at is not None or invite.expires_at <= datetime.now(timezone.utc):
+        raise not_found("invite_not_found")
     if account is None:
         raise not_found("account_not_found")
 
+    if doctor.email.strip().lower() != invite.email.strip().lower():
+        raise not_found("invite_not_found")
+    doctor.verified_email = invite.email.strip().lower()
     account.password = hash_password(new_password)
     invite.consumed_at = datetime.now(timezone.utc)
     db.commit()
@@ -354,6 +361,7 @@ def consume_new_doctor(
         family_name=profile["familyName"],
         contact=profile["contact"],
         email=invite.email,
+        verified_email=invite.email,
         slmc_registration_number=profile["slmcRegistrationNumber"],
         qualifications=profile["qualifications"],
         practitioner_address=profile["practitionerAddress"],

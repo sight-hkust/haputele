@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -189,6 +190,9 @@ function LoginScreen() {
                 required
                 {...passwordCaps.capsLockProps}
               />
+              <Link href="/forgot-password" className="self-start text-sm underline">
+                Forgot password?
+              </Link>
               <CapsLockHint id={passwordCaps.hintId} show={passwordCaps.capsLockOn} />
             </div>
 

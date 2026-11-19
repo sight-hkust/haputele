@@ -31,9 +31,9 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def create_token(subject: str, role: str) -> tuple[str, datetime]:
+def create_token(subject: str, role: str, credential_version: int = 0) -> tuple[str, datetime]:
     expires = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MIN)
-    payload = {"sub": subject, "role": role, "exp": expires}
+    payload = {"sub": subject, "role": role, "exp": expires, "cv": credential_version}
     token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALG)
     return token, expires
 

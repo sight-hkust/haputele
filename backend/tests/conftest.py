@@ -267,6 +267,7 @@ def captured_emails(monkeypatch):
     # Patch at every import site we know about.
     monkeypatch.setattr("app.services.email.send_templated", _fake_send_templated)
     monkeypatch.setattr("app.services.email.send_email", _fake_send_email)
+    monkeypatch.setattr("app.services.password_recovery.send_templated", _fake_send_templated)
     monkeypatch.setattr("app.routers.doctors.send_templated", _fake_send_templated)
     return calls
 

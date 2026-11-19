@@ -787,6 +787,11 @@ def update_doctor(doctor_id: int, payload: DoctorUpdate, db: Session = Depends(d
         "active": "active",
     }
     data = payload.model_dump(exclude_unset=True)
+    if "email" in data and str(data["email"]).lower() != doctor.email.lower():
+        doctor.verified_email = None
+        account = db.get(Account, doctor.username)
+        if account:
+            account.reset_digest = account.reset_expires_at = None
 
     superseded: list[str] = []
     if "rubberStampImage" in data and data["rubberStampImage"] is not None:
