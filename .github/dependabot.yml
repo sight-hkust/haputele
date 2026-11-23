@@ -68,7 +68,15 @@ updates:
       time: "09:00"
       timezone: Asia/Colombo
 
-  # backend/Dockerfile — python:3.12-slim digest/patch refreshes.
+  # Base images (both Dockerfiles and docker-compose.yml) use floating tags
+  # with no digest pin. Dependabot keeps a tag's precision, so its only
+  # candidates are new runtime lines, which the ignore rules below hold back.
+  # Patch releases already arrive through the floating tag at build time.
+  # These entries open no PRs today. They stay configured so that pinning an
+  # image (FROM image:tag@sha256:...) gets weekly digest refreshes with no
+  # further config change.
+
+  # backend/Dockerfile — python:3.12-slim.
   - package-ecosystem: docker
     directory: /backend
     schedule:
@@ -77,9 +85,11 @@ updates:
       time: "09:00"
       timezone: Asia/Colombo
     ignore:
-      # Major = new Python line (3.12 → 3.13): a runtime upgrade we take
-      # deliberately, in step with CI's python-version, not as a drive-by PR.
-      - update-types: ["version-update:semver-major"]
+      # A new Python line (3.12 → 3.13) is a semver *minor* bump to
+      # Dependabot, so ignoring majors alone would let it through. It is a
+      # runtime upgrade taken deliberately, in step with CI's python-version.
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   # frontend/Dockerfile — node:24-alpine across all three stages.
   - package-ecosystem: docker
@@ -104,8 +114,8 @@ updates:
       time: "09:00"
       timezone: Asia/Colombo
     ignore:
-      # Postgres major = data-directory migration (pg_upgrade + downtime);
-      # patch/minor image refreshes still flow weekly.
+      # Postgres major = data-directory migration (pg_upgrade + downtime).
+      # The 16-alpine tag already floats to the newest 16.x release.
       - dependency-name: postgres
         update-types: ["version-update:semver-major"]
 

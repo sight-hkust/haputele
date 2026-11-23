@@ -114,9 +114,14 @@ providers.
   `svix`, `next`).
 * Every PR runs the same CI gates as hand-written code (`backend-test`,
   `frontend-checks`, `api-types-drift`, `build`).
-* Deliberately manual: Python/Node base-image majors and the Postgres major
-  in `docker-compose.yml` (runtime/data migrations), and the exact-pinned
-  `carlpett/sops` Terraform provider. `hkust-contrib/actions/*@latest` and
+* Deliberately manual: new Python lines (3.12 → 3.13, which Dependabot
+  classes as a *minor* bump), the Node major, and the Postgres major in
+  `docker-compose.yml` (runtime/data migrations), and the exact-pinned
+  `carlpett/sops` Terraform provider.
+* Base images use floating tags (`python:3.12-slim`, `node:24-alpine`,
+  `postgres:16-alpine`) that pick up patch releases at build time, so their
+  Dependabot entries open no PRs until an image is pinned by digest
+  (`image:tag@sha256:…`), after which they refresh the digest weekly. `hkust-contrib/actions/*@latest` and
   `rustfs/rustfs:latest` are moving tags Dependabot cannot track — pin them
   to versions to bring them under management.
 * Security updates are separate: they follow Dependabot security alerts and
@@ -125,6 +130,8 @@ providers.
 ---
 
 ## 7. Release Versioning
+
+Release tags use the hybrid CalVer/SemVer format `vYYMM.MINOR.PATCH`:
 
 * `YYMM` identifies the release year and month.
 * `MINOR` increments for feature releases within that month.
