@@ -62,6 +62,7 @@ import pytest
 
 from app.database import SessionLocal
 from app.models import Account
+from app.services.credentials import MAX_PASSWORD_LEN
 
 # A passphrase: internal whitespace, no edges. Must survive every path.
 _PASSPHRASE = "correct horse battery"
@@ -306,6 +307,24 @@ def test_create_account_stores_username_verbatim(client, seeded_setup_token):
         db.close()
 
 
+# ── bcrypt 5.0: passwords past 72 UTF-8 bytes ─────────────────────────
+
+
+def test_create_account_rejects_password_past_bcrypt_byte_limit(client, seeded_setup_token):
+    """bcrypt 5.0's hashpw raises past 72 UTF-8 bytes (4.x silently
+    truncated), so an unguarded value here would be a 500. The policy gate
+    must answer 422 before the hasher ever sees the value. One endpoint
+    proves the wire behaviour; all seven write paths share the same
+    `NewPassword` type, and test_credentials_service.py pins the validator.
+    """
+    _init_and_login(client, seeded_setup_token)
+    r = _create_account(client, password="p" * (MAX_PASSWORD_LEN + 28))
+    assert r.status_code == 422, r.text
+    body = r.json()["detail"]
+    assert body["error"] == "password_too_long"
+    assert body.get("max") == MAX_PASSWORD_LEN
+
+
 # ── path 4: POST /accounts/{username}/reset-password ─────────
 
 
@@ -394,6 +413,20 @@ def test_login_does_not_validate_password_policy(client, seeded_setup_token):
     client.post("/auth/logout", headers=_csrf(client))
 
     r = client.post("/auth/login", json={"username": "ops", "password": " short "})
+    assert r.status_code == 401
+    assert _error_code(r) == "invalid_credentials"
+
+
+def test_login_with_past_limit_password_is_invalid_credentials(client, seeded_setup_token):
+    """bcrypt 5.0 raises on >72-byte input, so an unguarded login would 500
+    for anyone who pastes an oversized password. verify_password's 4.x
+    truncation fallback reduces it to the ordinary mismatch — same code and
+    status as any wrong password, with no signal that it was unusual.
+    """
+    _init_and_login(client, seeded_setup_token)
+    client.post("/auth/logout", headers=_csrf(client))
+
+    r = client.post("/auth/login", json={"username": "ops", "password": "p" * 100})
     assert r.status_code == 401
     assert _error_code(r) == "invalid_credentials"
 

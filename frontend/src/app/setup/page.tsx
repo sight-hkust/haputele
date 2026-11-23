@@ -243,6 +243,7 @@ function TokenStage({ onVerified }: { onVerified: (setupSessionToken: string) =>
 // owns it. Codes not in the map fall through to `_form` (the top-level pill).
 const BACKEND_ERROR_TO_FIELD: Record<string, string> = {
   setup_password_too_short: "password",
+  password_too_long: "password",
   setup_password_weak: "password",
   setup_username_taken: "username",
   setup_address_required: "addressLines",

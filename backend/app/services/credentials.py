@@ -5,6 +5,13 @@ Policy (see the `Credential policy` section of the PR that introduced this):
   username — no whitespace at all, internal or external.
   password — no leading/trailing whitespace; internal whitespace is fine,
              so passphrases like "correct horse battery staple" stay usable.
+  password — at most MAX_PASSWORD_LEN UTF-8 bytes. bcrypt 5.0 raises on
+             longer input where 4.x silently truncated, so the cap lives
+             here, on the write paths — otherwise every credential write
+             with an oversized password would 500. Counted in bytes of the
+             UTF-8 encoding, not characters (a 25-character CJK passphrase
+             is 75 bytes).
+  password — at least MIN_PASSWORD_LEN characters.
 
 Both rules are exposed as **annotated Pydantic types** (`NewUsername`,
 `NewPassword`) rather than functions the caller must remember to invoke.
@@ -35,6 +42,14 @@ from ..errors import unprocessable
 
 MIN_PASSWORD_LEN = 10
 MAX_USERNAME_LEN = 255
+
+# bcrypt 5.0 hard-caps its input at 72 UTF-8 bytes — hashpw raises ValueError
+# past that where 4.x silently truncated. Enforced here so the write paths
+# answer 422 instead of the hasher 500ing. Bytes of the UTF-8 encoding, not
+# characters. security.py's 4.x-compat fallback keeps its own constant rather
+# than importing this one: it must stay 72 even if this policy ever loosens,
+# because what it reproduces is what 4.x stored, not what we allow today.
+MAX_PASSWORD_LEN = 72
 
 # Obvious-weak strings rejected outright. Lower-cased exact match.
 _WEAK_PASSWORDS = frozenset({
@@ -74,16 +89,19 @@ def validate_new_password(password: str) -> str:
     """Apply password rules; raise the first problem we find.
 
     Raises `password_whitespace` / `setup_password_weak` /
-    `setup_password_too_short`. (The `setup_*` prefixes are historical —
-    the wizard shipped first — and are kept so existing frontend copy
-    keeps resolving.)
+    `setup_password_too_short` / `password_too_long`. (The `setup_*` prefixes
+    are historical — the wizard shipped first — and are kept so existing
+    frontend copy keeps resolving.)
 
     Order matters. Edge-whitespace runs first because whitespace would
     otherwise pad a short secret past the length gate — "1234 5678 " is
     ten characters and four of them are real. Weak-check runs before
     length so a known-bad password like "password1" is reported as weak
     (you picked a known-bad base) rather than short — the security signal
-    is more useful than the typing-more signal.
+    is more useful than the typing-more signal. The byte cap runs after
+    the character minimum: anything over 72 UTF-8 bytes is necessarily at
+    least ten characters, so the minimum can never mask it — and it counts
+    encoded bytes, not characters, to match what bcrypt actually counts.
 
     Caller is responsible for username-taken checks (DB lookup).
     """
@@ -93,6 +111,8 @@ def validate_new_password(password: str) -> str:
         raise unprocessable("setup_password_weak")
     if len(password) < MIN_PASSWORD_LEN:
         raise unprocessable("setup_password_too_short", min=MIN_PASSWORD_LEN)
+    if len(password.encode("utf-8")) > MAX_PASSWORD_LEN:
+        raise unprocessable("password_too_long", max=MAX_PASSWORD_LEN)
     return password
 
 
