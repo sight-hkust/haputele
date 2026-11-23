@@ -48,7 +48,7 @@ jobs:
       TF_VAR_ansible_vault_password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Authenticate to Security Token Service
         uses: hkust-contrib/actions/authenticate@latest
