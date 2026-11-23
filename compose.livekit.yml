@@ -1,7 +1,7 @@
 # Same-machine development. Run through scripts/local-livekit.
 services:
   livekit:
-    # LiveKit 1.11.0, used in the two-browser Docker Desktop call test.
+    # LiveKit 1.13.11, used in the two-browser Docker Desktop call test.
     image: livekit/livekit-server@sha256:25cd902de7cacbd5f1f779f6a6ac1eae20ba8f56b0935934ce6b0ab80d1e3d20
     environment:
       LIVEKIT_CONFIG: |
