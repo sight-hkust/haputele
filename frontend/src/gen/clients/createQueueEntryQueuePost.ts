@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CreateQueueEntryQueuePostOptions, CreateQueueEntryQueuePostResponses } from '../types/CreateQueueEntryQueuePost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /queue`
  * @summary Create Queue Entry
- * {@link /queue}
  */
-export function createQueueEntryQueuePost<ThrowOnError extends boolean = true>(options: Options<CreateQueueEntryQueuePostOptions, ThrowOnError>): Promise<RequestResult<CreateQueueEntryQueuePostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function createQueueEntryQueuePost<ThrowOnError extends boolean = true>(options: Options<CreateQueueEntryQueuePostOptions, ThrowOnError>): Unwrappable<RequestResult<CreateQueueEntryQueuePostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/queue', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CreateQueueEntryQueuePostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CreateQueueEntryQueuePostResponses, ThrowOnError>({ method: 'POST', url: '/queue', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

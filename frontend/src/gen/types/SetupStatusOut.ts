@@ -4,5 +4,5 @@
 */
 
 export type SetupStatusOut = {
-    initialized: boolean;
-};
+  initialized: boolean;
+}

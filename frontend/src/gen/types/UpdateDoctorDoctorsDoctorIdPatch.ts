@@ -8,50 +8,50 @@ import type { DoctorOut } from './DoctorOut'
 import type { DoctorUpdate } from './DoctorUpdate'
 
 export type UpdateDoctorDoctorsDoctorIdPatchPath = {
-    doctor_id: number;
-};
+  doctor_id: number;
+}
 
 export type UpdateDoctorDoctorsDoctorIdPatchHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type UpdateDoctorDoctorsDoctorIdPatchStatus200 = DoctorOut;
+export type UpdateDoctorDoctorsDoctorIdPatchStatus200 = DoctorOut
 
-export type UpdateDoctorDoctorsDoctorIdPatchStatus400 = ApiErrorResponse;
+export type UpdateDoctorDoctorsDoctorIdPatchStatus400 = ApiErrorResponse
 
-export type UpdateDoctorDoctorsDoctorIdPatchStatus401 = ApiErrorResponse;
+export type UpdateDoctorDoctorsDoctorIdPatchStatus401 = ApiErrorResponse
 
-export type UpdateDoctorDoctorsDoctorIdPatchStatus403 = ApiErrorResponse;
+export type UpdateDoctorDoctorsDoctorIdPatchStatus403 = ApiErrorResponse
 
-export type UpdateDoctorDoctorsDoctorIdPatchStatus404 = ApiErrorResponse;
+export type UpdateDoctorDoctorsDoctorIdPatchStatus404 = ApiErrorResponse
 
-export type UpdateDoctorDoctorsDoctorIdPatchStatus409 = ApiErrorResponse;
+export type UpdateDoctorDoctorsDoctorIdPatchStatus409 = ApiErrorResponse
 
-export type UpdateDoctorDoctorsDoctorIdPatchStatus422 = ApiErrorResponse;
+export type UpdateDoctorDoctorsDoctorIdPatchStatus422 = ApiErrorResponse
 
-export type UpdateDoctorDoctorsDoctorIdPatchStatus500 = ApiErrorResponse;
+export type UpdateDoctorDoctorsDoctorIdPatchStatus500 = ApiErrorResponse
 
-export type UpdateDoctorDoctorsDoctorIdPatchBody = DoctorUpdate;
+export type UpdateDoctorDoctorsDoctorIdPatchBody = DoctorUpdate
 
 export type UpdateDoctorDoctorsDoctorIdPatchOptions = {
-    body: UpdateDoctorDoctorsDoctorIdPatchBody;
-    path: UpdateDoctorDoctorsDoctorIdPatchPath;
-    query?: never | undefined;
-    headers?: UpdateDoctorDoctorsDoctorIdPatchHeaders | undefined;
-};
+  body: UpdateDoctorDoctorsDoctorIdPatchBody;
+  path: UpdateDoctorDoctorsDoctorIdPatchPath;
+  query?: never | undefined;
+  headers?: UpdateDoctorDoctorsDoctorIdPatchHeaders | undefined;
+}
 
 export type UpdateDoctorDoctorsDoctorIdPatchResponses = {
-    "200": UpdateDoctorDoctorsDoctorIdPatchStatus200;
-    "400": UpdateDoctorDoctorsDoctorIdPatchStatus400;
-    "401": UpdateDoctorDoctorsDoctorIdPatchStatus401;
-    "403": UpdateDoctorDoctorsDoctorIdPatchStatus403;
-    "404": UpdateDoctorDoctorsDoctorIdPatchStatus404;
-    "409": UpdateDoctorDoctorsDoctorIdPatchStatus409;
-    "422": UpdateDoctorDoctorsDoctorIdPatchStatus422;
-    "500": UpdateDoctorDoctorsDoctorIdPatchStatus500;
-};
+  '200': UpdateDoctorDoctorsDoctorIdPatchStatus200;
+  '400': UpdateDoctorDoctorsDoctorIdPatchStatus400;
+  '401': UpdateDoctorDoctorsDoctorIdPatchStatus401;
+  '403': UpdateDoctorDoctorsDoctorIdPatchStatus403;
+  '404': UpdateDoctorDoctorsDoctorIdPatchStatus404;
+  '409': UpdateDoctorDoctorsDoctorIdPatchStatus409;
+  '422': UpdateDoctorDoctorsDoctorIdPatchStatus422;
+  '500': UpdateDoctorDoctorsDoctorIdPatchStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type UpdateDoctorDoctorsDoctorIdPatchResponse = (UpdateDoctorDoctorsDoctorIdPatchStatus200 | UpdateDoctorDoctorsDoctorIdPatchStatus400 | UpdateDoctorDoctorsDoctorIdPatchStatus401 | UpdateDoctorDoctorsDoctorIdPatchStatus403 | UpdateDoctorDoctorsDoctorIdPatchStatus404 | UpdateDoctorDoctorsDoctorIdPatchStatus409 | UpdateDoctorDoctorsDoctorIdPatchStatus422 | UpdateDoctorDoctorsDoctorIdPatchStatus500);
+ */
+export type UpdateDoctorDoctorsDoctorIdPatchResponse = UpdateDoctorDoctorsDoctorIdPatchStatus200

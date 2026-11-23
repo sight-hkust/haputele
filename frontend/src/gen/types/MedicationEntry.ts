@@ -4,10 +4,10 @@
 */
 
 export type MedicationEntry = {
-    genericName: string;
-    tradeName?: (string | null) | undefined;
-    dose?: (string | null) | undefined;
-    frequency?: (string | null) | undefined;
-    duration?: (string | null) | undefined;
-    instructions?: (string | null) | undefined;
-};
+  genericName: string;
+  tradeName?: (string | (null | null)) | undefined;
+  dose?: (string | (null | null)) | undefined;
+  frequency?: (string | (null | null)) | undefined;
+  duration?: (string | (null | null)) | undefined;
+  instructions?: (string | (null | null)) | undefined;
+}

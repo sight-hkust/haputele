@@ -4,21 +4,21 @@
 */
 
 export type PatientOut = {
-    id: number;
-    given: string;
-    family: string;
-    gender: string;
-    dob?: (string | null) | undefined;
-    language?: (string | null) | undefined;
-    screeningRef?: (string | null) | undefined;
-    nationalId?: (string | null) | undefined;
-    contact?: (string | null) | undefined;
-    address?: (string | null) | undefined;
-    masterConsentId?: (number | null) | undefined;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    createdAt: string;
-};
+  id: number;
+  given: string;
+  family: string;
+  gender: string;
+  dob?: (string | (null | null)) | undefined;
+  language?: (string | (null | null)) | undefined;
+  screeningRef?: (string | (null | null)) | undefined;
+  nationalId?: (string | (null | null)) | undefined;
+  contact?: (string | (null | null)) | undefined;
+  address?: (string | (null | null)) | undefined;
+  masterConsentId?: (number | (null | null)) | undefined;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  createdAt: string;
+}

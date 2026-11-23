@@ -3,18 +3,18 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CreateCaptureSessionCaptureSessionsPostOptions, CreateCaptureSessionCaptureSessionsPostResponses } from '../types/CreateCaptureSessionCaptureSessionsPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /capture/sessions`
  * @description Mint a capture session. Role + target are validated per purpose so a
  * token can only ever do what the operator who minted it is allowed to do.
  * @summary Create Capture Session
- * {@link /capture/sessions}
  */
-export function createCaptureSessionCaptureSessionsPost<ThrowOnError extends boolean = true>(options: Options<CreateCaptureSessionCaptureSessionsPostOptions, ThrowOnError>): Promise<RequestResult<CreateCaptureSessionCaptureSessionsPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function createCaptureSessionCaptureSessionsPost<ThrowOnError extends boolean = true>(options: Options<CreateCaptureSessionCaptureSessionsPostOptions, ThrowOnError>): Unwrappable<RequestResult<CreateCaptureSessionCaptureSessionsPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/capture/sessions', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CreateCaptureSessionCaptureSessionsPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CreateCaptureSessionCaptureSessionsPostResponses, ThrowOnError>({ method: 'POST', url: '/capture/sessions', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

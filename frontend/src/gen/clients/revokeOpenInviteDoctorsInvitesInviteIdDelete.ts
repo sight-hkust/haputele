@@ -3,18 +3,18 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { RevokeOpenInviteDoctorsInvitesInviteIdDeleteOptions, RevokeOpenInviteDoctorsInvitesInviteIdDeleteResponses } from '../types/RevokeOpenInviteDoctorsInvitesInviteIdDelete'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `DELETE /doctors/invites/{invite_id}`
  * @description Revoke an open invite — kills the link and removes it from the
  * queue. 404 `invite_not_found` if it isn't an open invite.
  * @summary Revoke Open Invite
- * {@link /doctors/invites/:invite_id}
  */
-export function revokeOpenInviteDoctorsInvitesInviteIdDelete<ThrowOnError extends boolean = true>(options: Options<RevokeOpenInviteDoctorsInvitesInviteIdDeleteOptions, ThrowOnError>): Promise<RequestResult<RevokeOpenInviteDoctorsInvitesInviteIdDeleteResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function revokeOpenInviteDoctorsInvitesInviteIdDelete<ThrowOnError extends boolean = true>(options: Options<RevokeOpenInviteDoctorsInvitesInviteIdDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<RevokeOpenInviteDoctorsInvitesInviteIdDeleteResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'DELETE', url: '/doctors/invites/{invite_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<RevokeOpenInviteDoctorsInvitesInviteIdDeleteResponses, ThrowOnError>>
+  return withUnwrap(apiClient<RevokeOpenInviteDoctorsInvitesInviteIdDeleteResponses, ThrowOnError>({ method: 'DELETE', url: '/doctors/invites/{invite_id}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

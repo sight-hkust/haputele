@@ -8,17 +8,16 @@ import type { GetPreconsultAppointmentsApptIdPreconsultGetOptions, GetPreconsult
 import { getPreconsultAppointmentsApptIdPreconsultGet } from '../clients/getPreconsultAppointmentsApptIdPreconsultGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getPreconsultAppointmentsApptIdPreconsultGetQueryKey = ({ path }: Omit<GetPreconsultAppointmentsApptIdPreconsultGetOptions, 'headers'>) => [{ url: '/appointments/:appt_id/preconsult', params: path }] as const
+export const getPreconsultAppointmentsApptIdPreconsultGetQueryKey = ({ path, headers }: Omit<GetPreconsultAppointmentsApptIdPreconsultGetOptions, 'headers'> & { headers?: GetPreconsultAppointmentsApptIdPreconsultGetOptions['headers'] }) => [{ url: '/appointments/:appt_id/preconsult', params: path }] as const
 
 type GetPreconsultAppointmentsApptIdPreconsultGetQueryKey = ReturnType<typeof getPreconsultAppointmentsApptIdPreconsultGetQueryKey>
 
-export function getPreconsultAppointmentsApptIdPreconsultGetQueryOptions({ path, headers }: GetPreconsultAppointmentsApptIdPreconsultGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getPreconsultAppointmentsApptIdPreconsultGetQueryKey({ path })
+export function getPreconsultAppointmentsApptIdPreconsultGetQueryOptions({ path, headers }: GetPreconsultAppointmentsApptIdPreconsultGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getPreconsultAppointmentsApptIdPreconsultGetQueryKey({ path, headers })
   return queryOptions<GetPreconsultAppointmentsApptIdPreconsultGetStatus200, ResponseErrorConfig<GetPreconsultAppointmentsApptIdPreconsultGetStatus400 | GetPreconsultAppointmentsApptIdPreconsultGetStatus401 | GetPreconsultAppointmentsApptIdPreconsultGetStatus403 | GetPreconsultAppointmentsApptIdPreconsultGetStatus404 | GetPreconsultAppointmentsApptIdPreconsultGetStatus409 | GetPreconsultAppointmentsApptIdPreconsultGetStatus422 | GetPreconsultAppointmentsApptIdPreconsultGetStatus500>, GetPreconsultAppointmentsApptIdPreconsultGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getPreconsultAppointmentsApptIdPreconsultGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getPreconsultAppointmentsApptIdPreconsultGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CancelQueueEntryQueueQidCancelPostOptions, CancelQueueEntryQueueQidCancelPostResponses } from '../types/CancelQueueEntryQueueQidCancelPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /queue/{qid}/cancel`
  * @summary Cancel Queue Entry
- * {@link /queue/:qid/cancel}
  */
-export function cancelQueueEntryQueueQidCancelPost<ThrowOnError extends boolean = true>(options: Options<CancelQueueEntryQueueQidCancelPostOptions, ThrowOnError>): Promise<RequestResult<CancelQueueEntryQueueQidCancelPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function cancelQueueEntryQueueQidCancelPost<ThrowOnError extends boolean = true>(options: Options<CancelQueueEntryQueueQidCancelPostOptions, ThrowOnError>): Unwrappable<RequestResult<CancelQueueEntryQueueQidCancelPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/queue/{qid}/cancel', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CancelQueueEntryQueueQidCancelPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CancelQueueEntryQueueQidCancelPostResponses, ThrowOnError>({ method: 'POST', url: '/queue/{qid}/cancel', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -3,21 +3,21 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { DoctorSummaryDoctorsSummaryGetOptions, DoctorSummaryDoctorsSummaryGetResponses } from '../types/DoctorSummaryDoctorsSummaryGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /doctors/summary`
  * @description Per-status counts for the admin queue's tab badges.
  * Same two-query shape as the list endpoint: all rows + the batched
  * live-invite lookup. Doctor counts are modest (one clinic's roster),
  * so materialising rows to compute status in Python is cheaper than the
  * SQL gymnastics the invite-liveness join would need.
  * @summary Doctor Summary
- * {@link /doctors/summary}
  */
-export function doctorSummaryDoctorsSummaryGet<ThrowOnError extends boolean = true>(options: Options<DoctorSummaryDoctorsSummaryGetOptions, ThrowOnError> = {}): Promise<RequestResult<DoctorSummaryDoctorsSummaryGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function doctorSummaryDoctorsSummaryGet<ThrowOnError extends boolean = true>(options: Options<DoctorSummaryDoctorsSummaryGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<DoctorSummaryDoctorsSummaryGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/doctors/summary', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<DoctorSummaryDoctorsSummaryGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<DoctorSummaryDoctorsSummaryGetResponses, ThrowOnError>({ method: 'GET', url: '/doctors/summary', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

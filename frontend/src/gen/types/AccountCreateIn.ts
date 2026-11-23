@@ -4,16 +4,16 @@
 */
 
 export const accountCreateInRoleEnum = {
-    admin: "admin",
-    healthworker: "healthworker"
+  admin: 'admin',
+  healthworker: 'healthworker',
 } as const;
 
-export type AccountCreateInRoleEnumKey = (typeof accountCreateInRoleEnum)[keyof typeof accountCreateInRoleEnum];
+export type AccountCreateInRoleEnumKey = (typeof accountCreateInRoleEnum)[keyof typeof accountCreateInRoleEnum]
 
 export type AccountCreateIn = {
-    username: string;
-    password: string;
-    role: AccountCreateInRoleEnumKey;
-    fullName?: (string | null) | undefined;
-    contact?: (string | null) | undefined;
-};
+  username: string;
+  password: string;
+  role: AccountCreateInRoleEnumKey;
+  fullName?: (string | (null | null)) | undefined;
+  contact?: (string | (null | null)) | undefined;
+}

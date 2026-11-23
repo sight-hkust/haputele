@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const updateAvailabilityAvailabilityAidPatchMutationKey = () => [{ url: '/availability/:aid' }] as const
 
-export function updateAvailabilityAvailabilityAidPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function updateAvailabilityAvailabilityAidPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = updateAvailabilityAvailabilityAidPatchMutationKey()
   return mutationOptions<UpdateAvailabilityAvailabilityAidPatchStatus200, ResponseErrorConfig<UpdateAvailabilityAvailabilityAidPatchStatus400 | UpdateAvailabilityAvailabilityAidPatchStatus401 | UpdateAvailabilityAvailabilityAidPatchStatus403 | UpdateAvailabilityAvailabilityAidPatchStatus404 | UpdateAvailabilityAvailabilityAidPatchStatus409 | UpdateAvailabilityAvailabilityAidPatchStatus422 | UpdateAvailabilityAvailabilityAidPatchStatus500>, UpdateAvailabilityAvailabilityAidPatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await updateAvailabilityAvailabilityAidPatch({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return updateAvailabilityAvailabilityAidPatch({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

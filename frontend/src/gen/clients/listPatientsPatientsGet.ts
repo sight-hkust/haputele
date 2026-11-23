@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ListPatientsPatientsGetOptions, ListPatientsPatientsGetResponses } from '../types/ListPatientsPatientsGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /patients`
  * @summary List Patients
- * {@link /patients}
  */
-export function listPatientsPatientsGet<ThrowOnError extends boolean = true>(options: Options<ListPatientsPatientsGetOptions, ThrowOnError> = {}): Promise<RequestResult<ListPatientsPatientsGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function listPatientsPatientsGet<ThrowOnError extends boolean = true>(options: Options<ListPatientsPatientsGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<ListPatientsPatientsGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/patients', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ListPatientsPatientsGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ListPatientsPatientsGetResponses, ThrowOnError>({ method: 'GET', url: '/patients', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

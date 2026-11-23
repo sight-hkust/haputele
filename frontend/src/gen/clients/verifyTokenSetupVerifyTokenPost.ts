@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { VerifyTokenSetupVerifyTokenPostOptions, VerifyTokenSetupVerifyTokenPostResponses } from '../types/VerifyTokenSetupVerifyTokenPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `POST /setup/verify-token`
  * @summary Verify Token
- * {@link /setup/verify-token}
  */
-export function verifyTokenSetupVerifyTokenPost<ThrowOnError extends boolean = true>(options: Options<VerifyTokenSetupVerifyTokenPostOptions, ThrowOnError>): Promise<RequestResult<VerifyTokenSetupVerifyTokenPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function verifyTokenSetupVerifyTokenPost<ThrowOnError extends boolean = true>(options: Options<VerifyTokenSetupVerifyTokenPostOptions, ThrowOnError>): Unwrappable<RequestResult<VerifyTokenSetupVerifyTokenPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/setup/verify-token', ...config }) as Promise<RequestResult<VerifyTokenSetupVerifyTokenPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<VerifyTokenSetupVerifyTokenPostResponses, ThrowOnError>({ method: 'POST', url: '/setup/verify-token', contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

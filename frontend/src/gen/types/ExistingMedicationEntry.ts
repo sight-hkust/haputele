@@ -4,8 +4,8 @@
 */
 
 export type ExistingMedicationEntry = {
-    drug: string;
-    dosage?: (string | null) | undefined;
-    frequency?: (string | null) | undefined;
-    notes?: (string | null) | undefined;
-};
+  drug: string;
+  dosage?: (string | (null | null)) | undefined;
+  frequency?: (string | (null | null)) | undefined;
+  notes?: (string | (null | null)) | undefined;
+}

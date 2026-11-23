@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions, GetSummaryPdfAppointmentsApptIdSummaryPdfGetResponses } from '../types/GetSummaryPdfAppointmentsApptIdSummaryPdfGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /appointments/{appt_id}/summary.pdf`
  * @summary Get Summary Pdf
- * {@link /appointments/:appt_id/summary.pdf}
  */
-export function getSummaryPdfAppointmentsApptIdSummaryPdfGet<ThrowOnError extends boolean = true>(options: Options<GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions, ThrowOnError>): Promise<RequestResult<GetSummaryPdfAppointmentsApptIdSummaryPdfGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function getSummaryPdfAppointmentsApptIdSummaryPdfGet<ThrowOnError extends boolean = true>(options: Options<GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions, ThrowOnError>): Unwrappable<RequestResult<GetSummaryPdfAppointmentsApptIdSummaryPdfGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/appointments/{appt_id}/summary.pdf', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], responseType: 'blob', ...config }) as Promise<RequestResult<GetSummaryPdfAppointmentsApptIdSummaryPdfGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<GetSummaryPdfAppointmentsApptIdSummaryPdfGetResponses, ThrowOnError>({ method: 'GET', url: '/appointments/{appt_id}/summary.pdf', security: [securitySchemes.SessionCookie], parseAs: 'blob', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

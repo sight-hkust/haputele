@@ -7,21 +7,21 @@ import type { InstituteIdentityIn } from './InstituteIdentityIn'
 import type { SysAdminIn } from './SysAdminIn'
 
 export type InitializeIn = {
-    sysAdmin: SysAdminIn;
-    instituteIdentity: InstituteIdentityIn;
-    /**
-     * @minLength 1
-     * @type string
-    */
-    appTimezone: string;
-    /**
-     * @minLength 1
-     * @type string
-    */
-    exportTimezone: string;
-    /**
-     * @minLength 1
-     * @type string
-    */
-    masterConsentVersion: string;
-};
+  sysAdmin: SysAdminIn;
+  instituteIdentity: InstituteIdentityIn;
+  /**
+   * @minLength 1
+   * @type string
+   */
+  appTimezone: string;
+  /**
+   * @minLength 1
+   * @type string
+   */
+  exportTimezone: string;
+  /**
+   * @minLength 1
+   * @type string
+   */
+  masterConsentVersion: string;
+}

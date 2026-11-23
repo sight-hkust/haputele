@@ -8,8 +8,8 @@ import type { ConsultationOut } from './ConsultationOut'
 /**
  * @description POST /appointments/{id}/consultation/draft.
  * @type object
-*/
+ */
 export type ConsultationDraftResponse = {
-    consultationId: number;
-    draft: ConsultationOut;
-};
+  consultationId: number;
+  draft: ConsultationOut;
+}

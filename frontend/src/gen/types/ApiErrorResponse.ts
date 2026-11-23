@@ -6,9 +6,9 @@
 import type { ApiErrorDetail } from './ApiErrorDetail'
 
 export type ApiErrorResponse = {
-    /**
-     * @description Stable minimum error payload; domain-specific fields remain allowed.
-     * @type object
-    */
-    detail: ApiErrorDetail;
-};
+  /**
+   * @description Stable minimum error payload; domain-specific fields remain allowed.
+   * @type object
+   */
+  detail: ApiErrorDetail;
+}

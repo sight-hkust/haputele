@@ -4,7 +4,7 @@
 */
 
 export type AvailabilityUpdate = {
-    startAt?: (string | null) | undefined;
-    endAt?: (string | null) | undefined;
-    note?: (string | null) | undefined;
-};
+  startAt?: (string | (null | null)) | undefined;
+  endAt?: (string | (null | null)) | undefined;
+  note?: (string | (null | null)) | undefined;
+}

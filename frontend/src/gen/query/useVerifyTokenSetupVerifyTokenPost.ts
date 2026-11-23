@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const verifyTokenSetupVerifyTokenPostMutationKey = () => [{ url: '/setup/verify-token' }] as const
 
-export function verifyTokenSetupVerifyTokenPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function verifyTokenSetupVerifyTokenPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = verifyTokenSetupVerifyTokenPostMutationKey()
   return mutationOptions<VerifyTokenSetupVerifyTokenPostStatus200, ResponseErrorConfig<VerifyTokenSetupVerifyTokenPostStatus400 | VerifyTokenSetupVerifyTokenPostStatus401 | VerifyTokenSetupVerifyTokenPostStatus403 | VerifyTokenSetupVerifyTokenPostStatus404 | VerifyTokenSetupVerifyTokenPostStatus409 | VerifyTokenSetupVerifyTokenPostStatus422 | VerifyTokenSetupVerifyTokenPostStatus500>, VerifyTokenSetupVerifyTokenPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body }) => {
-      const { data } = await verifyTokenSetupVerifyTokenPost({ ...config, body, throwOnError: true })
-      return data
+      return verifyTokenSetupVerifyTokenPost({ ...config, body, throwOnError: true }).unwrap()
     },
   })
 }

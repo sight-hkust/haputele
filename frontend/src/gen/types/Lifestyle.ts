@@ -4,33 +4,33 @@
 */
 
 export const lifestyleSmoking = {
-    never: "never",
-    current: "current",
-    prior: "prior"
+  never: 'never',
+  current: 'current',
+  prior: 'prior',
 } as const;
 
-export type LifestyleSmokingKey = (typeof lifestyleSmoking)[keyof typeof lifestyleSmoking];
+export type LifestyleSmokingKey = (typeof lifestyleSmoking)[keyof typeof lifestyleSmoking]
 
 export const lifestyleAlcohol = {
-    none: "none",
-    occasional: "occasional",
-    regular: "regular"
+  none: 'none',
+  occasional: 'occasional',
+  regular: 'regular',
 } as const;
 
-export type LifestyleAlcoholKey = (typeof lifestyleAlcohol)[keyof typeof lifestyleAlcohol];
+export type LifestyleAlcoholKey = (typeof lifestyleAlcohol)[keyof typeof lifestyleAlcohol]
 
 export const lifestyleBetelAreca = {
-    never: "never",
-    current: "current",
-    prior: "prior"
+  never: 'never',
+  current: 'current',
+  prior: 'prior',
 } as const;
 
-export type LifestyleBetelArecaKey = (typeof lifestyleBetelAreca)[keyof typeof lifestyleBetelAreca];
+export type LifestyleBetelArecaKey = (typeof lifestyleBetelAreca)[keyof typeof lifestyleBetelAreca]
 
 export type Lifestyle = {
-    smoking?: (LifestyleSmokingKey | null) | undefined;
-    alcohol?: (LifestyleAlcoholKey | null) | undefined;
-    betelAreca?: (LifestyleBetelArecaKey | null) | undefined;
-    occupation?: (string | null) | undefined;
-    physicalActivity?: (string | null) | undefined;
-};
+  smoking?: (LifestyleSmokingKey | (null | null)) | undefined;
+  alcohol?: (LifestyleAlcoholKey | (null | null)) | undefined;
+  betelAreca?: (LifestyleBetelArecaKey | (null | null)) | undefined;
+  occupation?: (string | (null | null)) | undefined;
+  physicalActivity?: (string | (null | null)) | undefined;
+}

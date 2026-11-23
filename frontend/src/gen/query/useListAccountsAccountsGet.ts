@@ -8,17 +8,16 @@ import type { ListAccountsAccountsGetOptions, ListAccountsAccountsGetStatus200, 
 import { listAccountsAccountsGet } from '../clients/listAccountsAccountsGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const listAccountsAccountsGetQueryKey = () => [{ url: '/accounts' }] as const
+export const listAccountsAccountsGetQueryKey = ({ headers }: Omit<ListAccountsAccountsGetOptions, 'headers'> & { headers?: ListAccountsAccountsGetOptions['headers'] } = {}) => [{ url: '/accounts' }] as const
 
 type ListAccountsAccountsGetQueryKey = ReturnType<typeof listAccountsAccountsGetQueryKey>
 
-export function listAccountsAccountsGetQueryOptions({ headers }: ListAccountsAccountsGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = listAccountsAccountsGetQueryKey()
+export function listAccountsAccountsGetQueryOptions({ headers }: ListAccountsAccountsGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = listAccountsAccountsGetQueryKey({ headers })
   return queryOptions<ListAccountsAccountsGetStatus200, ResponseErrorConfig<ListAccountsAccountsGetStatus400 | ListAccountsAccountsGetStatus401 | ListAccountsAccountsGetStatus403 | ListAccountsAccountsGetStatus404 | ListAccountsAccountsGetStatus409 | ListAccountsAccountsGetStatus422 | ListAccountsAccountsGetStatus500>, ListAccountsAccountsGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await listAccountsAccountsGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return listAccountsAccountsGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

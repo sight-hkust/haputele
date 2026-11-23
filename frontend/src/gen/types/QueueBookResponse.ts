@@ -9,8 +9,8 @@ import type { QueueEntryOut } from './QueueEntryOut'
 /**
  * @description POST /queue/{id}/book.
  * @type object
-*/
+ */
 export type QueueBookResponse = {
-    queueEntry: QueueEntryOut;
-    appointment: AppointmentOut;
-};
+  queueEntry: QueueEntryOut;
+  appointment: AppointmentOut;
+}

@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const approveDoctorDoctorsDoctorIdApprovePostMutationKey = () => [{ url: '/doctors/:doctor_id/approve' }] as const
 
-export function approveDoctorDoctorsDoctorIdApprovePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function approveDoctorDoctorsDoctorIdApprovePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = approveDoctorDoctorsDoctorIdApprovePostMutationKey()
   return mutationOptions<ApproveDoctorDoctorsDoctorIdApprovePostStatus200, ResponseErrorConfig<ApproveDoctorDoctorsDoctorIdApprovePostStatus400 | ApproveDoctorDoctorsDoctorIdApprovePostStatus401 | ApproveDoctorDoctorsDoctorIdApprovePostStatus403 | ApproveDoctorDoctorsDoctorIdApprovePostStatus404 | ApproveDoctorDoctorsDoctorIdApprovePostStatus409 | ApproveDoctorDoctorsDoctorIdApprovePostStatus422 | ApproveDoctorDoctorsDoctorIdApprovePostStatus500>, ApproveDoctorDoctorsDoctorIdApprovePostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await approveDoctorDoctorsDoctorIdApprovePost({ ...config, path, headers, throwOnError: true })
-      return data
+      return approveDoctorDoctorsDoctorIdApprovePost({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

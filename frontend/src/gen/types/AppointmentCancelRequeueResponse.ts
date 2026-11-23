@@ -7,6 +7,6 @@ import type { AppointmentOut } from './AppointmentOut'
 import type { QueueEntryOut } from './QueueEntryOut'
 
 export type AppointmentCancelRequeueResponse = {
-    appointment: AppointmentOut;
-    queueEntry: QueueEntryOut;
-};
+  appointment: AppointmentOut;
+  queueEntry: QueueEntryOut;
+}

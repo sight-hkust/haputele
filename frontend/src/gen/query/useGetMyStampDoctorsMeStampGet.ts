@@ -8,17 +8,16 @@ import type { GetMyStampDoctorsMeStampGetOptions, GetMyStampDoctorsMeStampGetSta
 import { getMyStampDoctorsMeStampGet } from '../clients/getMyStampDoctorsMeStampGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getMyStampDoctorsMeStampGetQueryKey = () => [{ url: '/doctors/me/stamp' }] as const
+export const getMyStampDoctorsMeStampGetQueryKey = ({ headers }: Omit<GetMyStampDoctorsMeStampGetOptions, 'headers'> & { headers?: GetMyStampDoctorsMeStampGetOptions['headers'] } = {}) => [{ url: '/doctors/me/stamp' }] as const
 
 type GetMyStampDoctorsMeStampGetQueryKey = ReturnType<typeof getMyStampDoctorsMeStampGetQueryKey>
 
-export function getMyStampDoctorsMeStampGetQueryOptions({ headers }: GetMyStampDoctorsMeStampGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getMyStampDoctorsMeStampGetQueryKey()
+export function getMyStampDoctorsMeStampGetQueryOptions({ headers }: GetMyStampDoctorsMeStampGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getMyStampDoctorsMeStampGetQueryKey({ headers })
   return queryOptions<GetMyStampDoctorsMeStampGetStatus200, ResponseErrorConfig<GetMyStampDoctorsMeStampGetStatus400 | GetMyStampDoctorsMeStampGetStatus401 | GetMyStampDoctorsMeStampGetStatus403 | GetMyStampDoctorsMeStampGetStatus404 | GetMyStampDoctorsMeStampGetStatus409 | GetMyStampDoctorsMeStampGetStatus422 | GetMyStampDoctorsMeStampGetStatus500>, GetMyStampDoctorsMeStampGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getMyStampDoctorsMeStampGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getMyStampDoctorsMeStampGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

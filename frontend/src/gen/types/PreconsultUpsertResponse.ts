@@ -9,8 +9,8 @@ import type { PreconsultOut } from './PreconsultOut'
 /**
  * @description PUT /appointments/{id}/preconsult.
  * @type object
-*/
+ */
 export type PreconsultUpsertResponse = {
-    preconsult: PreconsultOut;
-    appointment: AppointmentOut;
-};
+  preconsult: PreconsultOut;
+  appointment: AppointmentOut;
+}

@@ -4,15 +4,15 @@
 */
 
 export const healthDependencyOutStatusEnum = {
-    ok: "ok",
-    error: "error",
-    not_configured: "not_configured"
+  ok: 'ok',
+  error: 'error',
+  not_configured: 'not_configured',
 } as const;
 
-export type HealthDependencyOutStatusEnumKey = (typeof healthDependencyOutStatusEnum)[keyof typeof healthDependencyOutStatusEnum];
+export type HealthDependencyOutStatusEnumKey = (typeof healthDependencyOutStatusEnum)[keyof typeof healthDependencyOutStatusEnum]
 
 export type HealthDependencyOut = {
-    status: HealthDependencyOutStatusEnumKey;
-    error?: (string | null) | undefined;
-    latency_ms?: (number | null) | undefined;
-};
+  status: HealthDependencyOutStatusEnumKey;
+  error?: (string | (null | null)) | undefined;
+  latency_ms?: (number | (null | null)) | undefined;
+}

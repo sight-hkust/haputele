@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostOptions, ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostResponses } from '../types/ReinviteReapplyDoctorsDoctorIdReinviteReapplyPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /doctors/{doctor_id}/reinvite-reapply`
  * @description Invite a previously-rejected doctor to reapply with a fresh
  * submission.
  * Issues a *new-doctor* invite (full profile form) to the rejected
@@ -18,10 +19,9 @@ import { client } from '../.kubb/client'
  * Refuses (409 `doctor_not_rejected`) for any doctor that isn't in the
  * rejected state — reapplication only makes sense from a rejection.
  * @summary Reinvite Reapply
- * {@link /doctors/:doctor_id/reinvite-reapply}
  */
-export function reinviteReapplyDoctorsDoctorIdReinviteReapplyPost<ThrowOnError extends boolean = true>(options: Options<ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostOptions, ThrowOnError>): Promise<RequestResult<ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function reinviteReapplyDoctorsDoctorIdReinviteReapplyPost<ThrowOnError extends boolean = true>(options: Options<ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostOptions, ThrowOnError>): Unwrappable<RequestResult<ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctors/{doctor_id}/reinvite-reapply', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostResponses, ThrowOnError>({ method: 'POST', url: '/doctors/{doctor_id}/reinvite-reapply', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

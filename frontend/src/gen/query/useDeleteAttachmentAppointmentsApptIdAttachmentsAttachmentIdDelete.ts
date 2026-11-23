@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteMutationKey = () => [{ url: '/appointments/:appt_id/attachments/:attachment_id' }] as const
 
-export function deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteMutationKey()
   return mutationOptions<DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus204, ResponseErrorConfig<DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus400 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus401 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus403 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus404 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus409 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus422 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus500>, DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDelete({ ...config, path, headers, throwOnError: true })
-      return data
+      return deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDelete({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { MeAuthMeGetOptions, MeAuthMeGetResponses } from '../types/MeAuthMeGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /auth/me`
  * @summary Me
- * {@link /auth/me}
  */
-export function meAuthMeGet<ThrowOnError extends boolean = true>(options: Options<MeAuthMeGetOptions, ThrowOnError> = {}): Promise<RequestResult<MeAuthMeGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function meAuthMeGet<ThrowOnError extends boolean = true>(options: Options<MeAuthMeGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<MeAuthMeGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/auth/me', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<MeAuthMeGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<MeAuthMeGetResponses, ThrowOnError>({ method: 'GET', url: '/auth/me', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

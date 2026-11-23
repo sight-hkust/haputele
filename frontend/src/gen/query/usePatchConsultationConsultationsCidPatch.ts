@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const patchConsultationConsultationsCidPatchMutationKey = () => [{ url: '/consultations/:cid' }] as const
 
-export function patchConsultationConsultationsCidPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function patchConsultationConsultationsCidPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = patchConsultationConsultationsCidPatchMutationKey()
   return mutationOptions<PatchConsultationConsultationsCidPatchStatus200, ResponseErrorConfig<PatchConsultationConsultationsCidPatchStatus400 | PatchConsultationConsultationsCidPatchStatus401 | PatchConsultationConsultationsCidPatchStatus403 | PatchConsultationConsultationsCidPatchStatus404 | PatchConsultationConsultationsCidPatchStatus409 | PatchConsultationConsultationsCidPatchStatus422 | PatchConsultationConsultationsCidPatchStatus500>, PatchConsultationConsultationsCidPatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await patchConsultationConsultationsCidPatch({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return patchConsultationConsultationsCidPatch({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

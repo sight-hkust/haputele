@@ -4,13 +4,13 @@
 */
 
 export const accountOutRoleEnum = {
-    admin: "admin",
-    healthworker: "healthworker"
+  admin: 'admin',
+  healthworker: 'healthworker',
 } as const;
 
-export type AccountOutRoleEnumKey = (typeof accountOutRoleEnum)[keyof typeof accountOutRoleEnum];
+export type AccountOutRoleEnumKey = (typeof accountOutRoleEnum)[keyof typeof accountOutRoleEnum]
 
 export type AccountOut = {
-    username: string;
-    role: AccountOutRoleEnumKey;
-};
+  username: string;
+  role: AccountOutRoleEnumKey;
+}

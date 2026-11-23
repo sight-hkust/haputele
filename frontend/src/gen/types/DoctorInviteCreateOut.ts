@@ -6,8 +6,8 @@
 /**
  * @description POST /doctors/invites and POST /doctors/{id}/reinvite-reapply.
  * @type object
-*/
+ */
 export type DoctorInviteCreateOut = {
-    inviteId: number;
-    email: string;
-};
+  inviteId: number;
+  email: string;
+}

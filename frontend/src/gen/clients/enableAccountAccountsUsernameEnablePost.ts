@@ -3,17 +3,17 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { EnableAccountAccountsUsernameEnablePostOptions, EnableAccountAccountsUsernameEnablePostResponses } from '../types/EnableAccountAccountsUsernameEnablePost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /accounts/{username}/enable`
  * @description Re-enable a disabled operating account. Idempotent.
  * @summary Enable Account
- * {@link /accounts/:username/enable}
  */
-export function enableAccountAccountsUsernameEnablePost<ThrowOnError extends boolean = true>(options: Options<EnableAccountAccountsUsernameEnablePostOptions, ThrowOnError>): Promise<RequestResult<EnableAccountAccountsUsernameEnablePostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function enableAccountAccountsUsernameEnablePost<ThrowOnError extends boolean = true>(options: Options<EnableAccountAccountsUsernameEnablePostOptions, ThrowOnError>): Unwrappable<RequestResult<EnableAccountAccountsUsernameEnablePostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/accounts/{username}/enable', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<EnableAccountAccountsUsernameEnablePostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<EnableAccountAccountsUsernameEnablePostResponses, ThrowOnError>({ method: 'POST', url: '/accounts/{username}/enable', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

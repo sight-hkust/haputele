@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UpdateAppointmentAppointmentsApptIdPatchOptions, UpdateAppointmentAppointmentsApptIdPatchResponses } from '../types/UpdateAppointmentAppointmentsApptIdPatch'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `PATCH /appointments/{appt_id}`
  * @summary Update Appointment
- * {@link /appointments/:appt_id}
  */
-export function updateAppointmentAppointmentsApptIdPatch<ThrowOnError extends boolean = true>(options: Options<UpdateAppointmentAppointmentsApptIdPatchOptions, ThrowOnError>): Promise<RequestResult<UpdateAppointmentAppointmentsApptIdPatchResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function updateAppointmentAppointmentsApptIdPatch<ThrowOnError extends boolean = true>(options: Options<UpdateAppointmentAppointmentsApptIdPatchOptions, ThrowOnError>): Unwrappable<RequestResult<UpdateAppointmentAppointmentsApptIdPatchResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'PATCH', url: '/appointments/{appt_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<UpdateAppointmentAppointmentsApptIdPatchResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UpdateAppointmentAppointmentsApptIdPatchResponses, ThrowOnError>({ method: 'PATCH', url: '/appointments/{appt_id}', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -4,12 +4,12 @@
 */
 
 export type AppointmentCreate = {
-    patientId: number;
-    doctorId: number;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    scheduledAt: string;
-};
+  patientId: number;
+  doctorId: number;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  scheduledAt: string;
+}

@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const cancelQueueEntryQueueQidCancelPostMutationKey = () => [{ url: '/queue/:qid/cancel' }] as const
 
-export function cancelQueueEntryQueueQidCancelPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function cancelQueueEntryQueueQidCancelPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = cancelQueueEntryQueueQidCancelPostMutationKey()
   return mutationOptions<CancelQueueEntryQueueQidCancelPostStatus200, ResponseErrorConfig<CancelQueueEntryQueueQidCancelPostStatus400 | CancelQueueEntryQueueQidCancelPostStatus401 | CancelQueueEntryQueueQidCancelPostStatus403 | CancelQueueEntryQueueQidCancelPostStatus404 | CancelQueueEntryQueueQidCancelPostStatus409 | CancelQueueEntryQueueQidCancelPostStatus422 | CancelQueueEntryQueueQidCancelPostStatus500>, CancelQueueEntryQueueQidCancelPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await cancelQueueEntryQueueQidCancelPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return cancelQueueEntryQueueQidCancelPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

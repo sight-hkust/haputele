@@ -6,27 +6,27 @@
 import type { MasterConsentIn } from './MasterConsentIn'
 
 export const patientCreateLanguage = {
-    en: "en",
-    ta: "ta",
-    si: "si"
+  en: 'en',
+  ta: 'ta',
+  si: 'si',
 } as const;
 
-export type PatientCreateLanguageKey = (typeof patientCreateLanguage)[keyof typeof patientCreateLanguage];
+export type PatientCreateLanguageKey = (typeof patientCreateLanguage)[keyof typeof patientCreateLanguage]
 
 export type PatientCreate = {
-    masterConsent: MasterConsentIn;
-    given: string;
-    family: string;
-    gender: string;
-    /**
-     * @description
-     * Format: `date`
-     * @type string
-    */
-    dob: string;
-    language?: (PatientCreateLanguageKey | null) | undefined;
-    screeningRef?: (string | null) | undefined;
-    nationalId?: (string | null) | undefined;
-    contact?: (string | null) | undefined;
-    address?: (string | null) | undefined;
-};
+  masterConsent: MasterConsentIn;
+  given: string;
+  family: string;
+  gender: string;
+  /**
+   * @description
+   * Format: `date`
+   * @type string
+   */
+  dob: string;
+  language?: (PatientCreateLanguageKey | (null | null)) | undefined;
+  screeningRef?: (string | (null | null)) | undefined;
+  nationalId?: (string | (null | null)) | undefined;
+  contact?: (string | (null | null)) | undefined;
+  address?: (string | (null | null)) | undefined;
+}

@@ -6,44 +6,44 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type LogoutAuthLogoutPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type LogoutAuthLogoutPostStatus204 = unknown;
+export type LogoutAuthLogoutPostStatus204 = unknown
 
-export type LogoutAuthLogoutPostStatus400 = ApiErrorResponse;
+export type LogoutAuthLogoutPostStatus400 = ApiErrorResponse
 
-export type LogoutAuthLogoutPostStatus401 = ApiErrorResponse;
+export type LogoutAuthLogoutPostStatus401 = ApiErrorResponse
 
-export type LogoutAuthLogoutPostStatus403 = ApiErrorResponse;
+export type LogoutAuthLogoutPostStatus403 = ApiErrorResponse
 
-export type LogoutAuthLogoutPostStatus404 = ApiErrorResponse;
+export type LogoutAuthLogoutPostStatus404 = ApiErrorResponse
 
-export type LogoutAuthLogoutPostStatus409 = ApiErrorResponse;
+export type LogoutAuthLogoutPostStatus409 = ApiErrorResponse
 
-export type LogoutAuthLogoutPostStatus422 = ApiErrorResponse;
+export type LogoutAuthLogoutPostStatus422 = ApiErrorResponse
 
-export type LogoutAuthLogoutPostStatus500 = ApiErrorResponse;
+export type LogoutAuthLogoutPostStatus500 = ApiErrorResponse
 
 export type LogoutAuthLogoutPostOptions = {
-    body?: never | undefined;
-    path?: never | undefined;
-    query?: never | undefined;
-    headers?: LogoutAuthLogoutPostHeaders | undefined;
-};
+  body?: never | undefined;
+  path?: never | undefined;
+  query?: never | undefined;
+  headers?: LogoutAuthLogoutPostHeaders | undefined;
+}
 
 export type LogoutAuthLogoutPostResponses = {
-    "204": LogoutAuthLogoutPostStatus204;
-    "400": LogoutAuthLogoutPostStatus400;
-    "401": LogoutAuthLogoutPostStatus401;
-    "403": LogoutAuthLogoutPostStatus403;
-    "404": LogoutAuthLogoutPostStatus404;
-    "409": LogoutAuthLogoutPostStatus409;
-    "422": LogoutAuthLogoutPostStatus422;
-    "500": LogoutAuthLogoutPostStatus500;
-};
+  '204': LogoutAuthLogoutPostStatus204;
+  '400': LogoutAuthLogoutPostStatus400;
+  '401': LogoutAuthLogoutPostStatus401;
+  '403': LogoutAuthLogoutPostStatus403;
+  '404': LogoutAuthLogoutPostStatus404;
+  '409': LogoutAuthLogoutPostStatus409;
+  '422': LogoutAuthLogoutPostStatus422;
+  '500': LogoutAuthLogoutPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type LogoutAuthLogoutPostResponse = (LogoutAuthLogoutPostStatus204 | LogoutAuthLogoutPostStatus400 | LogoutAuthLogoutPostStatus401 | LogoutAuthLogoutPostStatus403 | LogoutAuthLogoutPostStatus404 | LogoutAuthLogoutPostStatus409 | LogoutAuthLogoutPostStatus422 | LogoutAuthLogoutPostStatus500);
+ */
+export type LogoutAuthLogoutPostResponse = LogoutAuthLogoutPostStatus204

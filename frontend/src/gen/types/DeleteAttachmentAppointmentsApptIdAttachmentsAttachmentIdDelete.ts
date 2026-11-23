@@ -6,49 +6,49 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeletePath = {
-    appt_id: number;
-    attachment_id: number;
-};
+  appt_id: number;
+  attachment_id: number;
+}
 
 export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus204 = unknown;
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus204 = unknown
 
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus400 = ApiErrorResponse;
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus400 = ApiErrorResponse
 
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus401 = ApiErrorResponse;
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus401 = ApiErrorResponse
 
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus403 = ApiErrorResponse;
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus403 = ApiErrorResponse
 
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus404 = ApiErrorResponse;
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus404 = ApiErrorResponse
 
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus409 = ApiErrorResponse;
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus409 = ApiErrorResponse
 
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus422 = ApiErrorResponse;
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus422 = ApiErrorResponse
 
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus500 = ApiErrorResponse;
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus500 = ApiErrorResponse
 
 export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteOptions = {
-    body?: never | undefined;
-    path: DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeletePath;
-    query?: never | undefined;
-    headers?: DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteHeaders | undefined;
-};
+  body?: never | undefined;
+  path: DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeletePath;
+  query?: never | undefined;
+  headers?: DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteHeaders | undefined;
+}
 
 export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteResponses = {
-    "204": DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus204;
-    "400": DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus400;
-    "401": DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus401;
-    "403": DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus403;
-    "404": DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus404;
-    "409": DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus409;
-    "422": DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus422;
-    "500": DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus500;
-};
+  '204': DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus204;
+  '400': DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus400;
+  '401': DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus401;
+  '403': DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus403;
+  '404': DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus404;
+  '409': DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus409;
+  '422': DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus422;
+  '500': DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteResponse = (DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus204 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus400 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus401 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus403 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus404 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus409 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus422 | DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus500);
+ */
+export type DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteResponse = DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteStatus204

@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ListAttachmentsAppointmentsApptIdAttachmentsGetOptions, ListAttachmentsAppointmentsApptIdAttachmentsGetResponses } from '../types/ListAttachmentsAppointmentsApptIdAttachmentsGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /appointments/{appt_id}/attachments`
  * @summary List Attachments
- * {@link /appointments/:appt_id/attachments}
  */
-export function listAttachmentsAppointmentsApptIdAttachmentsGet<ThrowOnError extends boolean = true>(options: Options<ListAttachmentsAppointmentsApptIdAttachmentsGetOptions, ThrowOnError>): Promise<RequestResult<ListAttachmentsAppointmentsApptIdAttachmentsGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function listAttachmentsAppointmentsApptIdAttachmentsGet<ThrowOnError extends boolean = true>(options: Options<ListAttachmentsAppointmentsApptIdAttachmentsGetOptions, ThrowOnError>): Unwrappable<RequestResult<ListAttachmentsAppointmentsApptIdAttachmentsGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/appointments/{appt_id}/attachments', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ListAttachmentsAppointmentsApptIdAttachmentsGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ListAttachmentsAppointmentsApptIdAttachmentsGetResponses, ThrowOnError>({ method: 'GET', url: '/appointments/{appt_id}/attachments', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

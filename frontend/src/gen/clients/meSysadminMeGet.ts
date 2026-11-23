@@ -3,19 +3,19 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { MeSysadminMeGetOptions, MeSysadminMeGetResponses } from '../types/MeSysadminMeGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /sysadmin/me`
  * @description The signed-in ops account, including its editable profile. The
  * sys-admin manages its own account from the System page (it's excluded
  * from the /accounts roster), so this carries full_name/contact.
  * @summary Me
- * {@link /sysadmin/me}
  */
-export function meSysadminMeGet<ThrowOnError extends boolean = true>(options: Options<MeSysadminMeGetOptions, ThrowOnError> = {}): Promise<RequestResult<MeSysadminMeGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function meSysadminMeGet<ThrowOnError extends boolean = true>(options: Options<MeSysadminMeGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<MeSysadminMeGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/sysadmin/me', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<MeSysadminMeGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<MeSysadminMeGetResponses, ThrowOnError>({ method: 'GET', url: '/sysadmin/me', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

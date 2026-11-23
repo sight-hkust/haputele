@@ -4,21 +4,21 @@
 */
 
 export const loginOutRoleEnum = {
-    admin: "admin",
-    doctor: "doctor",
-    healthworker: "healthworker",
-    "sys-admin": "sys-admin"
+  admin: 'admin',
+  doctor: 'doctor',
+  healthworker: 'healthworker',
+  'sys-admin': 'sys-admin',
 } as const;
 
-export type LoginOutRoleEnumKey = (typeof loginOutRoleEnum)[keyof typeof loginOutRoleEnum];
+export type LoginOutRoleEnumKey = (typeof loginOutRoleEnum)[keyof typeof loginOutRoleEnum]
 
 export type LoginOut = {
-    username: string;
-    role: LoginOutRoleEnumKey;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    expiresAt: string;
-};
+  username: string;
+  role: LoginOutRoleEnumKey;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  expiresAt: string;
+}

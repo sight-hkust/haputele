@@ -7,49 +7,49 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { DoctorOut } from './DoctorOut'
 
 export type ListDoctorsDoctorsGetQuery = {
-    active?: (boolean | null) | undefined;
-    status?: (string | null) | undefined;
-};
+  active?: (boolean | (null | null)) | undefined;
+  status?: (string | (null | null)) | undefined;
+}
 
 export type ListDoctorsDoctorsGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type ListDoctorsDoctorsGetStatus200 = DoctorOut[];
+export type ListDoctorsDoctorsGetStatus200 = DoctorOut[]
 
-export type ListDoctorsDoctorsGetStatus400 = ApiErrorResponse;
+export type ListDoctorsDoctorsGetStatus400 = ApiErrorResponse
 
-export type ListDoctorsDoctorsGetStatus401 = ApiErrorResponse;
+export type ListDoctorsDoctorsGetStatus401 = ApiErrorResponse
 
-export type ListDoctorsDoctorsGetStatus403 = ApiErrorResponse;
+export type ListDoctorsDoctorsGetStatus403 = ApiErrorResponse
 
-export type ListDoctorsDoctorsGetStatus404 = ApiErrorResponse;
+export type ListDoctorsDoctorsGetStatus404 = ApiErrorResponse
 
-export type ListDoctorsDoctorsGetStatus409 = ApiErrorResponse;
+export type ListDoctorsDoctorsGetStatus409 = ApiErrorResponse
 
-export type ListDoctorsDoctorsGetStatus422 = ApiErrorResponse;
+export type ListDoctorsDoctorsGetStatus422 = ApiErrorResponse
 
-export type ListDoctorsDoctorsGetStatus500 = ApiErrorResponse;
+export type ListDoctorsDoctorsGetStatus500 = ApiErrorResponse
 
 export type ListDoctorsDoctorsGetOptions = {
-    body?: never | undefined;
-    path?: never | undefined;
-    query?: ListDoctorsDoctorsGetQuery | undefined;
-    headers?: ListDoctorsDoctorsGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path?: never | undefined;
+  query?: ListDoctorsDoctorsGetQuery | undefined;
+  headers?: ListDoctorsDoctorsGetHeaders | undefined;
+}
 
 export type ListDoctorsDoctorsGetResponses = {
-    "200": ListDoctorsDoctorsGetStatus200;
-    "400": ListDoctorsDoctorsGetStatus400;
-    "401": ListDoctorsDoctorsGetStatus401;
-    "403": ListDoctorsDoctorsGetStatus403;
-    "404": ListDoctorsDoctorsGetStatus404;
-    "409": ListDoctorsDoctorsGetStatus409;
-    "422": ListDoctorsDoctorsGetStatus422;
-    "500": ListDoctorsDoctorsGetStatus500;
-};
+  '200': ListDoctorsDoctorsGetStatus200;
+  '400': ListDoctorsDoctorsGetStatus400;
+  '401': ListDoctorsDoctorsGetStatus401;
+  '403': ListDoctorsDoctorsGetStatus403;
+  '404': ListDoctorsDoctorsGetStatus404;
+  '409': ListDoctorsDoctorsGetStatus409;
+  '422': ListDoctorsDoctorsGetStatus422;
+  '500': ListDoctorsDoctorsGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ListDoctorsDoctorsGetResponse = (ListDoctorsDoctorsGetStatus200 | ListDoctorsDoctorsGetStatus400 | ListDoctorsDoctorsGetStatus401 | ListDoctorsDoctorsGetStatus403 | ListDoctorsDoctorsGetStatus404 | ListDoctorsDoctorsGetStatus409 | ListDoctorsDoctorsGetStatus422 | ListDoctorsDoctorsGetStatus500);
+ */
+export type ListDoctorsDoctorsGetResponse = ListDoctorsDoctorsGetStatus200

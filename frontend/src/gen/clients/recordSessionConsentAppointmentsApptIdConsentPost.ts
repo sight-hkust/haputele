@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { RecordSessionConsentAppointmentsApptIdConsentPostOptions, RecordSessionConsentAppointmentsApptIdConsentPostResponses } from '../types/RecordSessionConsentAppointmentsApptIdConsentPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /appointments/{appt_id}/consent`
  * @summary Record Session Consent
- * {@link /appointments/:appt_id/consent}
  */
-export function recordSessionConsentAppointmentsApptIdConsentPost<ThrowOnError extends boolean = true>(options: Options<RecordSessionConsentAppointmentsApptIdConsentPostOptions, ThrowOnError>): Promise<RequestResult<RecordSessionConsentAppointmentsApptIdConsentPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function recordSessionConsentAppointmentsApptIdConsentPost<ThrowOnError extends boolean = true>(options: Options<RecordSessionConsentAppointmentsApptIdConsentPostOptions, ThrowOnError>): Unwrappable<RequestResult<RecordSessionConsentAppointmentsApptIdConsentPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/appointments/{appt_id}/consent', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<RecordSessionConsentAppointmentsApptIdConsentPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<RecordSessionConsentAppointmentsApptIdConsentPostResponses, ThrowOnError>({ method: 'POST', url: '/appointments/{appt_id}/consent', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

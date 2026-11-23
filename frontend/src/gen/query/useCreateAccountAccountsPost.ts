@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createAccountAccountsPostMutationKey = () => [{ url: '/accounts' }] as const
 
-export function createAccountAccountsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createAccountAccountsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createAccountAccountsPostMutationKey()
   return mutationOptions<CreateAccountAccountsPostStatus201, ResponseErrorConfig<CreateAccountAccountsPostStatus400 | CreateAccountAccountsPostStatus401 | CreateAccountAccountsPostStatus403 | CreateAccountAccountsPostStatus404 | CreateAccountAccountsPostStatus409 | CreateAccountAccountsPostStatus422 | CreateAccountAccountsPostStatus500>, CreateAccountAccountsPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await createAccountAccountsPost({ ...config, body, headers, throwOnError: true })
-      return data
+      return createAccountAccountsPost({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

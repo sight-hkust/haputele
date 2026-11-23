@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const reConsentPatientsPatientIdConsentsPostMutationKey = () => [{ url: '/patients/:patient_id/consents' }] as const
 
-export function reConsentPatientsPatientIdConsentsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function reConsentPatientsPatientIdConsentsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = reConsentPatientsPatientIdConsentsPostMutationKey()
   return mutationOptions<ReConsentPatientsPatientIdConsentsPostStatus201, ResponseErrorConfig<ReConsentPatientsPatientIdConsentsPostStatus400 | ReConsentPatientsPatientIdConsentsPostStatus401 | ReConsentPatientsPatientIdConsentsPostStatus403 | ReConsentPatientsPatientIdConsentsPostStatus404 | ReConsentPatientsPatientIdConsentsPostStatus409 | ReConsentPatientsPatientIdConsentsPostStatus422 | ReConsentPatientsPatientIdConsentsPostStatus500>, ReConsentPatientsPatientIdConsentsPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await reConsentPatientsPatientIdConsentsPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return reConsentPatientsPatientIdConsentsPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -7,48 +7,48 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { AttachmentMetaOut } from './AttachmentMetaOut'
 
 export type ListAttachmentsAppointmentsApptIdAttachmentsGetPath = {
-    appt_id: number;
-};
+  appt_id: number;
+}
 
 export type ListAttachmentsAppointmentsApptIdAttachmentsGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus200 = AttachmentMetaOut[];
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus200 = AttachmentMetaOut[]
 
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus400 = ApiErrorResponse;
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus400 = ApiErrorResponse
 
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus401 = ApiErrorResponse;
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus401 = ApiErrorResponse
 
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus403 = ApiErrorResponse;
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus403 = ApiErrorResponse
 
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus404 = ApiErrorResponse;
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus404 = ApiErrorResponse
 
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus409 = ApiErrorResponse;
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus409 = ApiErrorResponse
 
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus422 = ApiErrorResponse;
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus422 = ApiErrorResponse
 
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus500 = ApiErrorResponse;
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetStatus500 = ApiErrorResponse
 
 export type ListAttachmentsAppointmentsApptIdAttachmentsGetOptions = {
-    body?: never | undefined;
-    path: ListAttachmentsAppointmentsApptIdAttachmentsGetPath;
-    query?: never | undefined;
-    headers?: ListAttachmentsAppointmentsApptIdAttachmentsGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path: ListAttachmentsAppointmentsApptIdAttachmentsGetPath;
+  query?: never | undefined;
+  headers?: ListAttachmentsAppointmentsApptIdAttachmentsGetHeaders | undefined;
+}
 
 export type ListAttachmentsAppointmentsApptIdAttachmentsGetResponses = {
-    "200": ListAttachmentsAppointmentsApptIdAttachmentsGetStatus200;
-    "400": ListAttachmentsAppointmentsApptIdAttachmentsGetStatus400;
-    "401": ListAttachmentsAppointmentsApptIdAttachmentsGetStatus401;
-    "403": ListAttachmentsAppointmentsApptIdAttachmentsGetStatus403;
-    "404": ListAttachmentsAppointmentsApptIdAttachmentsGetStatus404;
-    "409": ListAttachmentsAppointmentsApptIdAttachmentsGetStatus409;
-    "422": ListAttachmentsAppointmentsApptIdAttachmentsGetStatus422;
-    "500": ListAttachmentsAppointmentsApptIdAttachmentsGetStatus500;
-};
+  '200': ListAttachmentsAppointmentsApptIdAttachmentsGetStatus200;
+  '400': ListAttachmentsAppointmentsApptIdAttachmentsGetStatus400;
+  '401': ListAttachmentsAppointmentsApptIdAttachmentsGetStatus401;
+  '403': ListAttachmentsAppointmentsApptIdAttachmentsGetStatus403;
+  '404': ListAttachmentsAppointmentsApptIdAttachmentsGetStatus404;
+  '409': ListAttachmentsAppointmentsApptIdAttachmentsGetStatus409;
+  '422': ListAttachmentsAppointmentsApptIdAttachmentsGetStatus422;
+  '500': ListAttachmentsAppointmentsApptIdAttachmentsGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ListAttachmentsAppointmentsApptIdAttachmentsGetResponse = (ListAttachmentsAppointmentsApptIdAttachmentsGetStatus200 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus400 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus401 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus403 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus404 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus409 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus422 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus500);
+ */
+export type ListAttachmentsAppointmentsApptIdAttachmentsGetResponse = ListAttachmentsAppointmentsApptIdAttachmentsGetStatus200

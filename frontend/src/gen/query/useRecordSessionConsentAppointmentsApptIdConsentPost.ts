@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const recordSessionConsentAppointmentsApptIdConsentPostMutationKey = () => [{ url: '/appointments/:appt_id/consent' }] as const
 
-export function recordSessionConsentAppointmentsApptIdConsentPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function recordSessionConsentAppointmentsApptIdConsentPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = recordSessionConsentAppointmentsApptIdConsentPostMutationKey()
   return mutationOptions<RecordSessionConsentAppointmentsApptIdConsentPostStatus201, ResponseErrorConfig<RecordSessionConsentAppointmentsApptIdConsentPostStatus400 | RecordSessionConsentAppointmentsApptIdConsentPostStatus401 | RecordSessionConsentAppointmentsApptIdConsentPostStatus403 | RecordSessionConsentAppointmentsApptIdConsentPostStatus404 | RecordSessionConsentAppointmentsApptIdConsentPostStatus409 | RecordSessionConsentAppointmentsApptIdConsentPostStatus422 | RecordSessionConsentAppointmentsApptIdConsentPostStatus500>, RecordSessionConsentAppointmentsApptIdConsentPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await recordSessionConsentAppointmentsApptIdConsentPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return recordSessionConsentAppointmentsApptIdConsentPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

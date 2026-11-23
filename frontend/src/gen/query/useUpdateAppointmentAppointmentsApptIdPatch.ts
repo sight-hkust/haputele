@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const updateAppointmentAppointmentsApptIdPatchMutationKey = () => [{ url: '/appointments/:appt_id' }] as const
 
-export function updateAppointmentAppointmentsApptIdPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function updateAppointmentAppointmentsApptIdPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = updateAppointmentAppointmentsApptIdPatchMutationKey()
   return mutationOptions<UpdateAppointmentAppointmentsApptIdPatchStatus200, ResponseErrorConfig<UpdateAppointmentAppointmentsApptIdPatchStatus400 | UpdateAppointmentAppointmentsApptIdPatchStatus401 | UpdateAppointmentAppointmentsApptIdPatchStatus403 | UpdateAppointmentAppointmentsApptIdPatchStatus404 | UpdateAppointmentAppointmentsApptIdPatchStatus409 | UpdateAppointmentAppointmentsApptIdPatchStatus422 | UpdateAppointmentAppointmentsApptIdPatchStatus500>, UpdateAppointmentAppointmentsApptIdPatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await updateAppointmentAppointmentsApptIdPatch({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return updateAppointmentAppointmentsApptIdPatch({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

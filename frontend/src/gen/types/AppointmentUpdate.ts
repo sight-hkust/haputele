@@ -4,6 +4,6 @@
 */
 
 export type AppointmentUpdate = {
-    doctorId?: (number | null) | undefined;
-    scheduledAt?: (string | null) | undefined;
-};
+  doctorId?: (number | (null | null)) | undefined;
+  scheduledAt?: (string | (null | null)) | undefined;
+}

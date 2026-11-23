@@ -4,6 +4,6 @@
 */
 
 export type AccountUpdateIn = {
-    fullName?: (string | null) | undefined;
-    contact?: (string | null) | undefined;
-};
+  fullName?: (string | (null | null)) | undefined;
+  contact?: (string | (null | null)) | undefined;
+}

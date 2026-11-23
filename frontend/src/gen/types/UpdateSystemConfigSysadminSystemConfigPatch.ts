@@ -8,50 +8,50 @@ import type { SystemConfigOut } from './SystemConfigOut'
 import type { SystemConfigUpdateIn } from './SystemConfigUpdateIn'
 
 export type UpdateSystemConfigSysadminSystemConfigPatchHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
  * @description GET/PATCH /sysadmin/system-config.
  * @type object
-*/
-export type UpdateSystemConfigSysadminSystemConfigPatchStatus200 = SystemConfigOut;
+ */
+export type UpdateSystemConfigSysadminSystemConfigPatchStatus200 = SystemConfigOut
 
-export type UpdateSystemConfigSysadminSystemConfigPatchStatus400 = ApiErrorResponse;
+export type UpdateSystemConfigSysadminSystemConfigPatchStatus400 = ApiErrorResponse
 
-export type UpdateSystemConfigSysadminSystemConfigPatchStatus401 = ApiErrorResponse;
+export type UpdateSystemConfigSysadminSystemConfigPatchStatus401 = ApiErrorResponse
 
-export type UpdateSystemConfigSysadminSystemConfigPatchStatus403 = ApiErrorResponse;
+export type UpdateSystemConfigSysadminSystemConfigPatchStatus403 = ApiErrorResponse
 
-export type UpdateSystemConfigSysadminSystemConfigPatchStatus404 = ApiErrorResponse;
+export type UpdateSystemConfigSysadminSystemConfigPatchStatus404 = ApiErrorResponse
 
-export type UpdateSystemConfigSysadminSystemConfigPatchStatus409 = ApiErrorResponse;
+export type UpdateSystemConfigSysadminSystemConfigPatchStatus409 = ApiErrorResponse
 
-export type UpdateSystemConfigSysadminSystemConfigPatchStatus422 = ApiErrorResponse;
+export type UpdateSystemConfigSysadminSystemConfigPatchStatus422 = ApiErrorResponse
 
-export type UpdateSystemConfigSysadminSystemConfigPatchStatus500 = ApiErrorResponse;
+export type UpdateSystemConfigSysadminSystemConfigPatchStatus500 = ApiErrorResponse
 
-export type UpdateSystemConfigSysadminSystemConfigPatchBody = SystemConfigUpdateIn;
+export type UpdateSystemConfigSysadminSystemConfigPatchBody = SystemConfigUpdateIn
 
 export type UpdateSystemConfigSysadminSystemConfigPatchOptions = {
-    body: UpdateSystemConfigSysadminSystemConfigPatchBody;
-    path?: never | undefined;
-    query?: never | undefined;
-    headers?: UpdateSystemConfigSysadminSystemConfigPatchHeaders | undefined;
-};
+  body: UpdateSystemConfigSysadminSystemConfigPatchBody;
+  path?: never | undefined;
+  query?: never | undefined;
+  headers?: UpdateSystemConfigSysadminSystemConfigPatchHeaders | undefined;
+}
 
 export type UpdateSystemConfigSysadminSystemConfigPatchResponses = {
-    "200": UpdateSystemConfigSysadminSystemConfigPatchStatus200;
-    "400": UpdateSystemConfigSysadminSystemConfigPatchStatus400;
-    "401": UpdateSystemConfigSysadminSystemConfigPatchStatus401;
-    "403": UpdateSystemConfigSysadminSystemConfigPatchStatus403;
-    "404": UpdateSystemConfigSysadminSystemConfigPatchStatus404;
-    "409": UpdateSystemConfigSysadminSystemConfigPatchStatus409;
-    "422": UpdateSystemConfigSysadminSystemConfigPatchStatus422;
-    "500": UpdateSystemConfigSysadminSystemConfigPatchStatus500;
-};
+  '200': UpdateSystemConfigSysadminSystemConfigPatchStatus200;
+  '400': UpdateSystemConfigSysadminSystemConfigPatchStatus400;
+  '401': UpdateSystemConfigSysadminSystemConfigPatchStatus401;
+  '403': UpdateSystemConfigSysadminSystemConfigPatchStatus403;
+  '404': UpdateSystemConfigSysadminSystemConfigPatchStatus404;
+  '409': UpdateSystemConfigSysadminSystemConfigPatchStatus409;
+  '422': UpdateSystemConfigSysadminSystemConfigPatchStatus422;
+  '500': UpdateSystemConfigSysadminSystemConfigPatchStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type UpdateSystemConfigSysadminSystemConfigPatchResponse = (UpdateSystemConfigSysadminSystemConfigPatchStatus200 | UpdateSystemConfigSysadminSystemConfigPatchStatus400 | UpdateSystemConfigSysadminSystemConfigPatchStatus401 | UpdateSystemConfigSysadminSystemConfigPatchStatus403 | UpdateSystemConfigSysadminSystemConfigPatchStatus404 | UpdateSystemConfigSysadminSystemConfigPatchStatus409 | UpdateSystemConfigSysadminSystemConfigPatchStatus422 | UpdateSystemConfigSysadminSystemConfigPatchStatus500);
+ */
+export type UpdateSystemConfigSysadminSystemConfigPatchResponse = UpdateSystemConfigSysadminSystemConfigPatchStatus200

@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ListQueueQueueGetOptions, ListQueueQueueGetResponses } from '../types/ListQueueQueueGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /queue`
  * @summary List Queue
- * {@link /queue}
  */
-export function listQueueQueueGet<ThrowOnError extends boolean = true>(options: Options<ListQueueQueueGetOptions, ThrowOnError> = {}): Promise<RequestResult<ListQueueQueueGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function listQueueQueueGet<ThrowOnError extends boolean = true>(options: Options<ListQueueQueueGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<ListQueueQueueGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/queue', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ListQueueQueueGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ListQueueQueueGetResponses, ThrowOnError>({ method: 'GET', url: '/queue', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

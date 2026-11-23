@@ -4,5 +4,5 @@
 */
 
 export type SurgeryEntry = {
-    description: string;
-};
+  description: string;
+}

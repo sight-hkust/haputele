@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const revokeOpenInviteDoctorsInvitesInviteIdDeleteMutationKey = () => [{ url: '/doctors/invites/:invite_id' }] as const
 
-export function revokeOpenInviteDoctorsInvitesInviteIdDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function revokeOpenInviteDoctorsInvitesInviteIdDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = revokeOpenInviteDoctorsInvitesInviteIdDeleteMutationKey()
   return mutationOptions<RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus204, ResponseErrorConfig<RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus400 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus401 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus403 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus404 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus409 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus422 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus500>, RevokeOpenInviteDoctorsInvitesInviteIdDeleteOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await revokeOpenInviteDoctorsInvitesInviteIdDelete({ ...config, path, headers, throwOnError: true })
-      return data
+      return revokeOpenInviteDoctorsInvitesInviteIdDelete({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

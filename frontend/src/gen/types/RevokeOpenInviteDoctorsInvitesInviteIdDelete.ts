@@ -6,48 +6,48 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type RevokeOpenInviteDoctorsInvitesInviteIdDeletePath = {
-    invite_id: number;
-};
+  invite_id: number;
+}
 
 export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus204 = unknown;
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus204 = unknown
 
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus400 = ApiErrorResponse;
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus400 = ApiErrorResponse
 
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus401 = ApiErrorResponse;
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus401 = ApiErrorResponse
 
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus403 = ApiErrorResponse;
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus403 = ApiErrorResponse
 
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus404 = ApiErrorResponse;
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus404 = ApiErrorResponse
 
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus409 = ApiErrorResponse;
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus409 = ApiErrorResponse
 
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus422 = ApiErrorResponse;
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus422 = ApiErrorResponse
 
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus500 = ApiErrorResponse;
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus500 = ApiErrorResponse
 
 export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteOptions = {
-    body?: never | undefined;
-    path: RevokeOpenInviteDoctorsInvitesInviteIdDeletePath;
-    query?: never | undefined;
-    headers?: RevokeOpenInviteDoctorsInvitesInviteIdDeleteHeaders | undefined;
-};
+  body?: never | undefined;
+  path: RevokeOpenInviteDoctorsInvitesInviteIdDeletePath;
+  query?: never | undefined;
+  headers?: RevokeOpenInviteDoctorsInvitesInviteIdDeleteHeaders | undefined;
+}
 
 export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteResponses = {
-    "204": RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus204;
-    "400": RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus400;
-    "401": RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus401;
-    "403": RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus403;
-    "404": RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus404;
-    "409": RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus409;
-    "422": RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus422;
-    "500": RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus500;
-};
+  '204': RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus204;
+  '400': RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus400;
+  '401': RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus401;
+  '403': RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus403;
+  '404': RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus404;
+  '409': RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus409;
+  '422': RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus422;
+  '500': RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteResponse = (RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus204 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus400 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus401 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus403 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus404 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus409 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus422 | RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus500);
+ */
+export type RevokeOpenInviteDoctorsInvitesInviteIdDeleteResponse = RevokeOpenInviteDoctorsInvitesInviteIdDeleteStatus204

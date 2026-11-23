@@ -6,48 +6,48 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type ReissueInviteDoctorsDoctorIdInvitesPostPath = {
-    doctor_id: number;
-};
+  doctor_id: number;
+}
 
 export type ReissueInviteDoctorsDoctorIdInvitesPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type ReissueInviteDoctorsDoctorIdInvitesPostStatus204 = unknown;
+export type ReissueInviteDoctorsDoctorIdInvitesPostStatus204 = unknown
 
-export type ReissueInviteDoctorsDoctorIdInvitesPostStatus400 = ApiErrorResponse;
+export type ReissueInviteDoctorsDoctorIdInvitesPostStatus400 = ApiErrorResponse
 
-export type ReissueInviteDoctorsDoctorIdInvitesPostStatus401 = ApiErrorResponse;
+export type ReissueInviteDoctorsDoctorIdInvitesPostStatus401 = ApiErrorResponse
 
-export type ReissueInviteDoctorsDoctorIdInvitesPostStatus403 = ApiErrorResponse;
+export type ReissueInviteDoctorsDoctorIdInvitesPostStatus403 = ApiErrorResponse
 
-export type ReissueInviteDoctorsDoctorIdInvitesPostStatus404 = ApiErrorResponse;
+export type ReissueInviteDoctorsDoctorIdInvitesPostStatus404 = ApiErrorResponse
 
-export type ReissueInviteDoctorsDoctorIdInvitesPostStatus409 = ApiErrorResponse;
+export type ReissueInviteDoctorsDoctorIdInvitesPostStatus409 = ApiErrorResponse
 
-export type ReissueInviteDoctorsDoctorIdInvitesPostStatus422 = ApiErrorResponse;
+export type ReissueInviteDoctorsDoctorIdInvitesPostStatus422 = ApiErrorResponse
 
-export type ReissueInviteDoctorsDoctorIdInvitesPostStatus500 = ApiErrorResponse;
+export type ReissueInviteDoctorsDoctorIdInvitesPostStatus500 = ApiErrorResponse
 
 export type ReissueInviteDoctorsDoctorIdInvitesPostOptions = {
-    body?: never | undefined;
-    path: ReissueInviteDoctorsDoctorIdInvitesPostPath;
-    query?: never | undefined;
-    headers?: ReissueInviteDoctorsDoctorIdInvitesPostHeaders | undefined;
-};
+  body?: never | undefined;
+  path: ReissueInviteDoctorsDoctorIdInvitesPostPath;
+  query?: never | undefined;
+  headers?: ReissueInviteDoctorsDoctorIdInvitesPostHeaders | undefined;
+}
 
 export type ReissueInviteDoctorsDoctorIdInvitesPostResponses = {
-    "204": ReissueInviteDoctorsDoctorIdInvitesPostStatus204;
-    "400": ReissueInviteDoctorsDoctorIdInvitesPostStatus400;
-    "401": ReissueInviteDoctorsDoctorIdInvitesPostStatus401;
-    "403": ReissueInviteDoctorsDoctorIdInvitesPostStatus403;
-    "404": ReissueInviteDoctorsDoctorIdInvitesPostStatus404;
-    "409": ReissueInviteDoctorsDoctorIdInvitesPostStatus409;
-    "422": ReissueInviteDoctorsDoctorIdInvitesPostStatus422;
-    "500": ReissueInviteDoctorsDoctorIdInvitesPostStatus500;
-};
+  '204': ReissueInviteDoctorsDoctorIdInvitesPostStatus204;
+  '400': ReissueInviteDoctorsDoctorIdInvitesPostStatus400;
+  '401': ReissueInviteDoctorsDoctorIdInvitesPostStatus401;
+  '403': ReissueInviteDoctorsDoctorIdInvitesPostStatus403;
+  '404': ReissueInviteDoctorsDoctorIdInvitesPostStatus404;
+  '409': ReissueInviteDoctorsDoctorIdInvitesPostStatus409;
+  '422': ReissueInviteDoctorsDoctorIdInvitesPostStatus422;
+  '500': ReissueInviteDoctorsDoctorIdInvitesPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ReissueInviteDoctorsDoctorIdInvitesPostResponse = (ReissueInviteDoctorsDoctorIdInvitesPostStatus204 | ReissueInviteDoctorsDoctorIdInvitesPostStatus400 | ReissueInviteDoctorsDoctorIdInvitesPostStatus401 | ReissueInviteDoctorsDoctorIdInvitesPostStatus403 | ReissueInviteDoctorsDoctorIdInvitesPostStatus404 | ReissueInviteDoctorsDoctorIdInvitesPostStatus409 | ReissueInviteDoctorsDoctorIdInvitesPostStatus422 | ReissueInviteDoctorsDoctorIdInvitesPostStatus500);
+ */
+export type ReissueInviteDoctorsDoctorIdInvitesPostResponse = ReissueInviteDoctorsDoctorIdInvitesPostStatus204

@@ -8,17 +8,16 @@ import type { GetDoctorDoctorsDoctorIdGetOptions, GetDoctorDoctorsDoctorIdGetSta
 import { getDoctorDoctorsDoctorIdGet } from '../clients/getDoctorDoctorsDoctorIdGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getDoctorDoctorsDoctorIdGetQueryKey = ({ path }: Omit<GetDoctorDoctorsDoctorIdGetOptions, 'headers'>) => [{ url: '/doctors/:doctor_id', params: path }] as const
+export const getDoctorDoctorsDoctorIdGetQueryKey = ({ path, headers }: Omit<GetDoctorDoctorsDoctorIdGetOptions, 'headers'> & { headers?: GetDoctorDoctorsDoctorIdGetOptions['headers'] }) => [{ url: '/doctors/:doctor_id', params: path }] as const
 
 type GetDoctorDoctorsDoctorIdGetQueryKey = ReturnType<typeof getDoctorDoctorsDoctorIdGetQueryKey>
 
-export function getDoctorDoctorsDoctorIdGetQueryOptions({ path, headers }: GetDoctorDoctorsDoctorIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getDoctorDoctorsDoctorIdGetQueryKey({ path })
+export function getDoctorDoctorsDoctorIdGetQueryOptions({ path, headers }: GetDoctorDoctorsDoctorIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getDoctorDoctorsDoctorIdGetQueryKey({ path, headers })
   return queryOptions<GetDoctorDoctorsDoctorIdGetStatus200, ResponseErrorConfig<GetDoctorDoctorsDoctorIdGetStatus400 | GetDoctorDoctorsDoctorIdGetStatus401 | GetDoctorDoctorsDoctorIdGetStatus403 | GetDoctorDoctorsDoctorIdGetStatus404 | GetDoctorDoctorsDoctorIdGetStatus409 | GetDoctorDoctorsDoctorIdGetStatus422 | GetDoctorDoctorsDoctorIdGetStatus500>, GetDoctorDoctorsDoctorIdGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getDoctorDoctorsDoctorIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getDoctorDoctorsDoctorIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

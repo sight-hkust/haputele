@@ -8,54 +8,54 @@ import type { QueueBookIn } from './QueueBookIn'
 import type { QueueBookResponse } from './QueueBookResponse'
 
 export type BookQueueEntryQueueQidBookPostPath = {
-    qid: number;
-};
+  qid: number;
+}
 
 export type BookQueueEntryQueueQidBookPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
  * @description POST /queue/{id}/book.
  * @type object
-*/
-export type BookQueueEntryQueueQidBookPostStatus200 = QueueBookResponse;
+ */
+export type BookQueueEntryQueueQidBookPostStatus200 = QueueBookResponse
 
-export type BookQueueEntryQueueQidBookPostStatus400 = ApiErrorResponse;
+export type BookQueueEntryQueueQidBookPostStatus400 = ApiErrorResponse
 
-export type BookQueueEntryQueueQidBookPostStatus401 = ApiErrorResponse;
+export type BookQueueEntryQueueQidBookPostStatus401 = ApiErrorResponse
 
-export type BookQueueEntryQueueQidBookPostStatus403 = ApiErrorResponse;
+export type BookQueueEntryQueueQidBookPostStatus403 = ApiErrorResponse
 
-export type BookQueueEntryQueueQidBookPostStatus404 = ApiErrorResponse;
+export type BookQueueEntryQueueQidBookPostStatus404 = ApiErrorResponse
 
-export type BookQueueEntryQueueQidBookPostStatus409 = ApiErrorResponse;
+export type BookQueueEntryQueueQidBookPostStatus409 = ApiErrorResponse
 
-export type BookQueueEntryQueueQidBookPostStatus422 = ApiErrorResponse;
+export type BookQueueEntryQueueQidBookPostStatus422 = ApiErrorResponse
 
-export type BookQueueEntryQueueQidBookPostStatus500 = ApiErrorResponse;
+export type BookQueueEntryQueueQidBookPostStatus500 = ApiErrorResponse
 
-export type BookQueueEntryQueueQidBookPostBody = QueueBookIn;
+export type BookQueueEntryQueueQidBookPostBody = QueueBookIn
 
 export type BookQueueEntryQueueQidBookPostOptions = {
-    body: BookQueueEntryQueueQidBookPostBody;
-    path: BookQueueEntryQueueQidBookPostPath;
-    query?: never | undefined;
-    headers?: BookQueueEntryQueueQidBookPostHeaders | undefined;
-};
+  body: BookQueueEntryQueueQidBookPostBody;
+  path: BookQueueEntryQueueQidBookPostPath;
+  query?: never | undefined;
+  headers?: BookQueueEntryQueueQidBookPostHeaders | undefined;
+}
 
 export type BookQueueEntryQueueQidBookPostResponses = {
-    "200": BookQueueEntryQueueQidBookPostStatus200;
-    "400": BookQueueEntryQueueQidBookPostStatus400;
-    "401": BookQueueEntryQueueQidBookPostStatus401;
-    "403": BookQueueEntryQueueQidBookPostStatus403;
-    "404": BookQueueEntryQueueQidBookPostStatus404;
-    "409": BookQueueEntryQueueQidBookPostStatus409;
-    "422": BookQueueEntryQueueQidBookPostStatus422;
-    "500": BookQueueEntryQueueQidBookPostStatus500;
-};
+  '200': BookQueueEntryQueueQidBookPostStatus200;
+  '400': BookQueueEntryQueueQidBookPostStatus400;
+  '401': BookQueueEntryQueueQidBookPostStatus401;
+  '403': BookQueueEntryQueueQidBookPostStatus403;
+  '404': BookQueueEntryQueueQidBookPostStatus404;
+  '409': BookQueueEntryQueueQidBookPostStatus409;
+  '422': BookQueueEntryQueueQidBookPostStatus422;
+  '500': BookQueueEntryQueueQidBookPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type BookQueueEntryQueueQidBookPostResponse = (BookQueueEntryQueueQidBookPostStatus200 | BookQueueEntryQueueQidBookPostStatus400 | BookQueueEntryQueueQidBookPostStatus401 | BookQueueEntryQueueQidBookPostStatus403 | BookQueueEntryQueueQidBookPostStatus404 | BookQueueEntryQueueQidBookPostStatus409 | BookQueueEntryQueueQidBookPostStatus422 | BookQueueEntryQueueQidBookPostStatus500);
+ */
+export type BookQueueEntryQueueQidBookPostResponse = BookQueueEntryQueueQidBookPostStatus200

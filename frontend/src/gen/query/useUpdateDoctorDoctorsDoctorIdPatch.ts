@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const updateDoctorDoctorsDoctorIdPatchMutationKey = () => [{ url: '/doctors/:doctor_id' }] as const
 
-export function updateDoctorDoctorsDoctorIdPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function updateDoctorDoctorsDoctorIdPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = updateDoctorDoctorsDoctorIdPatchMutationKey()
   return mutationOptions<UpdateDoctorDoctorsDoctorIdPatchStatus200, ResponseErrorConfig<UpdateDoctorDoctorsDoctorIdPatchStatus400 | UpdateDoctorDoctorsDoctorIdPatchStatus401 | UpdateDoctorDoctorsDoctorIdPatchStatus403 | UpdateDoctorDoctorsDoctorIdPatchStatus404 | UpdateDoctorDoctorsDoctorIdPatchStatus409 | UpdateDoctorDoctorsDoctorIdPatchStatus422 | UpdateDoctorDoctorsDoctorIdPatchStatus500>, UpdateDoctorDoctorsDoctorIdPatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await updateDoctorDoctorsDoctorIdPatch({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return updateDoctorDoctorsDoctorIdPatch({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

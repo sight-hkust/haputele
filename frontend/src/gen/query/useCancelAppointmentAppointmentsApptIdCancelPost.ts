@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const cancelAppointmentAppointmentsApptIdCancelPostMutationKey = () => [{ url: '/appointments/:appt_id/cancel' }] as const
 
-export function cancelAppointmentAppointmentsApptIdCancelPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function cancelAppointmentAppointmentsApptIdCancelPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = cancelAppointmentAppointmentsApptIdCancelPostMutationKey()
   return mutationOptions<CancelAppointmentAppointmentsApptIdCancelPostStatus200, ResponseErrorConfig<CancelAppointmentAppointmentsApptIdCancelPostStatus400 | CancelAppointmentAppointmentsApptIdCancelPostStatus401 | CancelAppointmentAppointmentsApptIdCancelPostStatus403 | CancelAppointmentAppointmentsApptIdCancelPostStatus404 | CancelAppointmentAppointmentsApptIdCancelPostStatus409 | CancelAppointmentAppointmentsApptIdCancelPostStatus422 | CancelAppointmentAppointmentsApptIdCancelPostStatus500>, CancelAppointmentAppointmentsApptIdCancelPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await cancelAppointmentAppointmentsApptIdCancelPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return cancelAppointmentAppointmentsApptIdCancelPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

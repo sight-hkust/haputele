@@ -7,54 +7,54 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { QueueEntryOut } from './QueueEntryOut'
 
 export type ListQueueQueueGetQuery = {
-    status?: (string | null) | undefined;
-    source?: (string | null) | undefined;
-    priority?: (string | null) | undefined;
-    preferredDoctorId?: (number | null) | undefined;
-    patientId?: (number | null) | undefined;
-    from?: (string | null) | undefined;
-    to?: (string | null) | undefined;
-};
+  status?: (string | (null | null)) | undefined;
+  source?: (string | (null | null)) | undefined;
+  priority?: (string | (null | null)) | undefined;
+  preferredDoctorId?: (number | (null | null)) | undefined;
+  patientId?: (number | (null | null)) | undefined;
+  from?: (string | (null | null)) | undefined;
+  to?: (string | (null | null)) | undefined;
+}
 
 export type ListQueueQueueGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type ListQueueQueueGetStatus200 = QueueEntryOut[];
+export type ListQueueQueueGetStatus200 = QueueEntryOut[]
 
-export type ListQueueQueueGetStatus400 = ApiErrorResponse;
+export type ListQueueQueueGetStatus400 = ApiErrorResponse
 
-export type ListQueueQueueGetStatus401 = ApiErrorResponse;
+export type ListQueueQueueGetStatus401 = ApiErrorResponse
 
-export type ListQueueQueueGetStatus403 = ApiErrorResponse;
+export type ListQueueQueueGetStatus403 = ApiErrorResponse
 
-export type ListQueueQueueGetStatus404 = ApiErrorResponse;
+export type ListQueueQueueGetStatus404 = ApiErrorResponse
 
-export type ListQueueQueueGetStatus409 = ApiErrorResponse;
+export type ListQueueQueueGetStatus409 = ApiErrorResponse
 
-export type ListQueueQueueGetStatus422 = ApiErrorResponse;
+export type ListQueueQueueGetStatus422 = ApiErrorResponse
 
-export type ListQueueQueueGetStatus500 = ApiErrorResponse;
+export type ListQueueQueueGetStatus500 = ApiErrorResponse
 
 export type ListQueueQueueGetOptions = {
-    body?: never | undefined;
-    path?: never | undefined;
-    query?: ListQueueQueueGetQuery | undefined;
-    headers?: ListQueueQueueGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path?: never | undefined;
+  query?: ListQueueQueueGetQuery | undefined;
+  headers?: ListQueueQueueGetHeaders | undefined;
+}
 
 export type ListQueueQueueGetResponses = {
-    "200": ListQueueQueueGetStatus200;
-    "400": ListQueueQueueGetStatus400;
-    "401": ListQueueQueueGetStatus401;
-    "403": ListQueueQueueGetStatus403;
-    "404": ListQueueQueueGetStatus404;
-    "409": ListQueueQueueGetStatus409;
-    "422": ListQueueQueueGetStatus422;
-    "500": ListQueueQueueGetStatus500;
-};
+  '200': ListQueueQueueGetStatus200;
+  '400': ListQueueQueueGetStatus400;
+  '401': ListQueueQueueGetStatus401;
+  '403': ListQueueQueueGetStatus403;
+  '404': ListQueueQueueGetStatus404;
+  '409': ListQueueQueueGetStatus409;
+  '422': ListQueueQueueGetStatus422;
+  '500': ListQueueQueueGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ListQueueQueueGetResponse = (ListQueueQueueGetStatus200 | ListQueueQueueGetStatus400 | ListQueueQueueGetStatus401 | ListQueueQueueGetStatus403 | ListQueueQueueGetStatus404 | ListQueueQueueGetStatus409 | ListQueueQueueGetStatus422 | ListQueueQueueGetStatus500);
+ */
+export type ListQueueQueueGetResponse = ListQueueQueueGetStatus200

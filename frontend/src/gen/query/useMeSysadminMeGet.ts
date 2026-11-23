@@ -8,17 +8,16 @@ import type { MeSysadminMeGetOptions, MeSysadminMeGetStatus200, MeSysadminMeGetS
 import { meSysadminMeGet } from '../clients/meSysadminMeGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const meSysadminMeGetQueryKey = () => [{ url: '/sysadmin/me' }] as const
+export const meSysadminMeGetQueryKey = ({ headers }: Omit<MeSysadminMeGetOptions, 'headers'> & { headers?: MeSysadminMeGetOptions['headers'] } = {}) => [{ url: '/sysadmin/me' }] as const
 
 type MeSysadminMeGetQueryKey = ReturnType<typeof meSysadminMeGetQueryKey>
 
-export function meSysadminMeGetQueryOptions({ headers }: MeSysadminMeGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = meSysadminMeGetQueryKey()
+export function meSysadminMeGetQueryOptions({ headers }: MeSysadminMeGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = meSysadminMeGetQueryKey({ headers })
   return queryOptions<MeSysadminMeGetStatus200, ResponseErrorConfig<MeSysadminMeGetStatus400 | MeSysadminMeGetStatus401 | MeSysadminMeGetStatus403 | MeSysadminMeGetStatus404 | MeSysadminMeGetStatus409 | MeSysadminMeGetStatus422 | MeSysadminMeGetStatus500>, MeSysadminMeGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await meSysadminMeGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return meSysadminMeGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

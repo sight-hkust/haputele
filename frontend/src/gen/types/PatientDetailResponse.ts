@@ -9,8 +9,8 @@ import type { ProfileOut } from './ProfileOut'
 /**
  * @description GET /patients/{id} — profile is null until the first intake save.
  * @type object
-*/
+ */
 export type PatientDetailResponse = {
-    patient: PatientOut;
-    profile: (ProfileOut | null);
-};
+  patient: PatientOut;
+  profile: ProfileOut | (null | null);
+}

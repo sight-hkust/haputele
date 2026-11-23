@@ -8,17 +8,16 @@ import type { ListOpenInvitesDoctorsInvitesGetOptions, ListOpenInvitesDoctorsInv
 import { listOpenInvitesDoctorsInvitesGet } from '../clients/listOpenInvitesDoctorsInvitesGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const listOpenInvitesDoctorsInvitesGetQueryKey = () => [{ url: '/doctors/invites' }] as const
+export const listOpenInvitesDoctorsInvitesGetQueryKey = ({ headers }: Omit<ListOpenInvitesDoctorsInvitesGetOptions, 'headers'> & { headers?: ListOpenInvitesDoctorsInvitesGetOptions['headers'] } = {}) => [{ url: '/doctors/invites' }] as const
 
 type ListOpenInvitesDoctorsInvitesGetQueryKey = ReturnType<typeof listOpenInvitesDoctorsInvitesGetQueryKey>
 
-export function listOpenInvitesDoctorsInvitesGetQueryOptions({ headers }: ListOpenInvitesDoctorsInvitesGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = listOpenInvitesDoctorsInvitesGetQueryKey()
+export function listOpenInvitesDoctorsInvitesGetQueryOptions({ headers }: ListOpenInvitesDoctorsInvitesGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = listOpenInvitesDoctorsInvitesGetQueryKey({ headers })
   return queryOptions<ListOpenInvitesDoctorsInvitesGetStatus200, ResponseErrorConfig<ListOpenInvitesDoctorsInvitesGetStatus400 | ListOpenInvitesDoctorsInvitesGetStatus401 | ListOpenInvitesDoctorsInvitesGetStatus403 | ListOpenInvitesDoctorsInvitesGetStatus404 | ListOpenInvitesDoctorsInvitesGetStatus409 | ListOpenInvitesDoctorsInvitesGetStatus422 | ListOpenInvitesDoctorsInvitesGetStatus500>, ListOpenInvitesDoctorsInvitesGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await listOpenInvitesDoctorsInvitesGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return listOpenInvitesDoctorsInvitesGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

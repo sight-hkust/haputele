@@ -3,18 +3,18 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CloseCaptureSessionCaptureSessionsSessionIdDeleteOptions, CloseCaptureSessionCaptureSessionsSessionIdDeleteResponses } from '../types/CloseCaptureSessionCaptureSessionsSessionIdDelete'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `DELETE /capture/sessions/{session_id}`
  * @description Close a session early so the QR stops working the moment the desktop
  * modal is dismissed, rather than lingering until the TTL.
  * @summary Close Capture Session
- * {@link /capture/sessions/:session_id}
  */
-export function closeCaptureSessionCaptureSessionsSessionIdDelete<ThrowOnError extends boolean = true>(options: Options<CloseCaptureSessionCaptureSessionsSessionIdDeleteOptions, ThrowOnError>): Promise<RequestResult<CloseCaptureSessionCaptureSessionsSessionIdDeleteResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function closeCaptureSessionCaptureSessionsSessionIdDelete<ThrowOnError extends boolean = true>(options: Options<CloseCaptureSessionCaptureSessionsSessionIdDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<CloseCaptureSessionCaptureSessionsSessionIdDeleteResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'DELETE', url: '/capture/sessions/{session_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CloseCaptureSessionCaptureSessionsSessionIdDeleteResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CloseCaptureSessionCaptureSessionsSessionIdDeleteResponses, ThrowOnError>({ method: 'DELETE', url: '/capture/sessions/{session_id}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

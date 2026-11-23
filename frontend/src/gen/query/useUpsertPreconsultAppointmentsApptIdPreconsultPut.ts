@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const upsertPreconsultAppointmentsApptIdPreconsultPutMutationKey = () => [{ url: '/appointments/:appt_id/preconsult' }] as const
 
-export function upsertPreconsultAppointmentsApptIdPreconsultPutMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function upsertPreconsultAppointmentsApptIdPreconsultPutMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = upsertPreconsultAppointmentsApptIdPreconsultPutMutationKey()
   return mutationOptions<UpsertPreconsultAppointmentsApptIdPreconsultPutStatus200, ResponseErrorConfig<UpsertPreconsultAppointmentsApptIdPreconsultPutStatus400 | UpsertPreconsultAppointmentsApptIdPreconsultPutStatus401 | UpsertPreconsultAppointmentsApptIdPreconsultPutStatus403 | UpsertPreconsultAppointmentsApptIdPreconsultPutStatus404 | UpsertPreconsultAppointmentsApptIdPreconsultPutStatus409 | UpsertPreconsultAppointmentsApptIdPreconsultPutStatus422 | UpsertPreconsultAppointmentsApptIdPreconsultPutStatus500>, UpsertPreconsultAppointmentsApptIdPreconsultPutOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await upsertPreconsultAppointmentsApptIdPreconsultPut({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return upsertPreconsultAppointmentsApptIdPreconsultPut({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

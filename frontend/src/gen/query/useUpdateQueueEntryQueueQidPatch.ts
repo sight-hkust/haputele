@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const updateQueueEntryQueueQidPatchMutationKey = () => [{ url: '/queue/:qid' }] as const
 
-export function updateQueueEntryQueueQidPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function updateQueueEntryQueueQidPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = updateQueueEntryQueueQidPatchMutationKey()
   return mutationOptions<UpdateQueueEntryQueueQidPatchStatus200, ResponseErrorConfig<UpdateQueueEntryQueueQidPatchStatus400 | UpdateQueueEntryQueueQidPatchStatus401 | UpdateQueueEntryQueueQidPatchStatus403 | UpdateQueueEntryQueueQidPatchStatus404 | UpdateQueueEntryQueueQidPatchStatus409 | UpdateQueueEntryQueueQidPatchStatus422 | UpdateQueueEntryQueueQidPatchStatus500>, UpdateQueueEntryQueueQidPatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await updateQueueEntryQueueQidPatch({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return updateQueueEntryQueueQidPatch({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

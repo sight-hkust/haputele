@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGetOptions, ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGetResponses } from '../types/ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /doctors/{doctor_id}/availability`
  * @summary List Doctor Availability
- * {@link /doctors/:doctor_id/availability}
  */
-export function listDoctorAvailabilityDoctorsDoctorIdAvailabilityGet<ThrowOnError extends boolean = true>(options: Options<ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGetOptions, ThrowOnError>): Promise<RequestResult<ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function listDoctorAvailabilityDoctorsDoctorIdAvailabilityGet<ThrowOnError extends boolean = true>(options: Options<ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGetOptions, ThrowOnError>): Unwrappable<RequestResult<ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/doctors/{doctor_id}/availability', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ListDoctorAvailabilityDoctorsDoctorIdAvailabilityGetResponses, ThrowOnError>({ method: 'GET', url: '/doctors/{doctor_id}/availability', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

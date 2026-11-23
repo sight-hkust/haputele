@@ -3,17 +3,17 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { GetMySignatureDoctorsMeSignatureGetOptions, GetMySignatureDoctorsMeSignatureGetResponses } from '../types/GetMySignatureDoctorsMeSignatureGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /doctors/me/signature`
  * @description Stream the calling doctor's saved e-signature PNG (404 if none).
  * @summary Get My Signature
- * {@link /doctors/me/signature}
  */
-export function getMySignatureDoctorsMeSignatureGet<ThrowOnError extends boolean = true>(options: Options<GetMySignatureDoctorsMeSignatureGetOptions, ThrowOnError> = {}): Promise<RequestResult<GetMySignatureDoctorsMeSignatureGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function getMySignatureDoctorsMeSignatureGet<ThrowOnError extends boolean = true>(options: Options<GetMySignatureDoctorsMeSignatureGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<GetMySignatureDoctorsMeSignatureGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/doctors/me/signature', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], responseType: 'blob', ...config }) as Promise<RequestResult<GetMySignatureDoctorsMeSignatureGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<GetMySignatureDoctorsMeSignatureGetResponses, ThrowOnError>({ method: 'GET', url: '/doctors/me/signature', security: [securitySchemes.SessionCookie], parseAs: 'blob', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

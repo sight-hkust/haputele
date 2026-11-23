@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const initializeSetupInitializePostMutationKey = () => [{ url: '/setup/initialize' }] as const
 
-export function initializeSetupInitializePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function initializeSetupInitializePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = initializeSetupInitializePostMutationKey()
   return mutationOptions<InitializeSetupInitializePostStatus201, ResponseErrorConfig<InitializeSetupInitializePostStatus400 | InitializeSetupInitializePostStatus401 | InitializeSetupInitializePostStatus403 | InitializeSetupInitializePostStatus404 | InitializeSetupInitializePostStatus409 | InitializeSetupInitializePostStatus422 | InitializeSetupInitializePostStatus500>, InitializeSetupInitializePostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body }) => {
-      const { data } = await initializeSetupInitializePost({ ...config, body, throwOnError: true })
-      return data
+      return initializeSetupInitializePost({ ...config, body, throwOnError: true }).unwrap()
     },
   })
 }

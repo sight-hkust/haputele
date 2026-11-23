@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const livekitWebhookLivekitWebhookPostMutationKey = () => [{ url: '/livekit/webhook' }] as const
 
-export function livekitWebhookLivekitWebhookPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function livekitWebhookLivekitWebhookPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = livekitWebhookLivekitWebhookPostMutationKey()
   return mutationOptions<LivekitWebhookLivekitWebhookPostStatus204, ResponseErrorConfig<LivekitWebhookLivekitWebhookPostStatus400 | LivekitWebhookLivekitWebhookPostStatus401 | LivekitWebhookLivekitWebhookPostStatus403 | LivekitWebhookLivekitWebhookPostStatus404 | LivekitWebhookLivekitWebhookPostStatus409 | LivekitWebhookLivekitWebhookPostStatus422 | LivekitWebhookLivekitWebhookPostStatus500>, LivekitWebhookLivekitWebhookPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ headers }) => {
-      const { data } = await livekitWebhookLivekitWebhookPost({ ...config, headers, throwOnError: true })
-      return data
+      return livekitWebhookLivekitWebhookPost({ ...config, headers, throwOnError: true }).unwrap()
     },
   })
 }

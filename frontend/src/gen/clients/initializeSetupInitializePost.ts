@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { InitializeSetupInitializePostOptions, InitializeSetupInitializePostResponses } from '../types/InitializeSetupInitializePost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /setup/initialize`
  * @summary Initialize
- * {@link /setup/initialize}
  */
-export function initializeSetupInitializePost<ThrowOnError extends boolean = true>(options: Options<InitializeSetupInitializePostOptions, ThrowOnError>): Promise<RequestResult<InitializeSetupInitializePostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function initializeSetupInitializePost<ThrowOnError extends boolean = true>(options: Options<InitializeSetupInitializePostOptions, ThrowOnError>): Unwrappable<RequestResult<InitializeSetupInitializePostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/setup/initialize', security: [{ type: 'http', scheme: 'bearer' }], ...config }) as Promise<RequestResult<InitializeSetupInitializePostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<InitializeSetupInitializePostResponses, ThrowOnError>({ method: 'POST', url: '/setup/initialize', security: [securitySchemes.SetupBearer], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

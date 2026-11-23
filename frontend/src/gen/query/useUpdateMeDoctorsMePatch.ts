@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const updateMeDoctorsMePatchMutationKey = () => [{ url: '/doctors/me' }] as const
 
-export function updateMeDoctorsMePatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function updateMeDoctorsMePatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = updateMeDoctorsMePatchMutationKey()
   return mutationOptions<UpdateMeDoctorsMePatchStatus200, ResponseErrorConfig<UpdateMeDoctorsMePatchStatus400 | UpdateMeDoctorsMePatchStatus401 | UpdateMeDoctorsMePatchStatus403 | UpdateMeDoctorsMePatchStatus404 | UpdateMeDoctorsMePatchStatus409 | UpdateMeDoctorsMePatchStatus422 | UpdateMeDoctorsMePatchStatus500>, UpdateMeDoctorsMePatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await updateMeDoctorsMePatch({ ...config, body, headers, throwOnError: true })
-      return data
+      return updateMeDoctorsMePatch({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

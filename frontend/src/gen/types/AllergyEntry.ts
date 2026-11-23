@@ -4,16 +4,16 @@
 */
 
 export const allergyEntryTypeEnum = {
-    food: "food",
-    medication: "medication",
-    other: "other"
+  food: 'food',
+  medication: 'medication',
+  other: 'other',
 } as const;
 
-export type AllergyEntryTypeEnumKey = (typeof allergyEntryTypeEnum)[keyof typeof allergyEntryTypeEnum];
+export type AllergyEntryTypeEnumKey = (typeof allergyEntryTypeEnum)[keyof typeof allergyEntryTypeEnum]
 
 export type AllergyEntry = {
-    type: AllergyEntryTypeEnumKey;
-    name: string;
-    medication?: (string | null) | undefined;
-    treatedWhere?: (string | null) | undefined;
-};
+  type: AllergyEntryTypeEnumKey;
+  name: string;
+  medication?: (string | (null | null)) | undefined;
+  treatedWhere?: (string | (null | null)) | undefined;
+}

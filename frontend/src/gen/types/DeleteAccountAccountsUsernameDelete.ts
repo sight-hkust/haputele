@@ -6,48 +6,48 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type DeleteAccountAccountsUsernameDeletePath = {
-    username: string;
-};
+  username: string;
+}
 
 export type DeleteAccountAccountsUsernameDeleteHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type DeleteAccountAccountsUsernameDeleteStatus204 = unknown;
+export type DeleteAccountAccountsUsernameDeleteStatus204 = unknown
 
-export type DeleteAccountAccountsUsernameDeleteStatus400 = ApiErrorResponse;
+export type DeleteAccountAccountsUsernameDeleteStatus400 = ApiErrorResponse
 
-export type DeleteAccountAccountsUsernameDeleteStatus401 = ApiErrorResponse;
+export type DeleteAccountAccountsUsernameDeleteStatus401 = ApiErrorResponse
 
-export type DeleteAccountAccountsUsernameDeleteStatus403 = ApiErrorResponse;
+export type DeleteAccountAccountsUsernameDeleteStatus403 = ApiErrorResponse
 
-export type DeleteAccountAccountsUsernameDeleteStatus404 = ApiErrorResponse;
+export type DeleteAccountAccountsUsernameDeleteStatus404 = ApiErrorResponse
 
-export type DeleteAccountAccountsUsernameDeleteStatus409 = ApiErrorResponse;
+export type DeleteAccountAccountsUsernameDeleteStatus409 = ApiErrorResponse
 
-export type DeleteAccountAccountsUsernameDeleteStatus422 = ApiErrorResponse;
+export type DeleteAccountAccountsUsernameDeleteStatus422 = ApiErrorResponse
 
-export type DeleteAccountAccountsUsernameDeleteStatus500 = ApiErrorResponse;
+export type DeleteAccountAccountsUsernameDeleteStatus500 = ApiErrorResponse
 
 export type DeleteAccountAccountsUsernameDeleteOptions = {
-    body?: never | undefined;
-    path: DeleteAccountAccountsUsernameDeletePath;
-    query?: never | undefined;
-    headers?: DeleteAccountAccountsUsernameDeleteHeaders | undefined;
-};
+  body?: never | undefined;
+  path: DeleteAccountAccountsUsernameDeletePath;
+  query?: never | undefined;
+  headers?: DeleteAccountAccountsUsernameDeleteHeaders | undefined;
+}
 
 export type DeleteAccountAccountsUsernameDeleteResponses = {
-    "204": DeleteAccountAccountsUsernameDeleteStatus204;
-    "400": DeleteAccountAccountsUsernameDeleteStatus400;
-    "401": DeleteAccountAccountsUsernameDeleteStatus401;
-    "403": DeleteAccountAccountsUsernameDeleteStatus403;
-    "404": DeleteAccountAccountsUsernameDeleteStatus404;
-    "409": DeleteAccountAccountsUsernameDeleteStatus409;
-    "422": DeleteAccountAccountsUsernameDeleteStatus422;
-    "500": DeleteAccountAccountsUsernameDeleteStatus500;
-};
+  '204': DeleteAccountAccountsUsernameDeleteStatus204;
+  '400': DeleteAccountAccountsUsernameDeleteStatus400;
+  '401': DeleteAccountAccountsUsernameDeleteStatus401;
+  '403': DeleteAccountAccountsUsernameDeleteStatus403;
+  '404': DeleteAccountAccountsUsernameDeleteStatus404;
+  '409': DeleteAccountAccountsUsernameDeleteStatus409;
+  '422': DeleteAccountAccountsUsernameDeleteStatus422;
+  '500': DeleteAccountAccountsUsernameDeleteStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type DeleteAccountAccountsUsernameDeleteResponse = (DeleteAccountAccountsUsernameDeleteStatus204 | DeleteAccountAccountsUsernameDeleteStatus400 | DeleteAccountAccountsUsernameDeleteStatus401 | DeleteAccountAccountsUsernameDeleteStatus403 | DeleteAccountAccountsUsernameDeleteStatus404 | DeleteAccountAccountsUsernameDeleteStatus409 | DeleteAccountAccountsUsernameDeleteStatus422 | DeleteAccountAccountsUsernameDeleteStatus500);
+ */
+export type DeleteAccountAccountsUsernameDeleteResponse = DeleteAccountAccountsUsernameDeleteStatus204

@@ -9,50 +9,50 @@ import type { AppointmentCancelRequeueResponse } from './AppointmentCancelRequeu
 import type { AppointmentCancelResponse } from './AppointmentCancelResponse'
 
 export type CancelAppointmentAppointmentsApptIdCancelPostPath = {
-    appt_id: number;
-};
+  appt_id: number;
+}
 
 export type CancelAppointmentAppointmentsApptIdCancelPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type CancelAppointmentAppointmentsApptIdCancelPostStatus200 = (AppointmentCancelRequeueResponse | AppointmentCancelResponse);
+export type CancelAppointmentAppointmentsApptIdCancelPostStatus200 = AppointmentCancelRequeueResponse | AppointmentCancelResponse
 
-export type CancelAppointmentAppointmentsApptIdCancelPostStatus400 = ApiErrorResponse;
+export type CancelAppointmentAppointmentsApptIdCancelPostStatus400 = ApiErrorResponse
 
-export type CancelAppointmentAppointmentsApptIdCancelPostStatus401 = ApiErrorResponse;
+export type CancelAppointmentAppointmentsApptIdCancelPostStatus401 = ApiErrorResponse
 
-export type CancelAppointmentAppointmentsApptIdCancelPostStatus403 = ApiErrorResponse;
+export type CancelAppointmentAppointmentsApptIdCancelPostStatus403 = ApiErrorResponse
 
-export type CancelAppointmentAppointmentsApptIdCancelPostStatus404 = ApiErrorResponse;
+export type CancelAppointmentAppointmentsApptIdCancelPostStatus404 = ApiErrorResponse
 
-export type CancelAppointmentAppointmentsApptIdCancelPostStatus409 = ApiErrorResponse;
+export type CancelAppointmentAppointmentsApptIdCancelPostStatus409 = ApiErrorResponse
 
-export type CancelAppointmentAppointmentsApptIdCancelPostStatus422 = ApiErrorResponse;
+export type CancelAppointmentAppointmentsApptIdCancelPostStatus422 = ApiErrorResponse
 
-export type CancelAppointmentAppointmentsApptIdCancelPostStatus500 = ApiErrorResponse;
+export type CancelAppointmentAppointmentsApptIdCancelPostStatus500 = ApiErrorResponse
 
-export type CancelAppointmentAppointmentsApptIdCancelPostBody = AppointmentCancelIn;
+export type CancelAppointmentAppointmentsApptIdCancelPostBody = AppointmentCancelIn
 
 export type CancelAppointmentAppointmentsApptIdCancelPostOptions = {
-    body: CancelAppointmentAppointmentsApptIdCancelPostBody;
-    path: CancelAppointmentAppointmentsApptIdCancelPostPath;
-    query?: never | undefined;
-    headers?: CancelAppointmentAppointmentsApptIdCancelPostHeaders | undefined;
-};
+  body: CancelAppointmentAppointmentsApptIdCancelPostBody;
+  path: CancelAppointmentAppointmentsApptIdCancelPostPath;
+  query?: never | undefined;
+  headers?: CancelAppointmentAppointmentsApptIdCancelPostHeaders | undefined;
+}
 
 export type CancelAppointmentAppointmentsApptIdCancelPostResponses = {
-    "200": CancelAppointmentAppointmentsApptIdCancelPostStatus200;
-    "400": CancelAppointmentAppointmentsApptIdCancelPostStatus400;
-    "401": CancelAppointmentAppointmentsApptIdCancelPostStatus401;
-    "403": CancelAppointmentAppointmentsApptIdCancelPostStatus403;
-    "404": CancelAppointmentAppointmentsApptIdCancelPostStatus404;
-    "409": CancelAppointmentAppointmentsApptIdCancelPostStatus409;
-    "422": CancelAppointmentAppointmentsApptIdCancelPostStatus422;
-    "500": CancelAppointmentAppointmentsApptIdCancelPostStatus500;
-};
+  '200': CancelAppointmentAppointmentsApptIdCancelPostStatus200;
+  '400': CancelAppointmentAppointmentsApptIdCancelPostStatus400;
+  '401': CancelAppointmentAppointmentsApptIdCancelPostStatus401;
+  '403': CancelAppointmentAppointmentsApptIdCancelPostStatus403;
+  '404': CancelAppointmentAppointmentsApptIdCancelPostStatus404;
+  '409': CancelAppointmentAppointmentsApptIdCancelPostStatus409;
+  '422': CancelAppointmentAppointmentsApptIdCancelPostStatus422;
+  '500': CancelAppointmentAppointmentsApptIdCancelPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type CancelAppointmentAppointmentsApptIdCancelPostResponse = (CancelAppointmentAppointmentsApptIdCancelPostStatus200 | CancelAppointmentAppointmentsApptIdCancelPostStatus400 | CancelAppointmentAppointmentsApptIdCancelPostStatus401 | CancelAppointmentAppointmentsApptIdCancelPostStatus403 | CancelAppointmentAppointmentsApptIdCancelPostStatus404 | CancelAppointmentAppointmentsApptIdCancelPostStatus409 | CancelAppointmentAppointmentsApptIdCancelPostStatus422 | CancelAppointmentAppointmentsApptIdCancelPostStatus500);
+ */
+export type CancelAppointmentAppointmentsApptIdCancelPostResponse = CancelAppointmentAppointmentsApptIdCancelPostStatus200

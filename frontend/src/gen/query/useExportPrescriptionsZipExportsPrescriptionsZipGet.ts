@@ -8,17 +8,16 @@ import type { ExportPrescriptionsZipExportsPrescriptionsZipGetOptions, ExportPre
 import { exportPrescriptionsZipExportsPrescriptionsZipGet } from '../clients/exportPrescriptionsZipExportsPrescriptionsZipGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const exportPrescriptionsZipExportsPrescriptionsZipGetQueryKey = ({ query }: Omit<ExportPrescriptionsZipExportsPrescriptionsZipGetOptions, 'headers'>) => [{ url: '/exports/prescriptions.zip' }, ...(query ? [query] : [])] as const
+export const exportPrescriptionsZipExportsPrescriptionsZipGetQueryKey = ({ query, headers }: Omit<ExportPrescriptionsZipExportsPrescriptionsZipGetOptions, 'headers'> & { headers?: ExportPrescriptionsZipExportsPrescriptionsZipGetOptions['headers'] }) => [{ url: '/exports/prescriptions.zip' }, ...(query ? [query] : [])] as const
 
 type ExportPrescriptionsZipExportsPrescriptionsZipGetQueryKey = ReturnType<typeof exportPrescriptionsZipExportsPrescriptionsZipGetQueryKey>
 
-export function exportPrescriptionsZipExportsPrescriptionsZipGetQueryOptions({ query, headers }: ExportPrescriptionsZipExportsPrescriptionsZipGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = exportPrescriptionsZipExportsPrescriptionsZipGetQueryKey({ query })
+export function exportPrescriptionsZipExportsPrescriptionsZipGetQueryOptions({ query, headers }: ExportPrescriptionsZipExportsPrescriptionsZipGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = exportPrescriptionsZipExportsPrescriptionsZipGetQueryKey({ query, headers })
   return queryOptions<ExportPrescriptionsZipExportsPrescriptionsZipGetStatus200, ResponseErrorConfig<ExportPrescriptionsZipExportsPrescriptionsZipGetStatus400 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus401 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus403 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus404 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus409 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus422 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus500>, ExportPrescriptionsZipExportsPrescriptionsZipGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await exportPrescriptionsZipExportsPrescriptionsZipGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return exportPrescriptionsZipExportsPrescriptionsZipGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

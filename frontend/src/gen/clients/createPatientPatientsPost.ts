@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CreatePatientPatientsPostOptions, CreatePatientPatientsPostResponses } from '../types/CreatePatientPatientsPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /patients`
  * @summary Create Patient
- * {@link /patients}
  */
-export function createPatientPatientsPost<ThrowOnError extends boolean = true>(options: Options<CreatePatientPatientsPostOptions, ThrowOnError>): Promise<RequestResult<CreatePatientPatientsPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function createPatientPatientsPost<ThrowOnError extends boolean = true>(options: Options<CreatePatientPatientsPostOptions, ThrowOnError>): Unwrappable<RequestResult<CreatePatientPatientsPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/patients', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CreatePatientPatientsPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CreatePatientPatientsPostResponses, ThrowOnError>({ method: 'POST', url: '/patients', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

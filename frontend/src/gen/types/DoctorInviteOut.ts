@@ -4,35 +4,40 @@
 */
 
 export const doctorInviteOutStatusEnum = {
-    invited: "invited",
-    invite_expired: "invite_expired"
+  invited: 'invited',
+  invite_expired: 'invite_expired',
 } as const;
 
-export type DoctorInviteOutStatusEnumKey = (typeof doctorInviteOutStatusEnum)[keyof typeof doctorInviteOutStatusEnum];
+export type DoctorInviteOutStatusEnumKey = (typeof doctorInviteOutStatusEnum)[keyof typeof doctorInviteOutStatusEnum]
 
 /**
- * @description An open email-only invite (the doctor hasn\'t onboarded yet),\nsurfaced in the admin queue\'s \'Invited\' tab so it\'s visible — and\nresendable / revocable — before any Doctor row exists.\n\n`status` is computed in the router from expiry, not stored:\n  \"invited\"        → live, the onboarding link still works.\n  \"invite_expired\" → unconsumed but past expires_at; resend to refresh.
+ * @description An open email-only invite (the doctor hasn't onboarded yet),
+ * surfaced in the admin queue's 'Invited' tab so it's visible — and
+ * resendable / revocable — before any Doctor row exists.
+ * `status` is computed in the router from expiry, not stored:
+ *   "invited"        → live, the onboarding link still works.
+ *   "invite_expired" → unconsumed but past expires_at; resend to refresh.
  * @type object
-*/
+ */
 export type DoctorInviteOut = {
-    inviteId: number;
-    email: string;
-    familyName?: (string | null) | undefined;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    createdAt: string;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    expiresAt: string;
-    /**
-     * @default 'invited'
-     * @type string | undefined
-    */
-    status?: DoctorInviteOutStatusEnumKey | undefined;
-};
+  inviteId: number;
+  email: string;
+  familyName?: (string | (null | null)) | undefined;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  createdAt: string;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  expiresAt: string;
+  /**
+   * @default 'invited'
+   * @type string | undefined
+   */
+  status?: DoctorInviteOutStatusEnumKey | undefined;
+}

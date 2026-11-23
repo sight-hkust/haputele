@@ -4,8 +4,8 @@
 */
 
 export type MasterConsentIn = {
-    agreed: boolean;
-    version?: (string | null) | undefined;
-    capturedAt?: (string | null) | undefined;
-    signatureImage?: (string | null) | undefined;
-};
+  agreed: boolean;
+  version?: (string | (null | null)) | undefined;
+  capturedAt?: (string | (null | null)) | undefined;
+  signatureImage?: (string | (null | null)) | undefined;
+}

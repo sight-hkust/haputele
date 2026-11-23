@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createOrGetDraftAppointmentsApptIdConsultationDraftPostMutationKey = () => [{ url: '/appointments/:appt_id/consultation/draft' }] as const
 
-export function createOrGetDraftAppointmentsApptIdConsultationDraftPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createOrGetDraftAppointmentsApptIdConsultationDraftPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createOrGetDraftAppointmentsApptIdConsultationDraftPostMutationKey()
   return mutationOptions<CreateOrGetDraftAppointmentsApptIdConsultationDraftPostStatus200, ResponseErrorConfig<CreateOrGetDraftAppointmentsApptIdConsultationDraftPostStatus400 | CreateOrGetDraftAppointmentsApptIdConsultationDraftPostStatus401 | CreateOrGetDraftAppointmentsApptIdConsultationDraftPostStatus403 | CreateOrGetDraftAppointmentsApptIdConsultationDraftPostStatus404 | CreateOrGetDraftAppointmentsApptIdConsultationDraftPostStatus409 | CreateOrGetDraftAppointmentsApptIdConsultationDraftPostStatus422 | CreateOrGetDraftAppointmentsApptIdConsultationDraftPostStatus500>, CreateOrGetDraftAppointmentsApptIdConsultationDraftPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await createOrGetDraftAppointmentsApptIdConsultationDraftPost({ ...config, path, headers, throwOnError: true })
-      return data
+      return createOrGetDraftAppointmentsApptIdConsultationDraftPost({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

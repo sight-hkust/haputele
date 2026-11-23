@@ -4,11 +4,11 @@
 */
 
 export type PreconsultIn = {
-    height?: (number | null) | undefined;
-    weight?: (number | null) | undefined;
-    sysBp?: (number | null) | undefined;
-    diaBp?: (number | null) | undefined;
-    pulse?: (number | null) | undefined;
-    temperature?: (number | string | null) | undefined;
-    primaryComplaint?: (string | null) | undefined;
-};
+  height?: (number | (null | null)) | undefined;
+  weight?: (number | (null | null)) | undefined;
+  sysBp?: (number | (null | null)) | undefined;
+  diaBp?: (number | (null | null)) | undefined;
+  pulse?: (number | (null | null)) | undefined;
+  temperature?: (number | string | (null | null)) | undefined;
+  primaryComplaint?: (string | (null | null)) | undefined;
+}

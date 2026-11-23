@@ -8,7 +8,7 @@ import type { AppointmentOut } from './AppointmentOut'
 /**
  * @description POST /appointments/{id}/cancel without re-queueing.
  * @type object
-*/
+ */
 export type AppointmentCancelResponse = {
-    appointment: AppointmentOut;
-};
+  appointment: AppointmentOut;
+}

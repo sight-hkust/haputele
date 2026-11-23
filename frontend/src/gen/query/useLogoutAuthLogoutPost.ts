@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const logoutAuthLogoutPostMutationKey = () => [{ url: '/auth/logout' }] as const
 
-export function logoutAuthLogoutPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function logoutAuthLogoutPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = logoutAuthLogoutPostMutationKey()
   return mutationOptions<LogoutAuthLogoutPostStatus204, ResponseErrorConfig<LogoutAuthLogoutPostStatus400 | LogoutAuthLogoutPostStatus401 | LogoutAuthLogoutPostStatus403 | LogoutAuthLogoutPostStatus404 | LogoutAuthLogoutPostStatus409 | LogoutAuthLogoutPostStatus422 | LogoutAuthLogoutPostStatus500>, LogoutAuthLogoutPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ headers }) => {
-      const { data } = await logoutAuthLogoutPost({ ...config, headers, throwOnError: true })
-      return data
+      return logoutAuthLogoutPost({ ...config, headers, throwOnError: true }).unwrap()
     },
   })
 }

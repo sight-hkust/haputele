@@ -8,17 +8,16 @@ import type { StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOption
 import { streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGet } from '../clients/streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetQueryKey = ({ path }: Omit<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOptions, 'headers'>) => [{ url: '/appointments/:appt_id/attachments/:attachment_id', params: path }] as const
+export const streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetQueryKey = ({ path, headers }: Omit<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOptions, 'headers'> & { headers?: StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOptions['headers'] }) => [{ url: '/appointments/:appt_id/attachments/:attachment_id', params: path }] as const
 
 type StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetQueryKey = ReturnType<typeof streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetQueryKey>
 
-export function streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetQueryOptions({ path, headers }: StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetQueryKey({ path })
+export function streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetQueryOptions({ path, headers }: StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetQueryKey({ path, headers })
   return queryOptions<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus200, ResponseErrorConfig<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus400 | StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus401 | StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus403 | StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus404 | StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus409 | StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus422 | StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus500>, StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

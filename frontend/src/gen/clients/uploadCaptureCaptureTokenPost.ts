@@ -3,17 +3,17 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UploadCaptureCaptureTokenPostOptions, UploadCaptureCaptureTokenPostResponses } from '../types/UploadCaptureCaptureTokenPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `POST /capture/{token}`
  * @description Accept a photo from the phone and route it by the session's purpose.
  * @summary Upload Capture
- * {@link /capture/:token}
  */
-export function uploadCaptureCaptureTokenPost<ThrowOnError extends boolean = true>(options: Options<UploadCaptureCaptureTokenPostOptions, ThrowOnError>): Promise<RequestResult<UploadCaptureCaptureTokenPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function uploadCaptureCaptureTokenPost<ThrowOnError extends boolean = true>(options: Options<UploadCaptureCaptureTokenPostOptions, ThrowOnError>): Unwrappable<RequestResult<UploadCaptureCaptureTokenPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/capture/{token}', contentType: { request: 'multipart/form-data' }, ...config }) as Promise<RequestResult<UploadCaptureCaptureTokenPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UploadCaptureCaptureTokenPostResponses, ThrowOnError>({ method: 'POST', url: '/capture/{token}', contentType: { request: 'multipart/form-data' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

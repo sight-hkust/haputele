@@ -4,38 +4,42 @@
 */
 
 /**
- * @description Per-status counts for the admin approval queue\'s tab badges.\n\n`awaitingApproval` is the actionable bucket — doctors who submitted\nand are blocked on the admin. Computed in one pass over the doctor\ntable plus the batched live-invite lookup the list endpoint already\nuses.
+ * @description Per-status counts for the admin approval queue's tab badges.
+ * `awaitingApproval` is the actionable bucket — doctors who submitted
+ * and are blocked on the admin. Computed in one pass over the doctor
+ * table plus the batched live-invite lookup the list endpoint already
+ * uses.
  * @type object
-*/
+ */
 export type DoctorSummaryOut = {
-    /**
-     * @default 0
-     * @type integer | undefined
-    */
-    awaitingApproval?: number | undefined;
-    /**
-     * @default 0
-     * @type integer | undefined
-    */
-    awaitingSetup?: number | undefined;
-    /**
-     * @default 0
-     * @type integer | undefined
-    */
-    invited?: number | undefined;
-    /**
-     * @default 0
-     * @type integer | undefined
-    */
-    active?: number | undefined;
-    /**
-     * @default 0
-     * @type integer | undefined
-    */
-    rejected?: number | undefined;
-    /**
-     * @default 0
-     * @type integer | undefined
-    */
-    total?: number | undefined;
-};
+  /**
+   * @default 0
+   * @type integer | undefined
+   */
+  awaitingApproval?: number | undefined;
+  /**
+   * @default 0
+   * @type integer | undefined
+   */
+  awaitingSetup?: number | undefined;
+  /**
+   * @default 0
+   * @type integer | undefined
+   */
+  invited?: number | undefined;
+  /**
+   * @default 0
+   * @type integer | undefined
+   */
+  active?: number | undefined;
+  /**
+   * @default 0
+   * @type integer | undefined
+   */
+  rejected?: number | undefined;
+  /**
+   * @default 0
+   * @type integer | undefined
+   */
+  total?: number | undefined;
+}

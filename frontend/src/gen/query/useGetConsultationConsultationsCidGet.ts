@@ -8,17 +8,16 @@ import type { GetConsultationConsultationsCidGetOptions, GetConsultationConsulta
 import { getConsultationConsultationsCidGet } from '../clients/getConsultationConsultationsCidGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getConsultationConsultationsCidGetQueryKey = ({ path }: Omit<GetConsultationConsultationsCidGetOptions, 'headers'>) => [{ url: '/consultations/:cid', params: path }] as const
+export const getConsultationConsultationsCidGetQueryKey = ({ path, headers }: Omit<GetConsultationConsultationsCidGetOptions, 'headers'> & { headers?: GetConsultationConsultationsCidGetOptions['headers'] }) => [{ url: '/consultations/:cid', params: path }] as const
 
 type GetConsultationConsultationsCidGetQueryKey = ReturnType<typeof getConsultationConsultationsCidGetQueryKey>
 
-export function getConsultationConsultationsCidGetQueryOptions({ path, headers }: GetConsultationConsultationsCidGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getConsultationConsultationsCidGetQueryKey({ path })
+export function getConsultationConsultationsCidGetQueryOptions({ path, headers }: GetConsultationConsultationsCidGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getConsultationConsultationsCidGetQueryKey({ path, headers })
   return queryOptions<GetConsultationConsultationsCidGetStatus200, ResponseErrorConfig<GetConsultationConsultationsCidGetStatus400 | GetConsultationConsultationsCidGetStatus401 | GetConsultationConsultationsCidGetStatus403 | GetConsultationConsultationsCidGetStatus404 | GetConsultationConsultationsCidGetStatus409 | GetConsultationConsultationsCidGetStatus422 | GetConsultationConsultationsCidGetStatus500>, GetConsultationConsultationsCidGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getConsultationConsultationsCidGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getConsultationConsultationsCidGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

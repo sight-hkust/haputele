@@ -3,18 +3,18 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ListAccountsAccountsGetOptions, ListAccountsAccountsGetResponses } from '../types/ListAccountsAccountsGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /accounts`
  * @description Roster of the accounts this caller may see. The sys-admin's own row
  * is never listed — it manages itself from the System page.
  * @summary List Accounts
- * {@link /accounts}
  */
-export function listAccountsAccountsGet<ThrowOnError extends boolean = true>(options: Options<ListAccountsAccountsGetOptions, ThrowOnError> = {}): Promise<RequestResult<ListAccountsAccountsGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function listAccountsAccountsGet<ThrowOnError extends boolean = true>(options: Options<ListAccountsAccountsGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<ListAccountsAccountsGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/accounts', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ListAccountsAccountsGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ListAccountsAccountsGetResponses, ThrowOnError>({ method: 'GET', url: '/accounts', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

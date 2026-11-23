@@ -8,17 +8,16 @@ import type { SystemConfigSysadminSystemConfigGetOptions, SystemConfigSysadminSy
 import { systemConfigSysadminSystemConfigGet } from '../clients/systemConfigSysadminSystemConfigGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const systemConfigSysadminSystemConfigGetQueryKey = () => [{ url: '/sysadmin/system-config' }] as const
+export const systemConfigSysadminSystemConfigGetQueryKey = ({ headers }: Omit<SystemConfigSysadminSystemConfigGetOptions, 'headers'> & { headers?: SystemConfigSysadminSystemConfigGetOptions['headers'] } = {}) => [{ url: '/sysadmin/system-config' }] as const
 
 type SystemConfigSysadminSystemConfigGetQueryKey = ReturnType<typeof systemConfigSysadminSystemConfigGetQueryKey>
 
-export function systemConfigSysadminSystemConfigGetQueryOptions({ headers }: SystemConfigSysadminSystemConfigGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = systemConfigSysadminSystemConfigGetQueryKey()
+export function systemConfigSysadminSystemConfigGetQueryOptions({ headers }: SystemConfigSysadminSystemConfigGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = systemConfigSysadminSystemConfigGetQueryKey({ headers })
   return queryOptions<SystemConfigSysadminSystemConfigGetStatus200, ResponseErrorConfig<SystemConfigSysadminSystemConfigGetStatus400 | SystemConfigSysadminSystemConfigGetStatus401 | SystemConfigSysadminSystemConfigGetStatus403 | SystemConfigSysadminSystemConfigGetStatus404 | SystemConfigSysadminSystemConfigGetStatus409 | SystemConfigSysadminSystemConfigGetStatus422 | SystemConfigSysadminSystemConfigGetStatus500>, SystemConfigSysadminSystemConfigGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await systemConfigSysadminSystemConfigGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return systemConfigSysadminSystemConfigGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

@@ -8,17 +8,16 @@ import type { ListAttachmentsAppointmentsApptIdAttachmentsGetOptions, ListAttach
 import { listAttachmentsAppointmentsApptIdAttachmentsGet } from '../clients/listAttachmentsAppointmentsApptIdAttachmentsGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const listAttachmentsAppointmentsApptIdAttachmentsGetQueryKey = ({ path }: Omit<ListAttachmentsAppointmentsApptIdAttachmentsGetOptions, 'headers'>) => [{ url: '/appointments/:appt_id/attachments', params: path }] as const
+export const listAttachmentsAppointmentsApptIdAttachmentsGetQueryKey = ({ path, headers }: Omit<ListAttachmentsAppointmentsApptIdAttachmentsGetOptions, 'headers'> & { headers?: ListAttachmentsAppointmentsApptIdAttachmentsGetOptions['headers'] }) => [{ url: '/appointments/:appt_id/attachments', params: path }] as const
 
 type ListAttachmentsAppointmentsApptIdAttachmentsGetQueryKey = ReturnType<typeof listAttachmentsAppointmentsApptIdAttachmentsGetQueryKey>
 
-export function listAttachmentsAppointmentsApptIdAttachmentsGetQueryOptions({ path, headers }: ListAttachmentsAppointmentsApptIdAttachmentsGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = listAttachmentsAppointmentsApptIdAttachmentsGetQueryKey({ path })
+export function listAttachmentsAppointmentsApptIdAttachmentsGetQueryOptions({ path, headers }: ListAttachmentsAppointmentsApptIdAttachmentsGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = listAttachmentsAppointmentsApptIdAttachmentsGetQueryKey({ path, headers })
   return queryOptions<ListAttachmentsAppointmentsApptIdAttachmentsGetStatus200, ResponseErrorConfig<ListAttachmentsAppointmentsApptIdAttachmentsGetStatus400 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus401 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus403 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus404 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus409 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus422 | ListAttachmentsAppointmentsApptIdAttachmentsGetStatus500>, ListAttachmentsAppointmentsApptIdAttachmentsGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await listAttachmentsAppointmentsApptIdAttachmentsGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return listAttachmentsAppointmentsApptIdAttachmentsGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

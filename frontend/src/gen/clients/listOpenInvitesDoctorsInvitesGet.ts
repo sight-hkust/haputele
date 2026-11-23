@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ListOpenInvitesDoctorsInvitesGetOptions, ListOpenInvitesDoctorsInvitesGetResponses } from '../types/ListOpenInvitesDoctorsInvitesGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /doctors/invites`
  * @description Open email-only invites whose doctor hasn't onboarded yet.
  * Surfaced in the admin queue's "Invited" tab so an invited doctor is
  * visible — and resendable / revocable — in the window between "Send
@@ -15,10 +16,9 @@ import { client } from '../.kubb/client'
  * expired-but-unconsumed invites (tagged `invite_expired`) so a lapsed
  * invite can be resent instead of silently vanishing.
  * @summary List Open Invites
- * {@link /doctors/invites}
  */
-export function listOpenInvitesDoctorsInvitesGet<ThrowOnError extends boolean = true>(options: Options<ListOpenInvitesDoctorsInvitesGetOptions, ThrowOnError> = {}): Promise<RequestResult<ListOpenInvitesDoctorsInvitesGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function listOpenInvitesDoctorsInvitesGet<ThrowOnError extends boolean = true>(options: Options<ListOpenInvitesDoctorsInvitesGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<ListOpenInvitesDoctorsInvitesGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/doctors/invites', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ListOpenInvitesDoctorsInvitesGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ListOpenInvitesDoctorsInvitesGetResponses, ThrowOnError>({ method: 'GET', url: '/doctors/invites', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

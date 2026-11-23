@@ -4,18 +4,18 @@
 */
 
 export const queueEntryUpdatePriority = {
-    urgent: "urgent",
-    routine: "routine"
+  urgent: 'urgent',
+  routine: 'routine',
 } as const;
 
-export type QueueEntryUpdatePriorityKey = (typeof queueEntryUpdatePriority)[keyof typeof queueEntryUpdatePriority];
+export type QueueEntryUpdatePriorityKey = (typeof queueEntryUpdatePriority)[keyof typeof queueEntryUpdatePriority]
 
 export type QueueEntryUpdate = {
-    priority?: (QueueEntryUpdatePriorityKey | null) | undefined;
-    preferredDoctorId?: (number | null) | undefined;
-    targetDate?: (string | null) | undefined;
-    notes?: (string | null) | undefined;
-    sourceMeta?: ({
-        [key: string]: unknown;
-    } | null) | undefined;
-};
+  priority?: (QueueEntryUpdatePriorityKey | (null | null)) | undefined;
+  preferredDoctorId?: (number | (null | null)) | undefined;
+  targetDate?: (string | (null | null)) | undefined;
+  notes?: (string | (null | null)) | undefined;
+  sourceMeta?: ({
+    [key: string]: unknown;
+  } | (null | null)) | undefined;
+}

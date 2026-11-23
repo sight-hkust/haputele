@@ -4,11 +4,11 @@
 */
 
 export type FollowUpAppointment = {
-    kind: "appointment";
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    scheduledAt: string;
-};
+  kind: 'appointment';
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  scheduledAt: string;
+}

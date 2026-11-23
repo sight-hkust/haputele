@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const deleteAvailabilityAvailabilityAidDeleteMutationKey = () => [{ url: '/availability/:aid' }] as const
 
-export function deleteAvailabilityAvailabilityAidDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function deleteAvailabilityAvailabilityAidDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = deleteAvailabilityAvailabilityAidDeleteMutationKey()
   return mutationOptions<DeleteAvailabilityAvailabilityAidDeleteStatus204, ResponseErrorConfig<DeleteAvailabilityAvailabilityAidDeleteStatus400 | DeleteAvailabilityAvailabilityAidDeleteStatus401 | DeleteAvailabilityAvailabilityAidDeleteStatus403 | DeleteAvailabilityAvailabilityAidDeleteStatus404 | DeleteAvailabilityAvailabilityAidDeleteStatus409 | DeleteAvailabilityAvailabilityAidDeleteStatus422 | DeleteAvailabilityAvailabilityAidDeleteStatus500>, DeleteAvailabilityAvailabilityAidDeleteOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await deleteAvailabilityAvailabilityAidDelete({ ...config, path, headers, throwOnError: true })
-      return data
+      return deleteAvailabilityAvailabilityAidDelete({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

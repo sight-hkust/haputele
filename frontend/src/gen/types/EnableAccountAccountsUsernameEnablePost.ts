@@ -7,48 +7,48 @@ import type { AccountRow } from './AccountRow'
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type EnableAccountAccountsUsernameEnablePostPath = {
-    username: string;
-};
+  username: string;
+}
 
 export type EnableAccountAccountsUsernameEnablePostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type EnableAccountAccountsUsernameEnablePostStatus200 = AccountRow;
+export type EnableAccountAccountsUsernameEnablePostStatus200 = AccountRow
 
-export type EnableAccountAccountsUsernameEnablePostStatus400 = ApiErrorResponse;
+export type EnableAccountAccountsUsernameEnablePostStatus400 = ApiErrorResponse
 
-export type EnableAccountAccountsUsernameEnablePostStatus401 = ApiErrorResponse;
+export type EnableAccountAccountsUsernameEnablePostStatus401 = ApiErrorResponse
 
-export type EnableAccountAccountsUsernameEnablePostStatus403 = ApiErrorResponse;
+export type EnableAccountAccountsUsernameEnablePostStatus403 = ApiErrorResponse
 
-export type EnableAccountAccountsUsernameEnablePostStatus404 = ApiErrorResponse;
+export type EnableAccountAccountsUsernameEnablePostStatus404 = ApiErrorResponse
 
-export type EnableAccountAccountsUsernameEnablePostStatus409 = ApiErrorResponse;
+export type EnableAccountAccountsUsernameEnablePostStatus409 = ApiErrorResponse
 
-export type EnableAccountAccountsUsernameEnablePostStatus422 = ApiErrorResponse;
+export type EnableAccountAccountsUsernameEnablePostStatus422 = ApiErrorResponse
 
-export type EnableAccountAccountsUsernameEnablePostStatus500 = ApiErrorResponse;
+export type EnableAccountAccountsUsernameEnablePostStatus500 = ApiErrorResponse
 
 export type EnableAccountAccountsUsernameEnablePostOptions = {
-    body?: never | undefined;
-    path: EnableAccountAccountsUsernameEnablePostPath;
-    query?: never | undefined;
-    headers?: EnableAccountAccountsUsernameEnablePostHeaders | undefined;
-};
+  body?: never | undefined;
+  path: EnableAccountAccountsUsernameEnablePostPath;
+  query?: never | undefined;
+  headers?: EnableAccountAccountsUsernameEnablePostHeaders | undefined;
+}
 
 export type EnableAccountAccountsUsernameEnablePostResponses = {
-    "200": EnableAccountAccountsUsernameEnablePostStatus200;
-    "400": EnableAccountAccountsUsernameEnablePostStatus400;
-    "401": EnableAccountAccountsUsernameEnablePostStatus401;
-    "403": EnableAccountAccountsUsernameEnablePostStatus403;
-    "404": EnableAccountAccountsUsernameEnablePostStatus404;
-    "409": EnableAccountAccountsUsernameEnablePostStatus409;
-    "422": EnableAccountAccountsUsernameEnablePostStatus422;
-    "500": EnableAccountAccountsUsernameEnablePostStatus500;
-};
+  '200': EnableAccountAccountsUsernameEnablePostStatus200;
+  '400': EnableAccountAccountsUsernameEnablePostStatus400;
+  '401': EnableAccountAccountsUsernameEnablePostStatus401;
+  '403': EnableAccountAccountsUsernameEnablePostStatus403;
+  '404': EnableAccountAccountsUsernameEnablePostStatus404;
+  '409': EnableAccountAccountsUsernameEnablePostStatus409;
+  '422': EnableAccountAccountsUsernameEnablePostStatus422;
+  '500': EnableAccountAccountsUsernameEnablePostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type EnableAccountAccountsUsernameEnablePostResponse = (EnableAccountAccountsUsernameEnablePostStatus200 | EnableAccountAccountsUsernameEnablePostStatus400 | EnableAccountAccountsUsernameEnablePostStatus401 | EnableAccountAccountsUsernameEnablePostStatus403 | EnableAccountAccountsUsernameEnablePostStatus404 | EnableAccountAccountsUsernameEnablePostStatus409 | EnableAccountAccountsUsernameEnablePostStatus422 | EnableAccountAccountsUsernameEnablePostStatus500);
+ */
+export type EnableAccountAccountsUsernameEnablePostResponse = EnableAccountAccountsUsernameEnablePostStatus200

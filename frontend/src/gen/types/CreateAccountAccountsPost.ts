@@ -8,46 +8,46 @@ import type { AccountOut } from './AccountOut'
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type CreateAccountAccountsPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type CreateAccountAccountsPostStatus201 = AccountOut;
+export type CreateAccountAccountsPostStatus201 = AccountOut
 
-export type CreateAccountAccountsPostStatus400 = ApiErrorResponse;
+export type CreateAccountAccountsPostStatus400 = ApiErrorResponse
 
-export type CreateAccountAccountsPostStatus401 = ApiErrorResponse;
+export type CreateAccountAccountsPostStatus401 = ApiErrorResponse
 
-export type CreateAccountAccountsPostStatus403 = ApiErrorResponse;
+export type CreateAccountAccountsPostStatus403 = ApiErrorResponse
 
-export type CreateAccountAccountsPostStatus404 = ApiErrorResponse;
+export type CreateAccountAccountsPostStatus404 = ApiErrorResponse
 
-export type CreateAccountAccountsPostStatus409 = ApiErrorResponse;
+export type CreateAccountAccountsPostStatus409 = ApiErrorResponse
 
-export type CreateAccountAccountsPostStatus422 = ApiErrorResponse;
+export type CreateAccountAccountsPostStatus422 = ApiErrorResponse
 
-export type CreateAccountAccountsPostStatus500 = ApiErrorResponse;
+export type CreateAccountAccountsPostStatus500 = ApiErrorResponse
 
-export type CreateAccountAccountsPostBody = AccountCreateIn;
+export type CreateAccountAccountsPostBody = AccountCreateIn
 
 export type CreateAccountAccountsPostOptions = {
-    body: CreateAccountAccountsPostBody;
-    path?: never | undefined;
-    query?: never | undefined;
-    headers?: CreateAccountAccountsPostHeaders | undefined;
-};
+  body: CreateAccountAccountsPostBody;
+  path?: never | undefined;
+  query?: never | undefined;
+  headers?: CreateAccountAccountsPostHeaders | undefined;
+}
 
 export type CreateAccountAccountsPostResponses = {
-    "201": CreateAccountAccountsPostStatus201;
-    "400": CreateAccountAccountsPostStatus400;
-    "401": CreateAccountAccountsPostStatus401;
-    "403": CreateAccountAccountsPostStatus403;
-    "404": CreateAccountAccountsPostStatus404;
-    "409": CreateAccountAccountsPostStatus409;
-    "422": CreateAccountAccountsPostStatus422;
-    "500": CreateAccountAccountsPostStatus500;
-};
+  '201': CreateAccountAccountsPostStatus201;
+  '400': CreateAccountAccountsPostStatus400;
+  '401': CreateAccountAccountsPostStatus401;
+  '403': CreateAccountAccountsPostStatus403;
+  '404': CreateAccountAccountsPostStatus404;
+  '409': CreateAccountAccountsPostStatus409;
+  '422': CreateAccountAccountsPostStatus422;
+  '500': CreateAccountAccountsPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type CreateAccountAccountsPostResponse = (CreateAccountAccountsPostStatus201 | CreateAccountAccountsPostStatus400 | CreateAccountAccountsPostStatus401 | CreateAccountAccountsPostStatus403 | CreateAccountAccountsPostStatus404 | CreateAccountAccountsPostStatus409 | CreateAccountAccountsPostStatus422 | CreateAccountAccountsPostStatus500);
+ */
+export type CreateAccountAccountsPostResponse = CreateAccountAccountsPostStatus201

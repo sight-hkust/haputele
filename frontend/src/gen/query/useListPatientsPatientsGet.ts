@@ -8,17 +8,16 @@ import type { ListPatientsPatientsGetOptions, ListPatientsPatientsGetStatus200, 
 import { listPatientsPatientsGet } from '../clients/listPatientsPatientsGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const listPatientsPatientsGetQueryKey = ({ query }: Omit<ListPatientsPatientsGetOptions, 'headers'> = {}) => [{ url: '/patients' }, ...(query ? [query] : [])] as const
+export const listPatientsPatientsGetQueryKey = ({ query, headers }: Omit<ListPatientsPatientsGetOptions, 'headers'> & { headers?: ListPatientsPatientsGetOptions['headers'] } = {}) => [{ url: '/patients' }, ...(query ? [query] : [])] as const
 
 type ListPatientsPatientsGetQueryKey = ReturnType<typeof listPatientsPatientsGetQueryKey>
 
-export function listPatientsPatientsGetQueryOptions({ query, headers }: ListPatientsPatientsGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = listPatientsPatientsGetQueryKey({ query })
+export function listPatientsPatientsGetQueryOptions({ query, headers }: ListPatientsPatientsGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = listPatientsPatientsGetQueryKey({ query, headers })
   return queryOptions<ListPatientsPatientsGetStatus200, ResponseErrorConfig<ListPatientsPatientsGetStatus400 | ListPatientsPatientsGetStatus401 | ListPatientsPatientsGetStatus403 | ListPatientsPatientsGetStatus404 | ListPatientsPatientsGetStatus409 | ListPatientsPatientsGetStatus422 | ListPatientsPatientsGetStatus500>, ListPatientsPatientsGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await listPatientsPatientsGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return listPatientsPatientsGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

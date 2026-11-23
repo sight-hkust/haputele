@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CreateAccountAccountsPostOptions, CreateAccountAccountsPostResponses } from '../types/CreateAccountAccountsPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /accounts`
  * @summary Create Account
- * {@link /accounts}
  */
-export function createAccountAccountsPost<ThrowOnError extends boolean = true>(options: Options<CreateAccountAccountsPostOptions, ThrowOnError>): Promise<RequestResult<CreateAccountAccountsPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function createAccountAccountsPost<ThrowOnError extends boolean = true>(options: Options<CreateAccountAccountsPostOptions, ThrowOnError>): Unwrappable<RequestResult<CreateAccountAccountsPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/accounts', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CreateAccountAccountsPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CreateAccountAccountsPostResponses, ThrowOnError>({ method: 'POST', url: '/accounts', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

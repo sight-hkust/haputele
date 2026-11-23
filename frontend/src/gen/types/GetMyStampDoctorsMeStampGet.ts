@@ -6,64 +6,62 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type GetMyStampDoctorsMeStampGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
  * @description
  * Format: `binary`
- * @type string
-*/
-export type GetMyStampDoctorsMeStampGetStatus200Png = Blob;
+ */
+export type GetMyStampDoctorsMeStampGetStatus200Png = Blob
 
 /**
  * @description
  * Format: `binary`
- * @type string
-*/
-export type GetMyStampDoctorsMeStampGetStatus200Jpeg = Blob;
+ */
+export type GetMyStampDoctorsMeStampGetStatus200Jpeg = Blob
 
-export type GetMyStampDoctorsMeStampGetStatus200 = (GetMyStampDoctorsMeStampGetStatus200Png | GetMyStampDoctorsMeStampGetStatus200Jpeg);
+export type GetMyStampDoctorsMeStampGetStatus200 = GetMyStampDoctorsMeStampGetStatus200Png | GetMyStampDoctorsMeStampGetStatus200Jpeg
 
-export type GetMyStampDoctorsMeStampGetStatus400 = ApiErrorResponse;
+export type GetMyStampDoctorsMeStampGetStatus400 = ApiErrorResponse
 
-export type GetMyStampDoctorsMeStampGetStatus401 = ApiErrorResponse;
+export type GetMyStampDoctorsMeStampGetStatus401 = ApiErrorResponse
 
-export type GetMyStampDoctorsMeStampGetStatus403 = ApiErrorResponse;
+export type GetMyStampDoctorsMeStampGetStatus403 = ApiErrorResponse
 
-export type GetMyStampDoctorsMeStampGetStatus404 = ApiErrorResponse;
+export type GetMyStampDoctorsMeStampGetStatus404 = ApiErrorResponse
 
-export type GetMyStampDoctorsMeStampGetStatus409 = ApiErrorResponse;
+export type GetMyStampDoctorsMeStampGetStatus409 = ApiErrorResponse
 
-export type GetMyStampDoctorsMeStampGetStatus422 = ApiErrorResponse;
+export type GetMyStampDoctorsMeStampGetStatus422 = ApiErrorResponse
 
-export type GetMyStampDoctorsMeStampGetStatus500 = ApiErrorResponse;
+export type GetMyStampDoctorsMeStampGetStatus500 = ApiErrorResponse
 
 export type GetMyStampDoctorsMeStampGetOptions = {
-    body?: never | undefined;
-    path?: never | undefined;
-    query?: never | undefined;
-    headers?: GetMyStampDoctorsMeStampGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path?: never | undefined;
+  query?: never | undefined;
+  headers?: GetMyStampDoctorsMeStampGetHeaders | undefined;
+}
 
 export type GetMyStampDoctorsMeStampGetResponses = {
-    "200": ({
-        contentType: "image/png";
-        data: GetMyStampDoctorsMeStampGetStatus200Png;
-    } | {
-        contentType: "image/jpeg";
-        data: GetMyStampDoctorsMeStampGetStatus200Jpeg;
-    });
-    "400": GetMyStampDoctorsMeStampGetStatus400;
-    "401": GetMyStampDoctorsMeStampGetStatus401;
-    "403": GetMyStampDoctorsMeStampGetStatus403;
-    "404": GetMyStampDoctorsMeStampGetStatus404;
-    "409": GetMyStampDoctorsMeStampGetStatus409;
-    "422": GetMyStampDoctorsMeStampGetStatus422;
-    "500": GetMyStampDoctorsMeStampGetStatus500;
-};
+  '200': {
+    contentType: 'image/png';
+    data: GetMyStampDoctorsMeStampGetStatus200Png;
+  } | {
+    contentType: 'image/jpeg';
+    data: GetMyStampDoctorsMeStampGetStatus200Jpeg;
+  };
+  '400': GetMyStampDoctorsMeStampGetStatus400;
+  '401': GetMyStampDoctorsMeStampGetStatus401;
+  '403': GetMyStampDoctorsMeStampGetStatus403;
+  '404': GetMyStampDoctorsMeStampGetStatus404;
+  '409': GetMyStampDoctorsMeStampGetStatus409;
+  '422': GetMyStampDoctorsMeStampGetStatus422;
+  '500': GetMyStampDoctorsMeStampGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type GetMyStampDoctorsMeStampGetResponse = (GetMyStampDoctorsMeStampGetStatus200 | GetMyStampDoctorsMeStampGetStatus400 | GetMyStampDoctorsMeStampGetStatus401 | GetMyStampDoctorsMeStampGetStatus403 | GetMyStampDoctorsMeStampGetStatus404 | GetMyStampDoctorsMeStampGetStatus409 | GetMyStampDoctorsMeStampGetStatus422 | GetMyStampDoctorsMeStampGetStatus500);
+ */
+export type GetMyStampDoctorsMeStampGetResponse = GetMyStampDoctorsMeStampGetStatus200

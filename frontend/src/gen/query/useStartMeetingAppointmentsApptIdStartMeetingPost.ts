@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const startMeetingAppointmentsApptIdStartMeetingPostMutationKey = () => [{ url: '/appointments/:appt_id/start-meeting' }] as const
 
-export function startMeetingAppointmentsApptIdStartMeetingPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function startMeetingAppointmentsApptIdStartMeetingPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = startMeetingAppointmentsApptIdStartMeetingPostMutationKey()
   return mutationOptions<StartMeetingAppointmentsApptIdStartMeetingPostStatus200, ResponseErrorConfig<StartMeetingAppointmentsApptIdStartMeetingPostStatus400 | StartMeetingAppointmentsApptIdStartMeetingPostStatus401 | StartMeetingAppointmentsApptIdStartMeetingPostStatus403 | StartMeetingAppointmentsApptIdStartMeetingPostStatus404 | StartMeetingAppointmentsApptIdStartMeetingPostStatus409 | StartMeetingAppointmentsApptIdStartMeetingPostStatus422 | StartMeetingAppointmentsApptIdStartMeetingPostStatus500>, StartMeetingAppointmentsApptIdStartMeetingPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await startMeetingAppointmentsApptIdStartMeetingPost({ ...config, path, headers, throwOnError: true })
-      return data
+      return startMeetingAppointmentsApptIdStartMeetingPost({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

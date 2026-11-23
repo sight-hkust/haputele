@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { SubmitConsultationConsultationsCidSubmitPostOptions, SubmitConsultationConsultationsCidSubmitPostResponses } from '../types/SubmitConsultationConsultationsCidSubmitPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /consultations/{cid}/submit`
  * @summary Submit Consultation
- * {@link /consultations/:cid/submit}
  */
-export function submitConsultationConsultationsCidSubmitPost<ThrowOnError extends boolean = true>(options: Options<SubmitConsultationConsultationsCidSubmitPostOptions, ThrowOnError>): Promise<RequestResult<SubmitConsultationConsultationsCidSubmitPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function submitConsultationConsultationsCidSubmitPost<ThrowOnError extends boolean = true>(options: Options<SubmitConsultationConsultationsCidSubmitPostOptions, ThrowOnError>): Unwrappable<RequestResult<SubmitConsultationConsultationsCidSubmitPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/consultations/{cid}/submit', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<SubmitConsultationConsultationsCidSubmitPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<SubmitConsultationConsultationsCidSubmitPostResponses, ThrowOnError>({ method: 'POST', url: '/consultations/{cid}/submit', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

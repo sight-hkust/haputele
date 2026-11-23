@@ -4,6 +4,9 @@
 */
 
 export type BodyUploadAttachmentAppointmentsApptIdAttachmentsPost = {
-    file: Blob;
-    caption?: (string | null) | undefined;
-};
+  /**
+   * @remarks Pass a `File` to send its filename. A plain `Blob` is sent with the filename `blob`.
+   */
+  file: Blob;
+  caption?: (string | (null | null)) | undefined;
+}

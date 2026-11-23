@@ -8,50 +8,50 @@ import type { AvailabilityCreate } from './AvailabilityCreate'
 import type { AvailabilityOut } from './AvailabilityOut'
 
 export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostPath = {
-    doctor_id: number;
-};
+  doctor_id: number;
+}
 
 export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus201 = AvailabilityOut;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus201 = AvailabilityOut
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus400 = ApiErrorResponse;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus400 = ApiErrorResponse
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus401 = ApiErrorResponse;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus401 = ApiErrorResponse
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus403 = ApiErrorResponse;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus403 = ApiErrorResponse
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus404 = ApiErrorResponse;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus404 = ApiErrorResponse
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus409 = ApiErrorResponse;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus409 = ApiErrorResponse
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus422 = ApiErrorResponse;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus422 = ApiErrorResponse
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus500 = ApiErrorResponse;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus500 = ApiErrorResponse
 
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostBody = AvailabilityCreate;
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostBody = AvailabilityCreate
 
 export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostOptions = {
-    body: CreateAvailabilityDoctorsDoctorIdAvailabilityPostBody;
-    path: CreateAvailabilityDoctorsDoctorIdAvailabilityPostPath;
-    query?: never | undefined;
-    headers?: CreateAvailabilityDoctorsDoctorIdAvailabilityPostHeaders | undefined;
-};
+  body: CreateAvailabilityDoctorsDoctorIdAvailabilityPostBody;
+  path: CreateAvailabilityDoctorsDoctorIdAvailabilityPostPath;
+  query?: never | undefined;
+  headers?: CreateAvailabilityDoctorsDoctorIdAvailabilityPostHeaders | undefined;
+}
 
 export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostResponses = {
-    "201": CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus201;
-    "400": CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus400;
-    "401": CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus401;
-    "403": CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus403;
-    "404": CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus404;
-    "409": CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus409;
-    "422": CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus422;
-    "500": CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus500;
-};
+  '201': CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus201;
+  '400': CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus400;
+  '401': CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus401;
+  '403': CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus403;
+  '404': CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus404;
+  '409': CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus409;
+  '422': CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus422;
+  '500': CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostResponse = (CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus201 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus400 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus401 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus403 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus404 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus409 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus422 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus500);
+ */
+export type CreateAvailabilityDoctorsDoctorIdAvailabilityPostResponse = CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus201

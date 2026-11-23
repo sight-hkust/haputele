@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UploadAttachmentAppointmentsApptIdAttachmentsPostOptions, UploadAttachmentAppointmentsApptIdAttachmentsPostResponses } from '../types/UploadAttachmentAppointmentsApptIdAttachmentsPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /appointments/{appt_id}/attachments`
  * @summary Upload Attachment
- * {@link /appointments/:appt_id/attachments}
  */
-export function uploadAttachmentAppointmentsApptIdAttachmentsPost<ThrowOnError extends boolean = true>(options: Options<UploadAttachmentAppointmentsApptIdAttachmentsPostOptions, ThrowOnError>): Promise<RequestResult<UploadAttachmentAppointmentsApptIdAttachmentsPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function uploadAttachmentAppointmentsApptIdAttachmentsPost<ThrowOnError extends boolean = true>(options: Options<UploadAttachmentAppointmentsApptIdAttachmentsPostOptions, ThrowOnError>): Unwrappable<RequestResult<UploadAttachmentAppointmentsApptIdAttachmentsPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/appointments/{appt_id}/attachments', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], contentType: { request: 'multipart/form-data' }, ...config }) as Promise<RequestResult<UploadAttachmentAppointmentsApptIdAttachmentsPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UploadAttachmentAppointmentsApptIdAttachmentsPostResponses, ThrowOnError>({ method: 'POST', url: '/appointments/{appt_id}/attachments', security: [securitySchemes.SessionCookie], contentType: { request: 'multipart/form-data' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -6,12 +6,13 @@
 import type { AppointmentOut } from './AppointmentOut'
 
 /**
- * @description POST /appointments/{id}/start-meeting — token payload plus the\nappointment flipped to in_progress.
+ * @description POST /appointments/{id}/start-meeting — token payload plus the
+ * appointment flipped to in_progress.
  * @type object
-*/
+ */
 export type StartMeetingResponse = {
-    room: string;
-    token: string;
-    serverUrl: string;
-    appointment: AppointmentOut;
-};
+  room: string;
+  token: string;
+  serverUrl: string;
+  appointment: AppointmentOut;
+}

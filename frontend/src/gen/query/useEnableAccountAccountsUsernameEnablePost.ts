@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const enableAccountAccountsUsernameEnablePostMutationKey = () => [{ url: '/accounts/:username/enable' }] as const
 
-export function enableAccountAccountsUsernameEnablePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function enableAccountAccountsUsernameEnablePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = enableAccountAccountsUsernameEnablePostMutationKey()
   return mutationOptions<EnableAccountAccountsUsernameEnablePostStatus200, ResponseErrorConfig<EnableAccountAccountsUsernameEnablePostStatus400 | EnableAccountAccountsUsernameEnablePostStatus401 | EnableAccountAccountsUsernameEnablePostStatus403 | EnableAccountAccountsUsernameEnablePostStatus404 | EnableAccountAccountsUsernameEnablePostStatus409 | EnableAccountAccountsUsernameEnablePostStatus422 | EnableAccountAccountsUsernameEnablePostStatus500>, EnableAccountAccountsUsernameEnablePostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await enableAccountAccountsUsernameEnablePost({ ...config, path, headers, throwOnError: true })
-      return data
+      return enableAccountAccountsUsernameEnablePost({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

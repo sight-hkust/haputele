@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ListAvailabilityAvailabilityGetOptions, ListAvailabilityAvailabilityGetResponses } from '../types/ListAvailabilityAvailabilityGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /availability`
  * @summary List Availability
- * {@link /availability}
  */
-export function listAvailabilityAvailabilityGet<ThrowOnError extends boolean = true>(options: Options<ListAvailabilityAvailabilityGetOptions, ThrowOnError> = {}): Promise<RequestResult<ListAvailabilityAvailabilityGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function listAvailabilityAvailabilityGet<ThrowOnError extends boolean = true>(options: Options<ListAvailabilityAvailabilityGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<ListAvailabilityAvailabilityGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/availability', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ListAvailabilityAvailabilityGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ListAvailabilityAvailabilityGetResponses, ThrowOnError>({ method: 'GET', url: '/availability', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

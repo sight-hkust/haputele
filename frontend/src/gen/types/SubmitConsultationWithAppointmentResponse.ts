@@ -7,7 +7,7 @@ import type { AppointmentOut } from './AppointmentOut'
 import type { ConsultationOut } from './ConsultationOut'
 
 export type SubmitConsultationWithAppointmentResponse = {
-    consultation: ConsultationOut;
-    appointment: AppointmentOut;
-    followUpAppointment: AppointmentOut;
-};
+  consultation: ConsultationOut;
+  appointment: AppointmentOut;
+  followUpAppointment: AppointmentOut;
+}

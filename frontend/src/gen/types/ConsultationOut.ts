@@ -10,23 +10,23 @@ import type { NotesPatch } from './NotesPatch'
 import type { ReferralEntry } from './ReferralEntry'
 
 export const consultationOutStatusEnum = {
-    draft: "draft",
-    completed: "completed"
+  draft: 'draft',
+  completed: 'completed',
 } as const;
 
-export type ConsultationOutStatusEnumKey = (typeof consultationOutStatusEnum)[keyof typeof consultationOutStatusEnum];
+export type ConsultationOutStatusEnumKey = (typeof consultationOutStatusEnum)[keyof typeof consultationOutStatusEnum]
 
 export type ConsultationOut = {
-    id: number;
-    appointmentId: number;
-    status: ConsultationOutStatusEnumKey;
-    notes: NotesPatch;
-    diagnoses?: DiagnosisEntry[] | undefined;
-    medications?: MedicationEntry[] | undefined;
-    labs?: LabEntry[] | undefined;
-    referrals?: ReferralEntry[] | undefined;
-    followUpDate?: (string | null) | undefined;
-    followUpWeeks?: (number | null) | undefined;
-    followUpAppointmentId?: (number | null) | undefined;
-    signedAt?: (string | null) | undefined;
-};
+  id: number;
+  appointmentId: number;
+  status: ConsultationOutStatusEnumKey;
+  notes: NotesPatch;
+  diagnoses?: DiagnosisEntry[] | undefined;
+  medications?: MedicationEntry[] | undefined;
+  labs?: LabEntry[] | undefined;
+  referrals?: ReferralEntry[] | undefined;
+  followUpDate?: (string | (null | null)) | undefined;
+  followUpWeeks?: (number | (null | null)) | undefined;
+  followUpAppointmentId?: (number | (null | null)) | undefined;
+  signedAt?: (string | (null | null)) | undefined;
+}

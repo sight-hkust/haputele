@@ -8,17 +8,16 @@ import type { ListAppointmentsAppointmentsGetOptions, ListAppointmentsAppointmen
 import { listAppointmentsAppointmentsGet } from '../clients/listAppointmentsAppointmentsGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const listAppointmentsAppointmentsGetQueryKey = ({ query }: Omit<ListAppointmentsAppointmentsGetOptions, 'headers'> = {}) => [{ url: '/appointments' }, ...(query ? [query] : [])] as const
+export const listAppointmentsAppointmentsGetQueryKey = ({ query, headers }: Omit<ListAppointmentsAppointmentsGetOptions, 'headers'> & { headers?: ListAppointmentsAppointmentsGetOptions['headers'] } = {}) => [{ url: '/appointments' }, ...(query ? [query] : [])] as const
 
 type ListAppointmentsAppointmentsGetQueryKey = ReturnType<typeof listAppointmentsAppointmentsGetQueryKey>
 
-export function listAppointmentsAppointmentsGetQueryOptions({ query, headers }: ListAppointmentsAppointmentsGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = listAppointmentsAppointmentsGetQueryKey({ query })
+export function listAppointmentsAppointmentsGetQueryOptions({ query, headers }: ListAppointmentsAppointmentsGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = listAppointmentsAppointmentsGetQueryKey({ query, headers })
   return queryOptions<ListAppointmentsAppointmentsGetStatus200, ResponseErrorConfig<ListAppointmentsAppointmentsGetStatus400 | ListAppointmentsAppointmentsGetStatus401 | ListAppointmentsAppointmentsGetStatus403 | ListAppointmentsAppointmentsGetStatus404 | ListAppointmentsAppointmentsGetStatus409 | ListAppointmentsAppointmentsGetStatus422 | ListAppointmentsAppointmentsGetStatus500>, ListAppointmentsAppointmentsGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await listAppointmentsAppointmentsGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return listAppointmentsAppointmentsGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

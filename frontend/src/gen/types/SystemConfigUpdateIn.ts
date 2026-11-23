@@ -4,11 +4,11 @@
 */
 
 export type SystemConfigUpdateIn = {
-    instituteName?: (string | null) | undefined;
-    instituteAddressLines?: (string[] | null) | undefined;
-    instituteContactPhone?: (string | null) | undefined;
-    instituteContactEmail?: (string | null) | undefined;
-    appTimezone?: (string | null) | undefined;
-    exportTimezone?: (string | null) | undefined;
-    masterConsentVersion?: (string | null) | undefined;
-};
+  instituteName?: (string | (null | null)) | undefined;
+  instituteAddressLines?: (string[] | (null | null)) | undefined;
+  instituteContactPhone?: (string | (null | null)) | undefined;
+  instituteContactEmail?: (string | (null | null)) | undefined;
+  appTimezone?: (string | (null | null)) | undefined;
+  exportTimezone?: (string | (null | null)) | undefined;
+  masterConsentVersion?: (string | (null | null)) | undefined;
+}

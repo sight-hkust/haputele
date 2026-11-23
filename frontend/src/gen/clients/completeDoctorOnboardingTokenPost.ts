@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CompleteDoctorOnboardingTokenPostOptions, CompleteDoctorOnboardingTokenPostResponses } from '../types/CompleteDoctorOnboardingTokenPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `POST /doctor-onboarding/{token}`
  * @description Consume the token. Body shape depends on the invite mode.
  * Rotation: {password}. We just set the new password on the existing
  * Account; Doctor row + approval state unchanged.
@@ -18,10 +19,9 @@ import { client } from '../.kubb/client'
  * a doctor can't accidentally send a new-doctor payload to a rotation
  * invite or vice versa.
  * @summary Complete
- * {@link /doctor-onboarding/:token}
  */
-export function completeDoctorOnboardingTokenPost<ThrowOnError extends boolean = true>(options: Options<CompleteDoctorOnboardingTokenPostOptions, ThrowOnError>): Promise<RequestResult<CompleteDoctorOnboardingTokenPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function completeDoctorOnboardingTokenPost<ThrowOnError extends boolean = true>(options: Options<CompleteDoctorOnboardingTokenPostOptions, ThrowOnError>): Unwrappable<RequestResult<CompleteDoctorOnboardingTokenPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctor-onboarding/{token}', ...config }) as Promise<RequestResult<CompleteDoctorOnboardingTokenPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CompleteDoctorOnboardingTokenPostResponses, ThrowOnError>({ method: 'POST', url: '/doctor-onboarding/{token}', contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

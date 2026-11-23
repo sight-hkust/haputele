@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createCaptureSessionCaptureSessionsPostMutationKey = () => [{ url: '/capture/sessions' }] as const
 
-export function createCaptureSessionCaptureSessionsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createCaptureSessionCaptureSessionsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createCaptureSessionCaptureSessionsPostMutationKey()
   return mutationOptions<CreateCaptureSessionCaptureSessionsPostStatus201, ResponseErrorConfig<CreateCaptureSessionCaptureSessionsPostStatus400 | CreateCaptureSessionCaptureSessionsPostStatus401 | CreateCaptureSessionCaptureSessionsPostStatus403 | CreateCaptureSessionCaptureSessionsPostStatus404 | CreateCaptureSessionCaptureSessionsPostStatus409 | CreateCaptureSessionCaptureSessionsPostStatus422 | CreateCaptureSessionCaptureSessionsPostStatus500>, CreateCaptureSessionCaptureSessionsPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await createCaptureSessionCaptureSessionsPost({ ...config, body, headers, throwOnError: true })
-      return data
+      return createCaptureSessionCaptureSessionsPost({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

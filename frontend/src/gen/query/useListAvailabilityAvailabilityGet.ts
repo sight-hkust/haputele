@@ -8,17 +8,16 @@ import type { ListAvailabilityAvailabilityGetOptions, ListAvailabilityAvailabili
 import { listAvailabilityAvailabilityGet } from '../clients/listAvailabilityAvailabilityGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const listAvailabilityAvailabilityGetQueryKey = ({ query }: Omit<ListAvailabilityAvailabilityGetOptions, 'headers'> = {}) => [{ url: '/availability' }, ...(query ? [query] : [])] as const
+export const listAvailabilityAvailabilityGetQueryKey = ({ query, headers }: Omit<ListAvailabilityAvailabilityGetOptions, 'headers'> & { headers?: ListAvailabilityAvailabilityGetOptions['headers'] } = {}) => [{ url: '/availability' }, ...(query ? [query] : [])] as const
 
 type ListAvailabilityAvailabilityGetQueryKey = ReturnType<typeof listAvailabilityAvailabilityGetQueryKey>
 
-export function listAvailabilityAvailabilityGetQueryOptions({ query, headers }: ListAvailabilityAvailabilityGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = listAvailabilityAvailabilityGetQueryKey({ query })
+export function listAvailabilityAvailabilityGetQueryOptions({ query, headers }: ListAvailabilityAvailabilityGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = listAvailabilityAvailabilityGetQueryKey({ query, headers })
   return queryOptions<ListAvailabilityAvailabilityGetStatus200, ResponseErrorConfig<ListAvailabilityAvailabilityGetStatus400 | ListAvailabilityAvailabilityGetStatus401 | ListAvailabilityAvailabilityGetStatus403 | ListAvailabilityAvailabilityGetStatus404 | ListAvailabilityAvailabilityGetStatus409 | ListAvailabilityAvailabilityGetStatus422 | ListAvailabilityAvailabilityGetStatus500>, ListAvailabilityAvailabilityGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await listAvailabilityAvailabilityGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return listAvailabilityAvailabilityGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

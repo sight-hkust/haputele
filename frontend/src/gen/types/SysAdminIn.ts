@@ -4,6 +4,6 @@
 */
 
 export type SysAdminIn = {
-    username: string;
-    password: string;
-};
+  username: string;
+  password: string;
+}

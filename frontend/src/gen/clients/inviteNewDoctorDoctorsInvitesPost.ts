@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { InviteNewDoctorDoctorsInvitesPostOptions, InviteNewDoctorDoctorsInvitesPostResponses } from '../types/InviteNewDoctorDoctorsInvitesPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /doctors/invites`
  * @description Email-only invite: admin types just the doctor's email, the
  * doctor fills out their full profile via the onboarding link.
  * The Doctor row is NOT created here — it springs into existence when
@@ -16,10 +17,9 @@ import { client } from '../.kubb/client'
  * Refuses (409 `email_already_used`) if the address is already in use
  * by an existing doctor or has a separate live invite.
  * @summary Invite New Doctor
- * {@link /doctors/invites}
  */
-export function inviteNewDoctorDoctorsInvitesPost<ThrowOnError extends boolean = true>(options: Options<InviteNewDoctorDoctorsInvitesPostOptions, ThrowOnError>): Promise<RequestResult<InviteNewDoctorDoctorsInvitesPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function inviteNewDoctorDoctorsInvitesPost<ThrowOnError extends boolean = true>(options: Options<InviteNewDoctorDoctorsInvitesPostOptions, ThrowOnError>): Unwrappable<RequestResult<InviteNewDoctorDoctorsInvitesPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctors/invites', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<InviteNewDoctorDoctorsInvitesPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<InviteNewDoctorDoctorsInvitesPostResponses, ThrowOnError>({ method: 'POST', url: '/doctors/invites', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

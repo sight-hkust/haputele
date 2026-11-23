@@ -4,18 +4,18 @@
 */
 
 export type PreconsultOut = {
-    appointmentId: number;
-    height: (number | null);
-    weight: (number | null);
-    sysBp?: (number | null) | undefined;
-    diaBp?: (number | null) | undefined;
-    pulse: (number | null);
-    temperature?: (number | null) | undefined;
-    primaryComplaint?: (string | null) | undefined;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    submittedAt: string;
-};
+  appointmentId: number;
+  height: number | (null | null);
+  weight: number | (null | null);
+  sysBp?: (number | (null | null)) | undefined;
+  diaBp?: (number | (null | null)) | undefined;
+  pulse: number | (null | null);
+  temperature?: (number | (null | null)) | undefined;
+  primaryComplaint?: (string | (null | null)) | undefined;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  submittedAt: string;
+}

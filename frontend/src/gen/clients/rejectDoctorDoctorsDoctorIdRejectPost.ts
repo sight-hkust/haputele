@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { RejectDoctorDoctorsDoctorIdRejectPostOptions, RejectDoctorDoctorsDoctorIdRejectPostResponses } from '../types/RejectDoctorDoctorsDoctorIdRejectPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /doctors/{doctor_id}/reject`
  * @description Reject a self-onboarded doctor. Stamps rejected_at +
  * rejected_reason and deactivates so they can't log in.
  * Refuses (409 `doctor_already_approved`) if the doctor is already
@@ -15,10 +16,9 @@ import { client } from '../.kubb/client'
  * so the audit trail stays clean ("rejected" specifically means the
  * onboarding submission was bad).
  * @summary Reject Doctor
- * {@link /doctors/:doctor_id/reject}
  */
-export function rejectDoctorDoctorsDoctorIdRejectPost<ThrowOnError extends boolean = true>(options: Options<RejectDoctorDoctorsDoctorIdRejectPostOptions, ThrowOnError>): Promise<RequestResult<RejectDoctorDoctorsDoctorIdRejectPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function rejectDoctorDoctorsDoctorIdRejectPost<ThrowOnError extends boolean = true>(options: Options<RejectDoctorDoctorsDoctorIdRejectPostOptions, ThrowOnError>): Unwrappable<RequestResult<RejectDoctorDoctorsDoctorIdRejectPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctors/{doctor_id}/reject', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<RejectDoctorDoctorsDoctorIdRejectPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<RejectDoctorDoctorsDoctorIdRejectPostResponses, ThrowOnError>({ method: 'POST', url: '/doctors/{doctor_id}/reject', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -8,54 +8,54 @@ import type { SessionConsentIn } from './SessionConsentIn'
 import type { SessionConsentResponse } from './SessionConsentResponse'
 
 export type RecordSessionConsentAppointmentsApptIdConsentPostPath = {
-    appt_id: number;
-};
+  appt_id: number;
+}
 
 export type RecordSessionConsentAppointmentsApptIdConsentPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
  * @description POST /appointments/{id}/consent.
  * @type object
-*/
-export type RecordSessionConsentAppointmentsApptIdConsentPostStatus201 = SessionConsentResponse;
+ */
+export type RecordSessionConsentAppointmentsApptIdConsentPostStatus201 = SessionConsentResponse
 
-export type RecordSessionConsentAppointmentsApptIdConsentPostStatus400 = ApiErrorResponse;
+export type RecordSessionConsentAppointmentsApptIdConsentPostStatus400 = ApiErrorResponse
 
-export type RecordSessionConsentAppointmentsApptIdConsentPostStatus401 = ApiErrorResponse;
+export type RecordSessionConsentAppointmentsApptIdConsentPostStatus401 = ApiErrorResponse
 
-export type RecordSessionConsentAppointmentsApptIdConsentPostStatus403 = ApiErrorResponse;
+export type RecordSessionConsentAppointmentsApptIdConsentPostStatus403 = ApiErrorResponse
 
-export type RecordSessionConsentAppointmentsApptIdConsentPostStatus404 = ApiErrorResponse;
+export type RecordSessionConsentAppointmentsApptIdConsentPostStatus404 = ApiErrorResponse
 
-export type RecordSessionConsentAppointmentsApptIdConsentPostStatus409 = ApiErrorResponse;
+export type RecordSessionConsentAppointmentsApptIdConsentPostStatus409 = ApiErrorResponse
 
-export type RecordSessionConsentAppointmentsApptIdConsentPostStatus422 = ApiErrorResponse;
+export type RecordSessionConsentAppointmentsApptIdConsentPostStatus422 = ApiErrorResponse
 
-export type RecordSessionConsentAppointmentsApptIdConsentPostStatus500 = ApiErrorResponse;
+export type RecordSessionConsentAppointmentsApptIdConsentPostStatus500 = ApiErrorResponse
 
-export type RecordSessionConsentAppointmentsApptIdConsentPostBody = SessionConsentIn;
+export type RecordSessionConsentAppointmentsApptIdConsentPostBody = SessionConsentIn
 
 export type RecordSessionConsentAppointmentsApptIdConsentPostOptions = {
-    body: RecordSessionConsentAppointmentsApptIdConsentPostBody;
-    path: RecordSessionConsentAppointmentsApptIdConsentPostPath;
-    query?: never | undefined;
-    headers?: RecordSessionConsentAppointmentsApptIdConsentPostHeaders | undefined;
-};
+  body: RecordSessionConsentAppointmentsApptIdConsentPostBody;
+  path: RecordSessionConsentAppointmentsApptIdConsentPostPath;
+  query?: never | undefined;
+  headers?: RecordSessionConsentAppointmentsApptIdConsentPostHeaders | undefined;
+}
 
 export type RecordSessionConsentAppointmentsApptIdConsentPostResponses = {
-    "201": RecordSessionConsentAppointmentsApptIdConsentPostStatus201;
-    "400": RecordSessionConsentAppointmentsApptIdConsentPostStatus400;
-    "401": RecordSessionConsentAppointmentsApptIdConsentPostStatus401;
-    "403": RecordSessionConsentAppointmentsApptIdConsentPostStatus403;
-    "404": RecordSessionConsentAppointmentsApptIdConsentPostStatus404;
-    "409": RecordSessionConsentAppointmentsApptIdConsentPostStatus409;
-    "422": RecordSessionConsentAppointmentsApptIdConsentPostStatus422;
-    "500": RecordSessionConsentAppointmentsApptIdConsentPostStatus500;
-};
+  '201': RecordSessionConsentAppointmentsApptIdConsentPostStatus201;
+  '400': RecordSessionConsentAppointmentsApptIdConsentPostStatus400;
+  '401': RecordSessionConsentAppointmentsApptIdConsentPostStatus401;
+  '403': RecordSessionConsentAppointmentsApptIdConsentPostStatus403;
+  '404': RecordSessionConsentAppointmentsApptIdConsentPostStatus404;
+  '409': RecordSessionConsentAppointmentsApptIdConsentPostStatus409;
+  '422': RecordSessionConsentAppointmentsApptIdConsentPostStatus422;
+  '500': RecordSessionConsentAppointmentsApptIdConsentPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type RecordSessionConsentAppointmentsApptIdConsentPostResponse = (RecordSessionConsentAppointmentsApptIdConsentPostStatus201 | RecordSessionConsentAppointmentsApptIdConsentPostStatus400 | RecordSessionConsentAppointmentsApptIdConsentPostStatus401 | RecordSessionConsentAppointmentsApptIdConsentPostStatus403 | RecordSessionConsentAppointmentsApptIdConsentPostStatus404 | RecordSessionConsentAppointmentsApptIdConsentPostStatus409 | RecordSessionConsentAppointmentsApptIdConsentPostStatus422 | RecordSessionConsentAppointmentsApptIdConsentPostStatus500);
+ */
+export type RecordSessionConsentAppointmentsApptIdConsentPostResponse = RecordSessionConsentAppointmentsApptIdConsentPostStatus201

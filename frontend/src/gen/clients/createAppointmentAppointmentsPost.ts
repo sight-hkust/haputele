@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CreateAppointmentAppointmentsPostOptions, CreateAppointmentAppointmentsPostResponses } from '../types/CreateAppointmentAppointmentsPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /appointments`
  * @summary Create Appointment
- * {@link /appointments}
  */
-export function createAppointmentAppointmentsPost<ThrowOnError extends boolean = true>(options: Options<CreateAppointmentAppointmentsPostOptions, ThrowOnError>): Promise<RequestResult<CreateAppointmentAppointmentsPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function createAppointmentAppointmentsPost<ThrowOnError extends boolean = true>(options: Options<CreateAppointmentAppointmentsPostOptions, ThrowOnError>): Unwrappable<RequestResult<CreateAppointmentAppointmentsPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/appointments', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CreateAppointmentAppointmentsPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CreateAppointmentAppointmentsPostResponses, ThrowOnError>({ method: 'POST', url: '/appointments', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

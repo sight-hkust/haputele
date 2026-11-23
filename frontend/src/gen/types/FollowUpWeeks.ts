@@ -4,11 +4,11 @@
 */
 
 export type FollowUpWeeks = {
-    kind: "weeks";
-    /**
-     * @minLength 1
-     * @maxLength 52
-     * @type integer
-    */
-    weeks: number;
-};
+  kind: 'weeks';
+  /**
+   * @minimum 1
+   * @maximum 52
+   * @type integer
+   */
+  weeks: number;
+}

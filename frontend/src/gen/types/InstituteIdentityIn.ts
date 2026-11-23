@@ -4,21 +4,21 @@
 */
 
 export type InstituteIdentityIn = {
-    /**
-     * @minLength 1
-     * @type string
-    */
-    name: string;
-    addressLines: string[];
-    /**
-     * @minLength 1
-     * @type string
-    */
-    contactPhone: string;
-    /**
-     * @description
-     * Format: `email`
-     * @type string
-    */
-    contactEmail: string;
-};
+  /**
+   * @minLength 1
+   * @type string
+   */
+  name: string;
+  addressLines: string[];
+  /**
+   * @minLength 1
+   * @type string
+   */
+  contactPhone: string;
+  /**
+   * @description
+   * Format: `email`
+   * @type string
+   */
+  contactEmail: string;
+}

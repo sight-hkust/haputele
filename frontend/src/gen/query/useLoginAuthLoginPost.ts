@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const loginAuthLoginPostMutationKey = () => [{ url: '/auth/login' }] as const
 
-export function loginAuthLoginPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function loginAuthLoginPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = loginAuthLoginPostMutationKey()
   return mutationOptions<LoginAuthLoginPostStatus200, ResponseErrorConfig<LoginAuthLoginPostStatus400 | LoginAuthLoginPostStatus401 | LoginAuthLoginPostStatus403 | LoginAuthLoginPostStatus404 | LoginAuthLoginPostStatus409 | LoginAuthLoginPostStatus422 | LoginAuthLoginPostStatus500>, LoginAuthLoginPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body }) => {
-      const { data } = await loginAuthLoginPost({ ...config, body, throwOnError: true })
-      return data
+      return loginAuthLoginPost({ ...config, body, throwOnError: true }).unwrap()
     },
   })
 }

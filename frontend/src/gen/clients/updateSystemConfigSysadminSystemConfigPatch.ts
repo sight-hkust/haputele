@@ -3,19 +3,19 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UpdateSystemConfigSysadminSystemConfigPatchOptions, UpdateSystemConfigSysadminSystemConfigPatchResponses } from '../types/UpdateSystemConfigSysadminSystemConfigPatch'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `PATCH /sysadmin/system-config`
  * @description Edit the clinic / institute identity and system defaults. Reloads the
  * in-memory LiveConfig cache so runtime consumers (PDF, exports) see the
  * change immediately without a restart.
  * @summary Update System Config
- * {@link /sysadmin/system-config}
  */
-export function updateSystemConfigSysadminSystemConfigPatch<ThrowOnError extends boolean = true>(options: Options<UpdateSystemConfigSysadminSystemConfigPatchOptions, ThrowOnError>): Promise<RequestResult<UpdateSystemConfigSysadminSystemConfigPatchResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function updateSystemConfigSysadminSystemConfigPatch<ThrowOnError extends boolean = true>(options: Options<UpdateSystemConfigSysadminSystemConfigPatchOptions, ThrowOnError>): Unwrappable<RequestResult<UpdateSystemConfigSysadminSystemConfigPatchResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'PATCH', url: '/sysadmin/system-config', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<UpdateSystemConfigSysadminSystemConfigPatchResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UpdateSystemConfigSysadminSystemConfigPatchResponses, ThrowOnError>({ method: 'PATCH', url: '/sysadmin/system-config', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

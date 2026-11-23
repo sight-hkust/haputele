@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { SetupStatusSetupStatusGetOptions, SetupStatusSetupStatusGetResponses } from '../types/SetupStatusSetupStatusGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `GET /setup/status`
  * @summary Setup Status
- * {@link /setup/status}
  */
-export function setupStatusSetupStatusGet<ThrowOnError extends boolean = true>(options: Options<SetupStatusSetupStatusGetOptions, ThrowOnError> = {}): Promise<RequestResult<SetupStatusSetupStatusGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function setupStatusSetupStatusGet<ThrowOnError extends boolean = true>(options: Options<SetupStatusSetupStatusGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<SetupStatusSetupStatusGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/setup/status', ...config }) as Promise<RequestResult<SetupStatusSetupStatusGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<SetupStatusSetupStatusGetResponses, ThrowOnError>({ method: 'GET', url: '/setup/status', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

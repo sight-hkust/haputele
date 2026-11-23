@@ -4,9 +4,10 @@
 */
 
 /**
- * @description Admin\'s reject payload. `reason` is shown to the doctor on a\npending/rejected screen and stored on the Doctor row for audit.
+ * @description Admin's reject payload. `reason` is shown to the doctor on a
+ * pending/rejected screen and stored on the Doctor row for audit.
  * @type object
-*/
+ */
 export type DoctorRejectIn = {
-    reason?: (string | null) | undefined;
-};
+  reason?: (string | (null | null)) | undefined;
+}

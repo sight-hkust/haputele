@@ -4,49 +4,49 @@
 */
 
 export const queueEntryOutSourceEnum = {
-    screening: "screening",
-    walk_in: "walk_in",
-    follow_up: "follow_up"
+  screening: 'screening',
+  walk_in: 'walk_in',
+  follow_up: 'follow_up',
 } as const;
 
-export type QueueEntryOutSourceEnumKey = (typeof queueEntryOutSourceEnum)[keyof typeof queueEntryOutSourceEnum];
+export type QueueEntryOutSourceEnumKey = (typeof queueEntryOutSourceEnum)[keyof typeof queueEntryOutSourceEnum]
 
 export const queueEntryOutStatusEnum = {
-    pending: "pending",
-    booked: "booked",
-    cancelled: "cancelled"
+  pending: 'pending',
+  booked: 'booked',
+  cancelled: 'cancelled',
 } as const;
 
-export type QueueEntryOutStatusEnumKey = (typeof queueEntryOutStatusEnum)[keyof typeof queueEntryOutStatusEnum];
+export type QueueEntryOutStatusEnumKey = (typeof queueEntryOutStatusEnum)[keyof typeof queueEntryOutStatusEnum]
 
 export const queueEntryOutPriorityEnum = {
-    urgent: "urgent",
-    routine: "routine"
+  urgent: 'urgent',
+  routine: 'routine',
 } as const;
 
-export type QueueEntryOutPriorityEnumKey = (typeof queueEntryOutPriorityEnum)[keyof typeof queueEntryOutPriorityEnum];
+export type QueueEntryOutPriorityEnumKey = (typeof queueEntryOutPriorityEnum)[keyof typeof queueEntryOutPriorityEnum]
 
 export type QueueEntryOut = {
-    id: number;
-    patientId: number;
-    source: QueueEntryOutSourceEnumKey;
-    status: QueueEntryOutStatusEnumKey;
-    priority: QueueEntryOutPriorityEnumKey;
-    preferredDoctorId?: (number | null) | undefined;
-    targetDate?: (string | null) | undefined;
-    notes?: (string | null) | undefined;
-    sourceMeta?: {
-        [key: string]: unknown;
-    } | undefined;
-    appointmentId?: (number | null) | undefined;
-    createdBy: string;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    createdAt: string;
-    bookedAt?: (string | null) | undefined;
-    cancelledAt?: (string | null) | undefined;
-    cancellationReason?: (string | null) | undefined;
-};
+  id: number;
+  patientId: number;
+  source: QueueEntryOutSourceEnumKey;
+  status: QueueEntryOutStatusEnumKey;
+  priority: QueueEntryOutPriorityEnumKey;
+  preferredDoctorId?: (number | (null | null)) | undefined;
+  targetDate?: (string | (null | null)) | undefined;
+  notes?: (string | (null | null)) | undefined;
+  sourceMeta?: {
+    [key: string]: unknown;
+  } | undefined;
+  appointmentId?: (number | (null | null)) | undefined;
+  createdBy: string;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  createdAt: string;
+  bookedAt?: (string | (null | null)) | undefined;
+  cancelledAt?: (string | (null | null)) | undefined;
+  cancellationReason?: (string | (null | null)) | undefined;
+}

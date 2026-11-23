@@ -4,26 +4,26 @@
 */
 
 export type AvailabilityOut = {
-    id: number;
-    doctorId: number;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    startAt: string;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    endAt: string;
-    note?: (string | null) | undefined;
-    createdBy: string;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    createdAt: string;
-};
+  id: number;
+  doctorId: number;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  startAt: string;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  endAt: string;
+  note?: (string | (null | null)) | undefined;
+  createdBy: string;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  createdAt: string;
+}

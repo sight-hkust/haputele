@@ -4,20 +4,20 @@
 */
 
 export const diseaseEntryCodeEnum = {
-    diabetes: "diabetes",
-    hypertension: "hypertension",
-    ihd: "ihd",
-    asthma_copd: "asthma_copd",
-    kidney: "kidney",
-    thyroid: "thyroid",
-    cancer: "cancer",
-    mental_health: "mental_health",
-    other: "other"
+  diabetes: 'diabetes',
+  hypertension: 'hypertension',
+  ihd: 'ihd',
+  asthma_copd: 'asthma_copd',
+  kidney: 'kidney',
+  thyroid: 'thyroid',
+  cancer: 'cancer',
+  mental_health: 'mental_health',
+  other: 'other',
 } as const;
 
-export type DiseaseEntryCodeEnumKey = (typeof diseaseEntryCodeEnum)[keyof typeof diseaseEntryCodeEnum];
+export type DiseaseEntryCodeEnumKey = (typeof diseaseEntryCodeEnum)[keyof typeof diseaseEntryCodeEnum]
 
 export type DiseaseEntry = {
-    code: DiseaseEntryCodeEnumKey;
-    text?: (string | null) | undefined;
-};
+  code: DiseaseEntryCodeEnumKey;
+  text?: (string | (null | null)) | undefined;
+}

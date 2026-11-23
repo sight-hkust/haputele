@@ -6,6 +6,6 @@
 import type { RequeueOnCancel } from './RequeueOnCancel'
 
 export type AppointmentCancelIn = {
-    reason?: (string | null) | undefined;
-    requeue?: (RequeueOnCancel | null) | undefined;
-};
+  reason?: (string | (null | null)) | undefined;
+  requeue?: (RequeueOnCancel | (null | null)) | undefined;
+}

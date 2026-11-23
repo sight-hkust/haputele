@@ -4,11 +4,11 @@
 */
 
 export type QueueBookIn = {
-    doctorId: number;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    scheduledAt: string;
-};
+  doctorId: number;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  scheduledAt: string;
+}

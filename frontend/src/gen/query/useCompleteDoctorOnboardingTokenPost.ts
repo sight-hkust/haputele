@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const completeDoctorOnboardingTokenPostMutationKey = () => [{ url: '/doctor-onboarding/:token' }] as const
 
-export function completeDoctorOnboardingTokenPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function completeDoctorOnboardingTokenPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = completeDoctorOnboardingTokenPostMutationKey()
   return mutationOptions<CompleteDoctorOnboardingTokenPostStatus204, ResponseErrorConfig<CompleteDoctorOnboardingTokenPostStatus400 | CompleteDoctorOnboardingTokenPostStatus401 | CompleteDoctorOnboardingTokenPostStatus403 | CompleteDoctorOnboardingTokenPostStatus404 | CompleteDoctorOnboardingTokenPostStatus409 | CompleteDoctorOnboardingTokenPostStatus422 | CompleteDoctorOnboardingTokenPostStatus500>, CompleteDoctorOnboardingTokenPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body }) => {
-      const { data } = await completeDoctorOnboardingTokenPost({ ...config, path, body, throwOnError: true })
-      return data
+      return completeDoctorOnboardingTokenPost({ ...config, path, body, throwOnError: true }).unwrap()
     },
   })
 }

@@ -4,22 +4,22 @@
 */
 
 export type DoctorCreate = {
-    givenName: string;
-    familyName: string;
-    contact: string;
-    /**
-     * @description
-     * Format: `email`
-     * @type string
-    */
-    email: string;
-    slmcRegistrationNumber: string;
-    qualifications: string;
-    practitionerAddress: string;
-    instituteName: string;
-    instituteContact?: (string | null) | undefined;
-    rubberStampImage: string;
-    username: string;
-    password?: (string | null) | undefined;
-    defaultSignatureImage?: (string | null) | undefined;
-};
+  givenName: string;
+  familyName: string;
+  contact: string;
+  /**
+   * @description
+   * Format: `email`
+   * @type string
+   */
+  email: string;
+  slmcRegistrationNumber: string;
+  qualifications: string;
+  practitionerAddress: string;
+  instituteName: string;
+  instituteContact?: (string | (null | null)) | undefined;
+  rubberStampImage: string;
+  username: string;
+  password?: (string | (null | null)) | undefined;
+  defaultSignatureImage?: (string | (null | null)) | undefined;
+}

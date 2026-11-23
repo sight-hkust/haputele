@@ -7,6 +7,6 @@ import type { AppointmentOut } from './AppointmentOut'
 import type { HistoryConsultationItem } from './HistoryConsultationItem'
 
 export type PatientHistoryOut = {
-    appointments: AppointmentOut[];
-    consultations: HistoryConsultationItem[];
-};
+  appointments: AppointmentOut[];
+  consultations: HistoryConsultationItem[];
+}

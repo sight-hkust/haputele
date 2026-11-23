@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ApproveDoctorDoctorsDoctorIdApprovePostOptions, ApproveDoctorDoctorsDoctorIdApprovePostResponses } from '../types/ApproveDoctorDoctorsDoctorIdApprovePost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /doctors/{doctor_id}/approve`
  * @description Approve a self-onboarded doctor. Idempotent — re-calling after
  * approval is a no-op that still returns the current state.
  * A rejected row is a tombstone and can't be approved (409
@@ -15,10 +16,9 @@ import { client } from '../.kubb/client'
  * them to reapply (POST /{id}/reinvite-reapply), which produces a fresh
  * submission rather than resurrecting the rejected one.
  * @summary Approve Doctor
- * {@link /doctors/:doctor_id/approve}
  */
-export function approveDoctorDoctorsDoctorIdApprovePost<ThrowOnError extends boolean = true>(options: Options<ApproveDoctorDoctorsDoctorIdApprovePostOptions, ThrowOnError>): Promise<RequestResult<ApproveDoctorDoctorsDoctorIdApprovePostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function approveDoctorDoctorsDoctorIdApprovePost<ThrowOnError extends boolean = true>(options: Options<ApproveDoctorDoctorsDoctorIdApprovePostOptions, ThrowOnError>): Unwrappable<RequestResult<ApproveDoctorDoctorsDoctorIdApprovePostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctors/{doctor_id}/approve', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ApproveDoctorDoctorsDoctorIdApprovePostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ApproveDoctorDoctorsDoctorIdApprovePostResponses, ThrowOnError>({ method: 'POST', url: '/doctors/{doctor_id}/approve', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -4,39 +4,39 @@
 */
 
 export const calendarAppointmentOutStatusEnum = {
-    scheduled: "scheduled",
-    consent_pending: "consent_pending",
-    data_collection: "data_collection",
-    in_progress: "in_progress",
-    awaiting_notes: "awaiting_notes",
-    completed: "completed",
-    cancelled: "cancelled"
+  scheduled: 'scheduled',
+  consent_pending: 'consent_pending',
+  data_collection: 'data_collection',
+  in_progress: 'in_progress',
+  awaiting_notes: 'awaiting_notes',
+  completed: 'completed',
+  cancelled: 'cancelled',
 } as const;
 
-export type CalendarAppointmentOutStatusEnumKey = (typeof calendarAppointmentOutStatusEnum)[keyof typeof calendarAppointmentOutStatusEnum];
+export type CalendarAppointmentOutStatusEnumKey = (typeof calendarAppointmentOutStatusEnum)[keyof typeof calendarAppointmentOutStatusEnum]
 
 /**
  * @description Calendar list item — adds denormalised display fields per §6.
  * @type object
-*/
+ */
 export type CalendarAppointmentOut = {
-    id: number;
-    patientId: number;
-    doctorId: number;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    scheduledAt: string;
-    status: CalendarAppointmentOutStatusEnumKey;
-    cancellationReason?: (string | null) | undefined;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    createdAt: string;
-    patientName: string;
-    doctorName: string;
-};
+  id: number;
+  patientId: number;
+  doctorId: number;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  scheduledAt: string;
+  status: CalendarAppointmentOutStatusEnumKey;
+  cancellationReason?: (string | (null | null)) | undefined;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  createdAt: string;
+  patientName: string;
+  doctorName: string;
+}

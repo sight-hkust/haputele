@@ -9,8 +9,8 @@ import type { ConsultationOut } from './ConsultationOut'
 /**
  * @description POST /consultations/{id}/submit without a follow-up.
  * @type object
-*/
+ */
 export type SubmitConsultationResponse = {
-    consultation: ConsultationOut;
-    appointment: AppointmentOut;
-};
+  consultation: ConsultationOut;
+  appointment: AppointmentOut;
+}

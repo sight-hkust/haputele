@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const upsertProfilePatientsPatientIdProfilePutMutationKey = () => [{ url: '/patients/:patient_id/profile' }] as const
 
-export function upsertProfilePatientsPatientIdProfilePutMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function upsertProfilePatientsPatientIdProfilePutMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = upsertProfilePatientsPatientIdProfilePutMutationKey()
   return mutationOptions<UpsertProfilePatientsPatientIdProfilePutStatus200, ResponseErrorConfig<UpsertProfilePatientsPatientIdProfilePutStatus400 | UpsertProfilePatientsPatientIdProfilePutStatus401 | UpsertProfilePatientsPatientIdProfilePutStatus403 | UpsertProfilePatientsPatientIdProfilePutStatus404 | UpsertProfilePatientsPatientIdProfilePutStatus409 | UpsertProfilePatientsPatientIdProfilePutStatus422 | UpsertProfilePatientsPatientIdProfilePutStatus500>, UpsertProfilePatientsPatientIdProfilePutOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await upsertProfilePatientsPatientIdProfilePut({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return upsertProfilePatientsPatientIdProfilePut({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ResendOpenInviteDoctorsInvitesInviteIdResendPostOptions, ResendOpenInviteDoctorsInvitesInviteIdResendPostResponses } from '../types/ResendOpenInviteDoctorsInvitesInviteIdResendPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /doctors/invites/{invite_id}/resend`
  * @description Re-issue and re-send an open invite's onboarding link. The previous
  * link stops working immediately.
  * 404 `invite_not_found` if it isn't an open invite (already consumed,
@@ -15,10 +16,9 @@ import { client } from '../.kubb/client'
  * since become a live doctor — they completed onboarding between page
  * load and resend, so refresh to find them in the approval queue.
  * @summary Resend Open Invite
- * {@link /doctors/invites/:invite_id/resend}
  */
-export function resendOpenInviteDoctorsInvitesInviteIdResendPost<ThrowOnError extends boolean = true>(options: Options<ResendOpenInviteDoctorsInvitesInviteIdResendPostOptions, ThrowOnError>): Promise<RequestResult<ResendOpenInviteDoctorsInvitesInviteIdResendPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function resendOpenInviteDoctorsInvitesInviteIdResendPost<ThrowOnError extends boolean = true>(options: Options<ResendOpenInviteDoctorsInvitesInviteIdResendPostOptions, ThrowOnError>): Unwrappable<RequestResult<ResendOpenInviteDoctorsInvitesInviteIdResendPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctors/invites/{invite_id}/resend', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ResendOpenInviteDoctorsInvitesInviteIdResendPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ResendOpenInviteDoctorsInvitesInviteIdResendPostResponses, ThrowOnError>({ method: 'POST', url: '/doctors/invites/{invite_id}/resend', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

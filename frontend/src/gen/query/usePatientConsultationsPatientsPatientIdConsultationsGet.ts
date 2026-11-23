@@ -8,17 +8,16 @@ import type { PatientConsultationsPatientsPatientIdConsultationsGetOptions, Pati
 import { patientConsultationsPatientsPatientIdConsultationsGet } from '../clients/patientConsultationsPatientsPatientIdConsultationsGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const patientConsultationsPatientsPatientIdConsultationsGetQueryKey = ({ path }: Omit<PatientConsultationsPatientsPatientIdConsultationsGetOptions, 'headers'>) => [{ url: '/patients/:patient_id/consultations', params: path }] as const
+export const patientConsultationsPatientsPatientIdConsultationsGetQueryKey = ({ path, headers }: Omit<PatientConsultationsPatientsPatientIdConsultationsGetOptions, 'headers'> & { headers?: PatientConsultationsPatientsPatientIdConsultationsGetOptions['headers'] }) => [{ url: '/patients/:patient_id/consultations', params: path }] as const
 
 type PatientConsultationsPatientsPatientIdConsultationsGetQueryKey = ReturnType<typeof patientConsultationsPatientsPatientIdConsultationsGetQueryKey>
 
-export function patientConsultationsPatientsPatientIdConsultationsGetQueryOptions({ path, headers }: PatientConsultationsPatientsPatientIdConsultationsGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = patientConsultationsPatientsPatientIdConsultationsGetQueryKey({ path })
+export function patientConsultationsPatientsPatientIdConsultationsGetQueryOptions({ path, headers }: PatientConsultationsPatientsPatientIdConsultationsGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = patientConsultationsPatientsPatientIdConsultationsGetQueryKey({ path, headers })
   return queryOptions<PatientConsultationsPatientsPatientIdConsultationsGetStatus200, ResponseErrorConfig<PatientConsultationsPatientsPatientIdConsultationsGetStatus400 | PatientConsultationsPatientsPatientIdConsultationsGetStatus401 | PatientConsultationsPatientsPatientIdConsultationsGetStatus403 | PatientConsultationsPatientsPatientIdConsultationsGetStatus404 | PatientConsultationsPatientsPatientIdConsultationsGetStatus409 | PatientConsultationsPatientsPatientIdConsultationsGetStatus422 | PatientConsultationsPatientsPatientIdConsultationsGetStatus500>, PatientConsultationsPatientsPatientIdConsultationsGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await patientConsultationsPatientsPatientIdConsultationsGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return patientConsultationsPatientsPatientIdConsultationsGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

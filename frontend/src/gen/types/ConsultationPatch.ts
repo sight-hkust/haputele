@@ -10,9 +10,9 @@ import type { NotesPatch } from './NotesPatch'
 import type { ReferralEntry } from './ReferralEntry'
 
 export type ConsultationPatch = {
-    notes?: (NotesPatch | null) | undefined;
-    diagnoses?: (DiagnosisEntry[] | null) | undefined;
-    medications?: (MedicationEntry[] | null) | undefined;
-    labs?: (LabEntry[] | null) | undefined;
-    referrals?: (ReferralEntry[] | null) | undefined;
-};
+  notes?: (NotesPatch | (null | null)) | undefined;
+  diagnoses?: (DiagnosisEntry[] | (null | null)) | undefined;
+  medications?: (MedicationEntry[] | (null | null)) | undefined;
+  labs?: (LabEntry[] | (null | null)) | undefined;
+  referrals?: (ReferralEntry[] | (null | null)) | undefined;
+}

@@ -8,7 +8,7 @@ import type { ConsentOut } from './ConsentOut'
 /**
  * @description POST /patients/{id}/consents (and .../revoke).
  * @type object
-*/
+ */
 export type MasterConsentResponse = {
-    masterConsent: ConsentOut;
-};
+  masterConsent: ConsentOut;
+}

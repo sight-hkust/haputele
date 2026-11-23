@@ -4,13 +4,13 @@
 */
 
 export type ReConsentIn = {
-    /**
-     * @default 'master'
-     * @type string | undefined
-    */
-    scope?: "master" | undefined;
-    agreed: boolean;
-    version?: (string | null) | undefined;
-    capturedAt?: (string | null) | undefined;
-    signatureImage?: (string | null) | undefined;
-};
+  /**
+   * @default 'master'
+   * @type string | undefined
+   */
+  scope?: 'master' | undefined;
+  agreed: boolean;
+  version?: (string | (null | null)) | undefined;
+  capturedAt?: (string | (null | null)) | undefined;
+  signatureImage?: (string | (null | null)) | undefined;
+}
