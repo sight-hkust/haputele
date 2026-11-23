@@ -102,7 +102,8 @@ updates:
     ignore:
       # Same reasoning: node 24 → 25 is a runtime decision aligned with CI's
       # node-version, not a weekly bump.
-      - update-types: ["version-update:semver-major"]
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
 
   # docker-compose.yml — postgres:16-alpine. rustfs/rustfs:latest is a moving
   # tag and cannot be tracked by Dependabot at all.
