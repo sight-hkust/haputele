@@ -1,6 +1,7 @@
 import type { Preview } from "@storybook/nextjs-vite";
 import { mswLoader } from "msw-storybook-addon/csf3";
 import { setupWorker } from "msw/browser";
+import { HttpNetworkFrame } from "msw/experimental";
 import { QueryProvider } from "@/lib/query-client";
 import { AuthProvider } from "@/lib/auth";
 import { createHandlers, scenario } from "@/stories/scenario";
@@ -15,8 +16,13 @@ const loadMsw = mswLoader(async () => {
   const worker = setupWorker();
   await worker.start({
     quiet: true,
-    onUnhandledRequest(request, print) {
-      if (new URL(request.url).pathname.startsWith("/api/")) print.error();
+    onUnhandledFrame({ frame, defaults }) {
+      if (
+        frame instanceof HttpNetworkFrame &&
+        new URL(frame.data.request.url).pathname.startsWith("/api/")
+      ) {
+        defaults.error();
+      }
     },
   });
   return worker;
