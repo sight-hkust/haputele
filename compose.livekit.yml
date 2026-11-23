@@ -1,0 +1,55 @@
+# Same-machine development. Run through scripts/local-livekit.
+services:
+  livekit:
+    # LiveKit 1.11.0, used in the two-browser Docker Desktop call test.
+    image: livekit/livekit-server@sha256:100b9a870616d02f5e3795b34e0b593b5054a26f8131a94fd3fa322ed3154b16
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        bind_addresses: ["0.0.0.0"]
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: false
+          node_ip: ${HAPUTELE_MEDIA_IP:?Run scripts/local-livekit}
+          enable_loopback_candidate: false
+        keys:
+          localdev: local-development-only-livekit-secret
+        webhook:
+          api_key: localdev
+          urls: ["http://api:8000/livekit/webhook"]
+    networks:
+      default:
+        aliases: [livekit.localhost]
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "${HAPUTELE_MEDIA_IP}:7881:7881"
+      - "${HAPUTELE_MEDIA_IP}:7882:7882/udp"
+
+  db:
+    ports: !override
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+
+  rustfs:
+    ports: !override
+      - "127.0.0.1:${S3_PORT:-9000}:9000"
+      - "127.0.0.1:${S3_CONSOLE_PORT:-9001}:9001"
+
+  api:
+    environment:
+      COOKIE_SECURE: "false"
+      LIVEKIT_URL: ws://livekit.localhost:7880
+      LIVEKIT_API_KEY: localdev
+      LIVEKIT_API_SECRET: local-development-only-livekit-secret
+    ports: !override
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+
+  frontend:
+    # Use the frontend's same-origin /api rewrite on any local preview port.
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: ""
+    environment:
+      NEXT_PUBLIC_API_URL: ""
+    ports: !override
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
