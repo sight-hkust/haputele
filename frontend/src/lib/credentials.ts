@@ -7,6 +7,8 @@
 //   password — no leading/trailing whitespace; internal whitespace is fine,
 //              so passphrases stay usable
 //   password — at least MIN_PASSWORD_LEN characters
+//   password — at most MAX_PASSWORD_LEN UTF-8 bytes (bcrypt counts bytes;
+//              a 40-character CJK passphrase is 120 of them)
 //
 // Nothing here transforms a value. Credential fields are never trimmed or
 // rewritten on the way to the server: the original lockout bug came from one
@@ -27,9 +29,20 @@
  */
 export const MIN_PASSWORD_LEN = 10;
 
+/**
+ * Mirrors MAX_PASSWORD_LEN in backend/app/services/credentials.py — bcrypt
+ * 5.0 rejects input over 72 UTF-8 bytes where 4.x silently truncated.
+ *
+ * Bytes of the UTF-8 encoding, never `.length`: `.length` counts UTF-16 code
+ * units, so a 40-character CJK passphrase is 40 to `.length` and 120 to
+ * bcrypt. Same parity gate as MIN_PASSWORD_LEN above.
+ */
+export const MAX_PASSWORD_LEN = 72;
+
 export const USERNAME_WHITESPACE_MESSAGE = "Username cannot contain spaces.";
 export const PASSWORD_EDGE_WHITESPACE_MESSAGE = "Password cannot start or end with a space.";
 export const PASSWORD_TOO_SHORT_MESSAGE = `Choose a password at least ${MIN_PASSWORD_LEN} characters long.`;
+export const PASSWORD_TOO_LONG_MESSAGE = `Choose a password of at most ${MAX_PASSWORD_LEN} bytes — some characters count as more than one.`;
 /** Field-hint / placeholder copy, so the number in the UI can't drift either. */
 export const PASSWORD_LENGTH_HINT = `At least ${MIN_PASSWORD_LEN} characters`;
 
@@ -49,9 +62,20 @@ export function passwordError(value: string): string | null {
   return value !== value.trim() ? PASSWORD_EDGE_WHITESPACE_MESSAGE : null;
 }
 
+/** UTF-8 byte length — the unit bcrypt counts. `.length` counts UTF-16. */
+export function passwordByteLength(value: string): number {
+  return new TextEncoder().encode(value).length;
+}
+
 /** Length-only message for a password being *set*, or null when it's fine. */
 export function passwordLengthError(value: string): string | null {
-  return value.length < MIN_PASSWORD_LEN ? PASSWORD_TOO_SHORT_MESSAGE : null;
+  if (value.length < MIN_PASSWORD_LEN) {
+    return PASSWORD_TOO_SHORT_MESSAGE;
+  }
+  if (passwordByteLength(value) > MAX_PASSWORD_LEN) {
+    return PASSWORD_TOO_LONG_MESSAGE;
+  }
+  return null;
 }
 
 /**
@@ -59,7 +83,9 @@ export function passwordLengthError(value: string): string | null {
  *
  * Order matches the backend deliberately. Edge whitespace is checked BEFORE
  * length, because otherwise padding sneaks a short secret past the minimum —
- * "1234 5678 " is ten characters and only eight of them are real.
+ * "1234 5678 " is ten characters and only eight of them are real. Within the
+ * length gate the character minimum runs before the byte maximum, same as
+ * validate_new_password.
  */
 export function newPasswordError(value: string): string | null {
   return passwordError(value) ?? passwordLengthError(value);

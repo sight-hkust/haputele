@@ -24,10 +24,33 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
+# bcrypt's own input limit. 5.0 turns input past 72 UTF-8 bytes into a
+# ValueError; 4.x silently hashed only the first 72 bytes. New passwords are
+# capped at the same figure in services/credentials.py, but this constant is
+# the 4.x-compatibility figure and stays 72 even if that policy ever loosens.
+_BCRYPT_MAX_PASSWORD_BYTES = 72
+
+
 def verify_password(password: str, hashed: str) -> bool:
+    encoded = password.encode("utf-8")
     try:
-        return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
-    except (ValueError, TypeError):
+        return bcrypt.checkpw(encoded, hashed.encode("utf-8"))
+    except ValueError:
+        # bcrypt 5.0 lands here for passwords over 72 UTF-8 bytes. Accounts
+        # created before the upgrade can only hold a hash of the truncated
+        # form (4.x never stored anything longer), so a long input retries
+        # against exactly the bytes 4.x would have hashed — delete this
+        # fallback and every pre-upgrade >72-byte password locks its owner
+        # out for good. Inputs within 72 bytes keep the old behaviour:
+        # ValueError there means a malformed stored hash, not a long one.
+        if len(encoded) > _BCRYPT_MAX_PASSWORD_BYTES:
+            try:
+                truncated = encoded[:_BCRYPT_MAX_PASSWORD_BYTES]
+                return bcrypt.checkpw(truncated, hashed.encode("utf-8"))
+            except (ValueError, TypeError):
+                return False
+        return False
+    except TypeError:
         return False
 
 
