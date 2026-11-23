@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const disableAccountAccountsUsernameDisablePostMutationKey = () => [{ url: '/accounts/:username/disable' }] as const
 
-export function disableAccountAccountsUsernameDisablePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function disableAccountAccountsUsernameDisablePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = disableAccountAccountsUsernameDisablePostMutationKey()
   return mutationOptions<DisableAccountAccountsUsernameDisablePostStatus200, ResponseErrorConfig<DisableAccountAccountsUsernameDisablePostStatus400 | DisableAccountAccountsUsernameDisablePostStatus401 | DisableAccountAccountsUsernameDisablePostStatus403 | DisableAccountAccountsUsernameDisablePostStatus404 | DisableAccountAccountsUsernameDisablePostStatus409 | DisableAccountAccountsUsernameDisablePostStatus422 | DisableAccountAccountsUsernameDisablePostStatus500>, DisableAccountAccountsUsernameDisablePostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await disableAccountAccountsUsernameDisablePost({ ...config, path, headers, throwOnError: true })
-      return data
+      return disableAccountAccountsUsernameDisablePost({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

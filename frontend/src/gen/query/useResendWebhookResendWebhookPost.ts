@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const resendWebhookResendWebhookPostMutationKey = () => [{ url: '/resend/webhook' }] as const
 
-export function resendWebhookResendWebhookPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function resendWebhookResendWebhookPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = resendWebhookResendWebhookPostMutationKey()
   return mutationOptions<ResendWebhookResendWebhookPostStatus204, ResponseErrorConfig<ResendWebhookResendWebhookPostStatus400 | ResendWebhookResendWebhookPostStatus401 | ResendWebhookResendWebhookPostStatus403 | ResendWebhookResendWebhookPostStatus404 | ResendWebhookResendWebhookPostStatus409 | ResendWebhookResendWebhookPostStatus422 | ResendWebhookResendWebhookPostStatus500>, ResendWebhookResendWebhookPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ headers }) => {
-      const { data } = await resendWebhookResendWebhookPost({ ...config, headers, throwOnError: true })
-      return data
+      return resendWebhookResendWebhookPost({ ...config, headers, throwOnError: true }).unwrap()
     },
   })
 }

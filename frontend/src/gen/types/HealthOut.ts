@@ -6,20 +6,20 @@
 import type { HealthDependencyOut } from './HealthDependencyOut'
 
 export const healthOutStatusEnum = {
-    ok: "ok",
-    degraded: "degraded"
+  ok: 'ok',
+  degraded: 'degraded',
 } as const;
 
-export type HealthOutStatusEnumKey = (typeof healthOutStatusEnum)[keyof typeof healthOutStatusEnum];
+export type HealthOutStatusEnumKey = (typeof healthOutStatusEnum)[keyof typeof healthOutStatusEnum]
 
 export type HealthOut = {
-    status: HealthOutStatusEnumKey;
-    uptime: number;
-    version: string;
-    build_date: string;
-    hostname: string;
-    commit: string;
-    dependencies?: ({
-        [key: string]: HealthDependencyOut;
-    } | null) | undefined;
-};
+  status: HealthOutStatusEnumKey;
+  uptime: number;
+  version: string;
+  build_date: string;
+  hostname: string;
+  commit: string;
+  dependencies?: ({
+    [key: string]: HealthDependencyOut;
+  } | (null | null)) | undefined;
+}

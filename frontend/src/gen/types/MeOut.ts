@@ -4,15 +4,15 @@
 */
 
 export const meOutRoleEnum = {
-    admin: "admin",
-    doctor: "doctor",
-    healthworker: "healthworker",
-    "sys-admin": "sys-admin"
+  admin: 'admin',
+  doctor: 'doctor',
+  healthworker: 'healthworker',
+  'sys-admin': 'sys-admin',
 } as const;
 
-export type MeOutRoleEnumKey = (typeof meOutRoleEnum)[keyof typeof meOutRoleEnum];
+export type MeOutRoleEnumKey = (typeof meOutRoleEnum)[keyof typeof meOutRoleEnum]
 
 export type MeOut = {
-    username: string;
-    role: MeOutRoleEnumKey;
-};
+  username: string;
+  role: MeOutRoleEnumKey;
+}

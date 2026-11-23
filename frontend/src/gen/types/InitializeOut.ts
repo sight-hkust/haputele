@@ -4,13 +4,13 @@
 */
 
 export type InitializeOut = {
-    ok: boolean;
-    username: string;
-    role: "sys-admin";
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    expiresAt: string;
-};
+  ok: boolean;
+  username: string;
+  role: 'sys-admin';
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  expiresAt: string;
+}

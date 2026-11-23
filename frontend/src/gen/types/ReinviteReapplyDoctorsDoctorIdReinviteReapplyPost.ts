@@ -7,52 +7,52 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { DoctorInviteCreateOut } from './DoctorInviteCreateOut'
 
 export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostPath = {
-    doctor_id: number;
-};
+  doctor_id: number;
+}
 
 export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
  * @description POST /doctors/invites and POST /doctors/{id}/reinvite-reapply.
  * @type object
-*/
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus201 = DoctorInviteCreateOut;
+ */
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus201 = DoctorInviteCreateOut
 
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus400 = ApiErrorResponse;
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus400 = ApiErrorResponse
 
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus401 = ApiErrorResponse;
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus401 = ApiErrorResponse
 
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus403 = ApiErrorResponse;
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus403 = ApiErrorResponse
 
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus404 = ApiErrorResponse;
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus404 = ApiErrorResponse
 
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus409 = ApiErrorResponse;
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus409 = ApiErrorResponse
 
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus422 = ApiErrorResponse;
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus422 = ApiErrorResponse
 
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus500 = ApiErrorResponse;
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus500 = ApiErrorResponse
 
 export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostOptions = {
-    body?: never | undefined;
-    path: ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostPath;
-    query?: never | undefined;
-    headers?: ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostHeaders | undefined;
-};
+  body?: never | undefined;
+  path: ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostPath;
+  query?: never | undefined;
+  headers?: ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostHeaders | undefined;
+}
 
 export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostResponses = {
-    "201": ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus201;
-    "400": ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus400;
-    "401": ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus401;
-    "403": ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus403;
-    "404": ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus404;
-    "409": ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus409;
-    "422": ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus422;
-    "500": ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus500;
-};
+  '201': ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus201;
+  '400': ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus400;
+  '401': ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus401;
+  '403': ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus403;
+  '404': ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus404;
+  '409': ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus409;
+  '422': ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus422;
+  '500': ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostResponse = (ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus201 | ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus400 | ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus401 | ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus403 | ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus404 | ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus409 | ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus422 | ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus500);
+ */
+export type ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostResponse = ReinviteReapplyDoctorsDoctorIdReinviteReapplyPostStatus201

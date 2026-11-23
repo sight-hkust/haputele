@@ -12,13 +12,12 @@ export const healthHealthGetQueryKey = ({ query }: Omit<HealthHealthGetOptions, 
 
 type HealthHealthGetQueryKey = ReturnType<typeof healthHealthGetQueryKey>
 
-export function healthHealthGetQueryOptions({ query }: HealthHealthGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function healthHealthGetQueryOptions({ query }: HealthHealthGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const queryKey = healthHealthGetQueryKey({ query })
   return queryOptions<HealthHealthGetStatus200, ResponseErrorConfig<HealthHealthGetStatus400 | HealthHealthGetStatus401 | HealthHealthGetStatus403 | HealthHealthGetStatus404 | HealthHealthGetStatus409 | HealthHealthGetStatus422 | HealthHealthGetStatus500 | HealthHealthGetStatus503>, HealthHealthGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await healthHealthGet({ ...config, query, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return healthHealthGet({ ...config, query, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

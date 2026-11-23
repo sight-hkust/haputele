@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { LogoutAuthLogoutPostOptions, LogoutAuthLogoutPostResponses } from '../types/LogoutAuthLogoutPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /auth/logout`
  * @summary Logout
- * {@link /auth/logout}
  */
-export function logoutAuthLogoutPost<ThrowOnError extends boolean = true>(options: Options<LogoutAuthLogoutPostOptions, ThrowOnError> = {}): Promise<RequestResult<LogoutAuthLogoutPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function logoutAuthLogoutPost<ThrowOnError extends boolean = true>(options: Options<LogoutAuthLogoutPostOptions, ThrowOnError> = {}): Unwrappable<RequestResult<LogoutAuthLogoutPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/auth/logout', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<LogoutAuthLogoutPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<LogoutAuthLogoutPostResponses, ThrowOnError>({ method: 'POST', url: '/auth/logout', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -3,17 +3,17 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CaptureSessionStatusCaptureSessionsSessionIdGetOptions, CaptureSessionStatusCaptureSessionsSessionIdGetResponses } from '../types/CaptureSessionStatusCaptureSessionsSessionIdGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /capture/sessions/{session_id}`
  * @description Poll a session the caller owns. Never echoes the token.
  * @summary Capture Session Status
- * {@link /capture/sessions/:session_id}
  */
-export function captureSessionStatusCaptureSessionsSessionIdGet<ThrowOnError extends boolean = true>(options: Options<CaptureSessionStatusCaptureSessionsSessionIdGetOptions, ThrowOnError>): Promise<RequestResult<CaptureSessionStatusCaptureSessionsSessionIdGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function captureSessionStatusCaptureSessionsSessionIdGet<ThrowOnError extends boolean = true>(options: Options<CaptureSessionStatusCaptureSessionsSessionIdGetOptions, ThrowOnError>): Unwrappable<RequestResult<CaptureSessionStatusCaptureSessionsSessionIdGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/capture/sessions/{session_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CaptureSessionStatusCaptureSessionsSessionIdGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CaptureSessionStatusCaptureSessionsSessionIdGetResponses, ThrowOnError>({ method: 'GET', url: '/capture/sessions/{session_id}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

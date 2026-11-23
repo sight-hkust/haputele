@@ -7,48 +7,48 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { HistoryConsultationItem } from './HistoryConsultationItem'
 
 export type PatientConsultationsPatientsPatientIdConsultationsGetPath = {
-    patient_id: number;
-};
+  patient_id: number;
+}
 
 export type PatientConsultationsPatientsPatientIdConsultationsGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type PatientConsultationsPatientsPatientIdConsultationsGetStatus200 = HistoryConsultationItem[];
+export type PatientConsultationsPatientsPatientIdConsultationsGetStatus200 = HistoryConsultationItem[]
 
-export type PatientConsultationsPatientsPatientIdConsultationsGetStatus400 = ApiErrorResponse;
+export type PatientConsultationsPatientsPatientIdConsultationsGetStatus400 = ApiErrorResponse
 
-export type PatientConsultationsPatientsPatientIdConsultationsGetStatus401 = ApiErrorResponse;
+export type PatientConsultationsPatientsPatientIdConsultationsGetStatus401 = ApiErrorResponse
 
-export type PatientConsultationsPatientsPatientIdConsultationsGetStatus403 = ApiErrorResponse;
+export type PatientConsultationsPatientsPatientIdConsultationsGetStatus403 = ApiErrorResponse
 
-export type PatientConsultationsPatientsPatientIdConsultationsGetStatus404 = ApiErrorResponse;
+export type PatientConsultationsPatientsPatientIdConsultationsGetStatus404 = ApiErrorResponse
 
-export type PatientConsultationsPatientsPatientIdConsultationsGetStatus409 = ApiErrorResponse;
+export type PatientConsultationsPatientsPatientIdConsultationsGetStatus409 = ApiErrorResponse
 
-export type PatientConsultationsPatientsPatientIdConsultationsGetStatus422 = ApiErrorResponse;
+export type PatientConsultationsPatientsPatientIdConsultationsGetStatus422 = ApiErrorResponse
 
-export type PatientConsultationsPatientsPatientIdConsultationsGetStatus500 = ApiErrorResponse;
+export type PatientConsultationsPatientsPatientIdConsultationsGetStatus500 = ApiErrorResponse
 
 export type PatientConsultationsPatientsPatientIdConsultationsGetOptions = {
-    body?: never | undefined;
-    path: PatientConsultationsPatientsPatientIdConsultationsGetPath;
-    query?: never | undefined;
-    headers?: PatientConsultationsPatientsPatientIdConsultationsGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path: PatientConsultationsPatientsPatientIdConsultationsGetPath;
+  query?: never | undefined;
+  headers?: PatientConsultationsPatientsPatientIdConsultationsGetHeaders | undefined;
+}
 
 export type PatientConsultationsPatientsPatientIdConsultationsGetResponses = {
-    "200": PatientConsultationsPatientsPatientIdConsultationsGetStatus200;
-    "400": PatientConsultationsPatientsPatientIdConsultationsGetStatus400;
-    "401": PatientConsultationsPatientsPatientIdConsultationsGetStatus401;
-    "403": PatientConsultationsPatientsPatientIdConsultationsGetStatus403;
-    "404": PatientConsultationsPatientsPatientIdConsultationsGetStatus404;
-    "409": PatientConsultationsPatientsPatientIdConsultationsGetStatus409;
-    "422": PatientConsultationsPatientsPatientIdConsultationsGetStatus422;
-    "500": PatientConsultationsPatientsPatientIdConsultationsGetStatus500;
-};
+  '200': PatientConsultationsPatientsPatientIdConsultationsGetStatus200;
+  '400': PatientConsultationsPatientsPatientIdConsultationsGetStatus400;
+  '401': PatientConsultationsPatientsPatientIdConsultationsGetStatus401;
+  '403': PatientConsultationsPatientsPatientIdConsultationsGetStatus403;
+  '404': PatientConsultationsPatientsPatientIdConsultationsGetStatus404;
+  '409': PatientConsultationsPatientsPatientIdConsultationsGetStatus409;
+  '422': PatientConsultationsPatientsPatientIdConsultationsGetStatus422;
+  '500': PatientConsultationsPatientsPatientIdConsultationsGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type PatientConsultationsPatientsPatientIdConsultationsGetResponse = (PatientConsultationsPatientsPatientIdConsultationsGetStatus200 | PatientConsultationsPatientsPatientIdConsultationsGetStatus400 | PatientConsultationsPatientsPatientIdConsultationsGetStatus401 | PatientConsultationsPatientsPatientIdConsultationsGetStatus403 | PatientConsultationsPatientsPatientIdConsultationsGetStatus404 | PatientConsultationsPatientsPatientIdConsultationsGetStatus409 | PatientConsultationsPatientsPatientIdConsultationsGetStatus422 | PatientConsultationsPatientsPatientIdConsultationsGetStatus500);
+ */
+export type PatientConsultationsPatientsPatientIdConsultationsGetResponse = PatientConsultationsPatientsPatientIdConsultationsGetStatus200

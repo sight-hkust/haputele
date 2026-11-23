@@ -7,10 +7,10 @@ import type { FollowUpAppointment } from './FollowUpAppointment'
 import type { FollowUpWeeks } from './FollowUpWeeks'
 
 export type ConsultationSubmitIn = {
-    signature?: (string | null) | undefined;
-    followUp?: (((FollowUpAppointment & {
-        kind: "appointment";
-    }) | (FollowUpWeeks & {
-        kind: "weeks";
-    })) | null) | undefined;
-};
+  signature?: (string | (null | null)) | undefined;
+  followUp?: ((FollowUpAppointment & {
+    kind: 'appointment';
+  } | FollowUpWeeks & {
+    kind: 'weeks';
+  }) | (null | null)) | undefined;
+}

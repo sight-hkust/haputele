@@ -3,20 +3,20 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UpdateMeDoctorsMePatchOptions, UpdateMeDoctorsMePatchResponses } from '../types/UpdateMeDoctorsMePatch'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `PATCH /doctors/me`
  * @description Partial self-update of the calling doctor's practice profile.
  * Only fields explicitly present in the payload are applied. Images
  * (rubber stamp, e-signature) are validated, uploaded to S3 and swapped;
  * the superseded object is deleted only after the row commits.
  * @summary Update Me
- * {@link /doctors/me}
  */
-export function updateMeDoctorsMePatch<ThrowOnError extends boolean = true>(options: Options<UpdateMeDoctorsMePatchOptions, ThrowOnError>): Promise<RequestResult<UpdateMeDoctorsMePatchResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function updateMeDoctorsMePatch<ThrowOnError extends boolean = true>(options: Options<UpdateMeDoctorsMePatchOptions, ThrowOnError>): Unwrappable<RequestResult<UpdateMeDoctorsMePatchResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'PATCH', url: '/doctors/me', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<UpdateMeDoctorsMePatchResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UpdateMeDoctorsMePatchResponses, ThrowOnError>({ method: 'PATCH', url: '/doctors/me', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

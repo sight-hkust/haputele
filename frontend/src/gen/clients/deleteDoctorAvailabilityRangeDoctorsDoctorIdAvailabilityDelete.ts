@@ -3,19 +3,19 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteOptions, DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteResponses } from '../types/DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDelete'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `DELETE /doctors/{doctor_id}/availability`
  * @description Delete every availability window for this doctor that overlaps the
  * given range. Used by the week-grid editor to atomically replace a
  * week's windows in one call (paired with the bulk-create endpoint).
  * @summary Delete Doctor Availability Range
- * {@link /doctors/:doctor_id/availability}
  */
-export function deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDelete<ThrowOnError extends boolean = true>(options: Options<DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteOptions, ThrowOnError>): Promise<RequestResult<DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDelete<ThrowOnError extends boolean = true>(options: Options<DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'DELETE', url: '/doctors/{doctor_id}/availability', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteResponses, ThrowOnError>>
+  return withUnwrap(apiClient<DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteResponses, ThrowOnError>({ method: 'DELETE', url: '/doctors/{doctor_id}/availability', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -8,50 +8,50 @@ import type { AvailabilityOut } from './AvailabilityOut'
 import type { AvailabilityUpdate } from './AvailabilityUpdate'
 
 export type UpdateAvailabilityAvailabilityAidPatchPath = {
-    aid: number;
-};
+  aid: number;
+}
 
 export type UpdateAvailabilityAvailabilityAidPatchHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type UpdateAvailabilityAvailabilityAidPatchStatus200 = AvailabilityOut;
+export type UpdateAvailabilityAvailabilityAidPatchStatus200 = AvailabilityOut
 
-export type UpdateAvailabilityAvailabilityAidPatchStatus400 = ApiErrorResponse;
+export type UpdateAvailabilityAvailabilityAidPatchStatus400 = ApiErrorResponse
 
-export type UpdateAvailabilityAvailabilityAidPatchStatus401 = ApiErrorResponse;
+export type UpdateAvailabilityAvailabilityAidPatchStatus401 = ApiErrorResponse
 
-export type UpdateAvailabilityAvailabilityAidPatchStatus403 = ApiErrorResponse;
+export type UpdateAvailabilityAvailabilityAidPatchStatus403 = ApiErrorResponse
 
-export type UpdateAvailabilityAvailabilityAidPatchStatus404 = ApiErrorResponse;
+export type UpdateAvailabilityAvailabilityAidPatchStatus404 = ApiErrorResponse
 
-export type UpdateAvailabilityAvailabilityAidPatchStatus409 = ApiErrorResponse;
+export type UpdateAvailabilityAvailabilityAidPatchStatus409 = ApiErrorResponse
 
-export type UpdateAvailabilityAvailabilityAidPatchStatus422 = ApiErrorResponse;
+export type UpdateAvailabilityAvailabilityAidPatchStatus422 = ApiErrorResponse
 
-export type UpdateAvailabilityAvailabilityAidPatchStatus500 = ApiErrorResponse;
+export type UpdateAvailabilityAvailabilityAidPatchStatus500 = ApiErrorResponse
 
-export type UpdateAvailabilityAvailabilityAidPatchBody = AvailabilityUpdate;
+export type UpdateAvailabilityAvailabilityAidPatchBody = AvailabilityUpdate
 
 export type UpdateAvailabilityAvailabilityAidPatchOptions = {
-    body: UpdateAvailabilityAvailabilityAidPatchBody;
-    path: UpdateAvailabilityAvailabilityAidPatchPath;
-    query?: never | undefined;
-    headers?: UpdateAvailabilityAvailabilityAidPatchHeaders | undefined;
-};
+  body: UpdateAvailabilityAvailabilityAidPatchBody;
+  path: UpdateAvailabilityAvailabilityAidPatchPath;
+  query?: never | undefined;
+  headers?: UpdateAvailabilityAvailabilityAidPatchHeaders | undefined;
+}
 
 export type UpdateAvailabilityAvailabilityAidPatchResponses = {
-    "200": UpdateAvailabilityAvailabilityAidPatchStatus200;
-    "400": UpdateAvailabilityAvailabilityAidPatchStatus400;
-    "401": UpdateAvailabilityAvailabilityAidPatchStatus401;
-    "403": UpdateAvailabilityAvailabilityAidPatchStatus403;
-    "404": UpdateAvailabilityAvailabilityAidPatchStatus404;
-    "409": UpdateAvailabilityAvailabilityAidPatchStatus409;
-    "422": UpdateAvailabilityAvailabilityAidPatchStatus422;
-    "500": UpdateAvailabilityAvailabilityAidPatchStatus500;
-};
+  '200': UpdateAvailabilityAvailabilityAidPatchStatus200;
+  '400': UpdateAvailabilityAvailabilityAidPatchStatus400;
+  '401': UpdateAvailabilityAvailabilityAidPatchStatus401;
+  '403': UpdateAvailabilityAvailabilityAidPatchStatus403;
+  '404': UpdateAvailabilityAvailabilityAidPatchStatus404;
+  '409': UpdateAvailabilityAvailabilityAidPatchStatus409;
+  '422': UpdateAvailabilityAvailabilityAidPatchStatus422;
+  '500': UpdateAvailabilityAvailabilityAidPatchStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type UpdateAvailabilityAvailabilityAidPatchResponse = (UpdateAvailabilityAvailabilityAidPatchStatus200 | UpdateAvailabilityAvailabilityAidPatchStatus400 | UpdateAvailabilityAvailabilityAidPatchStatus401 | UpdateAvailabilityAvailabilityAidPatchStatus403 | UpdateAvailabilityAvailabilityAidPatchStatus404 | UpdateAvailabilityAvailabilityAidPatchStatus409 | UpdateAvailabilityAvailabilityAidPatchStatus422 | UpdateAvailabilityAvailabilityAidPatchStatus500);
+ */
+export type UpdateAvailabilityAvailabilityAidPatchResponse = UpdateAvailabilityAvailabilityAidPatchStatus200

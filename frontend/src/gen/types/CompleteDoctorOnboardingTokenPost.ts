@@ -6,48 +6,48 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type CompleteDoctorOnboardingTokenPostPath = {
-    token: string;
-};
+  token: string;
+}
 
-export type CompleteDoctorOnboardingTokenPostStatus204 = unknown;
+export type CompleteDoctorOnboardingTokenPostStatus204 = unknown
 
-export type CompleteDoctorOnboardingTokenPostStatus400 = ApiErrorResponse;
+export type CompleteDoctorOnboardingTokenPostStatus400 = ApiErrorResponse
 
-export type CompleteDoctorOnboardingTokenPostStatus401 = ApiErrorResponse;
+export type CompleteDoctorOnboardingTokenPostStatus401 = ApiErrorResponse
 
-export type CompleteDoctorOnboardingTokenPostStatus403 = ApiErrorResponse;
+export type CompleteDoctorOnboardingTokenPostStatus403 = ApiErrorResponse
 
-export type CompleteDoctorOnboardingTokenPostStatus404 = ApiErrorResponse;
+export type CompleteDoctorOnboardingTokenPostStatus404 = ApiErrorResponse
 
-export type CompleteDoctorOnboardingTokenPostStatus409 = ApiErrorResponse;
+export type CompleteDoctorOnboardingTokenPostStatus409 = ApiErrorResponse
 
-export type CompleteDoctorOnboardingTokenPostStatus422 = ApiErrorResponse;
+export type CompleteDoctorOnboardingTokenPostStatus422 = ApiErrorResponse
 
-export type CompleteDoctorOnboardingTokenPostStatus500 = ApiErrorResponse;
+export type CompleteDoctorOnboardingTokenPostStatus500 = ApiErrorResponse
 
 export type CompleteDoctorOnboardingTokenPostBody = {
-    [key: string]: unknown;
-};
+  [key: string]: unknown;
+}
 
 export type CompleteDoctorOnboardingTokenPostOptions = {
-    body: CompleteDoctorOnboardingTokenPostBody;
-    path: CompleteDoctorOnboardingTokenPostPath;
-    query?: never | undefined;
-    headers?: never | undefined;
-};
+  body: CompleteDoctorOnboardingTokenPostBody;
+  path: CompleteDoctorOnboardingTokenPostPath;
+  query?: never | undefined;
+  headers?: never | undefined;
+}
 
 export type CompleteDoctorOnboardingTokenPostResponses = {
-    "204": CompleteDoctorOnboardingTokenPostStatus204;
-    "400": CompleteDoctorOnboardingTokenPostStatus400;
-    "401": CompleteDoctorOnboardingTokenPostStatus401;
-    "403": CompleteDoctorOnboardingTokenPostStatus403;
-    "404": CompleteDoctorOnboardingTokenPostStatus404;
-    "409": CompleteDoctorOnboardingTokenPostStatus409;
-    "422": CompleteDoctorOnboardingTokenPostStatus422;
-    "500": CompleteDoctorOnboardingTokenPostStatus500;
-};
+  '204': CompleteDoctorOnboardingTokenPostStatus204;
+  '400': CompleteDoctorOnboardingTokenPostStatus400;
+  '401': CompleteDoctorOnboardingTokenPostStatus401;
+  '403': CompleteDoctorOnboardingTokenPostStatus403;
+  '404': CompleteDoctorOnboardingTokenPostStatus404;
+  '409': CompleteDoctorOnboardingTokenPostStatus409;
+  '422': CompleteDoctorOnboardingTokenPostStatus422;
+  '500': CompleteDoctorOnboardingTokenPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type CompleteDoctorOnboardingTokenPostResponse = (CompleteDoctorOnboardingTokenPostStatus204 | CompleteDoctorOnboardingTokenPostStatus400 | CompleteDoctorOnboardingTokenPostStatus401 | CompleteDoctorOnboardingTokenPostStatus403 | CompleteDoctorOnboardingTokenPostStatus404 | CompleteDoctorOnboardingTokenPostStatus409 | CompleteDoctorOnboardingTokenPostStatus422 | CompleteDoctorOnboardingTokenPostStatus500);
+ */
+export type CompleteDoctorOnboardingTokenPostResponse = CompleteDoctorOnboardingTokenPostStatus204

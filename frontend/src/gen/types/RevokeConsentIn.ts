@@ -4,5 +4,5 @@
 */
 
 export type RevokeConsentIn = {
-    reason?: (string | null) | undefined;
-};
+  reason?: (string | (null | null)) | undefined;
+}

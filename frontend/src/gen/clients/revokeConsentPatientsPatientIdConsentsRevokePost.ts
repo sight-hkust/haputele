@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { RevokeConsentPatientsPatientIdConsentsRevokePostOptions, RevokeConsentPatientsPatientIdConsentsRevokePostResponses } from '../types/RevokeConsentPatientsPatientIdConsentsRevokePost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /patients/{patient_id}/consents/revoke`
  * @summary Revoke Consent
- * {@link /patients/:patient_id/consents/revoke}
  */
-export function revokeConsentPatientsPatientIdConsentsRevokePost<ThrowOnError extends boolean = true>(options: Options<RevokeConsentPatientsPatientIdConsentsRevokePostOptions, ThrowOnError>): Promise<RequestResult<RevokeConsentPatientsPatientIdConsentsRevokePostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function revokeConsentPatientsPatientIdConsentsRevokePost<ThrowOnError extends boolean = true>(options: Options<RevokeConsentPatientsPatientIdConsentsRevokePostOptions, ThrowOnError>): Unwrappable<RequestResult<RevokeConsentPatientsPatientIdConsentsRevokePostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/patients/{patient_id}/consents/revoke', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<RevokeConsentPatientsPatientIdConsentsRevokePostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<RevokeConsentPatientsPatientIdConsentsRevokePostResponses, ThrowOnError>({ method: 'POST', url: '/patients/{patient_id}/consents/revoke', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

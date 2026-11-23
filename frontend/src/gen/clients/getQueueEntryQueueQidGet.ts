@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { GetQueueEntryQueueQidGetOptions, GetQueueEntryQueueQidGetResponses } from '../types/GetQueueEntryQueueQidGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /queue/{qid}`
  * @summary Get Queue Entry
- * {@link /queue/:qid}
  */
-export function getQueueEntryQueueQidGet<ThrowOnError extends boolean = true>(options: Options<GetQueueEntryQueueQidGetOptions, ThrowOnError>): Promise<RequestResult<GetQueueEntryQueueQidGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function getQueueEntryQueueQidGet<ThrowOnError extends boolean = true>(options: Options<GetQueueEntryQueueQidGetOptions, ThrowOnError>): Unwrappable<RequestResult<GetQueueEntryQueueQidGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/queue/{qid}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<GetQueueEntryQueueQidGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<GetQueueEntryQueueQidGetResponses, ThrowOnError>({ method: 'GET', url: '/queue/{qid}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

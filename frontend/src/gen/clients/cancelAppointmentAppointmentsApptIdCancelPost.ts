@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CancelAppointmentAppointmentsApptIdCancelPostOptions, CancelAppointmentAppointmentsApptIdCancelPostResponses } from '../types/CancelAppointmentAppointmentsApptIdCancelPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /appointments/{appt_id}/cancel`
  * @summary Cancel Appointment
- * {@link /appointments/:appt_id/cancel}
  */
-export function cancelAppointmentAppointmentsApptIdCancelPost<ThrowOnError extends boolean = true>(options: Options<CancelAppointmentAppointmentsApptIdCancelPostOptions, ThrowOnError>): Promise<RequestResult<CancelAppointmentAppointmentsApptIdCancelPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function cancelAppointmentAppointmentsApptIdCancelPost<ThrowOnError extends boolean = true>(options: Options<CancelAppointmentAppointmentsApptIdCancelPostOptions, ThrowOnError>): Unwrappable<RequestResult<CancelAppointmentAppointmentsApptIdCancelPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/appointments/{appt_id}/cancel', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CancelAppointmentAppointmentsApptIdCancelPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CancelAppointmentAppointmentsApptIdCancelPostResponses, ThrowOnError>({ method: 'POST', url: '/appointments/{appt_id}/cancel', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

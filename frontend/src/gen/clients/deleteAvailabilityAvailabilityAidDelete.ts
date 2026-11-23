@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { DeleteAvailabilityAvailabilityAidDeleteOptions, DeleteAvailabilityAvailabilityAidDeleteResponses } from '../types/DeleteAvailabilityAvailabilityAidDelete'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `DELETE /availability/{aid}`
  * @summary Delete Availability
- * {@link /availability/:aid}
  */
-export function deleteAvailabilityAvailabilityAidDelete<ThrowOnError extends boolean = true>(options: Options<DeleteAvailabilityAvailabilityAidDeleteOptions, ThrowOnError>): Promise<RequestResult<DeleteAvailabilityAvailabilityAidDeleteResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function deleteAvailabilityAvailabilityAidDelete<ThrowOnError extends boolean = true>(options: Options<DeleteAvailabilityAvailabilityAidDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<DeleteAvailabilityAvailabilityAidDeleteResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'DELETE', url: '/availability/{aid}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<DeleteAvailabilityAvailabilityAidDeleteResponses, ThrowOnError>>
+  return withUnwrap(apiClient<DeleteAvailabilityAvailabilityAidDeleteResponses, ThrowOnError>({ method: 'DELETE', url: '/availability/{aid}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

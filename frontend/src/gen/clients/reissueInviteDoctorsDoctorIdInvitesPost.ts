@@ -3,20 +3,20 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ReissueInviteDoctorsDoctorIdInvitesPostOptions, ReissueInviteDoctorsDoctorIdInvitesPostResponses } from '../types/ReissueInviteDoctorsDoctorIdInvitesPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /doctors/{doctor_id}/invites`
  * @description Issue a fresh password-rotation invite for an existing doctor.
  * Used when the original link expired, was lost, or the doctor's email
  * address has been corrected. Any prior live invite for the same
  * doctor is revoked inside `invites.issue_rotation()`.
  * @summary Reissue Invite
- * {@link /doctors/:doctor_id/invites}
  */
-export function reissueInviteDoctorsDoctorIdInvitesPost<ThrowOnError extends boolean = true>(options: Options<ReissueInviteDoctorsDoctorIdInvitesPostOptions, ThrowOnError>): Promise<RequestResult<ReissueInviteDoctorsDoctorIdInvitesPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function reissueInviteDoctorsDoctorIdInvitesPost<ThrowOnError extends boolean = true>(options: Options<ReissueInviteDoctorsDoctorIdInvitesPostOptions, ThrowOnError>): Unwrappable<RequestResult<ReissueInviteDoctorsDoctorIdInvitesPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctors/{doctor_id}/invites', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ReissueInviteDoctorsDoctorIdInvitesPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ReissueInviteDoctorsDoctorIdInvitesPostResponses, ThrowOnError>({ method: 'POST', url: '/doctors/{doctor_id}/invites', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

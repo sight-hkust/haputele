@@ -4,15 +4,15 @@
 */
 
 export const loginInRole = {
-    admin: "admin",
-    doctor: "doctor",
-    healthworker: "healthworker"
+  admin: 'admin',
+  doctor: 'doctor',
+  healthworker: 'healthworker',
 } as const;
 
-export type LoginInRoleKey = (typeof loginInRole)[keyof typeof loginInRole];
+export type LoginInRoleKey = (typeof loginInRole)[keyof typeof loginInRole]
 
 export type LoginIn = {
-    username: string;
-    password: string;
-    role?: (LoginInRoleKey | null) | undefined;
-};
+  username: string;
+  password: string;
+  role?: (LoginInRoleKey | (null | null)) | undefined;
+}

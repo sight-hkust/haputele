@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const uploadAttachmentAppointmentsApptIdAttachmentsPostMutationKey = () => [{ url: '/appointments/:appt_id/attachments' }] as const
 
-export function uploadAttachmentAppointmentsApptIdAttachmentsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function uploadAttachmentAppointmentsApptIdAttachmentsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = uploadAttachmentAppointmentsApptIdAttachmentsPostMutationKey()
   return mutationOptions<UploadAttachmentAppointmentsApptIdAttachmentsPostStatus201, ResponseErrorConfig<UploadAttachmentAppointmentsApptIdAttachmentsPostStatus400 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus401 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus403 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus404 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus409 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus422 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus500>, UploadAttachmentAppointmentsApptIdAttachmentsPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await uploadAttachmentAppointmentsApptIdAttachmentsPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return uploadAttachmentAppointmentsApptIdAttachmentsPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const deleteAccountAccountsUsernameDeleteMutationKey = () => [{ url: '/accounts/:username' }] as const
 
-export function deleteAccountAccountsUsernameDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function deleteAccountAccountsUsernameDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = deleteAccountAccountsUsernameDeleteMutationKey()
   return mutationOptions<DeleteAccountAccountsUsernameDeleteStatus204, ResponseErrorConfig<DeleteAccountAccountsUsernameDeleteStatus400 | DeleteAccountAccountsUsernameDeleteStatus401 | DeleteAccountAccountsUsernameDeleteStatus403 | DeleteAccountAccountsUsernameDeleteStatus404 | DeleteAccountAccountsUsernameDeleteStatus409 | DeleteAccountAccountsUsernameDeleteStatus422 | DeleteAccountAccountsUsernameDeleteStatus500>, DeleteAccountAccountsUsernameDeleteOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await deleteAccountAccountsUsernameDelete({ ...config, path, headers, throwOnError: true })
-      return data
+      return deleteAccountAccountsUsernameDelete({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

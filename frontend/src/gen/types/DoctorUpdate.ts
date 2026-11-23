@@ -4,22 +4,22 @@
 */
 
 export type DoctorUpdate = {
-    givenName?: (string | null) | undefined;
-    familyName?: (string | null) | undefined;
-    contact?: (string | null) | undefined;
-    email?: (string | null) | undefined;
-    password?: (string | null) | undefined;
-    slmcRegistrationNumber?: (string | null) | undefined;
-    qualifications?: (string | null) | undefined;
-    practitionerAddress?: (string | null) | undefined;
-    instituteName?: (string | null) | undefined;
-    instituteContact?: (string | null) | undefined;
-    rubberStampImage?: (string | null) | undefined;
-    defaultSignatureImage?: (string | null) | undefined;
-    /**
-     * @default false
-     * @type boolean | undefined
-    */
-    clearDefaultSignature?: boolean | undefined;
-    active?: (boolean | null) | undefined;
-};
+  givenName?: (string | (null | null)) | undefined;
+  familyName?: (string | (null | null)) | undefined;
+  contact?: (string | (null | null)) | undefined;
+  email?: (string | (null | null)) | undefined;
+  password?: (string | (null | null)) | undefined;
+  slmcRegistrationNumber?: (string | (null | null)) | undefined;
+  qualifications?: (string | (null | null)) | undefined;
+  practitionerAddress?: (string | (null | null)) | undefined;
+  instituteName?: (string | (null | null)) | undefined;
+  instituteContact?: (string | (null | null)) | undefined;
+  rubberStampImage?: (string | (null | null)) | undefined;
+  defaultSignatureImage?: (string | (null | null)) | undefined;
+  /**
+   * @default false
+   * @type boolean | undefined
+   */
+  clearDefaultSignature?: boolean | undefined;
+  active?: (boolean | (null | null)) | undefined;
+}

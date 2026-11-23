@@ -6,9 +6,9 @@
 /**
  * @description Stable minimum error payload; domain-specific fields remain allowed.
  * @type object
-*/
+ */
 export type ApiErrorDetail = {
-    error: string;
-    requestId: string;
-    [key: string]: unknown;
-};
+  error: string;
+  requestId: string;
+  [key: string]: unknown;
+}

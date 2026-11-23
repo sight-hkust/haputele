@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOptions, StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetResponses } from '../types/StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /appointments/{appt_id}/attachments/{attachment_id}`
  * @summary Stream Attachment
- * {@link /appointments/:appt_id/attachments/:attachment_id}
  */
-export function streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGet<ThrowOnError extends boolean = true>(options: Options<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOptions, ThrowOnError>): Promise<RequestResult<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function streamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGet<ThrowOnError extends boolean = true>(options: Options<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetOptions, ThrowOnError>): Unwrappable<RequestResult<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/appointments/{appt_id}/attachments/{attachment_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<StreamAttachmentAppointmentsApptIdAttachmentsAttachmentIdGetResponses, ThrowOnError>({ method: 'GET', url: '/appointments/{appt_id}/attachments/{attachment_id}', security: [securitySchemes.SessionCookie], parseAs: 'blob', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

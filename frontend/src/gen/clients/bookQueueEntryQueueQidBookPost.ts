@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { BookQueueEntryQueueQidBookPostOptions, BookQueueEntryQueueQidBookPostResponses } from '../types/BookQueueEntryQueueQidBookPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /queue/{qid}/book`
  * @summary Book Queue Entry
- * {@link /queue/:qid/book}
  */
-export function bookQueueEntryQueueQidBookPost<ThrowOnError extends boolean = true>(options: Options<BookQueueEntryQueueQidBookPostOptions, ThrowOnError>): Promise<RequestResult<BookQueueEntryQueueQidBookPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function bookQueueEntryQueueQidBookPost<ThrowOnError extends boolean = true>(options: Options<BookQueueEntryQueueQidBookPostOptions, ThrowOnError>): Unwrappable<RequestResult<BookQueueEntryQueueQidBookPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/queue/{qid}/book', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<BookQueueEntryQueueQidBookPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<BookQueueEntryQueueQidBookPostResponses, ThrowOnError>({ method: 'POST', url: '/queue/{qid}/book', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

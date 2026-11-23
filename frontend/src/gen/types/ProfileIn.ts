@@ -10,9 +10,9 @@ import type { Lifestyle } from './Lifestyle'
 import type { SurgeryEntry } from './SurgeryEntry'
 
 export type ProfileIn = {
-    diseaseHistory?: DiseaseEntry[] | undefined;
-    surgicalHistory?: SurgeryEntry[] | undefined;
-    allergies?: AllergyEntry[] | undefined;
-    medications?: ExistingMedicationEntry[] | undefined;
-    lifestyle?: Lifestyle | undefined;
-};
+  diseaseHistory?: DiseaseEntry[] | undefined;
+  surgicalHistory?: SurgeryEntry[] | undefined;
+  allergies?: AllergyEntry[] | undefined;
+  medications?: ExistingMedicationEntry[] | undefined;
+  lifestyle?: Lifestyle | undefined;
+}

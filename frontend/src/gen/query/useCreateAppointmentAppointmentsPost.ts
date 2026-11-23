@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createAppointmentAppointmentsPostMutationKey = () => [{ url: '/appointments' }] as const
 
-export function createAppointmentAppointmentsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createAppointmentAppointmentsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createAppointmentAppointmentsPostMutationKey()
   return mutationOptions<CreateAppointmentAppointmentsPostStatus201, ResponseErrorConfig<CreateAppointmentAppointmentsPostStatus400 | CreateAppointmentAppointmentsPostStatus401 | CreateAppointmentAppointmentsPostStatus403 | CreateAppointmentAppointmentsPostStatus404 | CreateAppointmentAppointmentsPostStatus409 | CreateAppointmentAppointmentsPostStatus422 | CreateAppointmentAppointmentsPostStatus500>, CreateAppointmentAppointmentsPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await createAppointmentAppointmentsPost({ ...config, body, headers, throwOnError: true })
-      return data
+      return createAppointmentAppointmentsPost({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -4,22 +4,24 @@
 */
 
 export const capturePeekOutPurposeEnum = {
-    appointment_attachment: "appointment_attachment",
-    rubber_stamp: "rubber_stamp"
+  appointment_attachment: 'appointment_attachment',
+  rubber_stamp: 'rubber_stamp',
 } as const;
 
-export type CapturePeekOutPurposeEnumKey = (typeof capturePeekOutPurposeEnum)[keyof typeof capturePeekOutPurposeEnum];
+export type CapturePeekOutPurposeEnumKey = (typeof capturePeekOutPurposeEnum)[keyof typeof capturePeekOutPurposeEnum]
 
 /**
- * @description Phone → server peek: just enough for the capture page to render the\nright UI. No appointment/patient detail — the scanner is unauthenticated\nbeyond holding the token, so we leak nothing identifying.
+ * @description Phone → server peek: just enough for the capture page to render the
+ * right UI. No appointment/patient detail — the scanner is unauthenticated
+ * beyond holding the token, so we leak nothing identifying.
  * @type object
-*/
+ */
 export type CapturePeekOut = {
-    purpose: CapturePeekOutPurposeEnumKey;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    expiresAt: string;
-};
+  purpose: CapturePeekOutPurposeEnumKey;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  expiresAt: string;
+}

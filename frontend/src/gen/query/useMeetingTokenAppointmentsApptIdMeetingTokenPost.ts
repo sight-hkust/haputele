@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const meetingTokenAppointmentsApptIdMeetingTokenPostMutationKey = () => [{ url: '/appointments/:appt_id/meeting-token' }] as const
 
-export function meetingTokenAppointmentsApptIdMeetingTokenPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function meetingTokenAppointmentsApptIdMeetingTokenPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = meetingTokenAppointmentsApptIdMeetingTokenPostMutationKey()
   return mutationOptions<MeetingTokenAppointmentsApptIdMeetingTokenPostStatus200, ResponseErrorConfig<MeetingTokenAppointmentsApptIdMeetingTokenPostStatus400 | MeetingTokenAppointmentsApptIdMeetingTokenPostStatus401 | MeetingTokenAppointmentsApptIdMeetingTokenPostStatus403 | MeetingTokenAppointmentsApptIdMeetingTokenPostStatus404 | MeetingTokenAppointmentsApptIdMeetingTokenPostStatus409 | MeetingTokenAppointmentsApptIdMeetingTokenPostStatus422 | MeetingTokenAppointmentsApptIdMeetingTokenPostStatus500>, MeetingTokenAppointmentsApptIdMeetingTokenPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await meetingTokenAppointmentsApptIdMeetingTokenPost({ ...config, path, headers, throwOnError: true })
-      return data
+      return meetingTokenAppointmentsApptIdMeetingTokenPost({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

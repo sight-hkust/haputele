@@ -4,33 +4,33 @@
 */
 
 export const appointmentOutStatusEnum = {
-    scheduled: "scheduled",
-    consent_pending: "consent_pending",
-    data_collection: "data_collection",
-    in_progress: "in_progress",
-    awaiting_notes: "awaiting_notes",
-    completed: "completed",
-    cancelled: "cancelled"
+  scheduled: 'scheduled',
+  consent_pending: 'consent_pending',
+  data_collection: 'data_collection',
+  in_progress: 'in_progress',
+  awaiting_notes: 'awaiting_notes',
+  completed: 'completed',
+  cancelled: 'cancelled',
 } as const;
 
-export type AppointmentOutStatusEnumKey = (typeof appointmentOutStatusEnum)[keyof typeof appointmentOutStatusEnum];
+export type AppointmentOutStatusEnumKey = (typeof appointmentOutStatusEnum)[keyof typeof appointmentOutStatusEnum]
 
 export type AppointmentOut = {
-    id: number;
-    patientId: number;
-    doctorId: number;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    scheduledAt: string;
-    status: AppointmentOutStatusEnumKey;
-    cancellationReason?: (string | null) | undefined;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    createdAt: string;
-};
+  id: number;
+  patientId: number;
+  doctorId: number;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  scheduledAt: string;
+  status: AppointmentOutStatusEnumKey;
+  cancellationReason?: (string | (null | null)) | undefined;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  createdAt: string;
+}

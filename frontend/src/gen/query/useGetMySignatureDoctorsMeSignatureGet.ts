@@ -8,17 +8,16 @@ import type { GetMySignatureDoctorsMeSignatureGetOptions, GetMySignatureDoctorsM
 import { getMySignatureDoctorsMeSignatureGet } from '../clients/getMySignatureDoctorsMeSignatureGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getMySignatureDoctorsMeSignatureGetQueryKey = () => [{ url: '/doctors/me/signature' }] as const
+export const getMySignatureDoctorsMeSignatureGetQueryKey = ({ headers }: Omit<GetMySignatureDoctorsMeSignatureGetOptions, 'headers'> & { headers?: GetMySignatureDoctorsMeSignatureGetOptions['headers'] } = {}) => [{ url: '/doctors/me/signature' }] as const
 
 type GetMySignatureDoctorsMeSignatureGetQueryKey = ReturnType<typeof getMySignatureDoctorsMeSignatureGetQueryKey>
 
-export function getMySignatureDoctorsMeSignatureGetQueryOptions({ headers }: GetMySignatureDoctorsMeSignatureGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getMySignatureDoctorsMeSignatureGetQueryKey()
+export function getMySignatureDoctorsMeSignatureGetQueryOptions({ headers }: GetMySignatureDoctorsMeSignatureGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getMySignatureDoctorsMeSignatureGetQueryKey({ headers })
   return queryOptions<GetMySignatureDoctorsMeSignatureGetStatus200, ResponseErrorConfig<GetMySignatureDoctorsMeSignatureGetStatus400 | GetMySignatureDoctorsMeSignatureGetStatus401 | GetMySignatureDoctorsMeSignatureGetStatus403 | GetMySignatureDoctorsMeSignatureGetStatus404 | GetMySignatureDoctorsMeSignatureGetStatus409 | GetMySignatureDoctorsMeSignatureGetStatus422 | GetMySignatureDoctorsMeSignatureGetStatus500>, GetMySignatureDoctorsMeSignatureGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getMySignatureDoctorsMeSignatureGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getMySignatureDoctorsMeSignatureGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

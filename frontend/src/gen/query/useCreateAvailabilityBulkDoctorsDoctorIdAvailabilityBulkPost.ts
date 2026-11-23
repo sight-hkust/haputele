@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostMutationKey = () => [{ url: '/doctors/:doctor_id/availability/bulk' }] as const
 
-export function createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostMutationKey()
   return mutationOptions<CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostStatus201, ResponseErrorConfig<CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostStatus400 | CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostStatus401 | CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostStatus403 | CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostStatus404 | CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostStatus409 | CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostStatus422 | CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostStatus500>, CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createAvailabilityDoctorsDoctorIdAvailabilityPostMutationKey = () => [{ url: '/doctors/:doctor_id/availability' }] as const
 
-export function createAvailabilityDoctorsDoctorIdAvailabilityPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createAvailabilityDoctorsDoctorIdAvailabilityPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createAvailabilityDoctorsDoctorIdAvailabilityPostMutationKey()
   return mutationOptions<CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus201, ResponseErrorConfig<CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus400 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus401 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus403 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus404 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus409 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus422 | CreateAvailabilityDoctorsDoctorIdAvailabilityPostStatus500>, CreateAvailabilityDoctorsDoctorIdAvailabilityPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await createAvailabilityDoctorsDoctorIdAvailabilityPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return createAvailabilityDoctorsDoctorIdAvailabilityPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

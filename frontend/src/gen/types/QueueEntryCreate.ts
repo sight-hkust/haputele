@@ -4,36 +4,36 @@
 */
 
 export const queueEntryCreateSourceEnum = {
-    screening: "screening",
-    walk_in: "walk_in"
+  screening: 'screening',
+  walk_in: 'walk_in',
 } as const;
 
-export type QueueEntryCreateSourceEnumKey = (typeof queueEntryCreateSourceEnum)[keyof typeof queueEntryCreateSourceEnum];
+export type QueueEntryCreateSourceEnumKey = (typeof queueEntryCreateSourceEnum)[keyof typeof queueEntryCreateSourceEnum]
 
 export const queueEntryCreatePriorityEnum = {
-    urgent: "urgent",
-    routine: "routine"
+  urgent: 'urgent',
+  routine: 'routine',
 } as const;
 
-export type QueueEntryCreatePriorityEnumKey = (typeof queueEntryCreatePriorityEnum)[keyof typeof queueEntryCreatePriorityEnum];
+export type QueueEntryCreatePriorityEnumKey = (typeof queueEntryCreatePriorityEnum)[keyof typeof queueEntryCreatePriorityEnum]
 
 export type QueueEntryCreate = {
-    patientId: number;
-    source: QueueEntryCreateSourceEnumKey;
-    /**
-     * @default 'routine'
-     * @type string | undefined
-    */
-    priority?: QueueEntryCreatePriorityEnumKey | undefined;
-    preferredDoctorId?: (number | null) | undefined;
-    targetDate?: (string | null) | undefined;
-    notes?: (string | null) | undefined;
-    sourceMeta?: {
-        [key: string]: unknown;
-    } | undefined;
-    /**
-     * @default false
-     * @type boolean | undefined
-    */
-    force?: boolean | undefined;
-};
+  patientId: number;
+  source: QueueEntryCreateSourceEnumKey;
+  /**
+   * @default 'routine'
+   * @type string | undefined
+   */
+  priority?: QueueEntryCreatePriorityEnumKey | undefined;
+  preferredDoctorId?: (number | (null | null)) | undefined;
+  targetDate?: (string | (null | null)) | undefined;
+  notes?: (string | (null | null)) | undefined;
+  sourceMeta?: {
+    [key: string]: unknown;
+  } | undefined;
+  /**
+   * @default false
+   * @type boolean | undefined
+   */
+  force?: boolean | undefined;
+}

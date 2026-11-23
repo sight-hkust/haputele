@@ -7,11 +7,12 @@ import type { AppointmentOut } from './AppointmentOut'
 import type { PreconsultOut } from './PreconsultOut'
 
 /**
- * @description GET /appointments/{id}/preconsult — `editable` mirrors the backend\nstate gate (consent_pending / data_collection).
+ * @description GET /appointments/{id}/preconsult — `editable` mirrors the backend
+ * state gate (consent_pending / data_collection).
  * @type object
-*/
+ */
 export type PreconsultGetResponse = {
-    preconsult: (PreconsultOut | null);
-    appointment: AppointmentOut;
-    editable: boolean;
-};
+  preconsult: PreconsultOut | (null | null);
+  appointment: AppointmentOut;
+  editable: boolean;
+}

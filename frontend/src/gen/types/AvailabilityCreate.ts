@@ -4,17 +4,17 @@
 */
 
 export type AvailabilityCreate = {
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    startAt: string;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    endAt: string;
-    note?: (string | null) | undefined;
-};
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  startAt: string;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  endAt: string;
+  note?: (string | (null | null)) | undefined;
+}

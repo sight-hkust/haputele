@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { DeleteDoctorDoctorsDoctorIdDeleteOptions, DeleteDoctorDoctorsDoctorIdDeleteResponses } from '../types/DeleteDoctorDoctorsDoctorIdDelete'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `DELETE /doctors/{doctor_id}`
  * @summary Delete Doctor
- * {@link /doctors/:doctor_id}
  */
-export function deleteDoctorDoctorsDoctorIdDelete<ThrowOnError extends boolean = true>(options: Options<DeleteDoctorDoctorsDoctorIdDeleteOptions, ThrowOnError>): Promise<RequestResult<DeleteDoctorDoctorsDoctorIdDeleteResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function deleteDoctorDoctorsDoctorIdDelete<ThrowOnError extends boolean = true>(options: Options<DeleteDoctorDoctorsDoctorIdDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<DeleteDoctorDoctorsDoctorIdDeleteResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'DELETE', url: '/doctors/{doctor_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<DeleteDoctorDoctorsDoctorIdDeleteResponses, ThrowOnError>>
+  return withUnwrap(apiClient<DeleteDoctorDoctorsDoctorIdDeleteResponses, ThrowOnError>({ method: 'DELETE', url: '/doctors/{doctor_id}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -8,17 +8,16 @@ import type { ListQueueQueueGetOptions, ListQueueQueueGetStatus200, ListQueueQue
 import { listQueueQueueGet } from '../clients/listQueueQueueGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const listQueueQueueGetQueryKey = ({ query }: Omit<ListQueueQueueGetOptions, 'headers'> = {}) => [{ url: '/queue' }, ...(query ? [query] : [])] as const
+export const listQueueQueueGetQueryKey = ({ query, headers }: Omit<ListQueueQueueGetOptions, 'headers'> & { headers?: ListQueueQueueGetOptions['headers'] } = {}) => [{ url: '/queue' }, ...(query ? [query] : [])] as const
 
 type ListQueueQueueGetQueryKey = ReturnType<typeof listQueueQueueGetQueryKey>
 
-export function listQueueQueueGetQueryOptions({ query, headers }: ListQueueQueueGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = listQueueQueueGetQueryKey({ query })
+export function listQueueQueueGetQueryOptions({ query, headers }: ListQueueQueueGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = listQueueQueueGetQueryKey({ query, headers })
   return queryOptions<ListQueueQueueGetStatus200, ResponseErrorConfig<ListQueueQueueGetStatus400 | ListQueueQueueGetStatus401 | ListQueueQueueGetStatus403 | ListQueueQueueGetStatus404 | ListQueueQueueGetStatus409 | ListQueueQueueGetStatus422 | ListQueueQueueGetStatus500>, ListQueueQueueGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await listQueueQueueGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return listQueueQueueGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const submitConsultationConsultationsCidSubmitPostMutationKey = () => [{ url: '/consultations/:cid/submit' }] as const
 
-export function submitConsultationConsultationsCidSubmitPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function submitConsultationConsultationsCidSubmitPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = submitConsultationConsultationsCidSubmitPostMutationKey()
   return mutationOptions<SubmitConsultationConsultationsCidSubmitPostStatus200, ResponseErrorConfig<SubmitConsultationConsultationsCidSubmitPostStatus400 | SubmitConsultationConsultationsCidSubmitPostStatus401 | SubmitConsultationConsultationsCidSubmitPostStatus403 | SubmitConsultationConsultationsCidSubmitPostStatus404 | SubmitConsultationConsultationsCidSubmitPostStatus409 | SubmitConsultationConsultationsCidSubmitPostStatus422 | SubmitConsultationConsultationsCidSubmitPostStatus500>, SubmitConsultationConsultationsCidSubmitPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await submitConsultationConsultationsCidSubmitPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return submitConsultationConsultationsCidSubmitPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

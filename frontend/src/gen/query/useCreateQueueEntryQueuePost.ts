@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createQueueEntryQueuePostMutationKey = () => [{ url: '/queue' }] as const
 
-export function createQueueEntryQueuePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createQueueEntryQueuePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createQueueEntryQueuePostMutationKey()
   return mutationOptions<CreateQueueEntryQueuePostStatus201, ResponseErrorConfig<CreateQueueEntryQueuePostStatus400 | CreateQueueEntryQueuePostStatus401 | CreateQueueEntryQueuePostStatus403 | CreateQueueEntryQueuePostStatus404 | CreateQueueEntryQueuePostStatus409 | CreateQueueEntryQueuePostStatus422 | CreateQueueEntryQueuePostStatus500>, CreateQueueEntryQueuePostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await createQueueEntryQueuePost({ ...config, body, headers, throwOnError: true })
-      return data
+      return createQueueEntryQueuePost({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

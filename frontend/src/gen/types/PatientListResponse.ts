@@ -8,8 +8,8 @@ import type { PatientOut } from './PatientOut'
 /**
  * @description GET /patients — one search page.
  * @type object
-*/
+ */
 export type PatientListResponse = {
-    patients: PatientOut[];
-    page: number;
-};
+  patients: PatientOut[];
+  page: number;
+}

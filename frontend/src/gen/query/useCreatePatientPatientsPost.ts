@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createPatientPatientsPostMutationKey = () => [{ url: '/patients' }] as const
 
-export function createPatientPatientsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createPatientPatientsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createPatientPatientsPostMutationKey()
   return mutationOptions<CreatePatientPatientsPostStatus201, ResponseErrorConfig<CreatePatientPatientsPostStatus400 | CreatePatientPatientsPostStatus401 | CreatePatientPatientsPostStatus403 | CreatePatientPatientsPostStatus404 | CreatePatientPatientsPostStatus409 | CreatePatientPatientsPostStatus422 | CreatePatientPatientsPostStatus500>, CreatePatientPatientsPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await createPatientPatientsPost({ ...config, body, headers, throwOnError: true })
-      return data
+      return createPatientPatientsPost({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

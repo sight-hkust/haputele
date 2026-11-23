@@ -9,8 +9,8 @@ import type { PatientOut } from './PatientOut'
 /**
  * @description POST /patients — the new patient plus its signed master consent.
  * @type object
-*/
+ */
 export type PatientCreateResponse = {
-    patient: PatientOut;
-    masterConsent: ConsentOut;
-};
+  patient: PatientOut;
+  masterConsent: ConsentOut;
+}

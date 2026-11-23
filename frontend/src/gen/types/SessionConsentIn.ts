@@ -4,12 +4,12 @@
 */
 
 export type SessionConsentIn = {
-    /**
-     * @default 'session'
-     * @type string | undefined
-    */
-    scope?: "session" | undefined;
-    agreed: boolean;
-    capturedAt?: (string | null) | undefined;
-    signatureImage?: (string | null) | undefined;
-};
+  /**
+   * @default 'session'
+   * @type string | undefined
+   */
+  scope?: 'session' | undefined;
+  agreed: boolean;
+  capturedAt?: (string | (null | null)) | undefined;
+  signatureImage?: (string | (null | null)) | undefined;
+}

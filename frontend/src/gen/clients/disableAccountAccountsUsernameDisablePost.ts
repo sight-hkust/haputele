@@ -3,19 +3,19 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { DisableAccountAccountsUsernameDisablePostOptions, DisableAccountAccountsUsernameDisablePostResponses } from '../types/DisableAccountAccountsUsernameDisablePost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /accounts/{username}/disable`
  * @description Soft-disable an operating account — blocks /auth/login while
  * preserving every record it created. Idempotent: disabling an already-
  * disabled account leaves the original stamp untouched.
  * @summary Disable Account
- * {@link /accounts/:username/disable}
  */
-export function disableAccountAccountsUsernameDisablePost<ThrowOnError extends boolean = true>(options: Options<DisableAccountAccountsUsernameDisablePostOptions, ThrowOnError>): Promise<RequestResult<DisableAccountAccountsUsernameDisablePostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function disableAccountAccountsUsernameDisablePost<ThrowOnError extends boolean = true>(options: Options<DisableAccountAccountsUsernameDisablePostOptions, ThrowOnError>): Unwrappable<RequestResult<DisableAccountAccountsUsernameDisablePostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/accounts/{username}/disable', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<DisableAccountAccountsUsernameDisablePostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<DisableAccountAccountsUsernameDisablePostResponses, ThrowOnError>({ method: 'POST', url: '/accounts/{username}/disable', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

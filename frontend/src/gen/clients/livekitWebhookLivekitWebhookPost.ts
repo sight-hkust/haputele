@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { LivekitWebhookLivekitWebhookPostOptions, LivekitWebhookLivekitWebhookPostResponses } from '../types/LivekitWebhookLivekitWebhookPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `POST /livekit/webhook`
  * @summary Livekit Webhook
- * {@link /livekit/webhook}
  */
-export function livekitWebhookLivekitWebhookPost<ThrowOnError extends boolean = true>(options: Options<LivekitWebhookLivekitWebhookPostOptions, ThrowOnError> = {}): Promise<RequestResult<LivekitWebhookLivekitWebhookPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function livekitWebhookLivekitWebhookPost<ThrowOnError extends boolean = true>(options: Options<LivekitWebhookLivekitWebhookPostOptions, ThrowOnError> = {}): Unwrappable<RequestResult<LivekitWebhookLivekitWebhookPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/livekit/webhook', ...config }) as Promise<RequestResult<LivekitWebhookLivekitWebhookPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<LivekitWebhookLivekitWebhookPostResponses, ThrowOnError>({ method: 'POST', url: '/livekit/webhook', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

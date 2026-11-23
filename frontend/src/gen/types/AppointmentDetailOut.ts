@@ -11,22 +11,26 @@ import type { PreconsultOut } from './PreconsultOut'
 import type { ProfileOut } from './ProfileOut'
 
 export const appointmentDetailOutMasterConsentStatusEnum = {
-    ok: "ok",
-    needs_reconsent: "needs_reconsent"
+  ok: 'ok',
+  needs_reconsent: 'needs_reconsent',
 } as const;
 
-export type AppointmentDetailOutMasterConsentStatusEnumKey = (typeof appointmentDetailOutMasterConsentStatusEnum)[keyof typeof appointmentDetailOutMasterConsentStatusEnum];
+export type AppointmentDetailOutMasterConsentStatusEnumKey = (typeof appointmentDetailOutMasterConsentStatusEnum)[keyof typeof appointmentDetailOutMasterConsentStatusEnum]
 
 /**
- * @description Composite payload for `GET /appointments/{id}` covering §7, §9, §10.1.\n\n`profile` is included so the doctor \"Begin consultation\" view (§9) gets the\npatient health profile. `consultation` is the full consultation record (§10.1\nneeds the locked, complete version when the appointment is `completed`).\n`attachments` carries metadata only — clients fetch bytes per id.
+ * @description Composite payload for `GET /appointments/{id}` covering §7, §9, §10.1.
+ * `profile` is included so the doctor "Begin consultation" view (§9) gets the
+ * patient health profile. `consultation` is the full consultation record (§10.1
+ * needs the locked, complete version when the appointment is `completed`).
+ * `attachments` carries metadata only — clients fetch bytes per id.
  * @type object
-*/
+ */
 export type AppointmentDetailOut = {
-    appointment: AppointmentOut;
-    patient?: (PatientOut | null) | undefined;
-    profile?: (ProfileOut | null) | undefined;
-    preconsult?: (PreconsultOut | null) | undefined;
-    consultation?: (ConsultationOut | null) | undefined;
-    masterConsentStatus: AppointmentDetailOutMasterConsentStatusEnumKey;
-    attachments?: AttachmentMetaOut[] | undefined;
-};
+  appointment: AppointmentOut;
+  patient?: (PatientOut | (null | null)) | undefined;
+  profile?: (ProfileOut | (null | null)) | undefined;
+  preconsult?: (PreconsultOut | (null | null)) | undefined;
+  consultation?: (ConsultationOut | (null | null)) | undefined;
+  masterConsentStatus: AppointmentDetailOutMasterConsentStatusEnumKey;
+  attachments?: AttachmentMetaOut[] | undefined;
+}

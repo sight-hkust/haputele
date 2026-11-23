@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const updateAccountAccountsUsernamePatchMutationKey = () => [{ url: '/accounts/:username' }] as const
 
-export function updateAccountAccountsUsernamePatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function updateAccountAccountsUsernamePatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = updateAccountAccountsUsernamePatchMutationKey()
   return mutationOptions<UpdateAccountAccountsUsernamePatchStatus200, ResponseErrorConfig<UpdateAccountAccountsUsernamePatchStatus400 | UpdateAccountAccountsUsernamePatchStatus401 | UpdateAccountAccountsUsernamePatchStatus403 | UpdateAccountAccountsUsernamePatchStatus404 | UpdateAccountAccountsUsernamePatchStatus409 | UpdateAccountAccountsUsernamePatchStatus422 | UpdateAccountAccountsUsernamePatchStatus500>, UpdateAccountAccountsUsernamePatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await updateAccountAccountsUsernamePatch({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return updateAccountAccountsUsernamePatch({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

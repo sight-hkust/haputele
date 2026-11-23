@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ResendWebhookResendWebhookPostOptions, ResendWebhookResendWebhookPostResponses } from '../types/ResendWebhookResendWebhookPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `POST /resend/webhook`
  * @summary Resend Webhook
- * {@link /resend/webhook}
  */
-export function resendWebhookResendWebhookPost<ThrowOnError extends boolean = true>(options: Options<ResendWebhookResendWebhookPostOptions, ThrowOnError> = {}): Promise<RequestResult<ResendWebhookResendWebhookPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function resendWebhookResendWebhookPost<ThrowOnError extends boolean = true>(options: Options<ResendWebhookResendWebhookPostOptions, ThrowOnError> = {}): Unwrappable<RequestResult<ResendWebhookResendWebhookPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/resend/webhook', ...config }) as Promise<RequestResult<ResendWebhookResendWebhookPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ResendWebhookResendWebhookPostResponses, ThrowOnError>({ method: 'POST', url: '/resend/webhook', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

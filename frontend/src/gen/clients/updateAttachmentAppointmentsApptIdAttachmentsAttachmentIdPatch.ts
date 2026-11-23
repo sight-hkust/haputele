@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchOptions, UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchResponses } from '../types/UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatch'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `PATCH /appointments/{appt_id}/attachments/{attachment_id}`
  * @summary Update Attachment
- * {@link /appointments/:appt_id/attachments/:attachment_id}
  */
-export function updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatch<ThrowOnError extends boolean = true>(options: Options<UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchOptions, ThrowOnError>): Promise<RequestResult<UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatch<ThrowOnError extends boolean = true>(options: Options<UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchOptions, ThrowOnError>): Unwrappable<RequestResult<UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'PATCH', url: '/appointments/{appt_id}/attachments/{attachment_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchResponses, ThrowOnError>({ method: 'PATCH', url: '/appointments/{appt_id}/attachments/{attachment_id}', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

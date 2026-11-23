@@ -8,17 +8,16 @@ import type { DoctorSummaryDoctorsSummaryGetOptions, DoctorSummaryDoctorsSummary
 import { doctorSummaryDoctorsSummaryGet } from '../clients/doctorSummaryDoctorsSummaryGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const doctorSummaryDoctorsSummaryGetQueryKey = () => [{ url: '/doctors/summary' }] as const
+export const doctorSummaryDoctorsSummaryGetQueryKey = ({ headers }: Omit<DoctorSummaryDoctorsSummaryGetOptions, 'headers'> & { headers?: DoctorSummaryDoctorsSummaryGetOptions['headers'] } = {}) => [{ url: '/doctors/summary' }] as const
 
 type DoctorSummaryDoctorsSummaryGetQueryKey = ReturnType<typeof doctorSummaryDoctorsSummaryGetQueryKey>
 
-export function doctorSummaryDoctorsSummaryGetQueryOptions({ headers }: DoctorSummaryDoctorsSummaryGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = doctorSummaryDoctorsSummaryGetQueryKey()
+export function doctorSummaryDoctorsSummaryGetQueryOptions({ headers }: DoctorSummaryDoctorsSummaryGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = doctorSummaryDoctorsSummaryGetQueryKey({ headers })
   return queryOptions<DoctorSummaryDoctorsSummaryGetStatus200, ResponseErrorConfig<DoctorSummaryDoctorsSummaryGetStatus400 | DoctorSummaryDoctorsSummaryGetStatus401 | DoctorSummaryDoctorsSummaryGetStatus403 | DoctorSummaryDoctorsSummaryGetStatus404 | DoctorSummaryDoctorsSummaryGetStatus409 | DoctorSummaryDoctorsSummaryGetStatus422 | DoctorSummaryDoctorsSummaryGetStatus500>, DoctorSummaryDoctorsSummaryGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await doctorSummaryDoctorsSummaryGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return doctorSummaryDoctorsSummaryGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

@@ -9,8 +9,8 @@ import type { ConsentOut } from './ConsentOut'
 /**
  * @description POST /appointments/{id}/consent.
  * @type object
-*/
+ */
 export type SessionConsentResponse = {
-    consent: ConsentOut;
-    appointment: AppointmentOut;
-};
+  consent: ConsentOut;
+  appointment: AppointmentOut;
+}

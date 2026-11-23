@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { PeekDoctorOnboardingTokenGetOptions, PeekDoctorOnboardingTokenGetResponses } from '../types/PeekDoctorOnboardingTokenGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `GET /doctor-onboarding/{token}`
  * @description Validate the token and return non-sensitive context for the page.
  * Two response shapes by mode:
  * - new      → {mode, email, familyName?}. The frontend renders the
@@ -17,10 +18,9 @@ import { client } from '../.kubb/client'
  * A 404 here means the token is unknown / expired / already consumed —
  * the frontend should render a generic "this link isn't valid" screen.
  * @summary Peek
- * {@link /doctor-onboarding/:token}
  */
-export function peekDoctorOnboardingTokenGet<ThrowOnError extends boolean = true>(options: Options<PeekDoctorOnboardingTokenGetOptions, ThrowOnError>): Promise<RequestResult<PeekDoctorOnboardingTokenGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function peekDoctorOnboardingTokenGet<ThrowOnError extends boolean = true>(options: Options<PeekDoctorOnboardingTokenGetOptions, ThrowOnError>): Unwrappable<RequestResult<PeekDoctorOnboardingTokenGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/doctor-onboarding/{token}', ...config }) as Promise<RequestResult<PeekDoctorOnboardingTokenGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<PeekDoctorOnboardingTokenGetResponses, ThrowOnError>({ method: 'GET', url: '/doctor-onboarding/{token}', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

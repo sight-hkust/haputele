@@ -4,6 +4,6 @@
 */
 
 export type LabEntry = {
-    testName?: (string | null) | undefined;
-    instructions?: (string | null) | undefined;
-};
+  testName?: (string | (null | null)) | undefined;
+  instructions?: (string | (null | null)) | undefined;
+}

@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ReConsentPatientsPatientIdConsentsPostOptions, ReConsentPatientsPatientIdConsentsPostResponses } from '../types/ReConsentPatientsPatientIdConsentsPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /patients/{patient_id}/consents`
  * @summary Re Consent
- * {@link /patients/:patient_id/consents}
  */
-export function reConsentPatientsPatientIdConsentsPost<ThrowOnError extends boolean = true>(options: Options<ReConsentPatientsPatientIdConsentsPostOptions, ThrowOnError>): Promise<RequestResult<ReConsentPatientsPatientIdConsentsPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function reConsentPatientsPatientIdConsentsPost<ThrowOnError extends boolean = true>(options: Options<ReConsentPatientsPatientIdConsentsPostOptions, ThrowOnError>): Unwrappable<RequestResult<ReConsentPatientsPatientIdConsentsPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/patients/{patient_id}/consents', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ReConsentPatientsPatientIdConsentsPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ReConsentPatientsPatientIdConsentsPostResponses, ThrowOnError>({ method: 'POST', url: '/patients/{patient_id}/consents', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

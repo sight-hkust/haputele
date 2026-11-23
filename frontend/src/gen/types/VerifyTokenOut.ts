@@ -4,11 +4,11 @@
 */
 
 export type VerifyTokenOut = {
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    expiresAt: string;
-    setupSessionToken: string;
-};
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  expiresAt: string;
+  setupSessionToken: string;
+}

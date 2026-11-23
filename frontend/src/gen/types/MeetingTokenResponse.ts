@@ -6,9 +6,9 @@
 /**
  * @description LiveKit join credentials, minted per role.
  * @type object
-*/
+ */
 export type MeetingTokenResponse = {
-    room: string;
-    token: string;
-    serverUrl: string;
-};
+  room: string;
+  token: string;
+  serverUrl: string;
+}

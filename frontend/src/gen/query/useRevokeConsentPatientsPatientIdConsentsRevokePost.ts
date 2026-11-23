@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const revokeConsentPatientsPatientIdConsentsRevokePostMutationKey = () => [{ url: '/patients/:patient_id/consents/revoke' }] as const
 
-export function revokeConsentPatientsPatientIdConsentsRevokePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function revokeConsentPatientsPatientIdConsentsRevokePostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = revokeConsentPatientsPatientIdConsentsRevokePostMutationKey()
   return mutationOptions<RevokeConsentPatientsPatientIdConsentsRevokePostStatus200, ResponseErrorConfig<RevokeConsentPatientsPatientIdConsentsRevokePostStatus400 | RevokeConsentPatientsPatientIdConsentsRevokePostStatus401 | RevokeConsentPatientsPatientIdConsentsRevokePostStatus403 | RevokeConsentPatientsPatientIdConsentsRevokePostStatus404 | RevokeConsentPatientsPatientIdConsentsRevokePostStatus409 | RevokeConsentPatientsPatientIdConsentsRevokePostStatus422 | RevokeConsentPatientsPatientIdConsentsRevokePostStatus500>, RevokeConsentPatientsPatientIdConsentsRevokePostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await revokeConsentPatientsPatientIdConsentsRevokePost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return revokeConsentPatientsPatientIdConsentsRevokePost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -4,8 +4,8 @@
 */
 
 export type NotesPatch = {
-    complaint?: (string | null) | undefined;
-    onset?: (string | null) | undefined;
-    symptoms?: (string | null) | undefined;
-    observations?: (string | null) | undefined;
-};
+  complaint?: (string | (null | null)) | undefined;
+  onset?: (string | (null | null)) | undefined;
+  symptoms?: (string | (null | null)) | undefined;
+  observations?: (string | (null | null)) | undefined;
+}

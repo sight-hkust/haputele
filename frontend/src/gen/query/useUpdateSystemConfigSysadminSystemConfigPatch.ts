@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const updateSystemConfigSysadminSystemConfigPatchMutationKey = () => [{ url: '/sysadmin/system-config' }] as const
 
-export function updateSystemConfigSysadminSystemConfigPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function updateSystemConfigSysadminSystemConfigPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = updateSystemConfigSysadminSystemConfigPatchMutationKey()
   return mutationOptions<UpdateSystemConfigSysadminSystemConfigPatchStatus200, ResponseErrorConfig<UpdateSystemConfigSysadminSystemConfigPatchStatus400 | UpdateSystemConfigSysadminSystemConfigPatchStatus401 | UpdateSystemConfigSysadminSystemConfigPatchStatus403 | UpdateSystemConfigSysadminSystemConfigPatchStatus404 | UpdateSystemConfigSysadminSystemConfigPatchStatus409 | UpdateSystemConfigSysadminSystemConfigPatchStatus422 | UpdateSystemConfigSysadminSystemConfigPatchStatus500>, UpdateSystemConfigSysadminSystemConfigPatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await updateSystemConfigSysadminSystemConfigPatch({ ...config, body, headers, throwOnError: true })
-      return data
+      return updateSystemConfigSysadminSystemConfigPatch({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

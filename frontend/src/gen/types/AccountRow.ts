@@ -4,21 +4,21 @@
 */
 
 export const accountRowRoleEnum = {
-    "sys-admin": "sys-admin",
-    admin: "admin",
-    healthworker: "healthworker",
-    doctor: "doctor"
+  'sys-admin': 'sys-admin',
+  admin: 'admin',
+  healthworker: 'healthworker',
+  doctor: 'doctor',
 } as const;
 
-export type AccountRowRoleEnumKey = (typeof accountRowRoleEnum)[keyof typeof accountRowRoleEnum];
+export type AccountRowRoleEnumKey = (typeof accountRowRoleEnum)[keyof typeof accountRowRoleEnum]
 
 export type AccountRow = {
-    username: string;
-    role: AccountRowRoleEnumKey;
-    fullName?: (string | null) | undefined;
-    contact?: (string | null) | undefined;
-    disabledAt: (string | null);
-    manageable: boolean;
-    doctorActive?: (boolean | null) | undefined;
-    doctorId?: (number | null) | undefined;
-};
+  username: string;
+  role: AccountRowRoleEnumKey;
+  fullName?: (string | (null | null)) | undefined;
+  contact?: (string | (null | null)) | undefined;
+  disabledAt: string | (null | null);
+  manageable: boolean;
+  doctorActive?: (boolean | (null | null)) | undefined;
+  doctorId?: (number | (null | null)) | undefined;
+}

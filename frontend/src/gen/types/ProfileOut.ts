@@ -10,16 +10,16 @@ import type { Lifestyle } from './Lifestyle'
 import type { SurgeryEntry } from './SurgeryEntry'
 
 export type ProfileOut = {
-    patientId: number;
-    diseaseHistory?: DiseaseEntry[] | undefined;
-    surgicalHistory?: SurgeryEntry[] | undefined;
-    allergies?: AllergyEntry[] | undefined;
-    medications?: ExistingMedicationEntry[] | undefined;
-    lifestyle?: Lifestyle | undefined;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    updatedAt: string;
-};
+  patientId: number;
+  diseaseHistory?: DiseaseEntry[] | undefined;
+  surgicalHistory?: SurgeryEntry[] | undefined;
+  allergies?: AllergyEntry[] | undefined;
+  medications?: ExistingMedicationEntry[] | undefined;
+  lifestyle?: Lifestyle | undefined;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  updatedAt: string;
+}

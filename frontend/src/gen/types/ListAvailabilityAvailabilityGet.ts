@@ -7,50 +7,50 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { AvailabilityOut } from './AvailabilityOut'
 
 export type ListAvailabilityAvailabilityGetQuery = {
-    from?: (string | null) | undefined;
-    to?: (string | null) | undefined;
-    doctorId?: (number | null) | undefined;
-};
+  from?: (string | (null | null)) | undefined;
+  to?: (string | (null | null)) | undefined;
+  doctorId?: (number | (null | null)) | undefined;
+}
 
 export type ListAvailabilityAvailabilityGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type ListAvailabilityAvailabilityGetStatus200 = AvailabilityOut[];
+export type ListAvailabilityAvailabilityGetStatus200 = AvailabilityOut[]
 
-export type ListAvailabilityAvailabilityGetStatus400 = ApiErrorResponse;
+export type ListAvailabilityAvailabilityGetStatus400 = ApiErrorResponse
 
-export type ListAvailabilityAvailabilityGetStatus401 = ApiErrorResponse;
+export type ListAvailabilityAvailabilityGetStatus401 = ApiErrorResponse
 
-export type ListAvailabilityAvailabilityGetStatus403 = ApiErrorResponse;
+export type ListAvailabilityAvailabilityGetStatus403 = ApiErrorResponse
 
-export type ListAvailabilityAvailabilityGetStatus404 = ApiErrorResponse;
+export type ListAvailabilityAvailabilityGetStatus404 = ApiErrorResponse
 
-export type ListAvailabilityAvailabilityGetStatus409 = ApiErrorResponse;
+export type ListAvailabilityAvailabilityGetStatus409 = ApiErrorResponse
 
-export type ListAvailabilityAvailabilityGetStatus422 = ApiErrorResponse;
+export type ListAvailabilityAvailabilityGetStatus422 = ApiErrorResponse
 
-export type ListAvailabilityAvailabilityGetStatus500 = ApiErrorResponse;
+export type ListAvailabilityAvailabilityGetStatus500 = ApiErrorResponse
 
 export type ListAvailabilityAvailabilityGetOptions = {
-    body?: never | undefined;
-    path?: never | undefined;
-    query?: ListAvailabilityAvailabilityGetQuery | undefined;
-    headers?: ListAvailabilityAvailabilityGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path?: never | undefined;
+  query?: ListAvailabilityAvailabilityGetQuery | undefined;
+  headers?: ListAvailabilityAvailabilityGetHeaders | undefined;
+}
 
 export type ListAvailabilityAvailabilityGetResponses = {
-    "200": ListAvailabilityAvailabilityGetStatus200;
-    "400": ListAvailabilityAvailabilityGetStatus400;
-    "401": ListAvailabilityAvailabilityGetStatus401;
-    "403": ListAvailabilityAvailabilityGetStatus403;
-    "404": ListAvailabilityAvailabilityGetStatus404;
-    "409": ListAvailabilityAvailabilityGetStatus409;
-    "422": ListAvailabilityAvailabilityGetStatus422;
-    "500": ListAvailabilityAvailabilityGetStatus500;
-};
+  '200': ListAvailabilityAvailabilityGetStatus200;
+  '400': ListAvailabilityAvailabilityGetStatus400;
+  '401': ListAvailabilityAvailabilityGetStatus401;
+  '403': ListAvailabilityAvailabilityGetStatus403;
+  '404': ListAvailabilityAvailabilityGetStatus404;
+  '409': ListAvailabilityAvailabilityGetStatus409;
+  '422': ListAvailabilityAvailabilityGetStatus422;
+  '500': ListAvailabilityAvailabilityGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ListAvailabilityAvailabilityGetResponse = (ListAvailabilityAvailabilityGetStatus200 | ListAvailabilityAvailabilityGetStatus400 | ListAvailabilityAvailabilityGetStatus401 | ListAvailabilityAvailabilityGetStatus403 | ListAvailabilityAvailabilityGetStatus404 | ListAvailabilityAvailabilityGetStatus409 | ListAvailabilityAvailabilityGetStatus422 | ListAvailabilityAvailabilityGetStatus500);
+ */
+export type ListAvailabilityAvailabilityGetResponse = ListAvailabilityAvailabilityGetStatus200

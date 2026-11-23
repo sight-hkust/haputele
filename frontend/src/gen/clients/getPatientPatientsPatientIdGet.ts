@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { GetPatientPatientsPatientIdGetOptions, GetPatientPatientsPatientIdGetResponses } from '../types/GetPatientPatientsPatientIdGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /patients/{patient_id}`
  * @summary Get Patient
- * {@link /patients/:patient_id}
  */
-export function getPatientPatientsPatientIdGet<ThrowOnError extends boolean = true>(options: Options<GetPatientPatientsPatientIdGetOptions, ThrowOnError>): Promise<RequestResult<GetPatientPatientsPatientIdGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function getPatientPatientsPatientIdGet<ThrowOnError extends boolean = true>(options: Options<GetPatientPatientsPatientIdGetOptions, ThrowOnError>): Unwrappable<RequestResult<GetPatientPatientsPatientIdGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/patients/{patient_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<GetPatientPatientsPatientIdGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<GetPatientPatientsPatientIdGetResponses, ThrowOnError>({ method: 'GET', url: '/patients/{patient_id}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -4,5 +4,8 @@
 */
 
 export type BodyUploadCaptureCaptureTokenPost = {
-    file: Blob;
-};
+  /**
+   * @remarks Pass a `File` to send its filename. A plain `Blob` is sent with the filename `blob`.
+   */
+  file: Blob;
+}

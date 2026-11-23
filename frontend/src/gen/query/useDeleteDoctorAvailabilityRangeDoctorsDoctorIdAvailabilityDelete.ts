@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteMutationKey = () => [{ url: '/doctors/:doctor_id/availability' }] as const
 
-export function deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteMutationKey()
   return mutationOptions<DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteStatus204, ResponseErrorConfig<DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteStatus400 | DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteStatus401 | DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteStatus403 | DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteStatus404 | DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteStatus409 | DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteStatus422 | DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteStatus500>, DeleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDeleteOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, query, headers }) => {
-      const { data } = await deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDelete({ ...config, path, query, headers, throwOnError: true })
-      return data
+      return deleteDoctorAvailabilityRangeDoctorsDoctorIdAvailabilityDelete({ ...config, path, query, headers, throwOnError: true }).unwrap()
     },
   })
 }

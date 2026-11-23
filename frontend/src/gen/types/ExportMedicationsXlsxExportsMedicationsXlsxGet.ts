@@ -6,64 +6,63 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type ExportMedicationsXlsxExportsMedicationsXlsxGetQuery = {
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    from: string;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    to: string;
-};
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  from: string;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  to: string;
+}
 
 export type ExportMedicationsXlsxExportsMedicationsXlsxGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
  * @description
  * Format: `binary`
- * @type string
-*/
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus200 = Blob;
+ */
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus200 = Blob
 
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus400 = ApiErrorResponse;
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus400 = ApiErrorResponse
 
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus401 = ApiErrorResponse;
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus401 = ApiErrorResponse
 
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus403 = ApiErrorResponse;
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus403 = ApiErrorResponse
 
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus404 = ApiErrorResponse;
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus404 = ApiErrorResponse
 
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus409 = ApiErrorResponse;
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus409 = ApiErrorResponse
 
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus422 = ApiErrorResponse;
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus422 = ApiErrorResponse
 
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus500 = ApiErrorResponse;
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetStatus500 = ApiErrorResponse
 
 export type ExportMedicationsXlsxExportsMedicationsXlsxGetOptions = {
-    body?: never | undefined;
-    path?: never | undefined;
-    query: ExportMedicationsXlsxExportsMedicationsXlsxGetQuery;
-    headers?: ExportMedicationsXlsxExportsMedicationsXlsxGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path?: never | undefined;
+  query: ExportMedicationsXlsxExportsMedicationsXlsxGetQuery;
+  headers?: ExportMedicationsXlsxExportsMedicationsXlsxGetHeaders | undefined;
+}
 
 export type ExportMedicationsXlsxExportsMedicationsXlsxGetResponses = {
-    "200": ExportMedicationsXlsxExportsMedicationsXlsxGetStatus200;
-    "400": ExportMedicationsXlsxExportsMedicationsXlsxGetStatus400;
-    "401": ExportMedicationsXlsxExportsMedicationsXlsxGetStatus401;
-    "403": ExportMedicationsXlsxExportsMedicationsXlsxGetStatus403;
-    "404": ExportMedicationsXlsxExportsMedicationsXlsxGetStatus404;
-    "409": ExportMedicationsXlsxExportsMedicationsXlsxGetStatus409;
-    "422": ExportMedicationsXlsxExportsMedicationsXlsxGetStatus422;
-    "500": ExportMedicationsXlsxExportsMedicationsXlsxGetStatus500;
-};
+  '200': ExportMedicationsXlsxExportsMedicationsXlsxGetStatus200;
+  '400': ExportMedicationsXlsxExportsMedicationsXlsxGetStatus400;
+  '401': ExportMedicationsXlsxExportsMedicationsXlsxGetStatus401;
+  '403': ExportMedicationsXlsxExportsMedicationsXlsxGetStatus403;
+  '404': ExportMedicationsXlsxExportsMedicationsXlsxGetStatus404;
+  '409': ExportMedicationsXlsxExportsMedicationsXlsxGetStatus409;
+  '422': ExportMedicationsXlsxExportsMedicationsXlsxGetStatus422;
+  '500': ExportMedicationsXlsxExportsMedicationsXlsxGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ExportMedicationsXlsxExportsMedicationsXlsxGetResponse = (ExportMedicationsXlsxExportsMedicationsXlsxGetStatus200 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus400 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus401 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus403 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus404 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus409 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus422 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus500);
+ */
+export type ExportMedicationsXlsxExportsMedicationsXlsxGetResponse = ExportMedicationsXlsxExportsMedicationsXlsxGetStatus200

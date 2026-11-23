@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { StartMeetingAppointmentsApptIdStartMeetingPostOptions, StartMeetingAppointmentsApptIdStartMeetingPostResponses } from '../types/StartMeetingAppointmentsApptIdStartMeetingPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /appointments/{appt_id}/start-meeting`
  * @summary Start Meeting
- * {@link /appointments/:appt_id/start-meeting}
  */
-export function startMeetingAppointmentsApptIdStartMeetingPost<ThrowOnError extends boolean = true>(options: Options<StartMeetingAppointmentsApptIdStartMeetingPostOptions, ThrowOnError>): Promise<RequestResult<StartMeetingAppointmentsApptIdStartMeetingPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function startMeetingAppointmentsApptIdStartMeetingPost<ThrowOnError extends boolean = true>(options: Options<StartMeetingAppointmentsApptIdStartMeetingPostOptions, ThrowOnError>): Unwrappable<RequestResult<StartMeetingAppointmentsApptIdStartMeetingPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/appointments/{appt_id}/start-meeting', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<StartMeetingAppointmentsApptIdStartMeetingPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<StartMeetingAppointmentsApptIdStartMeetingPostResponses, ThrowOnError>({ method: 'POST', url: '/appointments/{appt_id}/start-meeting', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

@@ -8,54 +8,56 @@ import type { AttachmentMetaOut } from './AttachmentMetaOut'
 import type { BodyUploadAttachmentAppointmentsApptIdAttachmentsPost } from './BodyUploadAttachmentAppointmentsApptIdAttachmentsPost'
 
 export type UploadAttachmentAppointmentsApptIdAttachmentsPostPath = {
-    appt_id: number;
-};
+  appt_id: number;
+}
 
 export type UploadAttachmentAppointmentsApptIdAttachmentsPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
- * @description Metadata for an appointment attachment. The raw bytes are fetched via\nthe singular `GET /appointments/{id}/attachments/{aid}` endpoint so the\nJSON payload stays small.
+ * @description Metadata for an appointment attachment. The raw bytes are fetched via
+ * the singular `GET /appointments/{id}/attachments/{aid}` endpoint so the
+ * JSON payload stays small.
  * @type object
-*/
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus201 = AttachmentMetaOut;
+ */
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus201 = AttachmentMetaOut
 
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus400 = ApiErrorResponse;
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus400 = ApiErrorResponse
 
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus401 = ApiErrorResponse;
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus401 = ApiErrorResponse
 
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus403 = ApiErrorResponse;
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus403 = ApiErrorResponse
 
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus404 = ApiErrorResponse;
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus404 = ApiErrorResponse
 
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus409 = ApiErrorResponse;
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus409 = ApiErrorResponse
 
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus422 = ApiErrorResponse;
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus422 = ApiErrorResponse
 
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus500 = ApiErrorResponse;
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostStatus500 = ApiErrorResponse
 
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostBody = BodyUploadAttachmentAppointmentsApptIdAttachmentsPost;
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostBody = BodyUploadAttachmentAppointmentsApptIdAttachmentsPost
 
 export type UploadAttachmentAppointmentsApptIdAttachmentsPostOptions = {
-    body: UploadAttachmentAppointmentsApptIdAttachmentsPostBody;
-    path: UploadAttachmentAppointmentsApptIdAttachmentsPostPath;
-    query?: never | undefined;
-    headers?: UploadAttachmentAppointmentsApptIdAttachmentsPostHeaders | undefined;
-};
+  body: UploadAttachmentAppointmentsApptIdAttachmentsPostBody;
+  path: UploadAttachmentAppointmentsApptIdAttachmentsPostPath;
+  query?: never | undefined;
+  headers?: UploadAttachmentAppointmentsApptIdAttachmentsPostHeaders | undefined;
+}
 
 export type UploadAttachmentAppointmentsApptIdAttachmentsPostResponses = {
-    "201": UploadAttachmentAppointmentsApptIdAttachmentsPostStatus201;
-    "400": UploadAttachmentAppointmentsApptIdAttachmentsPostStatus400;
-    "401": UploadAttachmentAppointmentsApptIdAttachmentsPostStatus401;
-    "403": UploadAttachmentAppointmentsApptIdAttachmentsPostStatus403;
-    "404": UploadAttachmentAppointmentsApptIdAttachmentsPostStatus404;
-    "409": UploadAttachmentAppointmentsApptIdAttachmentsPostStatus409;
-    "422": UploadAttachmentAppointmentsApptIdAttachmentsPostStatus422;
-    "500": UploadAttachmentAppointmentsApptIdAttachmentsPostStatus500;
-};
+  '201': UploadAttachmentAppointmentsApptIdAttachmentsPostStatus201;
+  '400': UploadAttachmentAppointmentsApptIdAttachmentsPostStatus400;
+  '401': UploadAttachmentAppointmentsApptIdAttachmentsPostStatus401;
+  '403': UploadAttachmentAppointmentsApptIdAttachmentsPostStatus403;
+  '404': UploadAttachmentAppointmentsApptIdAttachmentsPostStatus404;
+  '409': UploadAttachmentAppointmentsApptIdAttachmentsPostStatus409;
+  '422': UploadAttachmentAppointmentsApptIdAttachmentsPostStatus422;
+  '500': UploadAttachmentAppointmentsApptIdAttachmentsPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type UploadAttachmentAppointmentsApptIdAttachmentsPostResponse = (UploadAttachmentAppointmentsApptIdAttachmentsPostStatus201 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus400 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus401 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus403 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus404 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus409 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus422 | UploadAttachmentAppointmentsApptIdAttachmentsPostStatus500);
+ */
+export type UploadAttachmentAppointmentsApptIdAttachmentsPostResponse = UploadAttachmentAppointmentsApptIdAttachmentsPostStatus201

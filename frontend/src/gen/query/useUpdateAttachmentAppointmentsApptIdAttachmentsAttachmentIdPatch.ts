@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchMutationKey = () => [{ url: '/appointments/:appt_id/attachments/:attachment_id' }] as const
 
-export function updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchMutationKey()
   return mutationOptions<UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchStatus200, ResponseErrorConfig<UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchStatus400 | UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchStatus401 | UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchStatus403 | UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchStatus404 | UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchStatus409 | UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchStatus422 | UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchStatus500>, UpdateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatchOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatch({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return updateAttachmentAppointmentsApptIdAttachmentsAttachmentIdPatch({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

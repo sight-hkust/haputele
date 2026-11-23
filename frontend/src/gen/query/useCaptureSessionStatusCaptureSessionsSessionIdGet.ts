@@ -8,17 +8,16 @@ import type { CaptureSessionStatusCaptureSessionsSessionIdGetOptions, CaptureSes
 import { captureSessionStatusCaptureSessionsSessionIdGet } from '../clients/captureSessionStatusCaptureSessionsSessionIdGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const captureSessionStatusCaptureSessionsSessionIdGetQueryKey = ({ path }: Omit<CaptureSessionStatusCaptureSessionsSessionIdGetOptions, 'headers'>) => [{ url: '/capture/sessions/:session_id', params: path }] as const
+export const captureSessionStatusCaptureSessionsSessionIdGetQueryKey = ({ path, headers }: Omit<CaptureSessionStatusCaptureSessionsSessionIdGetOptions, 'headers'> & { headers?: CaptureSessionStatusCaptureSessionsSessionIdGetOptions['headers'] }) => [{ url: '/capture/sessions/:session_id', params: path }] as const
 
 type CaptureSessionStatusCaptureSessionsSessionIdGetQueryKey = ReturnType<typeof captureSessionStatusCaptureSessionsSessionIdGetQueryKey>
 
-export function captureSessionStatusCaptureSessionsSessionIdGetQueryOptions({ path, headers }: CaptureSessionStatusCaptureSessionsSessionIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = captureSessionStatusCaptureSessionsSessionIdGetQueryKey({ path })
+export function captureSessionStatusCaptureSessionsSessionIdGetQueryOptions({ path, headers }: CaptureSessionStatusCaptureSessionsSessionIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = captureSessionStatusCaptureSessionsSessionIdGetQueryKey({ path, headers })
   return queryOptions<CaptureSessionStatusCaptureSessionsSessionIdGetStatus200, ResponseErrorConfig<CaptureSessionStatusCaptureSessionsSessionIdGetStatus400 | CaptureSessionStatusCaptureSessionsSessionIdGetStatus401 | CaptureSessionStatusCaptureSessionsSessionIdGetStatus403 | CaptureSessionStatusCaptureSessionsSessionIdGetStatus404 | CaptureSessionStatusCaptureSessionsSessionIdGetStatus409 | CaptureSessionStatusCaptureSessionsSessionIdGetStatus422 | CaptureSessionStatusCaptureSessionsSessionIdGetStatus500>, CaptureSessionStatusCaptureSessionsSessionIdGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await captureSessionStatusCaptureSessionsSessionIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return captureSessionStatusCaptureSessionsSessionIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

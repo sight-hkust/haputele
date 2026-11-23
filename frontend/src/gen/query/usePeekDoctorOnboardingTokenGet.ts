@@ -12,13 +12,12 @@ export const peekDoctorOnboardingTokenGetQueryKey = ({ path }: Omit<PeekDoctorOn
 
 type PeekDoctorOnboardingTokenGetQueryKey = ReturnType<typeof peekDoctorOnboardingTokenGetQueryKey>
 
-export function peekDoctorOnboardingTokenGetQueryOptions({ path }: PeekDoctorOnboardingTokenGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function peekDoctorOnboardingTokenGetQueryOptions({ path }: PeekDoctorOnboardingTokenGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const queryKey = peekDoctorOnboardingTokenGetQueryKey({ path })
   return queryOptions<PeekDoctorOnboardingTokenGetStatus200, ResponseErrorConfig<PeekDoctorOnboardingTokenGetStatus400 | PeekDoctorOnboardingTokenGetStatus401 | PeekDoctorOnboardingTokenGetStatus403 | PeekDoctorOnboardingTokenGetStatus404 | PeekDoctorOnboardingTokenGetStatus409 | PeekDoctorOnboardingTokenGetStatus422 | PeekDoctorOnboardingTokenGetStatus500>, PeekDoctorOnboardingTokenGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await peekDoctorOnboardingTokenGet({ ...config, path, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return peekDoctorOnboardingTokenGet({ ...config, path, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

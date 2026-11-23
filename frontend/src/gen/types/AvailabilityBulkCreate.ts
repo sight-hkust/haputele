@@ -6,5 +6,5 @@
 import type { AvailabilityCreate } from './AvailabilityCreate'
 
 export type AvailabilityBulkCreate = {
-    windows: AvailabilityCreate[];
-};
+  windows: AvailabilityCreate[];
+}

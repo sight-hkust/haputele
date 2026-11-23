@@ -6,46 +6,46 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type ResendWebhookResendWebhookPostHeaders = {
-    "svix-id"?: (string | null) | undefined;
-    "svix-timestamp"?: (string | null) | undefined;
-    "svix-signature"?: (string | null) | undefined;
-};
+  'svix-id'?: (string | (null | null)) | undefined;
+  'svix-timestamp'?: (string | (null | null)) | undefined;
+  'svix-signature'?: (string | (null | null)) | undefined;
+}
 
-export type ResendWebhookResendWebhookPostStatus204 = unknown;
+export type ResendWebhookResendWebhookPostStatus204 = unknown
 
-export type ResendWebhookResendWebhookPostStatus400 = ApiErrorResponse;
+export type ResendWebhookResendWebhookPostStatus400 = ApiErrorResponse
 
-export type ResendWebhookResendWebhookPostStatus401 = ApiErrorResponse;
+export type ResendWebhookResendWebhookPostStatus401 = ApiErrorResponse
 
-export type ResendWebhookResendWebhookPostStatus403 = ApiErrorResponse;
+export type ResendWebhookResendWebhookPostStatus403 = ApiErrorResponse
 
-export type ResendWebhookResendWebhookPostStatus404 = ApiErrorResponse;
+export type ResendWebhookResendWebhookPostStatus404 = ApiErrorResponse
 
-export type ResendWebhookResendWebhookPostStatus409 = ApiErrorResponse;
+export type ResendWebhookResendWebhookPostStatus409 = ApiErrorResponse
 
-export type ResendWebhookResendWebhookPostStatus422 = ApiErrorResponse;
+export type ResendWebhookResendWebhookPostStatus422 = ApiErrorResponse
 
-export type ResendWebhookResendWebhookPostStatus500 = ApiErrorResponse;
+export type ResendWebhookResendWebhookPostStatus500 = ApiErrorResponse
 
 export type ResendWebhookResendWebhookPostOptions = {
-    body?: never | undefined;
-    path?: never | undefined;
-    query?: never | undefined;
-    headers?: ResendWebhookResendWebhookPostHeaders | undefined;
-};
+  body?: never | undefined;
+  path?: never | undefined;
+  query?: never | undefined;
+  headers?: ResendWebhookResendWebhookPostHeaders | undefined;
+}
 
 export type ResendWebhookResendWebhookPostResponses = {
-    "204": ResendWebhookResendWebhookPostStatus204;
-    "400": ResendWebhookResendWebhookPostStatus400;
-    "401": ResendWebhookResendWebhookPostStatus401;
-    "403": ResendWebhookResendWebhookPostStatus403;
-    "404": ResendWebhookResendWebhookPostStatus404;
-    "409": ResendWebhookResendWebhookPostStatus409;
-    "422": ResendWebhookResendWebhookPostStatus422;
-    "500": ResendWebhookResendWebhookPostStatus500;
-};
+  '204': ResendWebhookResendWebhookPostStatus204;
+  '400': ResendWebhookResendWebhookPostStatus400;
+  '401': ResendWebhookResendWebhookPostStatus401;
+  '403': ResendWebhookResendWebhookPostStatus403;
+  '404': ResendWebhookResendWebhookPostStatus404;
+  '409': ResendWebhookResendWebhookPostStatus409;
+  '422': ResendWebhookResendWebhookPostStatus422;
+  '500': ResendWebhookResendWebhookPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ResendWebhookResendWebhookPostResponse = (ResendWebhookResendWebhookPostStatus204 | ResendWebhookResendWebhookPostStatus400 | ResendWebhookResendWebhookPostStatus401 | ResendWebhookResendWebhookPostStatus403 | ResendWebhookResendWebhookPostStatus404 | ResendWebhookResendWebhookPostStatus409 | ResendWebhookResendWebhookPostStatus422 | ResendWebhookResendWebhookPostStatus500);
+ */
+export type ResendWebhookResendWebhookPostResponse = ResendWebhookResendWebhookPostStatus204

@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteOptions, DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteResponses } from '../types/DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDelete'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `DELETE /appointments/{appt_id}/attachments/{attachment_id}`
  * @summary Delete Attachment
- * {@link /appointments/:appt_id/attachments/:attachment_id}
  */
-export function deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDelete<ThrowOnError extends boolean = true>(options: Options<DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteOptions, ThrowOnError>): Promise<RequestResult<DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function deleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDelete<ThrowOnError extends boolean = true>(options: Options<DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'DELETE', url: '/appointments/{appt_id}/attachments/{attachment_id}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteResponses, ThrowOnError>>
+  return withUnwrap(apiClient<DeleteAttachmentAppointmentsApptIdAttachmentsAttachmentIdDeleteResponses, ThrowOnError>({ method: 'DELETE', url: '/appointments/{appt_id}/attachments/{attachment_id}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

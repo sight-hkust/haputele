@@ -7,52 +7,53 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { StartMeetingResponse } from './StartMeetingResponse'
 
 export type StartMeetingAppointmentsApptIdStartMeetingPostPath = {
-    appt_id: number;
-};
+  appt_id: number;
+}
 
 export type StartMeetingAppointmentsApptIdStartMeetingPostHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
- * @description POST /appointments/{id}/start-meeting — token payload plus the\nappointment flipped to in_progress.
+ * @description POST /appointments/{id}/start-meeting — token payload plus the
+ * appointment flipped to in_progress.
  * @type object
-*/
-export type StartMeetingAppointmentsApptIdStartMeetingPostStatus200 = StartMeetingResponse;
+ */
+export type StartMeetingAppointmentsApptIdStartMeetingPostStatus200 = StartMeetingResponse
 
-export type StartMeetingAppointmentsApptIdStartMeetingPostStatus400 = ApiErrorResponse;
+export type StartMeetingAppointmentsApptIdStartMeetingPostStatus400 = ApiErrorResponse
 
-export type StartMeetingAppointmentsApptIdStartMeetingPostStatus401 = ApiErrorResponse;
+export type StartMeetingAppointmentsApptIdStartMeetingPostStatus401 = ApiErrorResponse
 
-export type StartMeetingAppointmentsApptIdStartMeetingPostStatus403 = ApiErrorResponse;
+export type StartMeetingAppointmentsApptIdStartMeetingPostStatus403 = ApiErrorResponse
 
-export type StartMeetingAppointmentsApptIdStartMeetingPostStatus404 = ApiErrorResponse;
+export type StartMeetingAppointmentsApptIdStartMeetingPostStatus404 = ApiErrorResponse
 
-export type StartMeetingAppointmentsApptIdStartMeetingPostStatus409 = ApiErrorResponse;
+export type StartMeetingAppointmentsApptIdStartMeetingPostStatus409 = ApiErrorResponse
 
-export type StartMeetingAppointmentsApptIdStartMeetingPostStatus422 = ApiErrorResponse;
+export type StartMeetingAppointmentsApptIdStartMeetingPostStatus422 = ApiErrorResponse
 
-export type StartMeetingAppointmentsApptIdStartMeetingPostStatus500 = ApiErrorResponse;
+export type StartMeetingAppointmentsApptIdStartMeetingPostStatus500 = ApiErrorResponse
 
 export type StartMeetingAppointmentsApptIdStartMeetingPostOptions = {
-    body?: never | undefined;
-    path: StartMeetingAppointmentsApptIdStartMeetingPostPath;
-    query?: never | undefined;
-    headers?: StartMeetingAppointmentsApptIdStartMeetingPostHeaders | undefined;
-};
+  body?: never | undefined;
+  path: StartMeetingAppointmentsApptIdStartMeetingPostPath;
+  query?: never | undefined;
+  headers?: StartMeetingAppointmentsApptIdStartMeetingPostHeaders | undefined;
+}
 
 export type StartMeetingAppointmentsApptIdStartMeetingPostResponses = {
-    "200": StartMeetingAppointmentsApptIdStartMeetingPostStatus200;
-    "400": StartMeetingAppointmentsApptIdStartMeetingPostStatus400;
-    "401": StartMeetingAppointmentsApptIdStartMeetingPostStatus401;
-    "403": StartMeetingAppointmentsApptIdStartMeetingPostStatus403;
-    "404": StartMeetingAppointmentsApptIdStartMeetingPostStatus404;
-    "409": StartMeetingAppointmentsApptIdStartMeetingPostStatus409;
-    "422": StartMeetingAppointmentsApptIdStartMeetingPostStatus422;
-    "500": StartMeetingAppointmentsApptIdStartMeetingPostStatus500;
-};
+  '200': StartMeetingAppointmentsApptIdStartMeetingPostStatus200;
+  '400': StartMeetingAppointmentsApptIdStartMeetingPostStatus400;
+  '401': StartMeetingAppointmentsApptIdStartMeetingPostStatus401;
+  '403': StartMeetingAppointmentsApptIdStartMeetingPostStatus403;
+  '404': StartMeetingAppointmentsApptIdStartMeetingPostStatus404;
+  '409': StartMeetingAppointmentsApptIdStartMeetingPostStatus409;
+  '422': StartMeetingAppointmentsApptIdStartMeetingPostStatus422;
+  '500': StartMeetingAppointmentsApptIdStartMeetingPostStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type StartMeetingAppointmentsApptIdStartMeetingPostResponse = (StartMeetingAppointmentsApptIdStartMeetingPostStatus200 | StartMeetingAppointmentsApptIdStartMeetingPostStatus400 | StartMeetingAppointmentsApptIdStartMeetingPostStatus401 | StartMeetingAppointmentsApptIdStartMeetingPostStatus403 | StartMeetingAppointmentsApptIdStartMeetingPostStatus404 | StartMeetingAppointmentsApptIdStartMeetingPostStatus409 | StartMeetingAppointmentsApptIdStartMeetingPostStatus422 | StartMeetingAppointmentsApptIdStartMeetingPostStatus500);
+ */
+export type StartMeetingAppointmentsApptIdStartMeetingPostResponse = StartMeetingAppointmentsApptIdStartMeetingPostStatus200

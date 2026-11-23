@@ -8,17 +8,16 @@ import type { ExportMedicationsXlsxExportsMedicationsXlsxGetOptions, ExportMedic
 import { exportMedicationsXlsxExportsMedicationsXlsxGet } from '../clients/exportMedicationsXlsxExportsMedicationsXlsxGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const exportMedicationsXlsxExportsMedicationsXlsxGetQueryKey = ({ query }: Omit<ExportMedicationsXlsxExportsMedicationsXlsxGetOptions, 'headers'>) => [{ url: '/exports/medications.xlsx' }, ...(query ? [query] : [])] as const
+export const exportMedicationsXlsxExportsMedicationsXlsxGetQueryKey = ({ query, headers }: Omit<ExportMedicationsXlsxExportsMedicationsXlsxGetOptions, 'headers'> & { headers?: ExportMedicationsXlsxExportsMedicationsXlsxGetOptions['headers'] }) => [{ url: '/exports/medications.xlsx' }, ...(query ? [query] : [])] as const
 
 type ExportMedicationsXlsxExportsMedicationsXlsxGetQueryKey = ReturnType<typeof exportMedicationsXlsxExportsMedicationsXlsxGetQueryKey>
 
-export function exportMedicationsXlsxExportsMedicationsXlsxGetQueryOptions({ query, headers }: ExportMedicationsXlsxExportsMedicationsXlsxGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = exportMedicationsXlsxExportsMedicationsXlsxGetQueryKey({ query })
+export function exportMedicationsXlsxExportsMedicationsXlsxGetQueryOptions({ query, headers }: ExportMedicationsXlsxExportsMedicationsXlsxGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = exportMedicationsXlsxExportsMedicationsXlsxGetQueryKey({ query, headers })
   return queryOptions<ExportMedicationsXlsxExportsMedicationsXlsxGetStatus200, ResponseErrorConfig<ExportMedicationsXlsxExportsMedicationsXlsxGetStatus400 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus401 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus403 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus404 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus409 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus422 | ExportMedicationsXlsxExportsMedicationsXlsxGetStatus500>, ExportMedicationsXlsxExportsMedicationsXlsxGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await exportMedicationsXlsxExportsMedicationsXlsxGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return exportMedicationsXlsxExportsMedicationsXlsxGet({ ...config, query, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

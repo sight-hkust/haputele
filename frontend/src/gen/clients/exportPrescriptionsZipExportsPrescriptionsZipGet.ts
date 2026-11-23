@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ExportPrescriptionsZipExportsPrescriptionsZipGetOptions, ExportPrescriptionsZipExportsPrescriptionsZipGetResponses } from '../types/ExportPrescriptionsZipExportsPrescriptionsZipGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /exports/prescriptions.zip`
  * @summary Export Prescriptions Zip
- * {@link /exports/prescriptions.zip}
  */
-export function exportPrescriptionsZipExportsPrescriptionsZipGet<ThrowOnError extends boolean = true>(options: Options<ExportPrescriptionsZipExportsPrescriptionsZipGetOptions, ThrowOnError>): Promise<RequestResult<ExportPrescriptionsZipExportsPrescriptionsZipGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function exportPrescriptionsZipExportsPrescriptionsZipGet<ThrowOnError extends boolean = true>(options: Options<ExportPrescriptionsZipExportsPrescriptionsZipGetOptions, ThrowOnError>): Unwrappable<RequestResult<ExportPrescriptionsZipExportsPrescriptionsZipGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/exports/prescriptions.zip', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ExportPrescriptionsZipExportsPrescriptionsZipGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ExportPrescriptionsZipExportsPrescriptionsZipGetResponses, ThrowOnError>({ method: 'GET', url: '/exports/prescriptions.zip', security: [securitySchemes.SessionCookie], parseAs: 'blob', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

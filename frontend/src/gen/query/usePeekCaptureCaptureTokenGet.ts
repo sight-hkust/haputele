@@ -12,13 +12,12 @@ export const peekCaptureCaptureTokenGetQueryKey = ({ path }: Omit<PeekCaptureCap
 
 type PeekCaptureCaptureTokenGetQueryKey = ReturnType<typeof peekCaptureCaptureTokenGetQueryKey>
 
-export function peekCaptureCaptureTokenGetQueryOptions({ path }: PeekCaptureCaptureTokenGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function peekCaptureCaptureTokenGetQueryOptions({ path }: PeekCaptureCaptureTokenGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const queryKey = peekCaptureCaptureTokenGetQueryKey({ path })
   return queryOptions<PeekCaptureCaptureTokenGetStatus200, ResponseErrorConfig<PeekCaptureCaptureTokenGetStatus400 | PeekCaptureCaptureTokenGetStatus401 | PeekCaptureCaptureTokenGetStatus403 | PeekCaptureCaptureTokenGetStatus404 | PeekCaptureCaptureTokenGetStatus409 | PeekCaptureCaptureTokenGetStatus422 | PeekCaptureCaptureTokenGetStatus500>, PeekCaptureCaptureTokenGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await peekCaptureCaptureTokenGet({ ...config, path, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return peekCaptureCaptureTokenGet({ ...config, path, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

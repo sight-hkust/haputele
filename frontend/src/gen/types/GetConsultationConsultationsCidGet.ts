@@ -7,48 +7,48 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { ConsultationOut } from './ConsultationOut'
 
 export type GetConsultationConsultationsCidGetPath = {
-    cid: number;
-};
+  cid: number;
+}
 
 export type GetConsultationConsultationsCidGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type GetConsultationConsultationsCidGetStatus200 = ConsultationOut;
+export type GetConsultationConsultationsCidGetStatus200 = ConsultationOut
 
-export type GetConsultationConsultationsCidGetStatus400 = ApiErrorResponse;
+export type GetConsultationConsultationsCidGetStatus400 = ApiErrorResponse
 
-export type GetConsultationConsultationsCidGetStatus401 = ApiErrorResponse;
+export type GetConsultationConsultationsCidGetStatus401 = ApiErrorResponse
 
-export type GetConsultationConsultationsCidGetStatus403 = ApiErrorResponse;
+export type GetConsultationConsultationsCidGetStatus403 = ApiErrorResponse
 
-export type GetConsultationConsultationsCidGetStatus404 = ApiErrorResponse;
+export type GetConsultationConsultationsCidGetStatus404 = ApiErrorResponse
 
-export type GetConsultationConsultationsCidGetStatus409 = ApiErrorResponse;
+export type GetConsultationConsultationsCidGetStatus409 = ApiErrorResponse
 
-export type GetConsultationConsultationsCidGetStatus422 = ApiErrorResponse;
+export type GetConsultationConsultationsCidGetStatus422 = ApiErrorResponse
 
-export type GetConsultationConsultationsCidGetStatus500 = ApiErrorResponse;
+export type GetConsultationConsultationsCidGetStatus500 = ApiErrorResponse
 
 export type GetConsultationConsultationsCidGetOptions = {
-    body?: never | undefined;
-    path: GetConsultationConsultationsCidGetPath;
-    query?: never | undefined;
-    headers?: GetConsultationConsultationsCidGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path: GetConsultationConsultationsCidGetPath;
+  query?: never | undefined;
+  headers?: GetConsultationConsultationsCidGetHeaders | undefined;
+}
 
 export type GetConsultationConsultationsCidGetResponses = {
-    "200": GetConsultationConsultationsCidGetStatus200;
-    "400": GetConsultationConsultationsCidGetStatus400;
-    "401": GetConsultationConsultationsCidGetStatus401;
-    "403": GetConsultationConsultationsCidGetStatus403;
-    "404": GetConsultationConsultationsCidGetStatus404;
-    "409": GetConsultationConsultationsCidGetStatus409;
-    "422": GetConsultationConsultationsCidGetStatus422;
-    "500": GetConsultationConsultationsCidGetStatus500;
-};
+  '200': GetConsultationConsultationsCidGetStatus200;
+  '400': GetConsultationConsultationsCidGetStatus400;
+  '401': GetConsultationConsultationsCidGetStatus401;
+  '403': GetConsultationConsultationsCidGetStatus403;
+  '404': GetConsultationConsultationsCidGetStatus404;
+  '409': GetConsultationConsultationsCidGetStatus409;
+  '422': GetConsultationConsultationsCidGetStatus422;
+  '500': GetConsultationConsultationsCidGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type GetConsultationConsultationsCidGetResponse = (GetConsultationConsultationsCidGetStatus200 | GetConsultationConsultationsCidGetStatus400 | GetConsultationConsultationsCidGetStatus401 | GetConsultationConsultationsCidGetStatus403 | GetConsultationConsultationsCidGetStatus404 | GetConsultationConsultationsCidGetStatus409 | GetConsultationConsultationsCidGetStatus422 | GetConsultationConsultationsCidGetStatus500);
+ */
+export type GetConsultationConsultationsCidGetResponse = GetConsultationConsultationsCidGetStatus200

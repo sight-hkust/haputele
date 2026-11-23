@@ -8,7 +8,7 @@ import type { ConsultationOut } from './ConsultationOut'
 import type { QueueEntryOut } from './QueueEntryOut'
 
 export type SubmitConsultationWithQueueResponse = {
-    consultation: ConsultationOut;
-    appointment: AppointmentOut;
-    followUpQueueEntry: QueueEntryOut;
-};
+  consultation: ConsultationOut;
+  appointment: AppointmentOut;
+  followUpQueueEntry: QueueEntryOut;
+}

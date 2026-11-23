@@ -8,15 +8,15 @@ import type { MedicationEntry } from './MedicationEntry'
 import type { NotesPatch } from './NotesPatch'
 
 export type HistoryConsultationItem = {
-    consultationId: number;
-    appointmentId: number;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    date: string;
-    diagnoses?: DiagnosisEntry[] | undefined;
-    prescription?: MedicationEntry[] | undefined;
-    notes: NotesPatch;
-};
+  consultationId: number;
+  appointmentId: number;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  date: string;
+  diagnoses?: DiagnosisEntry[] | undefined;
+  prescription?: MedicationEntry[] | undefined;
+  notes: NotesPatch;
+}

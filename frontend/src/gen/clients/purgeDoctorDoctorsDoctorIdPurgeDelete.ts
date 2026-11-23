@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { PurgeDoctorDoctorsDoctorIdPurgeDeleteOptions, PurgeDoctorDoctorsDoctorIdPurgeDeleteResponses } from '../types/PurgeDoctorDoctorsDoctorIdPurgeDelete'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `DELETE /doctors/{doctor_id}/purge`
  * @description Hard-delete a *rejected* doctor record — the right-to-erasure path.
  * Removes the Doctor row (cascading its invites), the backing Account,
  * and the rubber-stamp object in S3. Restricted to rejected doctors
@@ -17,10 +18,9 @@ import { client } from '../.kubb/client'
  * pointed here via previous_doctor_id is detached (FK ON DELETE SET NULL)
  * rather than blocked.
  * @summary Purge Doctor
- * {@link /doctors/:doctor_id/purge}
  */
-export function purgeDoctorDoctorsDoctorIdPurgeDelete<ThrowOnError extends boolean = true>(options: Options<PurgeDoctorDoctorsDoctorIdPurgeDeleteOptions, ThrowOnError>): Promise<RequestResult<PurgeDoctorDoctorsDoctorIdPurgeDeleteResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function purgeDoctorDoctorsDoctorIdPurgeDelete<ThrowOnError extends boolean = true>(options: Options<PurgeDoctorDoctorsDoctorIdPurgeDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<PurgeDoctorDoctorsDoctorIdPurgeDeleteResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'DELETE', url: '/doctors/{doctor_id}/purge', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<PurgeDoctorDoctorsDoctorIdPurgeDeleteResponses, ThrowOnError>>
+  return withUnwrap(apiClient<PurgeDoctorDoctorsDoctorIdPurgeDeleteResponses, ThrowOnError>({ method: 'DELETE', url: '/doctors/{doctor_id}/purge', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

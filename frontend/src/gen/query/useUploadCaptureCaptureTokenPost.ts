@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const uploadCaptureCaptureTokenPostMutationKey = () => [{ url: '/capture/:token' }] as const
 
-export function uploadCaptureCaptureTokenPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function uploadCaptureCaptureTokenPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = uploadCaptureCaptureTokenPostMutationKey()
   return mutationOptions<UploadCaptureCaptureTokenPostStatus201, ResponseErrorConfig<UploadCaptureCaptureTokenPostStatus400 | UploadCaptureCaptureTokenPostStatus401 | UploadCaptureCaptureTokenPostStatus403 | UploadCaptureCaptureTokenPostStatus404 | UploadCaptureCaptureTokenPostStatus409 | UploadCaptureCaptureTokenPostStatus422 | UploadCaptureCaptureTokenPostStatus500>, UploadCaptureCaptureTokenPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body }) => {
-      const { data } = await uploadCaptureCaptureTokenPost({ ...config, path, body, throwOnError: true })
-      return data
+      return uploadCaptureCaptureTokenPost({ ...config, path, body, throwOnError: true }).unwrap()
     },
   })
 }

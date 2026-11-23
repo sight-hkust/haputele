@@ -6,78 +6,75 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type PullCaptureRelayCaptureSessionsSessionIdRelayGetPath = {
-    session_id: number;
-};
+  session_id: number;
+}
 
 export type PullCaptureRelayCaptureSessionsSessionIdRelayGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
  * @description
  * Format: `binary`
- * @type string
-*/
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Jpeg = Blob;
+ */
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Jpeg = Blob
 
 /**
  * @description
  * Format: `binary`
- * @type string
-*/
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Png = Blob;
+ */
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Png = Blob
 
 /**
  * @description
  * Format: `binary`
- * @type string
-*/
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Webp = Blob;
+ */
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Webp = Blob
 
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200 = (PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Jpeg | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Png | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Webp);
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200 = PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Jpeg | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Png | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Webp
 
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus400 = ApiErrorResponse;
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus400 = ApiErrorResponse
 
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus401 = ApiErrorResponse;
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus401 = ApiErrorResponse
 
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus403 = ApiErrorResponse;
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus403 = ApiErrorResponse
 
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus404 = ApiErrorResponse;
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus404 = ApiErrorResponse
 
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus409 = ApiErrorResponse;
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus409 = ApiErrorResponse
 
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus422 = ApiErrorResponse;
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus422 = ApiErrorResponse
 
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus500 = ApiErrorResponse;
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus500 = ApiErrorResponse
 
 export type PullCaptureRelayCaptureSessionsSessionIdRelayGetOptions = {
-    body?: never | undefined;
-    path: PullCaptureRelayCaptureSessionsSessionIdRelayGetPath;
-    query?: never | undefined;
-    headers?: PullCaptureRelayCaptureSessionsSessionIdRelayGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path: PullCaptureRelayCaptureSessionsSessionIdRelayGetPath;
+  query?: never | undefined;
+  headers?: PullCaptureRelayCaptureSessionsSessionIdRelayGetHeaders | undefined;
+}
 
 export type PullCaptureRelayCaptureSessionsSessionIdRelayGetResponses = {
-    "200": ({
-        contentType: "image/jpeg";
-        data: PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Jpeg;
-    } | {
-        contentType: "image/png";
-        data: PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Png;
-    } | {
-        contentType: "image/webp";
-        data: PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Webp;
-    });
-    "400": PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus400;
-    "401": PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus401;
-    "403": PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus403;
-    "404": PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus404;
-    "409": PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus409;
-    "422": PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus422;
-    "500": PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus500;
-};
+  '200': {
+    contentType: 'image/jpeg';
+    data: PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Jpeg;
+  } | {
+    contentType: 'image/png';
+    data: PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Png;
+  } | {
+    contentType: 'image/webp';
+    data: PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200Webp;
+  };
+  '400': PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus400;
+  '401': PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus401;
+  '403': PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus403;
+  '404': PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus404;
+  '409': PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus409;
+  '422': PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus422;
+  '500': PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type PullCaptureRelayCaptureSessionsSessionIdRelayGetResponse = (PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus400 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus401 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus403 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus404 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus409 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus422 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus500);
+ */
+export type PullCaptureRelayCaptureSessionsSessionIdRelayGetResponse = PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200

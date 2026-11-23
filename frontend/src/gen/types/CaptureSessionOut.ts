@@ -4,24 +4,25 @@
 */
 
 export const captureSessionOutPurposeEnum = {
-    appointment_attachment: "appointment_attachment",
-    rubber_stamp: "rubber_stamp"
+  appointment_attachment: 'appointment_attachment',
+  rubber_stamp: 'rubber_stamp',
 } as const;
 
-export type CaptureSessionOutPurposeEnumKey = (typeof captureSessionOutPurposeEnum)[keyof typeof captureSessionOutPurposeEnum];
+export type CaptureSessionOutPurposeEnumKey = (typeof captureSessionOutPurposeEnum)[keyof typeof captureSessionOutPurposeEnum]
 
 /**
- * @description Creation response. `token` is the raw secret — returned exactly once\nhere so the desktop can build the QR; never re-fetchable afterwards.
+ * @description Creation response. `token` is the raw secret — returned exactly once
+ * here so the desktop can build the QR; never re-fetchable afterwards.
  * @type object
-*/
+ */
 export type CaptureSessionOut = {
-    id: number;
-    token: string;
-    purpose: CaptureSessionOutPurposeEnumKey;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    expiresAt: string;
-};
+  id: number;
+  token: string;
+  purpose: CaptureSessionOutPurposeEnumKey;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  expiresAt: string;
+}

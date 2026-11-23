@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { GetConsultationConsultationsCidGetOptions, GetConsultationConsultationsCidGetResponses } from '../types/GetConsultationConsultationsCidGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /consultations/{cid}`
  * @summary Get Consultation
- * {@link /consultations/:cid}
  */
-export function getConsultationConsultationsCidGet<ThrowOnError extends boolean = true>(options: Options<GetConsultationConsultationsCidGetOptions, ThrowOnError>): Promise<RequestResult<GetConsultationConsultationsCidGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function getConsultationConsultationsCidGet<ThrowOnError extends boolean = true>(options: Options<GetConsultationConsultationsCidGetOptions, ThrowOnError>): Unwrappable<RequestResult<GetConsultationConsultationsCidGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/consultations/{cid}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<GetConsultationConsultationsCidGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<GetConsultationConsultationsCidGetResponses, ThrowOnError>({ method: 'GET', url: '/consultations/{cid}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

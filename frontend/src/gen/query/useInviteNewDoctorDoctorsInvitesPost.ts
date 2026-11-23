@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const inviteNewDoctorDoctorsInvitesPostMutationKey = () => [{ url: '/doctors/invites' }] as const
 
-export function inviteNewDoctorDoctorsInvitesPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function inviteNewDoctorDoctorsInvitesPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = inviteNewDoctorDoctorsInvitesPostMutationKey()
   return mutationOptions<InviteNewDoctorDoctorsInvitesPostStatus201, ResponseErrorConfig<InviteNewDoctorDoctorsInvitesPostStatus400 | InviteNewDoctorDoctorsInvitesPostStatus401 | InviteNewDoctorDoctorsInvitesPostStatus403 | InviteNewDoctorDoctorsInvitesPostStatus404 | InviteNewDoctorDoctorsInvitesPostStatus409 | InviteNewDoctorDoctorsInvitesPostStatus422 | InviteNewDoctorDoctorsInvitesPostStatus500>, InviteNewDoctorDoctorsInvitesPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await inviteNewDoctorDoctorsInvitesPost({ ...config, body, headers, throwOnError: true })
-      return data
+      return inviteNewDoctorDoctorsInvitesPost({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const resendOpenInviteDoctorsInvitesInviteIdResendPostMutationKey = () => [{ url: '/doctors/invites/:invite_id/resend' }] as const
 
-export function resendOpenInviteDoctorsInvitesInviteIdResendPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function resendOpenInviteDoctorsInvitesInviteIdResendPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = resendOpenInviteDoctorsInvitesInviteIdResendPostMutationKey()
   return mutationOptions<ResendOpenInviteDoctorsInvitesInviteIdResendPostStatus200, ResponseErrorConfig<ResendOpenInviteDoctorsInvitesInviteIdResendPostStatus400 | ResendOpenInviteDoctorsInvitesInviteIdResendPostStatus401 | ResendOpenInviteDoctorsInvitesInviteIdResendPostStatus403 | ResendOpenInviteDoctorsInvitesInviteIdResendPostStatus404 | ResendOpenInviteDoctorsInvitesInviteIdResendPostStatus409 | ResendOpenInviteDoctorsInvitesInviteIdResendPostStatus422 | ResendOpenInviteDoctorsInvitesInviteIdResendPostStatus500>, ResendOpenInviteDoctorsInvitesInviteIdResendPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await resendOpenInviteDoctorsInvitesInviteIdResendPost({ ...config, path, headers, throwOnError: true })
-      return data
+      return resendOpenInviteDoctorsInvitesInviteIdResendPost({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

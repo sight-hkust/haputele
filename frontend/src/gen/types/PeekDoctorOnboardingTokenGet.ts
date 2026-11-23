@@ -7,48 +7,54 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { DoctorOnboardingPeek } from './DoctorOnboardingPeek'
 
 export type PeekDoctorOnboardingTokenGetPath = {
-    token: string;
-};
+  token: string;
+}
 
 /**
- * @description Public view returned when a doctor visits an invite link.\n\n`mode` distinguishes the two invite shapes:\n  - \"new\"      → the doctor is onboarding fresh. Frontend renders the\n                 full profile form; email + familyName are shown read-only\n                 as part of the welcome.\n  - \"rotation\" → an existing doctor is just setting a new password.\n                 Frontend renders the slim password-only form.
+ * @description Public view returned when a doctor visits an invite link.
+ * `mode` distinguishes the two invite shapes:
+ *   - "new"      → the doctor is onboarding fresh. Frontend renders the
+ *                  full profile form; email + familyName are shown read-only
+ *                  as part of the welcome.
+ *   - "rotation" → an existing doctor is just setting a new password.
+ *                  Frontend renders the slim password-only form.
  * @type object
-*/
-export type PeekDoctorOnboardingTokenGetStatus200 = DoctorOnboardingPeek;
+ */
+export type PeekDoctorOnboardingTokenGetStatus200 = DoctorOnboardingPeek
 
-export type PeekDoctorOnboardingTokenGetStatus400 = ApiErrorResponse;
+export type PeekDoctorOnboardingTokenGetStatus400 = ApiErrorResponse
 
-export type PeekDoctorOnboardingTokenGetStatus401 = ApiErrorResponse;
+export type PeekDoctorOnboardingTokenGetStatus401 = ApiErrorResponse
 
-export type PeekDoctorOnboardingTokenGetStatus403 = ApiErrorResponse;
+export type PeekDoctorOnboardingTokenGetStatus403 = ApiErrorResponse
 
-export type PeekDoctorOnboardingTokenGetStatus404 = ApiErrorResponse;
+export type PeekDoctorOnboardingTokenGetStatus404 = ApiErrorResponse
 
-export type PeekDoctorOnboardingTokenGetStatus409 = ApiErrorResponse;
+export type PeekDoctorOnboardingTokenGetStatus409 = ApiErrorResponse
 
-export type PeekDoctorOnboardingTokenGetStatus422 = ApiErrorResponse;
+export type PeekDoctorOnboardingTokenGetStatus422 = ApiErrorResponse
 
-export type PeekDoctorOnboardingTokenGetStatus500 = ApiErrorResponse;
+export type PeekDoctorOnboardingTokenGetStatus500 = ApiErrorResponse
 
 export type PeekDoctorOnboardingTokenGetOptions = {
-    body?: never | undefined;
-    path: PeekDoctorOnboardingTokenGetPath;
-    query?: never | undefined;
-    headers?: never | undefined;
-};
+  body?: never | undefined;
+  path: PeekDoctorOnboardingTokenGetPath;
+  query?: never | undefined;
+  headers?: never | undefined;
+}
 
 export type PeekDoctorOnboardingTokenGetResponses = {
-    "200": PeekDoctorOnboardingTokenGetStatus200;
-    "400": PeekDoctorOnboardingTokenGetStatus400;
-    "401": PeekDoctorOnboardingTokenGetStatus401;
-    "403": PeekDoctorOnboardingTokenGetStatus403;
-    "404": PeekDoctorOnboardingTokenGetStatus404;
-    "409": PeekDoctorOnboardingTokenGetStatus409;
-    "422": PeekDoctorOnboardingTokenGetStatus422;
-    "500": PeekDoctorOnboardingTokenGetStatus500;
-};
+  '200': PeekDoctorOnboardingTokenGetStatus200;
+  '400': PeekDoctorOnboardingTokenGetStatus400;
+  '401': PeekDoctorOnboardingTokenGetStatus401;
+  '403': PeekDoctorOnboardingTokenGetStatus403;
+  '404': PeekDoctorOnboardingTokenGetStatus404;
+  '409': PeekDoctorOnboardingTokenGetStatus409;
+  '422': PeekDoctorOnboardingTokenGetStatus422;
+  '500': PeekDoctorOnboardingTokenGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type PeekDoctorOnboardingTokenGetResponse = (PeekDoctorOnboardingTokenGetStatus200 | PeekDoctorOnboardingTokenGetStatus400 | PeekDoctorOnboardingTokenGetStatus401 | PeekDoctorOnboardingTokenGetStatus403 | PeekDoctorOnboardingTokenGetStatus404 | PeekDoctorOnboardingTokenGetStatus409 | PeekDoctorOnboardingTokenGetStatus422 | PeekDoctorOnboardingTokenGetStatus500);
+ */
+export type PeekDoctorOnboardingTokenGetResponse = PeekDoctorOnboardingTokenGetStatus200

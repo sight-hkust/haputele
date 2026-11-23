@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CreateOrGetDraftAppointmentsApptIdConsultationDraftPostOptions, CreateOrGetDraftAppointmentsApptIdConsultationDraftPostResponses } from '../types/CreateOrGetDraftAppointmentsApptIdConsultationDraftPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /appointments/{appt_id}/consultation/draft`
  * @summary Create Or Get Draft
- * {@link /appointments/:appt_id/consultation/draft}
  */
-export function createOrGetDraftAppointmentsApptIdConsultationDraftPost<ThrowOnError extends boolean = true>(options: Options<CreateOrGetDraftAppointmentsApptIdConsultationDraftPostOptions, ThrowOnError>): Promise<RequestResult<CreateOrGetDraftAppointmentsApptIdConsultationDraftPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function createOrGetDraftAppointmentsApptIdConsultationDraftPost<ThrowOnError extends boolean = true>(options: Options<CreateOrGetDraftAppointmentsApptIdConsultationDraftPostOptions, ThrowOnError>): Unwrappable<RequestResult<CreateOrGetDraftAppointmentsApptIdConsultationDraftPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/appointments/{appt_id}/consultation/draft', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CreateOrGetDraftAppointmentsApptIdConsultationDraftPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CreateOrGetDraftAppointmentsApptIdConsultationDraftPostResponses, ThrowOnError>({ method: 'POST', url: '/appointments/{appt_id}/consultation/draft', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

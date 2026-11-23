@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { SystemConfigSysadminSystemConfigGetOptions, SystemConfigSysadminSystemConfigGetResponses } from '../types/SystemConfigSysadminSystemConfigGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /sysadmin/system-config`
  * @summary System Config
- * {@link /sysadmin/system-config}
  */
-export function systemConfigSysadminSystemConfigGet<ThrowOnError extends boolean = true>(options: Options<SystemConfigSysadminSystemConfigGetOptions, ThrowOnError> = {}): Promise<RequestResult<SystemConfigSysadminSystemConfigGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function systemConfigSysadminSystemConfigGet<ThrowOnError extends boolean = true>(options: Options<SystemConfigSysadminSystemConfigGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<SystemConfigSysadminSystemConfigGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/sysadmin/system-config', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<SystemConfigSysadminSystemConfigGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<SystemConfigSysadminSystemConfigGetResponses, ThrowOnError>({ method: 'GET', url: '/sysadmin/system-config', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

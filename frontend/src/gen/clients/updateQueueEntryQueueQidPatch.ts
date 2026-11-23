@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UpdateQueueEntryQueueQidPatchOptions, UpdateQueueEntryQueueQidPatchResponses } from '../types/UpdateQueueEntryQueueQidPatch'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `PATCH /queue/{qid}`
  * @summary Update Queue Entry
- * {@link /queue/:qid}
  */
-export function updateQueueEntryQueueQidPatch<ThrowOnError extends boolean = true>(options: Options<UpdateQueueEntryQueueQidPatchOptions, ThrowOnError>): Promise<RequestResult<UpdateQueueEntryQueueQidPatchResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function updateQueueEntryQueueQidPatch<ThrowOnError extends boolean = true>(options: Options<UpdateQueueEntryQueueQidPatchOptions, ThrowOnError>): Unwrappable<RequestResult<UpdateQueueEntryQueueQidPatchResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'PATCH', url: '/queue/{qid}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<UpdateQueueEntryQueueQidPatchResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UpdateQueueEntryQueueQidPatchResponses, ThrowOnError>({ method: 'PATCH', url: '/queue/{qid}', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

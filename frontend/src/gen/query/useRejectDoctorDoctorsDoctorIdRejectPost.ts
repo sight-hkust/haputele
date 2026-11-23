@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const rejectDoctorDoctorsDoctorIdRejectPostMutationKey = () => [{ url: '/doctors/:doctor_id/reject' }] as const
 
-export function rejectDoctorDoctorsDoctorIdRejectPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function rejectDoctorDoctorsDoctorIdRejectPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = rejectDoctorDoctorsDoctorIdRejectPostMutationKey()
   return mutationOptions<RejectDoctorDoctorsDoctorIdRejectPostStatus200, ResponseErrorConfig<RejectDoctorDoctorsDoctorIdRejectPostStatus400 | RejectDoctorDoctorsDoctorIdRejectPostStatus401 | RejectDoctorDoctorsDoctorIdRejectPostStatus403 | RejectDoctorDoctorsDoctorIdRejectPostStatus404 | RejectDoctorDoctorsDoctorIdRejectPostStatus409 | RejectDoctorDoctorsDoctorIdRejectPostStatus422 | RejectDoctorDoctorsDoctorIdRejectPostStatus500>, RejectDoctorDoctorsDoctorIdRejectPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await rejectDoctorDoctorsDoctorIdRejectPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return rejectDoctorDoctorsDoctorIdRejectPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

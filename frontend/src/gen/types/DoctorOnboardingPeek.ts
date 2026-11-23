@@ -4,12 +4,18 @@
 */
 
 /**
- * @description Public view returned when a doctor visits an invite link.\n\n`mode` distinguishes the two invite shapes:\n  - \"new\"      → the doctor is onboarding fresh. Frontend renders the\n                 full profile form; email + familyName are shown read-only\n                 as part of the welcome.\n  - \"rotation\" → an existing doctor is just setting a new password.\n                 Frontend renders the slim password-only form.
+ * @description Public view returned when a doctor visits an invite link.
+ * `mode` distinguishes the two invite shapes:
+ *   - "new"      → the doctor is onboarding fresh. Frontend renders the
+ *                  full profile form; email + familyName are shown read-only
+ *                  as part of the welcome.
+ *   - "rotation" → an existing doctor is just setting a new password.
+ *                  Frontend renders the slim password-only form.
  * @type object
-*/
+ */
 export type DoctorOnboardingPeek = {
-    mode: string;
-    email: string;
-    familyName?: (string | null) | undefined;
-    givenName?: (string | null) | undefined;
-};
+  mode: string;
+  email: string;
+  familyName?: (string | (null | null)) | undefined;
+  givenName?: (string | (null | null)) | undefined;
+}

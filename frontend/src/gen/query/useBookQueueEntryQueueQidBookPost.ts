@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const bookQueueEntryQueueQidBookPostMutationKey = () => [{ url: '/queue/:qid/book' }] as const
 
-export function bookQueueEntryQueueQidBookPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function bookQueueEntryQueueQidBookPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = bookQueueEntryQueueQidBookPostMutationKey()
   return mutationOptions<BookQueueEntryQueueQidBookPostStatus200, ResponseErrorConfig<BookQueueEntryQueueQidBookPostStatus400 | BookQueueEntryQueueQidBookPostStatus401 | BookQueueEntryQueueQidBookPostStatus403 | BookQueueEntryQueueQidBookPostStatus404 | BookQueueEntryQueueQidBookPostStatus409 | BookQueueEntryQueueQidBookPostStatus422 | BookQueueEntryQueueQidBookPostStatus500>, BookQueueEntryQueueQidBookPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await bookQueueEntryQueueQidBookPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return bookQueueEntryQueueQidBookPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -4,20 +4,27 @@
 */
 
 /**
- * @description Partial self-service profile update (PATCH /doctors/me).\n\nOnly the practice-profile fields a doctor may change themselves —\nidentity/credential fields (name, email, SLMC number) stay admin-only.\nA field is applied only when explicitly present in the payload\n(tracked via model_fields_set), so omission leaves it unchanged.\n\nImage fields carry a base64 data URL to set/replace. To remove the\nsaved e-signature send clearDefaultSignature=true (a bare null on\ndefaultSignatureImage is treated as \"unchanged\", not \"clear\").
+ * @description Partial self-service profile update (PATCH /doctors/me).
+ * Only the practice-profile fields a doctor may change themselves —
+ * identity/credential fields (name, email, SLMC number) stay admin-only.
+ * A field is applied only when explicitly present in the payload
+ * (tracked via model_fields_set), so omission leaves it unchanged.
+ * Image fields carry a base64 data URL to set/replace. To remove the
+ * saved e-signature send clearDefaultSignature=true (a bare null on
+ * defaultSignatureImage is treated as "unchanged", not "clear").
  * @type object
-*/
+ */
 export type DoctorSelfUpdate = {
-    contact?: (string | null) | undefined;
-    qualifications?: (string | null) | undefined;
-    practitionerAddress?: (string | null) | undefined;
-    instituteName?: (string | null) | undefined;
-    instituteContact?: (string | null) | undefined;
-    rubberStampImage?: (string | null) | undefined;
-    defaultSignatureImage?: (string | null) | undefined;
-    /**
-     * @default false
-     * @type boolean | undefined
-    */
-    clearDefaultSignature?: boolean | undefined;
-};
+  contact?: (string | (null | null)) | undefined;
+  qualifications?: (string | (null | null)) | undefined;
+  practitionerAddress?: (string | (null | null)) | undefined;
+  instituteName?: (string | (null | null)) | undefined;
+  instituteContact?: (string | (null | null)) | undefined;
+  rubberStampImage?: (string | (null | null)) | undefined;
+  defaultSignatureImage?: (string | (null | null)) | undefined;
+  /**
+   * @default false
+   * @type boolean | undefined
+   */
+  clearDefaultSignature?: boolean | undefined;
+}

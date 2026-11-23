@@ -6,14 +6,14 @@
 /**
  * @description GET/PATCH /sysadmin/system-config.
  * @type object
-*/
+ */
 export type SystemConfigOut = {
-    initializedAt: (string | null);
-    instituteName: (string | null);
-    instituteAddressLines: (string[] | null);
-    instituteContactPhone: (string | null);
-    instituteContactEmail: (string | null);
-    appTimezone: (string | null);
-    exportTimezone: (string | null);
-    masterConsentVersion: (string | null);
-};
+  initializedAt: string | (null | null);
+  instituteName: string | (null | null);
+  instituteAddressLines: string[] | (null | null);
+  instituteContactPhone: string | (null | null);
+  instituteContactEmail: string | (null | null);
+  appTimezone: string | (null | null);
+  exportTimezone: string | (null | null);
+  masterConsentVersion: string | (null | null);
+}

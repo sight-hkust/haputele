@@ -4,17 +4,17 @@
 */
 
 export const captureUploadOutPurposeEnum = {
-    appointment_attachment: "appointment_attachment",
-    rubber_stamp: "rubber_stamp"
+  appointment_attachment: 'appointment_attachment',
+  rubber_stamp: 'rubber_stamp',
 } as const;
 
-export type CaptureUploadOutPurposeEnumKey = (typeof captureUploadOutPurposeEnum)[keyof typeof captureUploadOutPurposeEnum];
+export type CaptureUploadOutPurposeEnumKey = (typeof captureUploadOutPurposeEnum)[keyof typeof captureUploadOutPurposeEnum]
 
 /**
  * @description POST /capture/{token} — upload acknowledgement from the phone relay.
  * @type object
-*/
+ */
 export type CaptureUploadOut = {
-    ok: boolean;
-    purpose: CaptureUploadOutPurposeEnumKey;
-};
+  ok: boolean;
+  purpose: CaptureUploadOutPurposeEnumKey;
+}

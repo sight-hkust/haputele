@@ -4,17 +4,20 @@
 */
 
 export const captureSessionCreateInPurposeEnum = {
-    appointment_attachment: "appointment_attachment",
-    rubber_stamp: "rubber_stamp"
+  appointment_attachment: 'appointment_attachment',
+  rubber_stamp: 'rubber_stamp',
 } as const;
 
-export type CaptureSessionCreateInPurposeEnumKey = (typeof captureSessionCreateInPurposeEnum)[keyof typeof captureSessionCreateInPurposeEnum];
+export type CaptureSessionCreateInPurposeEnumKey = (typeof captureSessionCreateInPurposeEnum)[keyof typeof captureSessionCreateInPurposeEnum]
 
 /**
- * @description Desktop → server: mint a capture session.\n\n`appointmentId` is required when purpose is appointment_attachment\n(that\'s where the phone\'s photos land) and ignored otherwise. The\nserver re-validates the appointment exists and is writeable.
+ * @description Desktop → server: mint a capture session.
+ * `appointmentId` is required when purpose is appointment_attachment
+ * (that's where the phone's photos land) and ignored otherwise. The
+ * server re-validates the appointment exists and is writeable.
  * @type object
-*/
+ */
 export type CaptureSessionCreateIn = {
-    purpose: CaptureSessionCreateInPurposeEnumKey;
-    appointmentId?: (number | null) | undefined;
-};
+  purpose: CaptureSessionCreateInPurposeEnumKey;
+  appointmentId?: (number | (null | null)) | undefined;
+}

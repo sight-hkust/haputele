@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const purgeDoctorDoctorsDoctorIdPurgeDeleteMutationKey = () => [{ url: '/doctors/:doctor_id/purge' }] as const
 
-export function purgeDoctorDoctorsDoctorIdPurgeDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function purgeDoctorDoctorsDoctorIdPurgeDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = purgeDoctorDoctorsDoctorIdPurgeDeleteMutationKey()
   return mutationOptions<PurgeDoctorDoctorsDoctorIdPurgeDeleteStatus204, ResponseErrorConfig<PurgeDoctorDoctorsDoctorIdPurgeDeleteStatus400 | PurgeDoctorDoctorsDoctorIdPurgeDeleteStatus401 | PurgeDoctorDoctorsDoctorIdPurgeDeleteStatus403 | PurgeDoctorDoctorsDoctorIdPurgeDeleteStatus404 | PurgeDoctorDoctorsDoctorIdPurgeDeleteStatus409 | PurgeDoctorDoctorsDoctorIdPurgeDeleteStatus422 | PurgeDoctorDoctorsDoctorIdPurgeDeleteStatus500>, PurgeDoctorDoctorsDoctorIdPurgeDeleteOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await purgeDoctorDoctorsDoctorIdPurgeDelete({ ...config, path, headers, throwOnError: true })
-      return data
+      return purgeDoctorDoctorsDoctorIdPurgeDelete({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

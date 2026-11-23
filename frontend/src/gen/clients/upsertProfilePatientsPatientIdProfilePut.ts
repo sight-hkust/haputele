@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UpsertProfilePatientsPatientIdProfilePutOptions, UpsertProfilePatientsPatientIdProfilePutResponses } from '../types/UpsertProfilePatientsPatientIdProfilePut'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `PUT /patients/{patient_id}/profile`
  * @summary Upsert Profile
- * {@link /patients/:patient_id/profile}
  */
-export function upsertProfilePatientsPatientIdProfilePut<ThrowOnError extends boolean = true>(options: Options<UpsertProfilePatientsPatientIdProfilePutOptions, ThrowOnError>): Promise<RequestResult<UpsertProfilePatientsPatientIdProfilePutResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function upsertProfilePatientsPatientIdProfilePut<ThrowOnError extends boolean = true>(options: Options<UpsertProfilePatientsPatientIdProfilePutOptions, ThrowOnError>): Unwrappable<RequestResult<UpsertProfilePatientsPatientIdProfilePutResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'PUT', url: '/patients/{patient_id}/profile', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<UpsertProfilePatientsPatientIdProfilePutResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UpsertProfilePatientsPatientIdProfilePutResponses, ThrowOnError>({ method: 'PUT', url: '/patients/{patient_id}/profile', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

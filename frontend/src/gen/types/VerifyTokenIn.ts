@@ -4,9 +4,9 @@
 */
 
 export type VerifyTokenIn = {
-    /**
-     * @minLength 1
-     * @type string
-    */
-    token: string;
-};
+  /**
+   * @minLength 1
+   * @type string
+   */
+  token: string;
+}

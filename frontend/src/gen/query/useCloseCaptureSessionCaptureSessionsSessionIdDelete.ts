@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const closeCaptureSessionCaptureSessionsSessionIdDeleteMutationKey = () => [{ url: '/capture/sessions/:session_id' }] as const
 
-export function closeCaptureSessionCaptureSessionsSessionIdDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function closeCaptureSessionCaptureSessionsSessionIdDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = closeCaptureSessionCaptureSessionsSessionIdDeleteMutationKey()
   return mutationOptions<CloseCaptureSessionCaptureSessionsSessionIdDeleteStatus204, ResponseErrorConfig<CloseCaptureSessionCaptureSessionsSessionIdDeleteStatus400 | CloseCaptureSessionCaptureSessionsSessionIdDeleteStatus401 | CloseCaptureSessionCaptureSessionsSessionIdDeleteStatus403 | CloseCaptureSessionCaptureSessionsSessionIdDeleteStatus404 | CloseCaptureSessionCaptureSessionsSessionIdDeleteStatus409 | CloseCaptureSessionCaptureSessionsSessionIdDeleteStatus422 | CloseCaptureSessionCaptureSessionsSessionIdDeleteStatus500>, CloseCaptureSessionCaptureSessionsSessionIdDeleteOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await closeCaptureSessionCaptureSessionsSessionIdDelete({ ...config, path, headers, throwOnError: true })
-      return data
+      return closeCaptureSessionCaptureSessionsSessionIdDelete({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

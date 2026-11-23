@@ -4,21 +4,21 @@
 */
 
 export const patientUpdateLanguage = {
-    en: "en",
-    ta: "ta",
-    si: "si"
+  en: 'en',
+  ta: 'ta',
+  si: 'si',
 } as const;
 
-export type PatientUpdateLanguageKey = (typeof patientUpdateLanguage)[keyof typeof patientUpdateLanguage];
+export type PatientUpdateLanguageKey = (typeof patientUpdateLanguage)[keyof typeof patientUpdateLanguage]
 
 export type PatientUpdate = {
-    given?: (string | null) | undefined;
-    family?: (string | null) | undefined;
-    dob?: (string | null) | undefined;
-    gender?: (string | null) | undefined;
-    language?: (PatientUpdateLanguageKey | null) | undefined;
-    screeningRef?: (string | null) | undefined;
-    nationalId?: (string | null) | undefined;
-    contact?: (string | null) | undefined;
-    address?: (string | null) | undefined;
-};
+  given?: (string | (null | null)) | undefined;
+  family?: (string | (null | null)) | undefined;
+  dob?: (string | (null | null)) | undefined;
+  gender?: (string | (null | null)) | undefined;
+  language?: (PatientUpdateLanguageKey | (null | null)) | undefined;
+  screeningRef?: (string | (null | null)) | undefined;
+  nationalId?: (string | (null | null)) | undefined;
+  contact?: (string | (null | null)) | undefined;
+  address?: (string | (null | null)) | undefined;
+}

@@ -3,19 +3,19 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { PeekCaptureCaptureTokenGetOptions, PeekCaptureCaptureTokenGetResponses } from '../types/PeekCaptureCaptureTokenGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `GET /capture/{token}`
  * @description Validate the token and tell the phone page what it's capturing for.
  * 404 `capture_session_not_found` covers unknown / closed / expired —
  * the page renders a generic "this link isn't active" screen.
  * @summary Peek Capture
- * {@link /capture/:token}
  */
-export function peekCaptureCaptureTokenGet<ThrowOnError extends boolean = true>(options: Options<PeekCaptureCaptureTokenGetOptions, ThrowOnError>): Promise<RequestResult<PeekCaptureCaptureTokenGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function peekCaptureCaptureTokenGet<ThrowOnError extends boolean = true>(options: Options<PeekCaptureCaptureTokenGetOptions, ThrowOnError>): Unwrappable<RequestResult<PeekCaptureCaptureTokenGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/capture/{token}', ...config }) as Promise<RequestResult<PeekCaptureCaptureTokenGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<PeekCaptureCaptureTokenGetResponses, ThrowOnError>({ method: 'GET', url: '/capture/{token}', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

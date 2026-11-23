@@ -4,15 +4,18 @@
 */
 
 /**
- * @description Admin\'s invite-by-email request. Only the email is required.\n\n`familyName` is an optional hint solely for the invite email\'s\ngreeting — the doctor\'s real family name is captured during\nonboarding. Not echoed in any later API response.
+ * @description Admin's invite-by-email request. Only the email is required.
+ * `familyName` is an optional hint solely for the invite email's
+ * greeting — the doctor's real family name is captured during
+ * onboarding. Not echoed in any later API response.
  * @type object
-*/
+ */
 export type DoctorInviteCreate = {
-    /**
-     * @description
-     * Format: `email`
-     * @type string
-    */
-    email: string;
-    familyName?: (string | null) | undefined;
-};
+  /**
+   * @description
+   * Format: `email`
+   * @type string
+   */
+  email: string;
+  familyName?: (string | (null | null)) | undefined;
+}

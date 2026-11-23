@@ -8,17 +8,16 @@ import type { GetMeDoctorsMeGetOptions, GetMeDoctorsMeGetStatus200, GetMeDoctors
 import { getMeDoctorsMeGet } from '../clients/getMeDoctorsMeGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getMeDoctorsMeGetQueryKey = () => [{ url: '/doctors/me' }] as const
+export const getMeDoctorsMeGetQueryKey = ({ headers }: Omit<GetMeDoctorsMeGetOptions, 'headers'> & { headers?: GetMeDoctorsMeGetOptions['headers'] } = {}) => [{ url: '/doctors/me' }] as const
 
 type GetMeDoctorsMeGetQueryKey = ReturnType<typeof getMeDoctorsMeGetQueryKey>
 
-export function getMeDoctorsMeGetQueryOptions({ headers }: GetMeDoctorsMeGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getMeDoctorsMeGetQueryKey()
+export function getMeDoctorsMeGetQueryOptions({ headers }: GetMeDoctorsMeGetOptions = {}, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getMeDoctorsMeGetQueryKey({ headers })
   return queryOptions<GetMeDoctorsMeGetStatus200, ResponseErrorConfig<GetMeDoctorsMeGetStatus400 | GetMeDoctorsMeGetStatus401 | GetMeDoctorsMeGetStatus403 | GetMeDoctorsMeGetStatus404 | GetMeDoctorsMeGetStatus409 | GetMeDoctorsMeGetStatus422 | GetMeDoctorsMeGetStatus500>, GetMeDoctorsMeGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getMeDoctorsMeGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getMeDoctorsMeGet({ ...config, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const resetPasswordAccountsUsernameResetPasswordPostMutationKey = () => [{ url: '/accounts/:username/reset-password' }] as const
 
-export function resetPasswordAccountsUsernameResetPasswordPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function resetPasswordAccountsUsernameResetPasswordPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = resetPasswordAccountsUsernameResetPasswordPostMutationKey()
   return mutationOptions<ResetPasswordAccountsUsernameResetPasswordPostStatus204, ResponseErrorConfig<ResetPasswordAccountsUsernameResetPasswordPostStatus400 | ResetPasswordAccountsUsernameResetPasswordPostStatus401 | ResetPasswordAccountsUsernameResetPasswordPostStatus403 | ResetPasswordAccountsUsernameResetPasswordPostStatus404 | ResetPasswordAccountsUsernameResetPasswordPostStatus409 | ResetPasswordAccountsUsernameResetPasswordPostStatus422 | ResetPasswordAccountsUsernameResetPasswordPostStatus500>, ResetPasswordAccountsUsernameResetPasswordPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, body, headers }) => {
-      const { data } = await resetPasswordAccountsUsernameResetPasswordPost({ ...config, path, body, headers, throwOnError: true })
-      return data
+      return resetPasswordAccountsUsernameResetPasswordPost({ ...config, path, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostOptions, CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostResponses } from '../types/CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /doctors/{doctor_id}/availability/bulk`
  * @summary Create Availability Bulk
- * {@link /doctors/:doctor_id/availability/bulk}
  */
-export function createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPost<ThrowOnError extends boolean = true>(options: Options<CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostOptions, ThrowOnError>): Promise<RequestResult<CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function createAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPost<ThrowOnError extends boolean = true>(options: Options<CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostOptions, ThrowOnError>): Unwrappable<RequestResult<CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctors/{doctor_id}/availability/bulk', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CreateAvailabilityBulkDoctorsDoctorIdAvailabilityBulkPostResponses, ThrowOnError>({ method: 'POST', url: '/doctors/{doctor_id}/availability/bulk', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

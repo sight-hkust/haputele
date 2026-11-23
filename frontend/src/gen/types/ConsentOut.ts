@@ -4,31 +4,31 @@
 */
 
 export const consentOutScopeEnum = {
-    master: "master",
-    session: "session"
+  master: 'master',
+  session: 'session',
 } as const;
 
-export type ConsentOutScopeEnumKey = (typeof consentOutScopeEnum)[keyof typeof consentOutScopeEnum];
+export type ConsentOutScopeEnumKey = (typeof consentOutScopeEnum)[keyof typeof consentOutScopeEnum]
 
 export type ConsentOut = {
-    id: number;
-    patientId: number;
-    scope: ConsentOutScopeEnumKey;
-    version: (string | null);
-    agreed: boolean;
-    appointmentId?: (number | null) | undefined;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    capturedAt: string;
-    revokedAt?: (string | null) | undefined;
-    reason: (string | null);
-    /**
-     * @default false
-     * @type boolean | undefined
-    */
-    hasSignature?: boolean | undefined;
-    signatureMethod?: (string | null) | undefined;
-};
+  id: number;
+  patientId: number;
+  scope: ConsentOutScopeEnumKey;
+  version: string | (null | null);
+  agreed: boolean;
+  appointmentId?: (number | (null | null)) | undefined;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  capturedAt: string;
+  revokedAt?: (string | (null | null)) | undefined;
+  reason: string | (null | null);
+  /**
+   * @default false
+   * @type boolean | undefined
+   */
+  hasSignature?: boolean | undefined;
+  signatureMethod?: (string | (null | null)) | undefined;
+}

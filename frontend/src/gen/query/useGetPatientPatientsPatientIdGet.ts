@@ -8,17 +8,16 @@ import type { GetPatientPatientsPatientIdGetOptions, GetPatientPatientsPatientId
 import { getPatientPatientsPatientIdGet } from '../clients/getPatientPatientsPatientIdGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getPatientPatientsPatientIdGetQueryKey = ({ path }: Omit<GetPatientPatientsPatientIdGetOptions, 'headers'>) => [{ url: '/patients/:patient_id', params: path }] as const
+export const getPatientPatientsPatientIdGetQueryKey = ({ path, headers }: Omit<GetPatientPatientsPatientIdGetOptions, 'headers'> & { headers?: GetPatientPatientsPatientIdGetOptions['headers'] }) => [{ url: '/patients/:patient_id', params: path }] as const
 
 type GetPatientPatientsPatientIdGetQueryKey = ReturnType<typeof getPatientPatientsPatientIdGetQueryKey>
 
-export function getPatientPatientsPatientIdGetQueryOptions({ path, headers }: GetPatientPatientsPatientIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getPatientPatientsPatientIdGetQueryKey({ path })
+export function getPatientPatientsPatientIdGetQueryOptions({ path, headers }: GetPatientPatientsPatientIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getPatientPatientsPatientIdGetQueryKey({ path, headers })
   return queryOptions<GetPatientPatientsPatientIdGetStatus200, ResponseErrorConfig<GetPatientPatientsPatientIdGetStatus400 | GetPatientPatientsPatientIdGetStatus401 | GetPatientPatientsPatientIdGetStatus403 | GetPatientPatientsPatientIdGetStatus404 | GetPatientPatientsPatientIdGetStatus409 | GetPatientPatientsPatientIdGetStatus422 | GetPatientPatientsPatientIdGetStatus500>, GetPatientPatientsPatientIdGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getPatientPatientsPatientIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getPatientPatientsPatientIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

@@ -8,50 +8,50 @@ import type { PatientOut } from './PatientOut'
 import type { PatientUpdate } from './PatientUpdate'
 
 export type UpdatePatientPatientsPatientIdPatchPath = {
-    patient_id: number;
-};
+  patient_id: number;
+}
 
 export type UpdatePatientPatientsPatientIdPatchHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type UpdatePatientPatientsPatientIdPatchStatus200 = PatientOut;
+export type UpdatePatientPatientsPatientIdPatchStatus200 = PatientOut
 
-export type UpdatePatientPatientsPatientIdPatchStatus400 = ApiErrorResponse;
+export type UpdatePatientPatientsPatientIdPatchStatus400 = ApiErrorResponse
 
-export type UpdatePatientPatientsPatientIdPatchStatus401 = ApiErrorResponse;
+export type UpdatePatientPatientsPatientIdPatchStatus401 = ApiErrorResponse
 
-export type UpdatePatientPatientsPatientIdPatchStatus403 = ApiErrorResponse;
+export type UpdatePatientPatientsPatientIdPatchStatus403 = ApiErrorResponse
 
-export type UpdatePatientPatientsPatientIdPatchStatus404 = ApiErrorResponse;
+export type UpdatePatientPatientsPatientIdPatchStatus404 = ApiErrorResponse
 
-export type UpdatePatientPatientsPatientIdPatchStatus409 = ApiErrorResponse;
+export type UpdatePatientPatientsPatientIdPatchStatus409 = ApiErrorResponse
 
-export type UpdatePatientPatientsPatientIdPatchStatus422 = ApiErrorResponse;
+export type UpdatePatientPatientsPatientIdPatchStatus422 = ApiErrorResponse
 
-export type UpdatePatientPatientsPatientIdPatchStatus500 = ApiErrorResponse;
+export type UpdatePatientPatientsPatientIdPatchStatus500 = ApiErrorResponse
 
-export type UpdatePatientPatientsPatientIdPatchBody = PatientUpdate;
+export type UpdatePatientPatientsPatientIdPatchBody = PatientUpdate
 
 export type UpdatePatientPatientsPatientIdPatchOptions = {
-    body: UpdatePatientPatientsPatientIdPatchBody;
-    path: UpdatePatientPatientsPatientIdPatchPath;
-    query?: never | undefined;
-    headers?: UpdatePatientPatientsPatientIdPatchHeaders | undefined;
-};
+  body: UpdatePatientPatientsPatientIdPatchBody;
+  path: UpdatePatientPatientsPatientIdPatchPath;
+  query?: never | undefined;
+  headers?: UpdatePatientPatientsPatientIdPatchHeaders | undefined;
+}
 
 export type UpdatePatientPatientsPatientIdPatchResponses = {
-    "200": UpdatePatientPatientsPatientIdPatchStatus200;
-    "400": UpdatePatientPatientsPatientIdPatchStatus400;
-    "401": UpdatePatientPatientsPatientIdPatchStatus401;
-    "403": UpdatePatientPatientsPatientIdPatchStatus403;
-    "404": UpdatePatientPatientsPatientIdPatchStatus404;
-    "409": UpdatePatientPatientsPatientIdPatchStatus409;
-    "422": UpdatePatientPatientsPatientIdPatchStatus422;
-    "500": UpdatePatientPatientsPatientIdPatchStatus500;
-};
+  '200': UpdatePatientPatientsPatientIdPatchStatus200;
+  '400': UpdatePatientPatientsPatientIdPatchStatus400;
+  '401': UpdatePatientPatientsPatientIdPatchStatus401;
+  '403': UpdatePatientPatientsPatientIdPatchStatus403;
+  '404': UpdatePatientPatientsPatientIdPatchStatus404;
+  '409': UpdatePatientPatientsPatientIdPatchStatus409;
+  '422': UpdatePatientPatientsPatientIdPatchStatus422;
+  '500': UpdatePatientPatientsPatientIdPatchStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type UpdatePatientPatientsPatientIdPatchResponse = (UpdatePatientPatientsPatientIdPatchStatus200 | UpdatePatientPatientsPatientIdPatchStatus400 | UpdatePatientPatientsPatientIdPatchStatus401 | UpdatePatientPatientsPatientIdPatchStatus403 | UpdatePatientPatientsPatientIdPatchStatus404 | UpdatePatientPatientsPatientIdPatchStatus409 | UpdatePatientPatientsPatientIdPatchStatus422 | UpdatePatientPatientsPatientIdPatchStatus500);
+ */
+export type UpdatePatientPatientsPatientIdPatchResponse = UpdatePatientPatientsPatientIdPatchStatus200

@@ -4,26 +4,27 @@
 */
 
 export const captureSessionStatusOutPurposeEnum = {
-    appointment_attachment: "appointment_attachment",
-    rubber_stamp: "rubber_stamp"
+  appointment_attachment: 'appointment_attachment',
+  rubber_stamp: 'rubber_stamp',
 } as const;
 
-export type CaptureSessionStatusOutPurposeEnumKey = (typeof captureSessionStatusOutPurposeEnum)[keyof typeof captureSessionStatusOutPurposeEnum];
+export type CaptureSessionStatusOutPurposeEnumKey = (typeof captureSessionStatusOutPurposeEnum)[keyof typeof captureSessionStatusOutPurposeEnum]
 
 /**
- * @description Desktop poll response — never carries the token. `relayReady` flags\nthat a rubber_stamp photo is parked and waiting to be pulled.
+ * @description Desktop poll response — never carries the token. `relayReady` flags
+ * that a rubber_stamp photo is parked and waiting to be pulled.
  * @type object
-*/
+ */
 export type CaptureSessionStatusOut = {
-    id: number;
-    purpose: CaptureSessionStatusOutPurposeEnumKey;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    expiresAt: string;
-    closed: boolean;
-    uploadCount: number;
-    relayReady: boolean;
-};
+  id: number;
+  purpose: CaptureSessionStatusOutPurposeEnumKey;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  expiresAt: string;
+  closed: boolean;
+  uploadCount: number;
+  relayReady: boolean;
+}

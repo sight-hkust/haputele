@@ -8,17 +8,16 @@ import type { GetSessionConsentAppointmentsApptIdConsentGetOptions, GetSessionCo
 import { getSessionConsentAppointmentsApptIdConsentGet } from '../clients/getSessionConsentAppointmentsApptIdConsentGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getSessionConsentAppointmentsApptIdConsentGetQueryKey = ({ path }: Omit<GetSessionConsentAppointmentsApptIdConsentGetOptions, 'headers'>) => [{ url: '/appointments/:appt_id/consent', params: path }] as const
+export const getSessionConsentAppointmentsApptIdConsentGetQueryKey = ({ path, headers }: Omit<GetSessionConsentAppointmentsApptIdConsentGetOptions, 'headers'> & { headers?: GetSessionConsentAppointmentsApptIdConsentGetOptions['headers'] }) => [{ url: '/appointments/:appt_id/consent', params: path }] as const
 
 type GetSessionConsentAppointmentsApptIdConsentGetQueryKey = ReturnType<typeof getSessionConsentAppointmentsApptIdConsentGetQueryKey>
 
-export function getSessionConsentAppointmentsApptIdConsentGetQueryOptions({ path, headers }: GetSessionConsentAppointmentsApptIdConsentGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getSessionConsentAppointmentsApptIdConsentGetQueryKey({ path })
+export function getSessionConsentAppointmentsApptIdConsentGetQueryOptions({ path, headers }: GetSessionConsentAppointmentsApptIdConsentGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getSessionConsentAppointmentsApptIdConsentGetQueryKey({ path, headers })
   return queryOptions<GetSessionConsentAppointmentsApptIdConsentGetStatus200, ResponseErrorConfig<GetSessionConsentAppointmentsApptIdConsentGetStatus400 | GetSessionConsentAppointmentsApptIdConsentGetStatus401 | GetSessionConsentAppointmentsApptIdConsentGetStatus403 | GetSessionConsentAppointmentsApptIdConsentGetStatus404 | GetSessionConsentAppointmentsApptIdConsentGetStatus409 | GetSessionConsentAppointmentsApptIdConsentGetStatus422 | GetSessionConsentAppointmentsApptIdConsentGetStatus500>, GetSessionConsentAppointmentsApptIdConsentGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getSessionConsentAppointmentsApptIdConsentGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getSessionConsentAppointmentsApptIdConsentGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

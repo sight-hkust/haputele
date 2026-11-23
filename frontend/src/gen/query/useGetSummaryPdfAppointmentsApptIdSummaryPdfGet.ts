@@ -8,17 +8,16 @@ import type { GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions, GetSummaryPdf
 import { getSummaryPdfAppointmentsApptIdSummaryPdfGet } from '../clients/getSummaryPdfAppointmentsApptIdSummaryPdfGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getSummaryPdfAppointmentsApptIdSummaryPdfGetQueryKey = ({ path }: Omit<GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions, 'headers'>) => [{ url: '/appointments/:appt_id/summary.pdf', params: path }] as const
+export const getSummaryPdfAppointmentsApptIdSummaryPdfGetQueryKey = ({ path, headers }: Omit<GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions, 'headers'> & { headers?: GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions['headers'] }) => [{ url: '/appointments/:appt_id/summary.pdf', params: path }] as const
 
 type GetSummaryPdfAppointmentsApptIdSummaryPdfGetQueryKey = ReturnType<typeof getSummaryPdfAppointmentsApptIdSummaryPdfGetQueryKey>
 
-export function getSummaryPdfAppointmentsApptIdSummaryPdfGetQueryOptions({ path, headers }: GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getSummaryPdfAppointmentsApptIdSummaryPdfGetQueryKey({ path })
+export function getSummaryPdfAppointmentsApptIdSummaryPdfGetQueryOptions({ path, headers }: GetSummaryPdfAppointmentsApptIdSummaryPdfGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getSummaryPdfAppointmentsApptIdSummaryPdfGetQueryKey({ path, headers })
   return queryOptions<GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus200, ResponseErrorConfig<GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus400 | GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus401 | GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus403 | GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus404 | GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus409 | GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus422 | GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus500>, GetSummaryPdfAppointmentsApptIdSummaryPdfGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getSummaryPdfAppointmentsApptIdSummaryPdfGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getSummaryPdfAppointmentsApptIdSummaryPdfGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

@@ -4,6 +4,6 @@
 */
 
 export type ReferralEntry = {
-    specialistOrDepartment?: (string | null) | undefined;
-    instructions?: (string | null) | undefined;
-};
+  specialistOrDepartment?: (string | (null | null)) | undefined;
+  instructions?: (string | (null | null)) | undefined;
+}

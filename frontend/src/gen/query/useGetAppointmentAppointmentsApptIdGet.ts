@@ -8,17 +8,16 @@ import type { GetAppointmentAppointmentsApptIdGetOptions, GetAppointmentAppointm
 import { getAppointmentAppointmentsApptIdGet } from '../clients/getAppointmentAppointmentsApptIdGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getAppointmentAppointmentsApptIdGetQueryKey = ({ path }: Omit<GetAppointmentAppointmentsApptIdGetOptions, 'headers'>) => [{ url: '/appointments/:appt_id', params: path }] as const
+export const getAppointmentAppointmentsApptIdGetQueryKey = ({ path, headers }: Omit<GetAppointmentAppointmentsApptIdGetOptions, 'headers'> & { headers?: GetAppointmentAppointmentsApptIdGetOptions['headers'] }) => [{ url: '/appointments/:appt_id', params: path }] as const
 
 type GetAppointmentAppointmentsApptIdGetQueryKey = ReturnType<typeof getAppointmentAppointmentsApptIdGetQueryKey>
 
-export function getAppointmentAppointmentsApptIdGetQueryOptions({ path, headers }: GetAppointmentAppointmentsApptIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getAppointmentAppointmentsApptIdGetQueryKey({ path })
+export function getAppointmentAppointmentsApptIdGetQueryOptions({ path, headers }: GetAppointmentAppointmentsApptIdGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getAppointmentAppointmentsApptIdGetQueryKey({ path, headers })
   return queryOptions<GetAppointmentAppointmentsApptIdGetStatus200, ResponseErrorConfig<GetAppointmentAppointmentsApptIdGetStatus400 | GetAppointmentAppointmentsApptIdGetStatus401 | GetAppointmentAppointmentsApptIdGetStatus403 | GetAppointmentAppointmentsApptIdGetStatus404 | GetAppointmentAppointmentsApptIdGetStatus409 | GetAppointmentAppointmentsApptIdGetStatus422 | GetAppointmentAppointmentsApptIdGetStatus500>, GetAppointmentAppointmentsApptIdGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getAppointmentAppointmentsApptIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getAppointmentAppointmentsApptIdGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

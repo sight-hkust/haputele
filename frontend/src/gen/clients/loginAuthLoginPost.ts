@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { LoginAuthLoginPostOptions, LoginAuthLoginPostResponses } from '../types/LoginAuthLoginPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `POST /auth/login`
  * @summary Login
- * {@link /auth/login}
  */
-export function loginAuthLoginPost<ThrowOnError extends boolean = true>(options: Options<LoginAuthLoginPostOptions, ThrowOnError>): Promise<RequestResult<LoginAuthLoginPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function loginAuthLoginPost<ThrowOnError extends boolean = true>(options: Options<LoginAuthLoginPostOptions, ThrowOnError>): Unwrappable<RequestResult<LoginAuthLoginPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/auth/login', ...config }) as Promise<RequestResult<LoginAuthLoginPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<LoginAuthLoginPostResponses, ThrowOnError>({ method: 'POST', url: '/auth/login', contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

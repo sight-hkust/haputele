@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const deleteDoctorDoctorsDoctorIdDeleteMutationKey = () => [{ url: '/doctors/:doctor_id' }] as const
 
-export function deleteDoctorDoctorsDoctorIdDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function deleteDoctorDoctorsDoctorIdDeleteMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = deleteDoctorDoctorsDoctorIdDeleteMutationKey()
   return mutationOptions<DeleteDoctorDoctorsDoctorIdDeleteStatus204, ResponseErrorConfig<DeleteDoctorDoctorsDoctorIdDeleteStatus400 | DeleteDoctorDoctorsDoctorIdDeleteStatus401 | DeleteDoctorDoctorsDoctorIdDeleteStatus403 | DeleteDoctorDoctorsDoctorIdDeleteStatus404 | DeleteDoctorDoctorsDoctorIdDeleteStatus409 | DeleteDoctorDoctorsDoctorIdDeleteStatus422 | DeleteDoctorDoctorsDoctorIdDeleteStatus500>, DeleteDoctorDoctorsDoctorIdDeleteOptions, TContext>({
     mutationKey,
     mutationFn: async({ path, headers }) => {
-      const { data } = await deleteDoctorDoctorsDoctorIdDelete({ ...config, path, headers, throwOnError: true })
-      return data
+      return deleteDoctorDoctorsDoctorIdDelete({ ...config, path, headers, throwOnError: true }).unwrap()
     },
   })
 }

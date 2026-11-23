@@ -4,52 +4,54 @@
 */
 
 export const doctorDetailOutOnboardingStatusEnum = {
-    awaiting_setup: "awaiting_setup",
-    awaiting_approval: "awaiting_approval",
-    rejected: "rejected",
-    active: "active"
+  awaiting_setup: 'awaiting_setup',
+  awaiting_approval: 'awaiting_approval',
+  rejected: 'rejected',
+  active: 'active',
 } as const;
 
-export type DoctorDetailOutOnboardingStatusEnumKey = (typeof doctorDetailOutOnboardingStatusEnum)[keyof typeof doctorDetailOutOnboardingStatusEnum];
+export type DoctorDetailOutOnboardingStatusEnumKey = (typeof doctorDetailOutOnboardingStatusEnum)[keyof typeof doctorDetailOutOnboardingStatusEnum]
 
 /**
- * @description Singular `GET /doctors/{id}` response — adds the rubber stamp as a\nbase64 data URL so the admin edit page can re-display the existing image.\nThe list endpoint deliberately uses `DoctorOut` to keep payloads lean.
+ * @description Singular `GET /doctors/{id}` response — adds the rubber stamp as a
+ * base64 data URL so the admin edit page can re-display the existing image.
+ * The list endpoint deliberately uses `DoctorOut` to keep payloads lean.
  * @type object
-*/
+ */
 export type DoctorDetailOut = {
-    id: number;
-    username: string;
-    givenName: string;
-    familyName: string;
-    contact: string;
-    email: string;
-    slmcRegistrationNumber: string;
-    qualifications: string;
-    practitionerAddress: string;
-    instituteName: string;
-    instituteContact?: (string | null) | undefined;
-    /**
-     * @default false
-     * @type boolean | undefined
-    */
-    hasDefaultSignature?: boolean | undefined;
-    active: boolean;
-    /**
-     * @default 'active'
-     * @type string | undefined
-    */
-    onboardingStatus?: DoctorDetailOutOnboardingStatusEnumKey | undefined;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    submittedAt: string;
-    approvedAt?: (string | null) | undefined;
-    rejectedAt?: (string | null) | undefined;
-    rejectedReason?: (string | null) | undefined;
-    approvedBy?: (string | null) | undefined;
-    rejectedBy?: (string | null) | undefined;
-    previousDoctorId?: (number | null) | undefined;
-    rubberStampImage?: (string | null) | undefined;
-};
+  id: number;
+  username: string;
+  givenName: string;
+  familyName: string;
+  contact: string;
+  email: string;
+  slmcRegistrationNumber: string;
+  qualifications: string;
+  practitionerAddress: string;
+  instituteName: string;
+  instituteContact?: (string | (null | null)) | undefined;
+  /**
+   * @default false
+   * @type boolean | undefined
+   */
+  hasDefaultSignature?: boolean | undefined;
+  active: boolean;
+  /**
+   * @default 'active'
+   * @type string | undefined
+   */
+  onboardingStatus?: DoctorDetailOutOnboardingStatusEnumKey | undefined;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  submittedAt: string;
+  approvedAt?: (string | (null | null)) | undefined;
+  rejectedAt?: (string | (null | null)) | undefined;
+  rejectedReason?: (string | (null | null)) | undefined;
+  approvedBy?: (string | (null | null)) | undefined;
+  rejectedBy?: (string | (null | null)) | undefined;
+  previousDoctorId?: (number | (null | null)) | undefined;
+  rubberStampImage?: (string | (null | null)) | undefined;
+}

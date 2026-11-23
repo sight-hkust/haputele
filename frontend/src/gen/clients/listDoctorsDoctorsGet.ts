@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { ListDoctorsDoctorsGetOptions, ListDoctorsDoctorsGetResponses } from '../types/ListDoctorsDoctorsGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `GET /doctors`
  * @description List doctors, newest submission first.
  * `status` filters by the computed onboarding status (admin-only buckets
  * awaiting_approval / awaiting_setup / rejected are meaningless for the
@@ -15,10 +16,9 @@ import { client } from '../.kubb/client'
  * awaiting_setup depends on invite liveness — not a column — the status
  * filter is applied after the per-row computation rather than in SQL.
  * @summary List Doctors
- * {@link /doctors}
  */
-export function listDoctorsDoctorsGet<ThrowOnError extends boolean = true>(options: Options<ListDoctorsDoctorsGetOptions, ThrowOnError> = {}): Promise<RequestResult<ListDoctorsDoctorsGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function listDoctorsDoctorsGet<ThrowOnError extends boolean = true>(options: Options<ListDoctorsDoctorsGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<ListDoctorsDoctorsGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/doctors', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<ListDoctorsDoctorsGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<ListDoctorsDoctorsGetResponses, ThrowOnError>({ method: 'GET', url: '/doctors', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

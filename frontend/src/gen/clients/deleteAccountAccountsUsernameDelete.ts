@@ -3,18 +3,18 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { DeleteAccountAccountsUsernameDeleteOptions, DeleteAccountAccountsUsernameDeleteResponses } from '../types/DeleteAccountAccountsUsernameDelete'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `DELETE /accounts/{username}`
  * @description Hard-delete an operating account. Refuses (409 `account_in_use`) if
  * the account is FK-referenced by data it created — disable it instead.
  * @summary Delete Account
- * {@link /accounts/:username}
  */
-export function deleteAccountAccountsUsernameDelete<ThrowOnError extends boolean = true>(options: Options<DeleteAccountAccountsUsernameDeleteOptions, ThrowOnError>): Promise<RequestResult<DeleteAccountAccountsUsernameDeleteResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function deleteAccountAccountsUsernameDelete<ThrowOnError extends boolean = true>(options: Options<DeleteAccountAccountsUsernameDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<DeleteAccountAccountsUsernameDeleteResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'DELETE', url: '/accounts/{username}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<DeleteAccountAccountsUsernameDeleteResponses, ThrowOnError>>
+  return withUnwrap(apiClient<DeleteAccountAccountsUsernameDeleteResponses, ThrowOnError>({ method: 'DELETE', url: '/accounts/{username}', security: [securitySchemes.SessionCookie], ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

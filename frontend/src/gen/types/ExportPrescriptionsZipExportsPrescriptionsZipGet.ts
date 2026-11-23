@@ -6,64 +6,63 @@
 import type { ApiErrorResponse } from './ApiErrorResponse'
 
 export type ExportPrescriptionsZipExportsPrescriptionsZipGetQuery = {
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    from: string;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    to: string;
-};
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  from: string;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  to: string;
+}
 
 export type ExportPrescriptionsZipExportsPrescriptionsZipGetHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
 /**
  * @description
  * Format: `binary`
- * @type string
-*/
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus200 = Blob;
+ */
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus200 = Blob
 
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus400 = ApiErrorResponse;
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus400 = ApiErrorResponse
 
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus401 = ApiErrorResponse;
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus401 = ApiErrorResponse
 
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus403 = ApiErrorResponse;
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus403 = ApiErrorResponse
 
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus404 = ApiErrorResponse;
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus404 = ApiErrorResponse
 
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus409 = ApiErrorResponse;
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus409 = ApiErrorResponse
 
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus422 = ApiErrorResponse;
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus422 = ApiErrorResponse
 
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus500 = ApiErrorResponse;
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetStatus500 = ApiErrorResponse
 
 export type ExportPrescriptionsZipExportsPrescriptionsZipGetOptions = {
-    body?: never | undefined;
-    path?: never | undefined;
-    query: ExportPrescriptionsZipExportsPrescriptionsZipGetQuery;
-    headers?: ExportPrescriptionsZipExportsPrescriptionsZipGetHeaders | undefined;
-};
+  body?: never | undefined;
+  path?: never | undefined;
+  query: ExportPrescriptionsZipExportsPrescriptionsZipGetQuery;
+  headers?: ExportPrescriptionsZipExportsPrescriptionsZipGetHeaders | undefined;
+}
 
 export type ExportPrescriptionsZipExportsPrescriptionsZipGetResponses = {
-    "200": ExportPrescriptionsZipExportsPrescriptionsZipGetStatus200;
-    "400": ExportPrescriptionsZipExportsPrescriptionsZipGetStatus400;
-    "401": ExportPrescriptionsZipExportsPrescriptionsZipGetStatus401;
-    "403": ExportPrescriptionsZipExportsPrescriptionsZipGetStatus403;
-    "404": ExportPrescriptionsZipExportsPrescriptionsZipGetStatus404;
-    "409": ExportPrescriptionsZipExportsPrescriptionsZipGetStatus409;
-    "422": ExportPrescriptionsZipExportsPrescriptionsZipGetStatus422;
-    "500": ExportPrescriptionsZipExportsPrescriptionsZipGetStatus500;
-};
+  '200': ExportPrescriptionsZipExportsPrescriptionsZipGetStatus200;
+  '400': ExportPrescriptionsZipExportsPrescriptionsZipGetStatus400;
+  '401': ExportPrescriptionsZipExportsPrescriptionsZipGetStatus401;
+  '403': ExportPrescriptionsZipExportsPrescriptionsZipGetStatus403;
+  '404': ExportPrescriptionsZipExportsPrescriptionsZipGetStatus404;
+  '409': ExportPrescriptionsZipExportsPrescriptionsZipGetStatus409;
+  '422': ExportPrescriptionsZipExportsPrescriptionsZipGetStatus422;
+  '500': ExportPrescriptionsZipExportsPrescriptionsZipGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type ExportPrescriptionsZipExportsPrescriptionsZipGetResponse = (ExportPrescriptionsZipExportsPrescriptionsZipGetStatus200 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus400 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus401 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus403 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus404 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus409 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus422 | ExportPrescriptionsZipExportsPrescriptionsZipGetStatus500);
+ */
+export type ExportPrescriptionsZipExportsPrescriptionsZipGetResponse = ExportPrescriptionsZipExportsPrescriptionsZipGetStatus200

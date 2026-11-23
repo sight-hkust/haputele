@@ -4,21 +4,23 @@
 */
 
 /**
- * @description Metadata for an appointment attachment. The raw bytes are fetched via\nthe singular `GET /appointments/{id}/attachments/{aid}` endpoint so the\nJSON payload stays small.
+ * @description Metadata for an appointment attachment. The raw bytes are fetched via
+ * the singular `GET /appointments/{id}/attachments/{aid}` endpoint so the
+ * JSON payload stays small.
  * @type object
-*/
+ */
 export type AttachmentMetaOut = {
-    id: number;
-    appointmentId: number;
-    filename: string;
-    mimeType: string;
-    byteSize: number;
-    caption?: (string | null) | undefined;
-    uploadedBy: string;
-    /**
-     * @description
-     * Format: `date-time`
-     * @type string
-    */
-    uploadedAt: string;
-};
+  id: number;
+  appointmentId: number;
+  filename: string;
+  mimeType: string;
+  byteSize: number;
+  caption?: (string | (null | null)) | undefined;
+  uploadedBy: string;
+  /**
+   * @description
+   * Format: `date-time`
+   * @type string
+   */
+  uploadedAt: string;
+}

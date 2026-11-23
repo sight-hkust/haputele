@@ -12,13 +12,12 @@ export const setupStatusSetupStatusGetQueryKey = () => [{ url: '/setup/status' }
 
 type SetupStatusSetupStatusGetQueryKey = ReturnType<typeof setupStatusSetupStatusGetQueryKey>
 
-export function setupStatusSetupStatusGetQueryOptions(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function setupStatusSetupStatusGetQueryOptions(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const queryKey = setupStatusSetupStatusGetQueryKey()
   return queryOptions<SetupStatusSetupStatusGetStatus200, ResponseErrorConfig<SetupStatusSetupStatusGetStatus400 | SetupStatusSetupStatusGetStatus401 | SetupStatusSetupStatusGetStatus403 | SetupStatusSetupStatusGetStatus404 | SetupStatusSetupStatusGetStatus409 | SetupStatusSetupStatusGetStatus422 | SetupStatusSetupStatusGetStatus500>, SetupStatusSetupStatusGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await setupStatusSetupStatusGet({ ...config, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return setupStatusSetupStatusGet({ ...config, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

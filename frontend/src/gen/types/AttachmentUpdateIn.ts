@@ -4,5 +4,5 @@
 */
 
 export type AttachmentUpdateIn = {
-    caption?: (string | null) | undefined;
-};
+  caption?: (string | (null | null)) | undefined;
+}

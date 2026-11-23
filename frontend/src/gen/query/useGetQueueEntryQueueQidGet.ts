@@ -8,17 +8,16 @@ import type { GetQueueEntryQueueQidGetOptions, GetQueueEntryQueueQidGetStatus200
 import { getQueueEntryQueueQidGet } from '../clients/getQueueEntryQueueQidGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const getQueueEntryQueueQidGetQueryKey = ({ path }: Omit<GetQueueEntryQueueQidGetOptions, 'headers'>) => [{ url: '/queue/:qid', params: path }] as const
+export const getQueueEntryQueueQidGetQueryKey = ({ path, headers }: Omit<GetQueueEntryQueueQidGetOptions, 'headers'> & { headers?: GetQueueEntryQueueQidGetOptions['headers'] }) => [{ url: '/queue/:qid', params: path }] as const
 
 type GetQueueEntryQueueQidGetQueryKey = ReturnType<typeof getQueueEntryQueueQidGetQueryKey>
 
-export function getQueueEntryQueueQidGetQueryOptions({ path, headers }: GetQueueEntryQueueQidGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = getQueueEntryQueueQidGetQueryKey({ path })
+export function getQueueEntryQueueQidGetQueryOptions({ path, headers }: GetQueueEntryQueueQidGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = getQueueEntryQueueQidGetQueryKey({ path, headers })
   return queryOptions<GetQueueEntryQueueQidGetStatus200, ResponseErrorConfig<GetQueueEntryQueueQidGetStatus400 | GetQueueEntryQueueQidGetStatus401 | GetQueueEntryQueueQidGetStatus403 | GetQueueEntryQueueQidGetStatus404 | GetQueueEntryQueueQidGetStatus409 | GetQueueEntryQueueQidGetStatus422 | GetQueueEntryQueueQidGetStatus500>, GetQueueEntryQueueQidGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await getQueueEntryQueueQidGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return getQueueEntryQueueQidGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

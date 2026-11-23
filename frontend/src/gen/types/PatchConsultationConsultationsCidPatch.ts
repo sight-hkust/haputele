@@ -8,50 +8,50 @@ import type { ConsultationOut } from './ConsultationOut'
 import type { ConsultationPatch } from './ConsultationPatch'
 
 export type PatchConsultationConsultationsCidPatchPath = {
-    cid: number;
-};
+  cid: number;
+}
 
 export type PatchConsultationConsultationsCidPatchHeaders = {
-    "X-CSRF-Token"?: (string | null) | undefined;
-};
+  'X-CSRF-Token'?: (string | (null | null)) | undefined;
+}
 
-export type PatchConsultationConsultationsCidPatchStatus200 = ConsultationOut;
+export type PatchConsultationConsultationsCidPatchStatus200 = ConsultationOut
 
-export type PatchConsultationConsultationsCidPatchStatus400 = ApiErrorResponse;
+export type PatchConsultationConsultationsCidPatchStatus400 = ApiErrorResponse
 
-export type PatchConsultationConsultationsCidPatchStatus401 = ApiErrorResponse;
+export type PatchConsultationConsultationsCidPatchStatus401 = ApiErrorResponse
 
-export type PatchConsultationConsultationsCidPatchStatus403 = ApiErrorResponse;
+export type PatchConsultationConsultationsCidPatchStatus403 = ApiErrorResponse
 
-export type PatchConsultationConsultationsCidPatchStatus404 = ApiErrorResponse;
+export type PatchConsultationConsultationsCidPatchStatus404 = ApiErrorResponse
 
-export type PatchConsultationConsultationsCidPatchStatus409 = ApiErrorResponse;
+export type PatchConsultationConsultationsCidPatchStatus409 = ApiErrorResponse
 
-export type PatchConsultationConsultationsCidPatchStatus422 = ApiErrorResponse;
+export type PatchConsultationConsultationsCidPatchStatus422 = ApiErrorResponse
 
-export type PatchConsultationConsultationsCidPatchStatus500 = ApiErrorResponse;
+export type PatchConsultationConsultationsCidPatchStatus500 = ApiErrorResponse
 
-export type PatchConsultationConsultationsCidPatchBody = ConsultationPatch;
+export type PatchConsultationConsultationsCidPatchBody = ConsultationPatch
 
 export type PatchConsultationConsultationsCidPatchOptions = {
-    body: PatchConsultationConsultationsCidPatchBody;
-    path: PatchConsultationConsultationsCidPatchPath;
-    query?: never | undefined;
-    headers?: PatchConsultationConsultationsCidPatchHeaders | undefined;
-};
+  body: PatchConsultationConsultationsCidPatchBody;
+  path: PatchConsultationConsultationsCidPatchPath;
+  query?: never | undefined;
+  headers?: PatchConsultationConsultationsCidPatchHeaders | undefined;
+}
 
 export type PatchConsultationConsultationsCidPatchResponses = {
-    "200": PatchConsultationConsultationsCidPatchStatus200;
-    "400": PatchConsultationConsultationsCidPatchStatus400;
-    "401": PatchConsultationConsultationsCidPatchStatus401;
-    "403": PatchConsultationConsultationsCidPatchStatus403;
-    "404": PatchConsultationConsultationsCidPatchStatus404;
-    "409": PatchConsultationConsultationsCidPatchStatus409;
-    "422": PatchConsultationConsultationsCidPatchStatus422;
-    "500": PatchConsultationConsultationsCidPatchStatus500;
-};
+  '200': PatchConsultationConsultationsCidPatchStatus200;
+  '400': PatchConsultationConsultationsCidPatchStatus400;
+  '401': PatchConsultationConsultationsCidPatchStatus401;
+  '403': PatchConsultationConsultationsCidPatchStatus403;
+  '404': PatchConsultationConsultationsCidPatchStatus404;
+  '409': PatchConsultationConsultationsCidPatchStatus409;
+  '422': PatchConsultationConsultationsCidPatchStatus422;
+  '500': PatchConsultationConsultationsCidPatchStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type PatchConsultationConsultationsCidPatchResponse = (PatchConsultationConsultationsCidPatchStatus200 | PatchConsultationConsultationsCidPatchStatus400 | PatchConsultationConsultationsCidPatchStatus401 | PatchConsultationConsultationsCidPatchStatus403 | PatchConsultationConsultationsCidPatchStatus404 | PatchConsultationConsultationsCidPatchStatus409 | PatchConsultationConsultationsCidPatchStatus422 | PatchConsultationConsultationsCidPatchStatus500);
+ */
+export type PatchConsultationConsultationsCidPatchResponse = PatchConsultationConsultationsCidPatchStatus200

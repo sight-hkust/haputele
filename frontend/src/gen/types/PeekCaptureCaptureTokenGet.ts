@@ -7,48 +7,50 @@ import type { ApiErrorResponse } from './ApiErrorResponse'
 import type { CapturePeekOut } from './CapturePeekOut'
 
 export type PeekCaptureCaptureTokenGetPath = {
-    token: string;
-};
+  token: string;
+}
 
 /**
- * @description Phone → server peek: just enough for the capture page to render the\nright UI. No appointment/patient detail — the scanner is unauthenticated\nbeyond holding the token, so we leak nothing identifying.
+ * @description Phone → server peek: just enough for the capture page to render the
+ * right UI. No appointment/patient detail — the scanner is unauthenticated
+ * beyond holding the token, so we leak nothing identifying.
  * @type object
-*/
-export type PeekCaptureCaptureTokenGetStatus200 = CapturePeekOut;
+ */
+export type PeekCaptureCaptureTokenGetStatus200 = CapturePeekOut
 
-export type PeekCaptureCaptureTokenGetStatus400 = ApiErrorResponse;
+export type PeekCaptureCaptureTokenGetStatus400 = ApiErrorResponse
 
-export type PeekCaptureCaptureTokenGetStatus401 = ApiErrorResponse;
+export type PeekCaptureCaptureTokenGetStatus401 = ApiErrorResponse
 
-export type PeekCaptureCaptureTokenGetStatus403 = ApiErrorResponse;
+export type PeekCaptureCaptureTokenGetStatus403 = ApiErrorResponse
 
-export type PeekCaptureCaptureTokenGetStatus404 = ApiErrorResponse;
+export type PeekCaptureCaptureTokenGetStatus404 = ApiErrorResponse
 
-export type PeekCaptureCaptureTokenGetStatus409 = ApiErrorResponse;
+export type PeekCaptureCaptureTokenGetStatus409 = ApiErrorResponse
 
-export type PeekCaptureCaptureTokenGetStatus422 = ApiErrorResponse;
+export type PeekCaptureCaptureTokenGetStatus422 = ApiErrorResponse
 
-export type PeekCaptureCaptureTokenGetStatus500 = ApiErrorResponse;
+export type PeekCaptureCaptureTokenGetStatus500 = ApiErrorResponse
 
 export type PeekCaptureCaptureTokenGetOptions = {
-    body?: never | undefined;
-    path: PeekCaptureCaptureTokenGetPath;
-    query?: never | undefined;
-    headers?: never | undefined;
-};
+  body?: never | undefined;
+  path: PeekCaptureCaptureTokenGetPath;
+  query?: never | undefined;
+  headers?: never | undefined;
+}
 
 export type PeekCaptureCaptureTokenGetResponses = {
-    "200": PeekCaptureCaptureTokenGetStatus200;
-    "400": PeekCaptureCaptureTokenGetStatus400;
-    "401": PeekCaptureCaptureTokenGetStatus401;
-    "403": PeekCaptureCaptureTokenGetStatus403;
-    "404": PeekCaptureCaptureTokenGetStatus404;
-    "409": PeekCaptureCaptureTokenGetStatus409;
-    "422": PeekCaptureCaptureTokenGetStatus422;
-    "500": PeekCaptureCaptureTokenGetStatus500;
-};
+  '200': PeekCaptureCaptureTokenGetStatus200;
+  '400': PeekCaptureCaptureTokenGetStatus400;
+  '401': PeekCaptureCaptureTokenGetStatus401;
+  '403': PeekCaptureCaptureTokenGetStatus403;
+  '404': PeekCaptureCaptureTokenGetStatus404;
+  '409': PeekCaptureCaptureTokenGetStatus409;
+  '422': PeekCaptureCaptureTokenGetStatus422;
+  '500': PeekCaptureCaptureTokenGetStatus500;
+}
 
 /**
  * @description Union of all possible responses
-*/
-export type PeekCaptureCaptureTokenGetResponse = (PeekCaptureCaptureTokenGetStatus200 | PeekCaptureCaptureTokenGetStatus400 | PeekCaptureCaptureTokenGetStatus401 | PeekCaptureCaptureTokenGetStatus403 | PeekCaptureCaptureTokenGetStatus404 | PeekCaptureCaptureTokenGetStatus409 | PeekCaptureCaptureTokenGetStatus422 | PeekCaptureCaptureTokenGetStatus500);
+ */
+export type PeekCaptureCaptureTokenGetResponse = PeekCaptureCaptureTokenGetStatus200

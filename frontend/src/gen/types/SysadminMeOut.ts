@@ -6,10 +6,10 @@
 /**
  * @description GET /sysadmin/me.
  * @type object
-*/
+ */
 export type SysadminMeOut = {
-    username: string;
-    role: "sys-admin";
-    fullName?: (string | null) | undefined;
-    contact?: (string | null) | undefined;
-};
+  username: string;
+  role: 'sys-admin';
+  fullName?: (string | (null | null)) | undefined;
+  contact?: (string | (null | null)) | undefined;
+}

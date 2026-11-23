@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UpsertPreconsultAppointmentsApptIdPreconsultPutOptions, UpsertPreconsultAppointmentsApptIdPreconsultPutResponses } from '../types/UpsertPreconsultAppointmentsApptIdPreconsultPut'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `PUT /appointments/{appt_id}/preconsult`
  * @summary Upsert Preconsult
- * {@link /appointments/:appt_id/preconsult}
  */
-export function upsertPreconsultAppointmentsApptIdPreconsultPut<ThrowOnError extends boolean = true>(options: Options<UpsertPreconsultAppointmentsApptIdPreconsultPutOptions, ThrowOnError>): Promise<RequestResult<UpsertPreconsultAppointmentsApptIdPreconsultPutResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function upsertPreconsultAppointmentsApptIdPreconsultPut<ThrowOnError extends boolean = true>(options: Options<UpsertPreconsultAppointmentsApptIdPreconsultPutOptions, ThrowOnError>): Unwrappable<RequestResult<UpsertPreconsultAppointmentsApptIdPreconsultPutResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'PUT', url: '/appointments/{appt_id}/preconsult', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<UpsertPreconsultAppointmentsApptIdPreconsultPutResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UpsertPreconsultAppointmentsApptIdPreconsultPutResponses, ThrowOnError>({ method: 'PUT', url: '/appointments/{appt_id}/preconsult', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

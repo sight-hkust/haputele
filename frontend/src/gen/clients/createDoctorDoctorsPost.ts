@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { CreateDoctorDoctorsPostOptions, CreateDoctorDoctorsPostResponses } from '../types/CreateDoctorDoctorsPost'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `POST /doctors`
  * @description Legacy admin-fills-everything path. Two sub-modes by `password`:
  * password set    → admin types the password and shares it offline.
  * password absent → password-rotation invite goes out to the doctor's
@@ -17,10 +18,9 @@ import { client } from '../.kubb/client'
  * themselves so there's nothing to review. For the "doctor fills
  * everything" path use POST /doctors/invites instead.
  * @summary Create Doctor
- * {@link /doctors}
  */
-export function createDoctorDoctorsPost<ThrowOnError extends boolean = true>(options: Options<CreateDoctorDoctorsPostOptions, ThrowOnError>): Promise<RequestResult<CreateDoctorDoctorsPostResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function createDoctorDoctorsPost<ThrowOnError extends boolean = true>(options: Options<CreateDoctorDoctorsPostOptions, ThrowOnError>): Unwrappable<RequestResult<CreateDoctorDoctorsPostResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'POST', url: '/doctors', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<CreateDoctorDoctorsPostResponses, ThrowOnError>>
+  return withUnwrap(apiClient<CreateDoctorDoctorsPostResponses, ThrowOnError>({ method: 'POST', url: '/doctors', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

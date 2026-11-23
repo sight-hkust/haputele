@@ -8,17 +8,16 @@ import type { PullCaptureRelayCaptureSessionsSessionIdRelayGetOptions, PullCaptu
 import { pullCaptureRelayCaptureSessionsSessionIdRelayGet } from '../clients/pullCaptureRelayCaptureSessionsSessionIdRelayGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const pullCaptureRelayCaptureSessionsSessionIdRelayGetQueryKey = ({ path }: Omit<PullCaptureRelayCaptureSessionsSessionIdRelayGetOptions, 'headers'>) => [{ url: '/capture/sessions/:session_id/relay', params: path }] as const
+export const pullCaptureRelayCaptureSessionsSessionIdRelayGetQueryKey = ({ path, headers }: Omit<PullCaptureRelayCaptureSessionsSessionIdRelayGetOptions, 'headers'> & { headers?: PullCaptureRelayCaptureSessionsSessionIdRelayGetOptions['headers'] }) => [{ url: '/capture/sessions/:session_id/relay', params: path }] as const
 
 type PullCaptureRelayCaptureSessionsSessionIdRelayGetQueryKey = ReturnType<typeof pullCaptureRelayCaptureSessionsSessionIdRelayGetQueryKey>
 
-export function pullCaptureRelayCaptureSessionsSessionIdRelayGetQueryOptions({ path, headers }: PullCaptureRelayCaptureSessionsSessionIdRelayGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = pullCaptureRelayCaptureSessionsSessionIdRelayGetQueryKey({ path })
+export function pullCaptureRelayCaptureSessionsSessionIdRelayGetQueryOptions({ path, headers }: PullCaptureRelayCaptureSessionsSessionIdRelayGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = pullCaptureRelayCaptureSessionsSessionIdRelayGetQueryKey({ path, headers })
   return queryOptions<PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200, ResponseErrorConfig<PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus400 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus401 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus403 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus404 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus409 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus422 | PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus500>, PullCaptureRelayCaptureSessionsSessionIdRelayGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await pullCaptureRelayCaptureSessionsSessionIdRelayGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return pullCaptureRelayCaptureSessionsSessionIdRelayGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

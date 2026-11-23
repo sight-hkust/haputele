@@ -8,17 +8,16 @@ import type { PatientHistoryPatientsPatientIdHistoryGetOptions, PatientHistoryPa
 import { patientHistoryPatientsPatientIdHistoryGet } from '../clients/patientHistoryPatientsPatientIdHistoryGet'
 import { queryOptions } from '@tanstack/react-query'
 
-export const patientHistoryPatientsPatientIdHistoryGetQueryKey = ({ path }: Omit<PatientHistoryPatientsPatientIdHistoryGetOptions, 'headers'>) => [{ url: '/patients/:patient_id/history', params: path }] as const
+export const patientHistoryPatientsPatientIdHistoryGetQueryKey = ({ path, headers }: Omit<PatientHistoryPatientsPatientIdHistoryGetOptions, 'headers'> & { headers?: PatientHistoryPatientsPatientIdHistoryGetOptions['headers'] }) => [{ url: '/patients/:patient_id/history', params: path }] as const
 
 type PatientHistoryPatientsPatientIdHistoryGetQueryKey = ReturnType<typeof patientHistoryPatientsPatientIdHistoryGetQueryKey>
 
-export function patientHistoryPatientsPatientIdHistoryGetQueryOptions({ path, headers }: PatientHistoryPatientsPatientIdHistoryGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
-  const queryKey = patientHistoryPatientsPatientIdHistoryGetQueryKey({ path })
+export function patientHistoryPatientsPatientIdHistoryGetQueryOptions({ path, headers }: PatientHistoryPatientsPatientIdHistoryGetOptions, config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
+  const queryKey = patientHistoryPatientsPatientIdHistoryGetQueryKey({ path, headers })
   return queryOptions<PatientHistoryPatientsPatientIdHistoryGetStatus200, ResponseErrorConfig<PatientHistoryPatientsPatientIdHistoryGetStatus400 | PatientHistoryPatientsPatientIdHistoryGetStatus401 | PatientHistoryPatientsPatientIdHistoryGetStatus403 | PatientHistoryPatientsPatientIdHistoryGetStatus404 | PatientHistoryPatientsPatientIdHistoryGetStatus409 | PatientHistoryPatientsPatientIdHistoryGetStatus422 | PatientHistoryPatientsPatientIdHistoryGetStatus500>, PatientHistoryPatientsPatientIdHistoryGetStatus200, typeof queryKey>({
    queryKey,
    queryFn: async ({ signal }) => {
-      const { data } = await patientHistoryPatientsPatientIdHistoryGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true })
-      return data
+      return patientHistoryPatientsPatientIdHistoryGet({ ...config, path, headers, signal: config.signal ?? signal, throwOnError: true }).unwrap()
    },
   })
 }

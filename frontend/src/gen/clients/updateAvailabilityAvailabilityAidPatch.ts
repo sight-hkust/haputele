@@ -3,16 +3,16 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { UpdateAvailabilityAvailabilityAidPatchOptions, UpdateAvailabilityAvailabilityAidPatchResponses } from '../types/UpdateAvailabilityAvailabilityAidPatch'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError, securitySchemes } from '../.kubb/client'
 
 /**
+ * `PATCH /availability/{aid}`
  * @summary Update Availability
- * {@link /availability/:aid}
  */
-export function updateAvailabilityAvailabilityAidPatch<ThrowOnError extends boolean = true>(options: Options<UpdateAvailabilityAvailabilityAidPatchOptions, ThrowOnError>): Promise<RequestResult<UpdateAvailabilityAvailabilityAidPatchResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function updateAvailabilityAvailabilityAidPatch<ThrowOnError extends boolean = true>(options: Options<UpdateAvailabilityAvailabilityAidPatchOptions, ThrowOnError>): Unwrappable<RequestResult<UpdateAvailabilityAvailabilityAidPatchResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'PATCH', url: '/availability/{aid}', security: [{ type: 'apiKey', name: 'session', in: 'cookie' }], ...config }) as Promise<RequestResult<UpdateAvailabilityAvailabilityAidPatchResponses, ThrowOnError>>
+  return withUnwrap(apiClient<UpdateAvailabilityAvailabilityAidPatchResponses, ThrowOnError>({ method: 'PATCH', url: '/availability/{aid}', security: [securitySchemes.SessionCookie], contentType: { request: 'application/json' }, ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

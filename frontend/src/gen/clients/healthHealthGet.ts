@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
-import type { Options, RequestResult } from '../.kubb/client'
+import type { Options, Unwrappable, RequestResult } from '../.kubb/client'
 import type { HealthHealthGetOptions, HealthHealthGetResponses } from '../types/HealthHealthGet'
-import { client } from '../.kubb/client'
+import { client, withUnwrap, resolveThrowOnError } from '../.kubb/client'
 
 /**
+ * `GET /health`
  * @description Liveness probe — process identity only, no dependency is touched,
  * so it stays green while Postgres/S3 are down (that is what restart
  * policies and load balancers should watch).
@@ -17,10 +18,9 @@ import { client } from '../.kubb/client'
  * status "degraded" + 503, so the endpoint can back a real
  * healthcheck. See services/health_probe.py.
  * @summary Health
- * {@link /health}
  */
-export function healthHealthGet<ThrowOnError extends boolean = true>(options: Options<HealthHealthGetOptions, ThrowOnError> = {}): Promise<RequestResult<HealthHealthGetResponses, ThrowOnError>> {
-  const { client: request = client, ...config } = options
+export function healthHealthGet<ThrowOnError extends boolean = true>(options: Options<HealthHealthGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<HealthHealthGetResponses, ThrowOnError>> {
+  const { client: apiClient = client, ...config } = options
 
-  return request({ method: 'GET', url: '/health', ...config }) as Promise<RequestResult<HealthHealthGetResponses, ThrowOnError>>
+  return withUnwrap(apiClient<HealthHealthGetResponses, ThrowOnError>({ method: 'GET', url: '/health', ...config, throwOnError: resolveThrowOnError(config.throwOnError, true) }))
 }

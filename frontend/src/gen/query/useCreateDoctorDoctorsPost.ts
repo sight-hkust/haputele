@@ -10,13 +10,12 @@ import { mutationOptions } from '@tanstack/react-query'
 
 export const createDoctorDoctorsPostMutationKey = () => [{ url: '/doctors' }] as const
 
-export function createDoctorDoctorsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'url'>> = {}) {
+export function createDoctorDoctorsPostMutationOptions<TContext = unknown>(config: Partial<Omit<RequestConfig, 'path' | 'query' | 'body' | 'headers' | 'cookies' | 'url' | 'throwOnError'>> = {}) {
   const mutationKey = createDoctorDoctorsPostMutationKey()
   return mutationOptions<CreateDoctorDoctorsPostStatus201, ResponseErrorConfig<CreateDoctorDoctorsPostStatus400 | CreateDoctorDoctorsPostStatus401 | CreateDoctorDoctorsPostStatus403 | CreateDoctorDoctorsPostStatus404 | CreateDoctorDoctorsPostStatus409 | CreateDoctorDoctorsPostStatus422 | CreateDoctorDoctorsPostStatus500>, CreateDoctorDoctorsPostOptions, TContext>({
     mutationKey,
     mutationFn: async({ body, headers }) => {
-      const { data } = await createDoctorDoctorsPost({ ...config, body, headers, throwOnError: true })
-      return data
+      return createDoctorDoctorsPost({ ...config, body, headers, throwOnError: true }).unwrap()
     },
   })
 }

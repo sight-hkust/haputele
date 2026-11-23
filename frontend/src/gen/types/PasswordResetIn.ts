@@ -4,5 +4,5 @@
 */
 
 export type PasswordResetIn = {
-    password: string;
-};
+  password: string;
+}
