@@ -165,7 +165,7 @@ export function CameraCaptureModal({
     fileRef.current = null;
   };
 
-  const usePhoto = () => {
+  const confirmPhoto = () => {
     if (fileRef.current) onCapture(fileRef.current);
     onClose();
   };
@@ -225,7 +225,7 @@ export function CameraCaptureModal({
                       <RefreshCw className="h-4 w-4" />
                       Retake
                     </Button>
-                    <Button type="button" onClick={usePhoto}>
+                    <Button type="button" onClick={confirmPhoto}>
                       <Check className="h-4 w-4" />
                       Use photo
                     </Button>
