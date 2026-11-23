@@ -102,7 +102,34 @@ names and the few response-presence refinements the OpenAPI schema cannot carry.
 
 ---
 
-## 6. Release Versioning
+## 6. Dependency Updates (Dependabot)
+
+`.github/dependabot.yml` schedules weekly version updates (Mondays 09:00
+Asia/Colombo) across all dependency surfaces: frontend npm, backend pip, CI
+actions, Dockerfile base images, `docker-compose.yml` images, and Terraform
+providers.
+
+* Minor/patch npm and pip bumps arrive as grouped PRs; major bumps arrive
+  individually and deserve a real review (e.g. `fastapi`, `livekit-api`,
+  `svix`, `next`).
+* Every PR runs the same CI gates as hand-written code (`backend-test`,
+  `frontend-checks`, `api-types-drift`, `build`).
+* Deliberately manual: new Python lines (3.12 → 3.13, which Dependabot
+  classes as a *minor* bump), the Node major, and the Postgres major in
+  `docker-compose.yml` (runtime/data migrations), and the exact-pinned
+  `carlpett/sops` Terraform provider.
+* Base images use floating tags (`python:3.12-slim`, `node:24-alpine`,
+  `postgres:16-alpine`) that pick up patch releases at build time, so their
+  Dependabot entries open no PRs until an image is pinned by digest
+  (`image:tag@sha256:…`), after which they refresh the digest weekly. `hkust-contrib/actions/*@latest` and
+  `rustfs/rustfs:latest` are moving tags Dependabot cannot track — pin them
+  to versions to bring them under management.
+* Security updates are separate: they follow Dependabot security alerts and
+  open PRs as soon as a fix is published, independent of the weekly schedule.
+
+---
+
+## 7. Release Versioning
 
 Release tags use the hybrid CalVer/SemVer format `vYYMM.MINOR.PATCH`:
 
