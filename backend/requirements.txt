@@ -12,7 +12,7 @@ PyJWT==2.15.1
 bcrypt==4.2.1
 reportlab==5.1.0
 openpyxl==3.1.5
-livekit-api==1.2.0
+livekit-api==2.0.1
 boto3==1.44.7
 resend==2.55.0
 svix==1.45.1
