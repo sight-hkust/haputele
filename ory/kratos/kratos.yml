@@ -97,7 +97,7 @@ selfservice:
 session:
   lifespan: 8h
 
-# bcrypt keeps the existing app password hashes importable as-is.
+# bcrypt is light on memory for a small VM (argon2 defaults to 128 MB per hash).
 hashers:
   algorithm: bcrypt
   bcrypt:

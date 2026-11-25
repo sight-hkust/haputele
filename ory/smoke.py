@@ -2,7 +2,7 @@
 
 Exercises the design in docs/ory-auth-migration.md without any UI or app code:
   app -> Hydra /oauth2/auth -> /login?login_challenge -> Kratos login flow
-  (email + an imported Python-bcrypt hash) -> Hydra consent -> code ->
+  (email + password) -> Hydra consent -> code ->
   token endpoint -> ID token whose `sub` is the Kratos identity id,
   then RP-initiated logout through Hydra ending the Kratos session.
 Also covers case-insensitive email login and uniqueness, disabled
@@ -12,7 +12,7 @@ admin-set passwords for staff with a placeholder address.
 Run against the dev stack (safe to rerun; every run uses fresh addresses and
 its own OAuth2 client, `haputele-smoke`):
     docker compose up -d kratos hydra
-    python ory/smoke.py        # needs `bcrypt` (in backend/requirements.txt)
+    python ory/smoke.py        # standard library only
 """
 
 import base64
@@ -25,8 +25,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-
-import bcrypt
 
 KRATOS_PUBLIC = "http://localhost:4433"
 KRATOS_ADMIN = "http://localhost:4434"
@@ -86,14 +84,13 @@ def csrf_of(flow):
                 if n["attributes"].get("name") == "csrf_token")
 
 
-# 1. Import an identity with a hash made the way the app makes them.
-hashed = bcrypt.hashpw(PASSWORD.encode(), bcrypt.gensalt()).decode()
+# 1. Admin-create an identity with a password, as the app's account forms will.
 status, _, ident = call(plain, "POST", f"{KRATOS_ADMIN}/admin/identities", {
     "schema_id": "staff",
     "traits": {"email": EMAIL},
-    "credentials": {"password": {"config": {"hashed_password": hashed}}},
+    "credentials": {"password": {"config": {"password": PASSWORD}}},
 })
-check("import identity with Python bcrypt hash", status == 201, f"{hashed[:7]}…, status {status}")
+check("admin creates an identity with a password", status == 201, f"status {status}")
 identity_id = ident["id"]
 print(f"      stored identifier: {ident['credentials']['password']['identifiers']}")
 check("identity has no verifiable addresses (verification disabled)", not ident.get("verifiable_addresses"))
@@ -147,7 +144,7 @@ status, _, result = call(browser, "POST", f"{KRATOS_PUBLIC}/self-service/login?f
     "method": "password", "identifier": EMAIL.upper(), "password": PASSWORD, "csrf_token": csrf_of(flow),
 })
 redirect = (result or {}).get("redirect_browser_to") or ""
-check("Kratos accepts imported hash + uppercase email, hands back to Hydra",
+check("Kratos accepts the password + uppercase email, hands back to Hydra",
       redirect.startswith(f"{HYDRA_PUBLIC}/oauth2/auth") and "login_verifier=" in redirect, f"status {status}")
 
 # 6. Follow Hydra's redirects until it reaches the app callback (consent skipped).

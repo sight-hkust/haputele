@@ -29,8 +29,9 @@
 - Staff sign in with their **email**. Every account must have one, but it is **never verified**, because many rural staff have no working mailbox.
 - Admins can still set passwords. Anyone with a working mailbox can reset their own password by email.
 - Disabling an account or changing a password ends that user's sessions immediately.
+- **Hard cutover:** no accounts, passwords or sessions carry over. Everyone gets a new account (§7).
 
-**Effort:** core migration **35–53 person-days**; OIDC SSO **+5–8** (§9).
+**Effort:** core **27–39 person-days**; OIDC SSO **+5–8** (§9).
 
 **Preconditions:**
 - **Fix production secrets delivery and backups first** (§8.3, issue #121). Adding a secret today replaces the VM, and the database lives on that VM's disk with no backups.
@@ -74,8 +75,8 @@
   - **No `prompt=none` iframe.** When the app JWT expires, the existing 401 → `/login` → `/api/auth/login` path signs the user in again. This is silent while the Kratos session is alive.
   - **Hydra doesn't persist login sessions for Kratos-driven logins.** `hydra_oauth2_authentication_session` stays empty, so silent re-login depends only on the Kratos session [verified-live]. The `auth_time` cap is therefore close to redundant; the real bound is the Kratos session lifespan. Keep it as a backstop.
 - **Revocation: `accounts.session_version`,** carried as the `sv` claim and checked in `current_user` with one primary-key read.
-  - **What bumps it:** admin disable, password reset, delete and "sign out everywhere"; doctor reject, deactivate and purge; Kratos webhooks after a settings password change or a recovery; and every account at cutover.
-  - **A token without `sv` is invalid.** Deploying Phase 1 therefore signs everyone out once, and pre-cutover cookies can't outlive the cutover.
+  - **What bumps it:** admin disable, password reset, delete and "sign out everywhere"; doctor reject, deactivate and purge; Kratos webhooks after a settings password change or a recovery.
+  - **A token without `sv` is invalid.** Deploying Phase 1 therefore signs everyone out once.
   - **Backstop for a failed webhook** (D26): the password is already saved when Kratos calls the webhook, so a lost call would leave stolen sessions alive. The reconcile job also bumps `sv` when an identity's `credentials.password.updated_at` is newer than the account's last bump. Run it every 5 minutes.
   - **Not covered by `sv`:** LiveKit tokens, S3 presigned URLs and the setup JWT keep working until they expire. Keep their lifetimes short.
 - **Username and role come from the app DB,** looked up by `sub`.
@@ -116,7 +117,7 @@
 - **Bootstrap:** `hydra import oauth2-client` isn't idempotent, so add `app/scripts/ensure_oidc_client.py` and run it from `backend/entrypoint.sh` after Alembic.
   - It GETs `/admin/clients/haputele-web`, POSTs if the client is missing, and PUTs if it differs.
   - The client secret comes from env.
-  - In `local` mode it must not stop the `set -e` entrypoint: skip it, or follow the `|| echo` pattern at `entrypoint.sh:17`.
+  - The entrypoint runs under `set -e`, so the script retries until Hydra answers instead of failing on the first error. `api` also depends on Hydra being healthy.
 - **For SSO:** every login, password or SSO, reaches the app as the same kind of ID token. Its `amr` claim (`password` or `oidc`) lets the callback enforce "SSO required for institution X" (§9.3).
 
 ### 2.7 Routing and cookies
@@ -175,30 +176,28 @@ This is `ory/kratos/identity.schema.json` [verified-live]:
 - **No `username` trait.** The app maps `sub` to its own `username`.
 - **Users can't edit traits.** Registration and the `profile` method are disabled, so the settings flow changes only the password (and later SSO links). Only the admin API writes traits.
 - **Role is never a trait.** It stays in `accounts.role`.
-- **Set `external_id = username` on import.** It is unique and fetchable through `GET /admin/identities/by/external/{externalID}`, which makes the import idempotent.
+- **Set `external_id = username` when creating an identity.** It is unique and fetchable through `GET /admin/identities/by/external/{externalID}`, which helps reconciliation.
 
 ### 3.2 Email and username
 
 - **Every account must have an email, but not a working mailbox.** Today only doctors have one: `doctor.email` is NOT NULL, while `accounts` has no email column and admin and health worker accounts carry only a free-text `contact` [code].
   - **`accounts.email`** is a lowercased `String(320)` with a partial unique index `WHERE email IS NOT NULL`. It is the login email and mirrors the Kratos trait for listing, search and Resend.
-  - **It stays nullable for good.** A rejected doctor's account row is a tombstone: reject sets its `email` and `kratos_identity_id` to NULL, and `doctor.email` keeps the audit copy. Rejected doctors keep their email on purpose: the partial index `doctor_one_live_email_idx` (`0014_doctor_status_audit.py:27-31`) lets a reapply reuse the address [code]. "Every live account has an email" is enforced by the import pre-flight and by the identity service, not by NOT NULL.
-  - **Backfill** `accounts.email` from `doctor.email` for doctors that aren't rejected.
+  - **It stays nullable.** A rejected doctor's account row is a tombstone: reject sets its `email` and `kratos_identity_id` to NULL, and `doctor.email` keeps the audit copy. Rejected doctors keep their email on purpose: the partial index `doctor_one_live_email_idx` (`0014_doctor_status_audit.py:27-31`) lets a reapply reuse the address [code]. The identity service makes the email required for every live account.
   - **`doctor.email` stays** as the doctor's profile and audit copy (D22). The identity service writes it together with `accounts.email` while the doctor is live, so its current readers (`doctors.py`, `doctor_invites.py`, the onboarding peek) keep working.
-  - **Every write goes through the identity service** from Phase 1: `create_doctor`, `consume_new_doctor`, `update_doctor`, account create and update, and setup. With Ory, it writes Kratos first, then the app.
-  - **Who enters the missing emails:** the sys-admin for admin accounts and for their own account (System page); admins for health workers (`PERMITTED_TARGETS`, `accounts.py:57-62`). The form is prefilled from `contact` where it parses as an email, for confirmation.
+  - **Every write goes through the identity service:** `create_doctor`, `consume_new_doctor`, `update_doctor`, account create and update, and setup. It writes Kratos first, then the app.
+  - **Email is a required field** wherever an account is created: the account forms (the sys-admin creates admins, admins create health workers, per `PERMITTED_TARGETS`, `accounts.py:57-62`), the setup wizard, legacy doctor create and onboarding.
 - **Staff with no mailbox get a placeholder address** on a subdomain the project owns, such as `nimal.hw@no-mail.<prod domain>` (D24).
   - Give that subdomain a null MX record (RFC 7505), so mail to it is refused at once and can never reach a stranger.
   - **Don't use `.invalid`.** Kratos accepts it [verified-live], but the app's `EmailStr` (`pydantic` 2.13.4 with `email-validator` 2.3.0) rejects it as a special-use name [verified-live].
   - Self-service recovery refuses the placeholder domain (§3.7). Those users go through an admin.
 - **`username` stays the app's internal key.**
   - The app never sees what the user typed at login; the callback maps `sub` to `accounts.kratos_identity_id`.
-  - The 7 foreign keys (§7.2) and the ownership checks are unaffected.
+  - The 7 foreign keys (§7.3) and the ownership checks are unaffected.
   - Emails change, for example when people move institution or fix a typo; keys shouldn't.
 - **New accounts don't choose a username (D23).**
   - The app derives an immutable one from the email: the lowercased local part, reduced to `[a-z0-9._-]`, with `-2`, `-3`… on collision. Usernames appear in URL paths such as `/accounts/{username}`.
   - A reserved list (`admin`, `sys-admin`, `root`, `system`, `support`…) is never derived.
   - It is used in audit trails and LiveKit identities (`hw-{username}`).
-- **Local login accepts the email from Phase 1** (as well as the username). Users can then sign in with their email before cutover, and accounts created with derived usernames can log in while `AUTH_PROVIDER=local`.
 - **Changing an account's email changes its login.** Admins must tell the user.
 
 **Risk of unverified emails.** Recovery goes to whoever owns the address.
@@ -238,7 +237,7 @@ This is `ory/kratos/identity.schema.json` [verified-live]:
 There's no distributed transaction between Kratos and the app.
 - **Actions that revoke access:** commit the app change, including `sv++`, first. A Kratos failure then leaves the user more locked out, never less.
 - **Creates:** create the Kratos identity first, and delete it if the DB commit fails.
-- **Reconciliation** (`identity_reconcile.py`, nightly) converges any remaining drift.
+- **Reconciliation** (`identity_reconcile.py`, every 5 minutes, §5.2(r)) converges any remaining drift.
 
 | Action | Order | If a step fails |
 |---|---|---|
@@ -310,9 +309,9 @@ There's no distributed transaction between Kratos and the app.
 
 | # | Responsibility | Where today [code] | After | Notes |
 |---|---|---|---|---|
-| 1 | Password hashing and storage (bcrypt `$2b$12$`) | `security.py:23-31`, `models.py:25` | K | Hashes import unchanged; keep `hashers.algorithm: bcrypt`, cost 12. |
+| 1 | Password hashing and storage (bcrypt `$2b$12$`) | `security.py:23-31`, `models.py:25` | K | Nothing is imported. Kratos uses bcrypt, cost 12, which is light on memory (§8.5). |
 | 2 | Password policy (min 10, weak list, no edge whitespace) | `services/credentials.py:36-102`, `frontend/src/lib/credentials.ts` | K (self-service) + A (admin-set) | Kratos has `min_password_length: 10`, its HIBP check and the similarity check. The app keeps `NewPassword` for every password it sends to the admin API (admin-set, setup, onboarding), which accepts anything [verified-live]. The username rules go. |
-| 3 | Login | `routers/auth.py:28-68`, `frontend/src/app/login/page.tsx:77-88` | K + H (flow), A (UI) | By email, case-insensitive. Local login also accepts the email from Phase 1. |
+| 3 | Login | `routers/auth.py:28-68`, `frontend/src/app/login/page.tsx:77-88` | K + H (flow), A (UI) | By email, case-insensitive. The local login is deleted. |
 | 4 | Post-login checks: disabled, doctor rejected or pending | `routers/auth.py:44-59` | A | In the callback (`post_login_gate`), then on every request through `sv` and `disabled_at`. `Doctor.active` isn't checked today (D4). |
 | 5 | Session issuance (HS256 JWT, 8h, HttpOnly cookie) | `security.py:34-42,55-86`, `config.py:49-59` | A | Unchanged cookie, minted in the callback, with `sv` added and `exp` capped by `auth_time`. |
 | 6 | Session validation per request | `deps.py:53-71` | A | Unchanged, plus one primary-key read for `sv` and `disabled_at`. |
@@ -385,7 +384,6 @@ There's no distributed transaction between Kratos and the app.
 
 | Variable | Dev value or purpose |
 |---|---|
-| `AUTH_PROVIDER` | `local`, `dual` or `ory` |
 | `KRATOS_ADMIN_URL` | `http://kratos:4434` |
 | `HYDRA_ADMIN_URL` | `http://hydra:4445` |
 | `HYDRA_PUBLIC_INTERNAL_URL` | `http://hydra:4444`, for the token endpoint and JWKS. The issuer host isn't reachable from inside the container. |
@@ -397,8 +395,6 @@ There's no distributed transaction between Kratos and the app.
 | `KRATOS_WEBHOOK_SECRET` | secret |
 | `KRATOS_SESSION_LIFESPAN_MIN` | `480` |
 | `PLACEHOLDER_EMAIL_DOMAIN` | the null-MX subdomain (D24) |
-
-Unknown `AUTH_PROVIDER` values make the app refuse to start.
 
 **Frontend build:** `NEXT_PUBLIC_KRATOS_PUBLIC_URL` is inlined at build time, but `frontend/Dockerfile:18-21` and `docker.yml:334-339` pass only the API URL and timezone. Default it to the relative `/.ory/kratos/public`, and add a build arg for dev.
 
@@ -413,8 +409,7 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
   - `create_token(subject, role, session_version, expires_at=None)` adds `sv` and `typ: "session"`. `decode_token` requires the expected `typ`.
   - Add helpers for the per-`state` `oidc_tx_<prefix>` cookie (10 min, HttpOnly, Lax, `typ: "oidc_tx"`, deleted once used) and the `oidc_idt` cookie (`Path=/api/auth/`).
   - `clear_session_cookies` also clears `oidc_idt`.
-  - `verify_password(pw, None)` returns `False` instead of raising (it catches only `ValueError` and `TypeError` today, `security.py:28-31`). Accounts created after cutover have no local hash, which matters on rollback.
-  - `hash_password` and `verify_password` stay until Phase 6.
+  - `hash_password`, `verify_password` and the `bcrypt` dependency are deleted, along with their callers in `auth.py`, `accounts.py`, `doctors.py`, `setup.py`, `doctor_invites.py` and `demo_invite.py`.
 - **(d) `deps.py`**
   - Restore `import jwt` (Appendix B).
   - `current_user` gains a `db: Session = Depends(db_dep)` parameter (it has none today, `deps.py:53-57`) and one primary-key read:
@@ -432,21 +427,16 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
   ```
   - `require_role` is unchanged.
 - **(e) `models.py`**
-  - **Phase 1:** `Account` adds `email` (nullable, lowercased, partial unique index) and `session_version` (int, not null, default 0).
-  - **Phase 2:** `Account` adds `kratos_identity_id` (UUID, nullable, unique), `invite_issued_at` and `invite_expires_at`, and `password` becomes nullable. These ship before cutover, because the entrypoint runs `alembic upgrade head` under `set -e` and the Ory provider creates accounts without a local hash.
-  - `password` is dropped in Phase 6.
-- **(f) Alembic** (head is `0018` today):
-  - `0019_account_email_session_version` (Phase 1): adds the columns and backfills `email` from non-rejected doctors;
-  - `0020_account_identity_link` (Phase 2): the Phase 2 columns, and `password` nullable;
-  - `0021_institutions` (SSO-1);
-  - `0022_drop_account_password` (Phase 6).
+  - **Phase 1:** `Account` adds `session_version` (int, not null, default 0).
+  - **Phase 2:** `Account` adds `email` (nullable, lowercased, partial unique index `WHERE email IS NOT NULL`), `kratos_identity_id` (UUID, nullable, unique), `invite_issued_at` and `invite_expires_at`, and drops `password`.
+- **(f) Alembic** (head is `0018` today). Schema only; no data is migrated:
+  - `0019_account_session_version` (Phase 1);
+  - `0020_account_identity` (Phase 2);
+  - `0021_institutions` (SSO-1).
 - **(g) New `services/identity.py`**
   - **`IdentityProvider` protocol:** `create(email, password=None)`, `set_password`, `set_email`, `set_active`, `delete`, `revoke_sessions`, `issue_setup_code`.
   - `set_email` writes `accounts.email`, and `doctor.email` for a live doctor.
-  - **Implementations:**
-    - `LocalIdentityProvider`: today's bcrypt column;
-    - `OryIdentityProvider`: the Kratos admin API;
-    - `DualIdentityProvider`: Phase 3; local first, then Kratos, with reconciliation fixing drift.
+  - **Implementations:** `OryIdentityProvider` (the Kratos admin API) and `FakeIdentityProvider` (tests).
   - **Exceptions:** `IdentityConflict` (→ 422 `email_taken`) and `IdentityUnavailable` (→ 503).
   - Exposed as a FastAPI dependency, so tests can override it.
   - **`OryIdentityProvider` calls:**
@@ -464,12 +454,12 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
   - a `HydraAdmin` client for consent, logout and login-session revocation.
 - **(i) `routers/auth.py`**
   - Extract `post_login_gate(db, acct)` from the existing login checks, and add the `Doctor.active` check (D4). Phase 1.
-  - `POST /auth/login` accepts a username or an email from Phase 1 (looked up by `lower(email)`). It is served only when `AUTH_PROVIDER != "ory"`, and is deleted in Phase 6.
+  - `POST /auth/login`, the local password login, is deleted.
   - **New endpoints:**
 
     | Endpoint | Behaviour |
     |---|---|
-    | `GET /auth/login?next=` | In local mode, 302 to `/login?local=1`. Otherwise set `oidc_tx` and 302 to Hydra. |
+    | `GET /auth/login?next=` | Set `oidc_tx` and 302 to Hydra. |
     | `GET /auth/callback` | Check `state`, exchange the code, verify the ID token, look up the account by `sub`, run the gate. On failure, revoke sessions and 303 to `/login?error=<code>`. On success, mint the app JWT, CSRF and `oidc_idt` cookies and 303 to `next` (only paths starting with `/` and not `//`). |
     | `GET /auth/consent` | If the client is `haputele-web`, accept with `grant_scope ∩ {"openid"}`, `remember=true` and `preferred_username`. Otherwise reject with `consent_required`. |
     | `GET /auth/logout/challenge` | Accept if `rp_initiated` and the client is ours; otherwise reject and redirect to `/login`. |
@@ -496,7 +486,7 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
   - `disable` / `enable`: `sv++` on disable, commit, then `set_active`.
   - `delete`: commit, then identity delete.
   - `_account_is_referenced` adds `CaptureSession.created_by` (Appendix B).
-  - The `_self_editable_account` password path is removed at cutover (§4, row 16).
+  - The `_self_editable_account` password path is removed (§4, row 16).
 - **(o) Unchanged:** `middleware/setup_gate.py`.
 - **(p) `services/credentials.py`:** reject passwords over 72 bytes (`password_too_long`), because Kratos's bcrypt rejects them. Mirror it in `frontend/src/lib/credentials.ts`. Drop the username rules and add `NewEmail` (`EmailStr`, lowercased, ≤ 320). The placeholder subdomain is an ordinary domain, so it passes.
 - **(q) New `routers/internal_hooks.py`,** mounted only on the internal listener (port 8001, §2.7): `POST /internal/kratos/events`, with a constant-time-compared header secret.
@@ -504,20 +494,17 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
   - Handlers are idempotent and don't trust the payload: they re-read the identity from Kratos by ID, so a replayed call can at most sign a user out again.
 - **(r) Scripts:**
   - `ensure_oidc_client.py` (§2.6);
-  - `kratos_import.py` (§7.1);
   - `identity_reconcile.py`, every 5 minutes (D26). Nothing in `deployment/` schedules jobs today, so add a systemd timer through Ansible, or a small loop container;
   - `demo_invite.py` switches to the provider, and `demo_seed.py:79-119` stops logging in by username.
 - **(s) Email templates:** §3.5.
 
 ### 5.3 Frontend
 
-- **`app/login/page.tsx`** has five modes:
+- **`app/login/page.tsx`** has four modes:
   - `login_challenge` → open the Kratos browser login flow;
   - `flow` → render it (email and password, institution buttons later), and follow `422 redirect_browser_to`;
-  - `local=1` → the current form, until Phase 6;
   - `error=` → show the message;
   - otherwise → navigate to `/api/auth/login?next=`.
-- **For a few weeks after cutover,** the login page says "Sign in with your email (this replaces your username)".
 - **Unchanged:** the 401 → `/login?next=` redirects and the `lib/auth.tsx` bootstrap.
 - **`lib/auth.tsx`:** `logout` reads `{redirectTo}` and navigates there. Pending approval arrives as `/login?error=account_pending_approval`, not as a 403 (`auth.tsx:75-77` treats a 403 as a bootstrap failure).
 - **New:**
@@ -528,10 +515,10 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
 - **Account forms:**
   - add an email field (with the public-provider warning and placeholder help from §3.2);
   - keep the password field, with a "send invite instead" option for health workers;
-  - the username field goes (Phase 2, while local login already accepts emails);
+  - the username field goes;
   - the roster searches and sorts by email as well as name (`accounts-surface.tsx:130,195`).
 - **Setup wizard** (`app/setup/page.tsx`): the sys-admin stage takes an email (`:266-376`), and the stage that creates admin and health worker accounts uses emails instead of usernames (`:537-640`).
-- **Sys-admin self-service** (`self-account-form.tsx:35`): the password section becomes a link to `/settings` at cutover; add the email field in Phase 1.
+- **Sys-admin self-service** (`self-account-form.tsx:35`): the password section becomes a link to `/settings`, and an email field is added.
 - **Doctor screens:**
   - the onboarding form and the legacy create form (`doctor-form.tsx:46,317-321`) drop the username field;
   - `doctor-onboarding/[token]` loses the rotation panel;
@@ -559,7 +546,7 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
     - a capture-session delete test → 409.
 - **Contract CI job against the real stack** (`db kratos hydra mailpit api`):
   - `tests/contract/test_ory_flow.py` drives `/auth/login` → Hydra → Kratos → consent → callback with an httpx cookie jar.
-  - It also covers bcrypt-import login, recovery through the Mailpit API, a disable revoking access, and logout ending the Kratos session.
+  - It also covers recovery through the Mailpit API, a disable revoking access, and logout ending the Kratos session.
   - `ory/smoke.py` already does most of this without the app.
   - Start Kratos and Hydra with `docker compose`, not GitHub service containers, because service containers can't override the command.
 - **Playwright end-to-end** (new; there's no frontend test runner today), with docker compose:
@@ -579,14 +566,12 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
 
 | Phase | Scope | Person-days |
 |---|---|---|
-| 0 | Dev compose stack and smoke test (**done**). Spikes: callback cookies through the Next rewrite; Hydra and Kratos on sub-paths behind Caddy; the flow renderer; an import dry run on a sanitized dump; app-started recovery (§3.7); what Kratos does when an after-hook webhook fails. | 2–3 |
-| 1 | No Ory dependency; ships on its own. `IdentityProvider` with the local implementation. `session_version`, the `typ` claim and the `current_user` check, and `sv++` at every revoking site (disable, reset, delete, reject, deactivate, purge). `post_login_gate` with D4. `accounts.email` with backfill, the email fields in account, doctor and sys-admin screens and endpoints, and local login by email. Logout without `current_user`. `login_as`. Alembic `0019`. The Appendix B bugs. | 6–9 |
-| 2 | Behind `AUTH_PROVIDER`, dev only. OIDC endpoints with `safe_next`, `OryIdentityProvider`, consent and logout handlers, app-started recovery, the internal listener and Kratos webhook, Kratos UI pages, client bootstrap, derived usernames, the invite option, Alembic `0020`, email templates. | 10–14 |
-| 3 | Import, dual-write, reconciliation with its scheduler. | 3–5 |
-| 4 | Prod infrastructure: secrets delivery, backups (app → kratos → hydra), Caddy routes and rate limits (custom build), prod compose and Ansible for Ory (internal admin network, separate DB roles, no `--dev`, no Mailpit), null-MX placeholder subdomain. | 7–11 |
-| 5 | CI contract job, Playwright, cutover runbook and comms, flag flip, reissue setup links. | 5–8 |
-| 6 | Decommission local auth. | 2–3 |
-| **Core total** | | **35–53** |
+| 0 | Dev compose stack and smoke test (**done**). Spikes: callback cookies through the Next rewrite; Hydra and Kratos on sub-paths behind Caddy; the flow renderer; app-started recovery (§3.7); what Kratos does when an after-hook webhook fails. | 2–3 |
+| 1 | Groundwork with no Ory dependency, shipped to production on its own: `session_version`, the `typ` claim and the `current_user` check; `sv++` at every revoking site (disable, reset, delete, reject, deactivate, purge); `post_login_gate` with D4; logout without `current_user`; `login_as`; Alembic `0019`; the Appendix B bugs. | 3–4 |
+| 2 | The switch, released as one unit (§7.2): `accounts.email` and the identity service; OIDC endpoints with `safe_next`; consent and logout handlers; app-started recovery; the internal listener, Kratos webhook and reconcile job; Kratos UI pages; account, setup and doctor screens with emails and derived usernames; the invite option; email templates; client bootstrap; deleting the local login and `accounts.password`; Alembic `0020`. | 11–15 |
+| 3 | Prod infrastructure: secrets delivery, backups (app → kratos → hydra), Caddy routes and rate limits (custom build), prod compose and Ansible for Ory (internal admin network, separate DB roles, no `--dev`, no Mailpit), null-MX placeholder subdomain. | 7–11 |
+| 4 | CI contract job, Playwright, cutover runbook and comms. | 4–6 |
+| **Core total** | | **27–39** |
 | SSO-1 | Option (a): institutions registry and admin UI, discovery and picker, linking from settings, `sso_required` check, mock IdP in CI, onboarding runbook. | 5–8 |
 | SSO-2 | (b) Polis: +6–10 · (c) OEL: +3–6 plus licence · (d) Ory Network: +8–12 plus subscription. | — |
 
@@ -595,7 +580,7 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
 2. **OSS security-patch lag** across Kratos and Hydra, for a health system (§8.5, D1).
 3. **Kratos and the app DB drifting apart.** Mitigated by the order of operations (§3.4), reconciliation, and `sv` failing closed.
 4. **Account takeover through recovery or invites:** brute-forced recovery codes until §3.7 is in place, and wrong email addresses because nothing is verified (§3.2).
-5. **Cutover surprises:** accounts with no email or a shared one, passwords over 72 bytes, rotation links in flight, everyone signing in again, and with an email instead of the username they know.
+5. **Everyone starts over at cutover:** admins recreate accounts, doctors are re-invited, and staff learn to sign in with an email. Plan the comms and the admins' time.
 6. **Ory availability becomes login availability.** Existing app sessions keep working while Kratos or Hydra is down; only new logins need them.
 7. **No per-account login lockout** in Kratos OSS; per-IP limits only (§3.7).
 8. **Memory on a 2 GB VM** that already runs LiveKit, now with two more Go services [inferred].
@@ -603,27 +588,29 @@ Unknown `AUTH_PROVIDER` values make the app refuse to start.
 
 ---
 
-## 7. Data migration and cutover
+## 7. Cutover
 
-### 7.1 Importing identities
+**Hard cutover (decided 2026-11-25).** No accounts, passwords or sessions carry over, and nothing is imported into Kratos. There is no dual-write, no auth flag and no fallback to the old login: the release that switches to Ory deletes it.
 
-- **API:** `PATCH /admin/identities`, up to 1,000 identities per request, with `credentials.password.config.hashed_password`. Kratos detects bcrypt by `^\$2[abzy]?\$`, so Python `$2b$12$` hashes import and log in unchanged [verified-live].
-- **Per account:**
-  - `traits.email` from `accounts.email`;
-  - `external_id = username`;
-  - `state: inactive` if `disabled_at` is set, or (D4) for an inactive doctor;
-  - no `verifiable_addresses`;
-  - write `kratos_identity_id` back to the app.
-- **Rejected doctors aren't imported.** They can't sign in, their `accounts.email` is NULL, and their email stays free for a reapply.
-- **Pre-flight checks** (any failure stops the import):
-  - every importable account has an email;
-  - no two importable accounts share an email in any case;
-  - every `accounts.password` matches `^\$2[aby]\$`.
-- **Known casualties:**
-  - **Passwords over 72 bytes.** `bcrypt==4.2.1` silently truncated them; Kratos rejects them at compare time, so those users need a reset. They can't be found from the hashes.
-  - **Doctors with a live rotation invite at cutover.** Their links stop working; reissue them as Kratos codes on cutover day.
+### 7.1 Starting up
 
-### 7.2 `username` stays the key
+- **Assumption:** production starts from an empty database at cutover.
+- The first-run wizard creates the sys-admin, with a Kratos identity.
+- Accounts are recreated through the normal flows: the sys-admin creates admins, admins create health workers, and doctors are invited again.
+
+### 7.2 Building and releasing it
+
+- **Phase 1 ships to production on its own.** It doesn't touch Ory.
+- **Phase 2 lands on an integration branch** (`feature/ory-auth`), with one PR per issue targeting it, and merges to `main` once complete.
+  - `main` then stays deployable for hotfixes in the meantime.
+  - Deploys are manual (`deploy.yml` is `workflow_dispatch`), so nothing ships by accident either way.
+- **Cutover day:**
+  1. §3.7's throttling and the Phase 3 infrastructure are live.
+  2. Deploy in a maintenance window.
+  3. Run the first-run wizard.
+  4. Admins recreate accounts. Users were told beforehand that they'll get a new account and sign in with an email.
+
+### 7.3 `username` stays the key
 
 These foreign keys reference `accounts.username` [code]:
 
@@ -638,25 +625,12 @@ These foreign keys reference `accounts.username` [code]:
 
 `username` is also used without a foreign key in `preconsult.py:193` (the LiveKit identity), `services/capture.py:103`, and the ownership checks in §4, row 10.
 
-Switching to UUIDs or emails would rewrite 7 columns on clinical tables and about 25 comparison sites. That's about 4–6 more person-days and real data-migration risk, for no gain.
-
-### 7.3 Cutover without password resets
-
-1. **Before cutover (Phase 3):** import, then dual-write: every credential or state write goes to both the local store and Kratos. Run reconciliation until it reports no differences.
-   - **In `dual` mode Kratos's self-service flows aren't reachable** (Caddy doesn't route them yet), so the local hash is the only password users can change. That keeps the two stores from holding different live passwords.
-2. **Communication, a week ahead:** every user learns their sign-in email. Staff with placeholder addresses get theirs from their admin.
-3. **Cutover day:** a short maintenance window. Deploy with `AUTH_PROVIDER=ory`, and bump every account's `session_version`.
-   - All app sessions end. Users sign in once with their email and their **existing password**.
-   - §3.7's throttling must be live before the flag flips.
-   - Reissue pending rotation links.
+Switching to UUIDs or emails would rewrite 7 columns on clinical tables and about 25 comparison sites, for no gain.
 
 ### 7.4 Rollback
 
-- **How:** set `AUTH_PROVIDER=local` and redeploy the previous image (the `image_tag` input of `.github/workflows/deploy.yml`).
-- **Passwords changed in Kratos, and accounts created after cutover:** copy their bcrypt hashes back into `accounts.password` through `GET /admin/identities/{id}?include_credential=password`. Whether it returns `hashed_password` needs checking. This only works while Kratos stays on bcrypt.
-  - Anyone without a copied hash needs an admin reset. `verify_password` returns `False` for a NULL hash (§5.2(c)).
-  - Bump every `session_version` on rollback too.
-- **How long:** keep the `password` column and the local implementation for 2–4 weeks after cutover.
+- Redeploy the previous image (the `image_tag` input of `.github/workflows/deploy.yml`), and restore the pre-cutover database backup.
+- Anything created after cutover is lost, so decide within the maintenance window.
 
 ---
 
@@ -789,6 +763,7 @@ Dump the app DB, then `kratos`, then `hydra`, and restore them together.
 - Kratos and Hydra get separate databases in the app's Postgres.
 - **D3:** `username` stays the app's internal key.
 - **Login is by email** (2026-11-23).
+- **Hard cutover, with no account or data migration** (2026-11-25).
 - **D7, D8, D21:** every account requires an email, never verified, and it needn't be a working mailbox (2026-11-25). Self-service recovery works wherever the mailbox is real; admins can always set passwords.
 - **D13:** throttling recovery and login is required before cutover (§3.7). The exact mechanism is a Phase 0 spike.
 
@@ -824,7 +799,6 @@ Dump the app DB, then `kratos`, then `hydra`, and restore them together.
 Run `docker compose up -d kratos hydra`, then `python ory/smoke.py`. It is safe to rerun. All of the following pass on v26.2.0:
 
 - **Imports and identifiers**
-  - Python bcrypt `$2b$12$` hashes import and log in unchanged.
   - Email identifiers are stored lowercased, login with a different case works, and a second identity with the same email in another case gets a 409.
   - With verification disabled, identities have no verifiable addresses, and the verification flow answers "Verification is not allowed because it was disabled".
 - **Login**
