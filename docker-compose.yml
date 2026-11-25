@@ -53,6 +53,98 @@ services:
       retries: 20
       start_period: 10s
 
+  # Identity (Ory). Kratos owns accounts, passwords and the login/recovery
+  # flows; Hydra is the OIDC provider the app signs in through. Both keep
+  # their state in their own database in the `db` Postgres. Config lives in
+  # ./ory (dev values only). The public APIs are on localhost:4433 (Kratos)
+  # and localhost:4444 (Hydra); the admin APIs are on 4434 and 4445 and are
+  # bound to loopback for local debugging only. The host ports are fixed
+  # because the ory/*.yml URLs (and the frontend's localhost:3000) name them.
+  ory-db-init:
+    image: postgres:16-alpine
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-hapu}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-hapu}
+      PGDATABASE: ${POSTGRES_DB:-haputele}
+    volumes:
+      - ./ory/postgres/create-databases.sh:/create-databases.sh:ro
+    command: ["sh", "/create-databases.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  kratos-migrate:
+    image: oryd/kratos:v26.2.0
+    environment:
+      DSN: postgres://${POSTGRES_USER:-hapu}:${POSTGRES_PASSWORD:-hapu}@db:5432/kratos?sslmode=disable
+    command: ["migrate", "sql", "--read-from-env", "--yes"]
+    depends_on:
+      ory-db-init:
+        condition: service_completed_successfully
+
+  kratos:
+    image: oryd/kratos:v26.2.0
+    restart: unless-stopped
+    environment:
+      DSN: postgres://${POSTGRES_USER:-hapu}:${POSTGRES_PASSWORD:-hapu}@db:5432/kratos?sslmode=disable
+    # --dev allows plain-HTTP cookies on localhost; --watch-courier runs the
+    # mail sender in-process (it must be a singleton).
+    command: ["serve", "--config", "/etc/config/kratos/kratos.yml", "--dev", "--watch-courier"]
+    volumes:
+      - ./ory/kratos:/etc/config/kratos:ro
+    depends_on:
+      kratos-migrate:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:4434/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "127.0.0.1:4433:4433"
+      - "127.0.0.1:4434:4434"
+
+  hydra-migrate:
+    image: oryd/hydra:v26.2.0
+    environment:
+      DSN: postgres://${POSTGRES_USER:-hapu}:${POSTGRES_PASSWORD:-hapu}@db:5432/hydra?sslmode=disable
+    command: ["migrate", "sql", "--read-from-env", "--yes"]
+    depends_on:
+      ory-db-init:
+        condition: service_completed_successfully
+
+  hydra:
+    image: oryd/hydra:v26.2.0
+    restart: unless-stopped
+    environment:
+      DSN: postgres://${POSTGRES_USER:-hapu}:${POSTGRES_PASSWORD:-hapu}@db:5432/hydra?sslmode=disable
+    # --dev allows a plain-HTTP issuer on localhost.
+    command: ["serve", "all", "--config", "/etc/config/hydra/hydra.yml", "--dev"]
+    volumes:
+      - ./ory/hydra:/etc/config/hydra:ro
+    depends_on:
+      hydra-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:4445/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "127.0.0.1:4444:4444"
+      - "127.0.0.1:4445:4445"
+
+  # Catches Kratos courier mail (recovery and verification codes) in dev.
+  # Inbox at http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+
   # For local Docker video calls, run scripts/local-livekit (see README).
 
   api:

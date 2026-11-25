@@ -1,0 +1,127 @@
+# Ory Kratos — local development only. Production config will be rendered by
+# Ansible with real secrets; never reuse the dev values below.
+#
+# Kratos owns identities, passwords, and the login/recovery/settings flows.
+# Hydra (see ../hydra/hydra.yml) is the OIDC provider the app signs in
+# through; Kratos accepts Hydra's login challenges via oauth2_provider.
+# DSN comes from the environment (docker-compose.yml).
+
+version: v26.2.0
+
+serve:
+  public:
+    base_url: http://localhost:4433/
+    # The frontend (localhost:3000) calls the public API cross-origin until
+    # the same-origin /.ory/kratos/public rewrite lands.
+    cors:
+      enabled: true
+      allowed_origins:
+        - http://localhost:3000
+      allowed_methods: [GET, POST, PUT, PATCH, DELETE]
+      allowed_headers: [Authorization, Content-Type, X-Session-Token, X-CSRF-Token]
+      exposed_headers: [Content-Type, Set-Cookie]
+      allow_credentials: true
+  admin:
+    base_url: http://kratos:4434/
+
+oauth2_provider:
+  url: http://hydra:4445
+  # Recovery/settings started inside an OAuth2 login return to Hydra.
+  override_return_to: true
+
+identity:
+  default_schema_id: staff
+  schemas:
+    - id: staff
+      url: file:///etc/config/kratos/identity.schema.json
+
+selfservice:
+  default_browser_return_url: http://localhost:3000/
+  allowed_return_urls:
+    - http://localhost:3000
+    # Required by oauth2_provider.override_return_to: flows started from a
+    # Hydra login challenge return to Hydra's authorize URL.
+    - http://localhost:4444
+
+  methods:
+    password:
+      enabled: true
+      config:
+        min_password_length: 10
+        identifier_similarity_check_enabled: true
+    # Recovery uses one-time codes (links are deprecated).
+    code:
+      enabled: true
+      config:
+        lifespan: 15m
+    # Accounts are admin-managed: users can't edit their own traits.
+    profile:
+      enabled: false
+    link:
+      enabled: false
+
+  flows:
+    login:
+      ui_url: http://localhost:3000/login
+      lifespan: 10m
+    # No self-registration: accounts are created through the admin API.
+    registration:
+      enabled: false
+    settings:
+      ui_url: http://localhost:3000/settings
+      # Short: clinic computers are often shared.
+      privileged_session_max_age: 5m
+      after:
+        password:
+          hooks:
+            # A password change signs out every other device.
+            - hook: revoke_active_sessions
+    recovery:
+      enabled: true
+      use: code
+      ui_url: http://localhost:3000/recovery
+      notify_unknown_recipients: false
+      after:
+        hooks:
+          - hook: revoke_active_sessions
+    # Emails are login identifiers and are never verified: staff in rural
+    # clinics may not have a working mailbox.
+    verification:
+      enabled: false
+    logout:
+      after:
+        default_browser_return_url: http://localhost:3000/login
+    error:
+      ui_url: http://localhost:3000/error
+
+session:
+  lifespan: 8h
+
+# bcrypt is light on memory for a small VM (argon2 defaults to 128 MB per hash).
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 12
+
+ciphers:
+  algorithm: xchacha20-poly1305
+
+secrets:
+  cookie:
+    - dev-only-kratos-cookie-secret-change-me
+  cipher:
+    - dev-only-32-char-cipher-secret!!
+  default:
+    - dev-only-kratos-default-secret-change-me
+
+# Dev mail goes to Mailpit (UI at http://localhost:8025).
+courier:
+  smtp:
+    connection_uri: smtp://mailpit:1025/?disable_starttls=true
+    from_address: no-reply@haputele.local
+    from_name: HapuTele
+
+log:
+  level: info
+  format: text
+  leak_sensitive_values: false

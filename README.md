@@ -8,7 +8,7 @@ The live API contract is browsable at `/docs` (Swagger) once the stack is up; th
 
 ```bash
 cp .env.example .env             # first time only — adjust JWT_SECRET, passwords, LiveKit + S3 creds
-docker compose up --build        # builds and starts db + rustfs + api + frontend
+docker compose up --build        # builds and starts db + rustfs + Ory (Kratos, Hydra, Mailpit) + api + frontend
 ```
 
 Once the containers are up:
@@ -21,6 +21,11 @@ Once the containers are up:
 | Health   | http://localhost:8000/health         |
 | Setup status | http://localhost:8000/setup/status |
 | Object store (rustfs console) | http://localhost:9001 (login with `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`) |
+| Kratos (identity) | http://localhost:4433 public, http://localhost:4434 admin |
+| Hydra (OIDC provider) | http://localhost:4444 public, http://localhost:4445 admin |
+| Mailpit (dev inbox for Kratos mail) | http://localhost:8025 |
+
+Kratos and Hydra are being introduced to replace the in-house login. The app doesn't use them yet. They run with dev-only config and secrets from `ory/`, keep their data in the `kratos` and `hydra` databases of the same Postgres, and bind every port to loopback. The migration plan is in [`docs/ory-auth-migration.md`](docs/ory-auth-migration.md); `python ory/smoke.py` checks the stack end to end.
 
 `GET /health` is a pure liveness probe (no DB/S3 dependency) returning `{"status": "ok", "uptime": <seconds>, "version": <git ref>, "build_date": <UTC ISO-8601 build timestamp>, "hostname": <container hostname>, "commit": <git sha>}`. `version` / `build_date` / `commit` are baked into the image at build time (CI passes the git ref, sha, and build timestamp; local builds fall back to `dev` / `unknown` markers).
 
