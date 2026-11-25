@@ -69,7 +69,13 @@ selfservice:
       enabled: false
     settings:
       ui_url: http://localhost:3000/settings
-      privileged_session_max_age: 15m
+      # Short: clinic computers are often shared.
+      privileged_session_max_age: 5m
+      after:
+        password:
+          hooks:
+            # A password change signs out every other device.
+            - hook: revoke_active_sessions
     recovery:
       enabled: true
       use: code
