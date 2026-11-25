@@ -268,7 +268,7 @@ check("invite code leads to the settings flow",
 
 # 11. An admin-set password works for a staff member with no real mailbox,
 #     and an admin can reset it (no email involved).
-NOMAIL = f"nimal.hw+{RUN}@no-mail.haputele.invalid"
+NOMAIL = f"nimal.hw+{RUN}@haputele.local"
 status, _, nm = call(plain, "POST", f"{KRATOS_ADMIN}/admin/identities", {
     "schema_id": "staff", "traits": {"email": NOMAIL},
     "credentials": {"password": {"config": {"password": "first-password-123"}}}})

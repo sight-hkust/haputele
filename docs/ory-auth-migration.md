@@ -186,10 +186,18 @@ This is `ory/kratos/identity.schema.json` [verified-live]:
   - **`doctor.email` stays** as the doctor's profile and audit copy (D22). The identity service writes it together with `accounts.email` while the doctor is live, so its current readers (`doctors.py`, `doctor_invites.py`, the onboarding peek) keep working.
   - **Every write goes through the identity service:** `create_doctor`, `consume_new_doctor`, `update_doctor`, account create and update, and setup. It writes Kratos first, then the app.
   - **Email is a required field** wherever an account is created: the account forms (the sys-admin creates admins, admins create health workers, per `PERMITTED_TARGETS`, `accounts.py:57-62`), the setup wizard, legacy doctor create and onboarding.
-- **Staff with no mailbox get a placeholder address** on a subdomain the project owns, such as `nimal.hw@no-mail.<prod domain>` (D24).
-  - Give that subdomain a null MX record (RFC 7505), so mail to it is refused at once and can never reach a stranger.
-  - **Don't use `.invalid`.** Kratos accepts it [verified-live], but the app's `EmailStr` (`pydantic` 2.13.4 with `email-validator` 2.3.0) rejects it as a special-use name [verified-live].
-  - Self-service recovery refuses the placeholder domain (§3.7). Those users go through an admin.
+- **Staff with no mailbox get a placeholder address at `haputele.local`**, such as `nimal.hw@haputele.local` (D24, decided).
+  - `.local` is reserved for local-network names (RFC 6762), so nobody can own the domain publicly and mail to it can't be delivered.
+  - **The app never sends mail there:**
+    - placeholder accounts can't be invited, only given a password;
+    - self-service recovery refuses the domain with the normal response (§3.7);
+    - `send_email` treats the domain as suppressed.
+  - **Validation:**
+    - Kratos accepts it [verified-live].
+    - The app's `EmailStr` (`pydantic` 2.13.4 with `email-validator` 2.3.0) rejects any `.local` address as a special-use name, as it does `.invalid` [verified-live].
+    - `NewEmail` therefore accepts exactly `@<PLACEHOLDER_EMAIL_DOMAIN>` through a targeted rule, and sends every other address through `EmailStr` unchanged.
+    - Don't remove `local` from email-validator's global special-use list: that would also admit addresses like `x@printer.local` [verified-live].
+    - The frontend's zod `.email()` and `type="email"` should accept it [inferred].
 - **`username` stays the app's internal key.**
   - The app never sees what the user typed at login; the callback maps `sub` to `accounts.kratos_identity_id`.
   - The 7 foreign keys (§7.3) and the ownership checks are unaffected.
@@ -204,7 +212,7 @@ This is `ory/kratos/identity.schema.json` [verified-live]:
 - If an admin mistypes an address, or invents one on a public provider, the real owner of that address can reset the password and take over the account.
 - **Invites are the sharper edge:** a mistyped invite hands a stranger a code for an account that already has its role.
 - **Mitigations:**
-  - placeholder addresses only under the project's own null-MX subdomain (D24);
+  - placeholder addresses only at `haputele.local`, which can't receive mail (D24);
   - the account form asks the admin to confirm the address and warns when it's on a public provider;
   - invites expire after 24h, and admin and sys-admin accounts can't be invited; an admin sets their password (D25);
   - throttled recovery (§3.7).
@@ -394,7 +402,7 @@ There's no distributed transaction between Kratos and the app.
 | `OIDC_POST_LOGOUT_REDIRECT_URI` | `http://localhost:3000/login` |
 | `KRATOS_WEBHOOK_SECRET` | secret |
 | `KRATOS_SESSION_LIFESPAN_MIN` | `480` |
-| `PLACEHOLDER_EMAIL_DOMAIN` | the null-MX subdomain (D24) |
+| `PLACEHOLDER_EMAIL_DOMAIN` | `haputele.local` (D24) |
 
 **Frontend build:** `NEXT_PUBLIC_KRATOS_PUBLIC_URL` is inlined at build time, but `frontend/Dockerfile:18-21` and `docker.yml:334-339` pass only the API URL and timezone. Default it to the relative `/.ory/kratos/public`, and add a build arg for dev.
 
@@ -488,7 +496,7 @@ There's no distributed transaction between Kratos and the app.
   - `_account_is_referenced` adds `CaptureSession.created_by` (Appendix B).
   - The `_self_editable_account` password path is removed (§4, row 16).
 - **(o) Unchanged:** `middleware/setup_gate.py`.
-- **(p) `services/credentials.py`:** reject passwords over 72 bytes (`password_too_long`), because Kratos's bcrypt rejects them. Mirror it in `frontend/src/lib/credentials.ts`. Drop the username rules and add `NewEmail` (`EmailStr`, lowercased, ≤ 320). The placeholder subdomain is an ordinary domain, so it passes.
+- **(p) `services/credentials.py`:** reject passwords over 72 bytes (`password_too_long`), because Kratos's bcrypt rejects them. Mirror it in `frontend/src/lib/credentials.ts`. Drop the username rules and add `NewEmail` (lowercased, ≤ 320): `EmailStr`, except that addresses at exactly `PLACEHOLDER_EMAIL_DOMAIN` pass through a targeted rule (§3.2). Use it everywhere an email is accepted, including `DoctorBase.email` (`schemas.py:76`) and `DoctorUpdate.email` (`schemas.py:191`).
 - **(q) New `routers/internal_hooks.py`,** mounted only on the internal listener (port 8001, §2.7): `POST /internal/kratos/events`, with a constant-time-compared header secret.
   - `password_changed` and `recovered` → `sv++`, `mark_rotation_consumed` and the end of "awaiting setup".
   - Handlers are idempotent and don't trust the payload: they re-read the identity from Kratos by ID, so a replayed call can at most sign a user out again.
@@ -569,7 +577,7 @@ There's no distributed transaction between Kratos and the app.
 | 0 | Dev compose stack and smoke test (**done**). Spikes: callback cookies through the Next rewrite; Hydra and Kratos on sub-paths behind Caddy; the flow renderer; app-started recovery (§3.7); what Kratos does when an after-hook webhook fails. | 2–3 |
 | 1 | Groundwork with no Ory dependency, shipped to production on its own: `session_version`, the `typ` claim and the `current_user` check; `sv++` at every revoking site (disable, reset, delete, reject, deactivate, purge); `post_login_gate` with D4; logout without `current_user`; `login_as`; Alembic `0019`; the Appendix B bugs. | 3–4 |
 | 2 | The switch, released as one unit (§7.2): `accounts.email` and the identity service; OIDC endpoints with `safe_next`; consent and logout handlers; app-started recovery; the internal listener, Kratos webhook and reconcile job; Kratos UI pages; account, setup and doctor screens with emails and derived usernames; the invite option; email templates; client bootstrap; deleting the local login and `accounts.password`; Alembic `0020`. | 11–15 |
-| 3 | Prod infrastructure: secrets delivery, backups (app → kratos → hydra), Caddy routes and rate limits (custom build), prod compose and Ansible for Ory (internal admin network, separate DB roles, no `--dev`, no Mailpit), null-MX placeholder subdomain. | 7–11 |
+| 3 | Prod infrastructure: secrets delivery, backups (app → kratos → hydra), Caddy routes and rate limits (custom build), prod compose and Ansible for Ory (internal admin network, separate DB roles, no `--dev`, no Mailpit). | 7–11 |
 | 4 | CI contract job, Playwright, cutover runbook and comms. | 4–6 |
 | **Core total** | | **27–39** |
 | SSO-1 | Option (a): institutions registry and admin UI, discovery and picker, linking from settings, `sso_required` check, mock IdP in CI, onboarding runbook. | 5–8 |
@@ -764,6 +772,7 @@ Dump the app DB, then `kratos`, then `hydra`, and restore them together.
 - **D3:** `username` stays the app's internal key.
 - **Login is by email** (2026-11-23).
 - **Hard cutover, with no account or data migration** (2026-11-25).
+- **D24:** placeholder addresses for staff with no mailbox use `haputele.local` (2026-11-25).
 - **D7, D8, D21:** every account requires an email, never verified, and it needn't be a working mailbox (2026-11-25). Self-service recovery works wherever the mailbox is real; admins can always set passwords.
 - **D13:** throttling recovery and login is required before cutover (§3.7). The exact mechanism is a Phase 0 spike.
 
@@ -787,7 +796,6 @@ Dump the app DB, then `kratos`, then `hydra`, and restore them together.
 | D20 | Multi-tenant Entra/Google providers gated by the institution allowlist, or per-institution registrations | Decide in SSO-1 |
 | D22 | Keep `doctor.email` as the profile and audit copy, written together with `accounts.email`, or merge it away | Keep, in lockstep; rejected doctors' tombstones need it |
 | D23 | Derive new usernames from the email, or keep asking for one | Derive |
-| D24 | Placeholder addresses for staff with no mailbox | A subdomain the project owns, with a null MX record. `.invalid` fails the app's `EmailStr` [verified-live]. Which domain? |
 | D25 | Invites: lifetime, and which roles may be invited | 24h; health workers only (doctors keep their own invite flows); admins get admin-set passwords |
 | D26 | Backstop if the password-change webhook fails | Reconcile every 5 minutes against `credentials.password.updated_at`. The alternative, checking the Kratos session on every request with a short cache, brings back a per-request Ory dependency |
 | D27 | Force a password change at the next login after an admin sets one | Yes: an `accounts.must_change_password` flag; the callback sends the user to `/settings` first |
@@ -812,7 +820,7 @@ Run `docker compose up -d kratos hydra`, then `python ory/smoke.py`. It is safe 
   - A correct code gets a 422 `browser_location_change_required` that redirects to the settings flow.
 - **Logout:** Hydra redirects to the logout handler even with `skip_logout_consent: true`. Accepting it ends at `post_logout_redirect_uri`, and the Kratos session is revoked.
 - **Admin invites:** a recovery code on a password-less identity opens the frontend `/recovery?flow=` page. The flow has no CSRF node, and the code leads to the settings flow.
-- **Admin-set passwords:** an identity with an admin-set password can be reset through `PUT /admin/identities/{id}`. Afterwards the old password fails and the new one works. The test uses a `.invalid` address, which Kratos accepts but the app won't (D24).
+- **Admin-set passwords:** an identity with an admin-set password can be reset through `PUT /admin/identities/{id}`. Afterwards the old password fails and the new one works. The test uses a `haputele.local` placeholder address (D24).
 - **Config finding:** `oauth2_provider.override_return_to` requires Hydra's public URL in `selfservice.allowed_return_urls`.
 
 **From the security review**, on the same stack:
@@ -827,7 +835,7 @@ Run `docker compose up -d kratos hydra`, then `python ory/smoke.py`. It is safe 
 - **Disabling works:** once an identity is `inactive`, `whoami` returns 401, and its revoked sessions don't continue a login.
 - **JSON clients** that start a login while a Kratos session exists get 400 "valid session detected".
 
-**App-side check:** the app's `EmailStr` (`pydantic` 2.13.4, `email-validator` 2.3.0) rejects `…@no-mail.haputele.invalid` and accepts an ordinary subdomain.
+**App-side check:** the app's `EmailStr` (`pydantic` 2.13.4, `email-validator` 2.3.0) rejects `…@haputele.invalid` and `…@haputele.local` as special-use names, and accepts an ordinary domain. Removing `local` from `email_validator.SPECIAL_USE_DOMAIN_NAMES` admits every `.local` address, not just ours.
 - **Earlier finding, before verification was disabled:** admin codes left an address `pending`, while self-service recovery verified it.
 
 ## Appendix B. Bugs on `main` fixed in Phase 1
