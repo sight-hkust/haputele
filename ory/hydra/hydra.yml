@@ -1,0 +1,43 @@
+# Ory Hydra — local development only. Production config will be rendered by
+# Ansible with real secrets; never reuse the dev values below.
+#
+# Hydra is the OIDC provider the app signs in through. Login challenges go
+# to the frontend login page, backed by Kratos. Hydra asks for consent and
+# logout confirmation even for skip_consent clients, so the app auto-accepts
+# them for its first-party client (docs/ory-auth-migration.md §2). DSN comes
+# from the environment (docker-compose.yml).
+
+serve:
+  cookies:
+    same_site_mode: Lax
+
+urls:
+  self:
+    issuer: http://localhost:4444/
+    public: http://localhost:4444/
+  login: http://localhost:3000/login
+  consent: http://localhost:3000/consent
+  logout: http://localhost:3000/logout
+  error: http://localhost:3000/error
+  post_logout_redirect: http://localhost:3000/login
+  # Lets Hydra end the Kratos session when a user logs out through Hydra.
+  identity_provider:
+    url: http://kratos:4434
+
+oauth2:
+  pkce:
+    enforced: true
+
+secrets:
+  system:
+    - dev-only-hydra-system-secret-change-me
+
+oidc:
+  subject_identifiers:
+    supported_types:
+      - public
+
+log:
+  level: info
+  format: text
+  leak_sensitive_values: false
